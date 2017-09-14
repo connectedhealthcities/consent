@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<people>
+    <person>
+        <identities>
+            <identity>
+                <kind>SimpleKind</kind>
+                <value>111-111-111</value>
+            </identity>
+        </identities>
+    </person>
+</people>
