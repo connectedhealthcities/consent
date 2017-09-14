@@ -60,7 +60,7 @@ namespace CHC.Consent.IntegrationTests
         public void AddWatcher(IWatcher watcher)
         {
             
-            this.Watchers.Add(watcher, CancellationToken);
+            Watchers.Add(watcher, CancellationToken);
             watcher.NewDatasourceAvailable += HandleNewData;
             watcher.Start();
         }
