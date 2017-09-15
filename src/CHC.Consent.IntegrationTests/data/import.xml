@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<people>
+<people xmlxs="urn:chc:consent:standard-data:v0.1">
     <person>
         <identities>
-            <identity>
-                <kind>SimpleKind</kind>
+            <simpleIdentity>
+                <identityKindId>SimpleKind</identityKindId>
                 <value>111-111-111</value>
-            </identity>
+            </simpleIdentity>
         </identities>
     </person>
 </people>

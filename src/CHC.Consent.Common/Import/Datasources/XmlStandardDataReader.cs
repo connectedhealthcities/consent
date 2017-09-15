@@ -9,7 +9,7 @@ namespace CHC.Consent.Common.Import.Datasources
 {
     public class XmlStandardDataReader : StandardDataReader
     {
-        public const string DefaultNamespace = "urn:chc:consent:v0.1";
+        public const string DefaultNamespace = "urn:chc:consent:standard-data:v0.1";
         private static readonly XNamespace ChcNs = DefaultNamespace; 
         private static readonly XNamespace Xsi = "http://www.w3.org/2001/XMLSchema-instance";
         private readonly FileDatasource datasource;

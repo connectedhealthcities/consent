@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <xs:schema 
         xmlns:xs="http://www.w3.org/2001/XMLSchema"
-        xmlns="urn:chc:consent:v0.1"
-        targetNamespace="urn:chc:consent:v0.1" 
+        xmlns="urn:chc:consent:standard-data:v0.1"
+        targetNamespace="urn:chc:consent:standard-data:v0.1" 
         elementFormDefault="qualified">
 
     <xs:complexType name="identity" abstract="true">
