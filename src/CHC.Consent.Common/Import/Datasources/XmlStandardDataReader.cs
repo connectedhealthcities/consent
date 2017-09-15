@@ -9,8 +9,8 @@ namespace CHC.Consent.Common.Import.Datasources
 {
     public class XmlStandardDataReader : StandardDataReader
     {
-        public const string DefaultNamespace = "urn:chc:consent:standard-data:v0.1";
-        private static readonly XNamespace ChcNs = DefaultNamespace; 
+        public const string ChcStandardDataNamespace = "urn:chc:consent:standard-data:v0.1";
+        private static readonly XNamespace ChcNs = ChcStandardDataNamespace; 
         private static readonly XNamespace Xsi = "http://www.w3.org/2001/XMLSchema-instance";
         private readonly FileDatasource datasource;
 
@@ -24,9 +24,9 @@ namespace CHC.Consent.Common.Import.Datasources
             using (var reader = CreateReader())
             {
                 reader.MoveToContent();
-                reader.ReadToDescendant("person", DefaultNamespace);
+                reader.ReadToDescendant("person", ChcStandardDataNamespace);
 
-                while (reader.IsStartElement("person", DefaultNamespace))
+                while (reader.IsStartElement("person", ChcStandardDataNamespace))
                 {
                     var me = XNode.ReadFrom(reader) as XElement;
 

@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using System.Xml.Schema;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Import;
 using CHC.Consent.Common.Import.Datasources;
@@ -11,7 +12,7 @@ namespace CHC.Consent.Common.Tests.Import.Datasources
 {
     public class XmlStandardDataReaderTests
     {
-        private static readonly XNamespace Ns = XmlStandardDataReader.DefaultNamespace;
+        private static readonly XNamespace Ns = XmlStandardDataReader.ChcStandardDataNamespace;
         
         private readonly ITestOutputHelper output;
 
@@ -103,7 +104,12 @@ namespace CHC.Consent.Common.Tests.Import.Datasources
             protected override XmlReader CreateReader()
             {
                 output.WriteLine(source.ToString());
-                return source.CreateReader();
+                var xmlReaderSettings = new XmlReaderSettings();
+                xmlReaderSettings.Schemas.Add(ChcStandardDataNamespace, "StandardData.xsd");
+                return XmlReader.Create(
+                    source.CreateReader(),
+                    xmlReaderSettings);
+                
             }
         }
     }
