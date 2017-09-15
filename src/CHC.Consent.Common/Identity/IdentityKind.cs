@@ -4,7 +4,7 @@
     {
         public IdentityKindFormat Format { get; set; }
         public bool Key { get; set; }
-        
+        public string Id { get; set; }
     }
 
     /// <summary>

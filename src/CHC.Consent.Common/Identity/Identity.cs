@@ -2,6 +2,6 @@
 {
     public abstract class Identity
     {
-        public IdentityKind IdentityKind { get; } 
+        public IdentityKind IdentityKind { get; set; }
     }
 }
