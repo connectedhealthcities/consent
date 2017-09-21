@@ -1,8 +1,10 @@
-﻿namespace CHC.Consent.Common.Core
+﻿using System;
+
+namespace CHC.Consent.Common.Core
 {
     public class Study : IStudy
     {
-        public long Id { get; protected set; }
+        public virtual Guid Id { get; protected set; }
         
     }
 }

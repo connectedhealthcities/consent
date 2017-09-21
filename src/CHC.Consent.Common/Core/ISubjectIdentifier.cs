@@ -1,8 +1,10 @@
-﻿namespace CHC.Consent.Common.Core
+﻿using System;
+
+namespace CHC.Consent.Common.Core
 {
     public interface ISubjectIdentifier
     {
-        long StudyId { get; }
+        Guid StudyId { get; }
         string Identifier { get; }
     }
 }
