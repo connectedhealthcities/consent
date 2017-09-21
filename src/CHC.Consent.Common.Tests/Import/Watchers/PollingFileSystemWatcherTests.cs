@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using CHC.Consent.Common.Core;
 using CHC.Consent.Common.Import;
 using CHC.Consent.Common.Import.Datasources;
 using CHC.Consent.Common.Import.Watchers;
@@ -17,7 +18,8 @@ namespace CHC.Consent.Common.Tests.Import.Watchers
             private readonly CancellationTokenSource cancellationTokenSource;
             public Queue<string[]> Files { get; } = new Queue<string[]>();
             
-            public PollingFileSystemWatcherStub(CancellationTokenSource cancellationTokenSource) : base("", TimeSpan.MaxValue, cancellationTokenSource.Token)
+            public PollingFileSystemWatcherStub(CancellationTokenSource cancellationTokenSource) 
+                : base("", new Study(), TimeSpan.MaxValue, cancellationTokenSource.Token)
             {
                 this.cancellationTokenSource = cancellationTokenSource;
             }

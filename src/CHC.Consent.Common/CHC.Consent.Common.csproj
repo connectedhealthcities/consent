@@ -7,4 +7,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="~StandardData.xsd" />
+  </ItemGroup>
 </Project>

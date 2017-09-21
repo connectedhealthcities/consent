@@ -11,4 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CHC.Consent.Common\CHC.Consent.Common.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Import\Utils" />
+  </ItemGroup>
 </Project>

@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CHC.Consent.Common.Core;
 using CHC.Consent.Common.Import.Datasources;
 using CHC.Consent.Common.Utils;
 
@@ -11,12 +12,18 @@ namespace CHC.Consent.Common.Import.Watchers
     public class PollingFileSystemWatcher : IWatcher
     {
         private readonly string location;
+        private readonly IStudy study;
         private readonly TimeSpan pollingInterval;
         private readonly CancellationToken cancellationToken;
 
-        public PollingFileSystemWatcher(string location, TimeSpan pollingInterval, CancellationToken cancellationToken)
+        public PollingFileSystemWatcher(
+            string location, 
+            IStudy study,
+            TimeSpan pollingInterval, 
+            CancellationToken cancellationToken)
         {
             this.location = location;
+            this.study = study;
             this.pollingInterval = pollingInterval;
             this.cancellationToken = cancellationToken;
         }
@@ -41,7 +48,7 @@ namespace CHC.Consent.Common.Import.Watchers
                         
                         foreach (var newFile in newFiles)
                         {
-                            NewDatasourceAvailable.Trigger(this, new NewDataEventArgs(new FileDatasource(newFile)));
+                            NewDatasourceAvailable.Trigger(this, new NewDataEventArgs(new FileDatasource(newFile, study)));
                         }
                     }
                 },

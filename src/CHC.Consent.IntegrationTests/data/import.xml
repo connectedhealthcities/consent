@@ -1,11 +1,25 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<people xmlxs="urn:chc:consent:standard-data:v0.1">
+<people xmlns="urn:chc:consent:standard-data:v0.1">
     <person>
         <identities>
-            <simpleIdentity>
+            <simpleIdentity id="id1">
                 <identityKindId>SimpleKind</identityKindId>
                 <value>111-111-111</value>
             </simpleIdentity>
+            <simpleIdentity id="id2">
+                <identityKindId>SimpleKind2</identityKindId>
+                <value>222</value>
+            </simpleIdentity>
         </identities>
+        <matchIdentity>
+            <match>
+                <identity ref="id1" />
+            </match>
+        </matchIdentity>
+        <matchStudyIdentity>
+            <match>
+                <identityKindId>SimpleKind2</identityKindId>
+            </match>
+        </matchStudyIdentity>
     </person>
 </people>

@@ -1,4 +1,9 @@
+using System.Collections.Generic;
+
 namespace CHC.Consent.Common.Import
 {
-    public class StandardDataReader {}
+    public abstract class StandardDataReader
+    {
+        public abstract IEnumerable<IPerson> People();
+    }
 }

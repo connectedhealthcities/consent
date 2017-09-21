@@ -46,6 +46,7 @@
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
+
     <xs:complexType name="identityReference">
         <xs:attribute name="ref" type="xs:IDREF"/>
     </xs:complexType>
@@ -103,6 +104,5 @@
         </xs:complexType>
     </xs:element>
 </xs:schema>
-
 
 

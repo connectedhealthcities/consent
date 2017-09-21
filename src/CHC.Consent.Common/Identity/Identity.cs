@@ -2,6 +2,7 @@
 {
     public abstract class Identity
     {
-        public IdentityKind IdentityKind { get; set; }
+        public virtual long Id { get; set; }
+        public virtual IdentityKind IdentityKind { get; set; }
     }
 }

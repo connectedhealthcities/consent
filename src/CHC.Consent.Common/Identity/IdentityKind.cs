@@ -1,10 +1,13 @@
-﻿namespace CHC.Consent.Common.Identity
+﻿using System;
+
+namespace CHC.Consent.Common.Identity
 {
     public class IdentityKind
     {
-        public IdentityKindFormat Format { get; set; }
-        public bool Key { get; set; }
-        public string Id { get; set; }
+        public virtual IdentityKindFormat Format { get; set; }
+        public virtual string ExternalId { get; set; }
+        
+        public virtual Guid Id { get; protected set; }
     }
 
     /// <summary>
