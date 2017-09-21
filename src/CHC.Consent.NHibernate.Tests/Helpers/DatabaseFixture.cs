@@ -5,12 +5,13 @@ using Xunit.Sdk;
 
 namespace CHC.Consent.NHibernate.Tests
 {
-    public class DatabaseFixture : IDisposable
+    public class DatabaseFixture : IDisposable, ISessionFactory
     {
         private bool setup = false;
         private Configuration configuration;
 
-
+        ISession  ISessionFactory.StartSession() => StartSession();
+        
         public ISession StartSession(ITestOutputHelper output=null)
         {
             if (!setup)
@@ -26,16 +27,6 @@ namespace CHC.Consent.NHibernate.Tests
             return configuration.StartSession();
         }
 
-        public void AsTransaction(Action<ISession> run)
-        {
-            using(var session = StartSession())
-            using (var tx = session.BeginTransaction())
-            {
-                run(session);
-                
-                tx.Commit();
-            }
-        }
 
         public void Dispose()
         {

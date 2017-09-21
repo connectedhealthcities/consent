@@ -4,12 +4,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.ServiceModel.Channels;
 using System.Threading;
 using CHC.Consent.Common.Core;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Import;
 using CHC.Consent.Common.Import.Watchers;
 using CHC.Consent.Common.SubjectIdentifierCreation;
+using CHC.Consent.NHibernate;
 using Xunit;
 
 namespace CHC.Consent.IntegrationTests
@@ -74,17 +76,22 @@ namespace CHC.Consent.IntegrationTests
         private readonly CancellationTokenSource cancellationTokenSource;
         private ISubjectIdentfierAllocator subjectIdentfierAllocator;
         private SimpleIdentityStore identityStore;
+        private readonly Configuration dbSessionFactory;
         public CancellationToken CancellationToken => cancellationTokenSource.Token;
         private BlockingCollection<IWatcher> Watchers { get; } = new BlockingCollection<IWatcher>();
 
         public ConsentSystem()
         {
             cancellationTokenSource = new CancellationTokenSource();
+            dbSessionFactory = new Configuration(
+                Configuration.SqlServer(@"Data Source=(localdb)\.;Integrated Security=true"));
+            dbSessionFactory.Create();
         }
 
         protected virtual void Dispose(bool disposing)
         {
             if (!disposing) return;
+            dbSessionFactory.DropSchema();
             cancellationTokenSource.Cancel();
             WaitHandle.WaitAll(
                 Watchers.Select(_ => _.WaitHandle).Cast<WaitHandle>().ToArray(),
@@ -148,10 +155,14 @@ namespace CHC.Consent.IntegrationTests
 
         public IStudy CreateStudy()
         {
-            var study = new Study();
-            typeof(Study).GetProperty(nameof(study.Id), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance).
-                SetValue(study, 16L);
-            return study;
+            return dbSessionFactory.AsTransaction(
+                session =>
+                {
+                    var study = new Study();
+                    session.Save(study);
+                    return study;
+                }
+            );
         }
 
         public void UseSubjectIdentifiersFrom(ISubjectIdentfierAllocator allocator)

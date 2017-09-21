@@ -16,9 +16,9 @@ using NHibernate.Type;
 
 namespace CHC.Consent.NHibernate
 {
-    public class Configuration
+    public class Configuration : ISessionFactory
     {
-        private readonly ISessionFactory sessionFactory;
+        private readonly global::NHibernate.ISessionFactory sessionFactory;
         private readonly global::NHibernate.Cfg.Configuration config;
 
         public static Action<IDbIntegrationConfigurationProperties> SqlServer(string connectionString)

@@ -17,6 +17,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CHC.Consent.Common\CHC.Consent.Common.csproj" />
-    <ProjectReference Include="..\CHC.Consent.EntityFramework\CHC.Consent.EntityFramework.csproj" />
+    <ProjectReference Include="..\CHC.Consent.NHibernate\CHC.Consent.NHibernate.csproj">
+      <Project>{15524136-60DD-4112-A90D-2E945CB1715B}</Project>
+      <Name>CHC.Consent.NHibernate</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>
