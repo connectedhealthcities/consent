@@ -1,10 +1,11 @@
 using Xunit;
 
+
 namespace CHC.Consent.NHibernate.Tests
 {
     [CollectionDefinition(Name)]
     public class DatabaseCollection : ICollectionFixture<DatabaseFixture>
     {
-        public const string Name = "Db Collection";
+        public const string Name = "Db";
     }
 }

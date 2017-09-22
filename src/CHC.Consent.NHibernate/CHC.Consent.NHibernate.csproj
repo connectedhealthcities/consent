@@ -5,6 +5,7 @@
   <ItemGroup>
     <PackageReference Include="NHibernate" Version="5.0.0-ci-00138-dbg-NH-3807" />
     <PackageReference Include="NHibernate.Driver.SqlServer" Version="5.0.0-ci-00138-dbg-NH-3807" />
+    <PackageReference Include="PredicateExtensions" Version="1.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CHC.Consent.Common\CHC.Consent.Common.csproj" />

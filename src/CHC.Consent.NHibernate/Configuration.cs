@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Runtime.InteropServices.ComTypes;
+using System.Xml.Serialization;
 using CHC.Consent.Common.Core;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Utils;
+using CHC.Consent.NHibernate.Identity;
 using NHibernate;
 using NHibernate.Cfg;
 using NHibernate.Cfg.Loquacious;
@@ -10,9 +11,7 @@ using NHibernate.Cfg.MappingSchema;
 using NHibernate.Dialect;
 using NHibernate.Driver;
 using NHibernate.Mapping.ByCode;
-using NHibernate.SqlTypes;
 using NHibernate.Tool.hbm2ddl;
-using NHibernate.Type;
 
 namespace CHC.Consent.NHibernate
 {
@@ -99,16 +98,34 @@ namespace CHC.Consent.NHibernate
 
             mapper.Class<IdentityKind>(m => { m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid)); });
             mapper.Class<Study>(m => { m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid)); });
+            mapper.Class<PersistedPerson>(m =>
+            {
+                m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid));
+                m.Bag(
+                    _ => _.Identities,
+                    j =>
+                    {
+                        j.Cascade(Cascade.Persist);
+                        j.Inverse(true);
+                    });
+            });
             
-            mapper.IsTablePerClassHierarchy((s, b) => typeof(Identity).IsAssignableFrom(s));
+            mapper.Class<PersistedIdentity>(m =>
+            {
+                m.ManyToOne(
+                    _ => _.Person,
+                    j => { j.Index("IX_PersistedIdentity_Person"); });
+            });
+            
+            mapper.IsTablePerClassHierarchy((s, b) => typeof(PersistedIdentity).IsAssignableFrom(s));
             
             return mapper.CompileMappingFor(
                 new[]
                 {
+                    typeof(PersistedPerson),
                     typeof(IdentityKind), 
-                    typeof(Identity), 
-                    typeof(SimpleIdentity), 
-                    typeof(CompositeIdentity),
+                    typeof(PersistedIdentity), 
+                    typeof(PersistedSimpleIdentity), 
                     typeof(Study)
                 });
         }

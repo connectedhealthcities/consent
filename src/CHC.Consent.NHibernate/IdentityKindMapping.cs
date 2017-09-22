@@ -27,7 +27,7 @@ namespace CHC.Consent.NHibernate
         }
     }
 
-    public class IdentityMapping : ClassMapping<Identity>
+    public class IdentityMapping : ClassMapping<Common.Identity.Identity>
     {
         public IdentityMapping()
         {

@@ -41,27 +41,6 @@ namespace CHC.Consent.IntegrationTests
         }
     }
 
-    public class SimpleIdentityStore : IIdentityStore
-    {
-        private readonly Dictionary<string, Identity[]> store = new Dictionary<string, Identity[]>(); 
-        
-        public IEnumerable<Identity> FindExisitingIdentiesFor(IEnumerable<Identity> identies)
-        {
-            return store.TryGetValue(Key(identies), out var found) ? found : null;
-        }
-
-        private static string Key(IEnumerable<Identity> keys)
-        {
-            return string.Join("\x241f", keys.Cast<SimpleIdentity>().Select(_ => _.Value));
-        }
-
-        public void UpsertIdentity(IEnumerable<Identity> keys, IEnumerable<Identity> identities)
-        {
-            var key = Key(keys);
-            store[key] = identities.ToArray();
-        }
-    }
-
     public class SimpleSubjectIdentifierAllocator : ISubjectIdentfierAllocator
     {
         private int nextId = 0;
@@ -75,7 +54,7 @@ namespace CHC.Consent.IntegrationTests
     {
         private readonly CancellationTokenSource cancellationTokenSource;
         private ISubjectIdentfierAllocator subjectIdentfierAllocator;
-        private SimpleIdentityStore identityStore;
+        private IIdentityStore identityStore;
         private readonly Configuration dbSessionFactory;
         public CancellationToken CancellationToken => cancellationTokenSource.Token;
         private BlockingCollection<IWatcher> Watchers { get; } = new BlockingCollection<IWatcher>();

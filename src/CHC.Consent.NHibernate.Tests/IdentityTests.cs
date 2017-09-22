@@ -3,6 +3,7 @@ using System.Configuration;
 using System.Xml.Linq;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Utils;
+using CHC.Consent.NHibernate.Identity;
 using NHibernate;
 using Xunit;
 using Xunit.Abstractions;
@@ -10,7 +11,7 @@ using Xunit.Abstractions;
 namespace CHC.Consent.NHibernate.Tests
 {
     [Collection(DatabaseCollection.Name)]
-    public class IdentityTests : IClassFixture<DatabaseFixture>
+    public class IdentityTests
     {
         private readonly ITestOutputHelper output;
         private readonly DatabaseFixture db;
@@ -62,7 +63,7 @@ namespace CHC.Consent.NHibernate.Tests
                     _.Save(identityKind);
 
                     id = _.Save(
-                        new SimpleIdentity
+                        new PersistedSimpleIdentity
                         {
                             IdentityKind = identityKind,
                             Value = "simple value"
@@ -74,14 +75,14 @@ namespace CHC.Consent.NHibernate.Tests
             db.AsTransaction(
                 session =>
                 {
-                    var simpleIdentity = session.Get<Identity>(id);
+                    var simpleIdentity = session.Get<PersistedIdentity>(id);
                     NHibernateUtil.Initialize(simpleIdentity.IdentityKind);
 
                     Assert.NotEqual(default(long), simpleIdentity.Id);
-                    Assert.IsType<SimpleIdentity>(simpleIdentity);
+                    Assert.IsType<PersistedSimpleIdentity>(simpleIdentity);
 
                     Assert.Equal("chc:external:testing", simpleIdentity.IdentityKind.ExternalId);
-                    Assert.Equal("simple value", ((SimpleIdentity) simpleIdentity).Value);
+                    Assert.Equal("simple value", ((PersistedSimpleIdentity) simpleIdentity).Value);
                 }
             );
         }
