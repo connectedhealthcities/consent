@@ -12,6 +12,7 @@ using CHC.Consent.Common.Import;
 using CHC.Consent.Common.Import.Watchers;
 using CHC.Consent.Common.SubjectIdentifierCreation;
 using CHC.Consent.NHibernate;
+using CHC.Consent.NHibernate.Identity;
 using Xunit;
 
 namespace CHC.Consent.IntegrationTests
@@ -29,7 +30,7 @@ namespace CHC.Consent.IntegrationTests
                 var study = system.CreateStudy();
 
                 system.UseSubjectIdentifiersFrom(new SimpleSubjectIdentifierAllocator());
-                system.UseIdentityStore(new SimpleIdentityStore());
+                
                 
                 system.WatchFileSystem(mailDropLocation, study);
 
@@ -64,7 +65,10 @@ namespace CHC.Consent.IntegrationTests
             cancellationTokenSource = new CancellationTokenSource();
             dbSessionFactory = new Configuration(
                 Configuration.SqlServer(@"Data Source=(localdb)\.;Integrated Security=true"));
+            
             dbSessionFactory.Create();
+            
+            identityStore = new NHibernateIdentityStore(dbSessionFactory);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -111,7 +115,7 @@ namespace CHC.Consent.IntegrationTests
                 }
                 else
                 {
-                    //TODO: handle updates?
+                    //TODO: handle person updates?
                 }
             }
         }
@@ -149,7 +153,7 @@ namespace CHC.Consent.IntegrationTests
             subjectIdentfierAllocator = allocator; 
         }
 
-        public void UseIdentityStore(SimpleIdentityStore store)
+        public void UseIdentityStore(IIdentityStore store)
         {
             identityStore = store;
             

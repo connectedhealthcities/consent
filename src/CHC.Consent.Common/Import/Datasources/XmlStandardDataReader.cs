@@ -96,7 +96,7 @@ namespace CHC.Consent.Common.Import.Datasources
             {
                 if (identityElement.Name == X.SimpleIdentity)
                 {
-                    //TODO: more validation on these
+                    //TODO: Validate simple identity from xml - external kind id and value 
                     var identityKind = new IdentityKind{ ExternalId = identityElement.Element(X.IdentityKindId).Value};
                     var identity = new SimpleIdentity
                     {
@@ -107,8 +107,8 @@ namespace CHC.Consent.Common.Import.Datasources
                 }
                 else
                 {
-                    //TODO: composite identity
-                    //TODO: error logging
+                    //TODO: handle reading composite identity
+                    //TODO: error logging for reading identites
                     continue;
                 }
             }

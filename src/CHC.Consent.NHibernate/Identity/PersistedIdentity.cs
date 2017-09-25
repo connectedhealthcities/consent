@@ -8,5 +8,6 @@ namespace CHC.Consent.NHibernate.Identity
         public virtual long Id { get; set; }
         public virtual IdentityKind IdentityKind { get; set; }
         public virtual PersistedPerson Person { get; set; }
+        public abstract bool HasSameValueAs(Common.Identity.Identity newIdentity);
     }
 }
