@@ -18,6 +18,7 @@ namespace CHC.Consent.NHibernate.Tests
 
         private void Log(string level, object message, Exception exception)
         {
+            if(name.Contains("SQL"))
             output.WriteLine($"{level} {name} {message} {exception}");
         }
 

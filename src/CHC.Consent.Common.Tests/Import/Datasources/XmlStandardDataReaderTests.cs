@@ -57,9 +57,9 @@ namespace CHC.Consent.Common.Tests.Import.Datasources
             Assert.NotEmpty(person.Identities);
             var identity = person.Identities.Single();
 
-            Assert.Equal("id", identity.Key.ExternalId);
-            Assert.IsType<SimpleIdentity>(identity.Value);
-            Assert.Equal("value", ((SimpleIdentity) identity.Value).Value);
+            Assert.Equal("id", identity.IdentityKindId);
+            Assert.IsType<SimpleIdentityRecord>(identity);
+            Assert.Equal("value", ((SimpleIdentityRecord) identity).Value);
         }
 
         [Fact]
@@ -132,7 +132,7 @@ namespace CHC.Consent.Common.Tests.Import.Datasources
         }
 
 
-        private IPerson[] ReadPeople(params XNode[] personElements)
+        private IImportRecord[] ReadPeople(params XNode[] personElements)
         {
             var people = new XmlStandardDataReaderFromString(
                 new XDocument(

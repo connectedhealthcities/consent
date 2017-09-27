@@ -22,7 +22,7 @@ namespace CHC.Consent.NHibernate.Identity
             this.sessionFactory = sessionFactory;
         }
 
-        public IEnumerable<Common.Identity.Identity> FindExisitingIdentiesFor(IReadOnlyCollection<Match> matches, IEnumerable<Common.Identity.Identity> identities)
+        public IEnumerable<IIdentity> FindExisitingIdentiesFor(IReadOnlyCollection<Match> matches, IEnumerable<IIdentity> identities)
         {
             foreach (var match in matches)
             {
@@ -34,17 +34,17 @@ namespace CHC.Consent.NHibernate.Identity
 
                 return matchedPerson.Identities.Select(CreateDomainIdentity);
             }
-            //TODO: Watch happens if no one is found
-            throw new NotImplementedException("Don't know how to handle more than one identity");
+
+            return null;
         }
 
-        private static Common.Identity.Identity CreateDomainIdentity(PersistedIdentity identity)
+        private static IIdentity CreateDomainIdentity(PersistedIdentity identity)
         {
             //TODO: handle Composite identies mapping
-            return new SimpleIdentity{IdentityKind = identity.IdentityKind, Id = identity.Id, Value = ((PersistedSimpleIdentity)identity).Value };
+            return new PersistedSimpleIdentity{IdentityKind = identity.IdentityKind, Id = identity.Id, Value = ((PersistedSimpleIdentity)identity).Value };
         }
 
-        public void UpsertIdentity(IReadOnlyCollection<Match> matches, IEnumerable<Common.Identity.Identity> allIdentities)
+        public void UpsertIdentity(IReadOnlyCollection<Match> matches, IEnumerable<IIdentity> allIdentities)
         {
             foreach (var match in matches)
             {
@@ -67,7 +67,7 @@ namespace CHC.Consent.NHibernate.Identity
             }
         }
 
-        private void UpdatePersonIdentities(PersistedPerson person, IEnumerable<Common.Identity.Identity> allIdentities, ISession session)
+        private void UpdatePersonIdentities(PersistedPerson person, IEnumerable<IIdentity> allIdentities, ISession session)
         {
             foreach (var newIdentity in allIdentities)
             {
@@ -79,9 +79,9 @@ namespace CHC.Consent.NHibernate.Identity
             }
         }
 
-        private PersistedIdentity CreatePersistedIdentityFor(Common.Identity.Identity identity, ISession session)
+        private PersistedIdentity CreatePersistedIdentityFor(IIdentity identity, ISession session)
         {
-            if(identity.GetType() == typeof(SimpleIdentity))
+            if(identity is ISimpleIdentity simpleIdentity)
             {
                 //TODO: Can we dynamically create identity kinds? Or is this an error condition...
                 var identityKind = session.Query<IdentityKind>()
@@ -91,12 +91,13 @@ namespace CHC.Consent.NHibernate.Identity
                 {
                     IdentityKind = identityKind,
                     Id = identity.Id,
-                    Value = ((SimpleIdentity) identity).Value
+                    Value = simpleIdentity.Value
                 };
             }
             
             //TODO: handle persisting non-simple identities
-            throw new NotImplementedException();
+            throw new InvalidOperationException(
+                $"Don't know now to create a Persisted Identity from {identity.GetType()}");
         }
         
 
@@ -124,7 +125,7 @@ namespace CHC.Consent.NHibernate.Identity
             
         }
 
-        private static Expression<Func<PersistedIdentity, bool>> CreateMatchQuery(Match match, IEnumerable<Common.Identity.Identity> identities)
+        private static Expression<Func<PersistedIdentity, bool>> CreateMatchQuery(Match match, IEnumerable<IIdentity> identities)
         {
             Expression<Func<PersistedIdentity, bool>> matchExpression = null;
             if (match.GetType() == typeof(IdentityKindId))
@@ -135,7 +136,7 @@ namespace CHC.Consent.NHibernate.Identity
 
                 Expression<Func<PersistedIdentity, bool>> identityIdMatch = id => id.IdentityKind.ExternalId == externalId;
 
-                var identityValue = ((SimpleIdentity) identities.First(_ => _.IdentityKind.ExternalId == externalId)).Value;
+                var identityValue = ((ISimpleIdentity) identities.First(_ => _.IdentityKind.ExternalId == externalId)).Value;
 
 
                 matchExpression = identityIdMatch.And(

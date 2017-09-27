@@ -1,14 +1,9 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.IO.Pipes;
 using System.Linq;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Import.Match;
 using CHC.Consent.NHibernate.Identity;
-using NHibernate;
-using NHibernate.Linq;
-using NHibernate.Util;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -21,13 +16,11 @@ namespace CHC.Consent.NHibernate.Tests
 
         public IdentityStoreTests(DatabaseFixture db, ITestOutputHelper output)
         {
-            this.db = db;   
-            LoggerProvider.SetLoggersFactory(new OutputLoggerFactory(output));
+            this.db = db;
         }
 
         public void Dispose()
         {
-            LoggerProvider.SetLoggersFactory(new NoLoggingLoggerFactory());
         }
 
         [Fact]
@@ -47,7 +40,7 @@ namespace CHC.Consent.NHibernate.Tests
                 new Match[] {new IdentityKindId {Id = identityExternalId}},
                 new[]
                 {
-                    new SimpleIdentity
+                    new PersistedSimpleIdentity
                     {
                         Value = "1234",
                         IdentityKind = new IdentityKind {ExternalId = identityExternalId}
@@ -55,7 +48,7 @@ namespace CHC.Consent.NHibernate.Tests
                 }).ToArray();
 
             Assert.Single((IEnumerable) found);
-            var expected = found.Cast<SimpleIdentity>().Single();
+            var expected = found.Cast<ISimpleIdentity>().Single();
             Assert.Equal("1234", expected.Value);
             Assert.Equal(identityExternalId, expected.IdentityKind.ExternalId);
 
@@ -100,29 +93,31 @@ namespace CHC.Consent.NHibernate.Tests
             
             var identityStore = new NHibernateIdentityStore(db);
 
-            var found = identityStore.FindExisitingIdentiesFor(
+            var result = identityStore.FindExisitingIdentiesFor(
                 new Match[] {new IdentityKindId {Id = identityExternalId1}},
                 new[]
                 {
-                    new SimpleIdentity
-                    {
-                        Value = "1234",
-                        IdentityKind = new IdentityKind {ExternalId = identityExternalId1}
-                    },
-                }).ToArray();
+                    new PersistedSimpleIdentity {IdentityKind = new IdentityKind {ExternalId = identityExternalId1}, Value = "1234"}
+
+                });
+            
+            Assert.NotNull(result);
+
+            var found = result.ToArray();
+            
 
             Assert.Equal(2, found.Length);
             
-            Assert.All(found, _ => Assert.IsType<SimpleIdentity>(_));
+            Assert.All(found, _ => Assert.IsType<PersistedSimpleIdentity>(_));
 
             Assert.Contains(
-                found.Cast<SimpleIdentity>(),
+                found.Cast<PersistedSimpleIdentity>(),
                 expected =>
                     "1234" == expected.Value
                     && expected.IdentityKind.ExternalId == identityExternalId1);
 
             Assert.Contains(
-                found.Cast<SimpleIdentity>(),
+                found.Cast<PersistedSimpleIdentity>(),
                 id =>
                     "97" == id.Value
                     && id.IdentityKind.ExternalId == identityExternalId2);
@@ -138,7 +133,7 @@ namespace CHC.Consent.NHibernate.Tests
             var identityStore = new NHibernateIdentityStore(db);
 
             var match = new Match[] {new IdentityKindId {Id = identityExternalId1}};
-            var keyIdentity = new SimpleIdentity{ IdentityKind = new IdentityKind { ExternalId = identityExternalId1 } , Value = "the key"  };
+            var keyIdentity = new PersistedSimpleIdentity { IdentityKind = new IdentityKind { ExternalId = identityExternalId1 } , Value = "the key"  };
             db.AsTransaction(_ => _.Save(new IdentityKind {ExternalId = identityExternalId2}));
             
             identityStore.UpsertIdentity(
@@ -146,7 +141,7 @@ namespace CHC.Consent.NHibernate.Tests
                 new[]
                 {
                     keyIdentity,
-                    new SimpleIdentity{ IdentityKind = new IdentityKind { ExternalId = identityExternalId2}, Value = "Updated" }
+                    new PersistedSimpleIdentity{ IdentityKind = new IdentityKind { ExternalId = identityExternalId2}, Value = "Updated" }
                 });
 
             var found = identityStore.FindExisitingIdentiesFor(
@@ -155,7 +150,7 @@ namespace CHC.Consent.NHibernate.Tests
             );
             
             Assert.Contains(
-                found.Cast<SimpleIdentity>(),
+                found.Cast<PersistedSimpleIdentity>(),
                 id =>
                     id.Value == "Updated" &&
                     id.IdentityKind.ExternalId == identityExternalId2

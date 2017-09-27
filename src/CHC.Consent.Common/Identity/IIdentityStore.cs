@@ -5,7 +5,8 @@ namespace CHC.Consent.Common.Identity
 {
     public interface IIdentityStore
     {
-        IEnumerable<Identity> FindExisitingIdentiesFor(IReadOnlyCollection<Match> matches, IEnumerable<Identity> identities);
-        void UpsertIdentity(IReadOnlyCollection<Match> matches, IEnumerable<Identity> allIdentities);
+        IEnumerable<IIdentity> FindExisitingIdentiesFor(IReadOnlyCollection<Match> matches, IEnumerable<IIdentity> identities);
+        void UpsertIdentity(IReadOnlyCollection<Match> matches, IEnumerable<IIdentity> allIdentities);
+        
     }
 }

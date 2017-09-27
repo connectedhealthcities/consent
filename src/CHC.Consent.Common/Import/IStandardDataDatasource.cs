@@ -5,7 +5,7 @@ namespace CHC.Consent.Common.Import
 {
     public interface IStandardDataDatasource
     {
-        IEnumerable<IPerson> People { get; }
+        IEnumerable<IImportRecord> People { get; }
         IStudy Study { get; }
     }
 }

@@ -39,7 +39,7 @@ namespace CHC.Consent.Common.Import.Datasources
             this.datasource = datasource;
         }
 
-        public override IEnumerable<IPerson> People()
+        public override IEnumerable<IImportRecord> People()
         {
             using (var reader = CreateReader())
             {
@@ -48,23 +48,20 @@ namespace CHC.Consent.Common.Import.Datasources
 
                 while (reader.IsStartElement("person", ChcStandardDataNamespace))
                 {
-                    var me = XNode.ReadFrom(reader) as XElement;
+                    var currentNode = XNode.ReadFrom(reader) as XElement;
 
-                    if (me == null)
+                    if (currentNode == null)
                     {
                         //TODO: Error logging
                         continue;
                     }
 
-                    var person = new XmlPerson();
+                    var person = new XmlImportRecord();
 
-                    foreach (var (identityKind, identity) in ReadIdentities(me))
-                    {
-                        person.Identities.Add(identityKind, identity);
-                    }
-
-                    person.MatchIdentity = ReadMatches(me.Element(X.MatchIdenty)).ToArray();
-                    person.MatchStudyIdentity = ReadMatches(me.Element(X.MatchStudyIdentity)).ToArray();
+                    person.Identities.AddRange(ReadIdentities(currentNode));
+                    
+                    person.MatchIdentity = ReadMatches(currentNode.Element(X.MatchIdenty)).ToArray();
+                    person.MatchStudyIdentity = ReadMatches(currentNode.Element(X.MatchStudyIdentity)).ToArray();
 
                     yield return person;
                 }
@@ -90,20 +87,17 @@ namespace CHC.Consent.Common.Import.Datasources
             }
         }
 
-        private IEnumerable<(IdentityKind identityKind, Identity.Identity identity)> ReadIdentities(XContainer person)
+        private IEnumerable<IdentityRecord> ReadIdentities(XContainer person)
         {
             foreach (var identityElement in person.Elements(X.Identities).Elements())
             {
                 if (identityElement.Name == X.SimpleIdentity)
                 {
                     //TODO: Validate simple identity from xml - external kind id and value 
-                    var identityKind = new IdentityKind{ ExternalId = identityElement.Element(X.IdentityKindId).Value};
-                    var identity = new SimpleIdentity
-                    {
-                        IdentityKind = identityKind,
-                        Value = identityElement.Element(X.Value).Value
-                    };
-                    yield return (identityKind,identity);
+
+                    yield return new SimpleIdentityRecord(
+                        identityElement.Element(X.IdentityKindId).Value,
+                        identityElement.Element(X.Value).Value);
                 }
                 else
                 {

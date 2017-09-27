@@ -4,10 +4,10 @@ using CHC.Consent.Common.Identity;
 
 namespace CHC.Consent.Common.Import
 {
-    public interface IPerson
+    public interface IImportRecord
     {
-        IDictionary<IdentityKind, Identity.Identity> Identities { get; }
-        IDictionary<EvidenceKind, Evidence.Evidence> Evidence { get; }
+        IReadOnlyList<IdentityRecord> Identities { get; }
+        IReadOnlyList<Evidence.Evidence> Evidence { get; }
         IReadOnlyList<Match.Match> MatchIdentity { get; }
         IReadOnlyList<Match.Match> MatchStudyIdentity { get; }
     }

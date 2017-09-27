@@ -17,7 +17,7 @@ namespace CHC.Consent.Common.Import.Datasources
             Study = study;
         }
 
-        public IEnumerable<IPerson> People => CreateStandardDataReader().People();
+        public IEnumerable<IImportRecord> People => CreateStandardDataReader().People();
 
         public StandardDataReader CreateStandardDataReader()
         {

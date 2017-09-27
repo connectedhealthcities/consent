@@ -7,6 +7,7 @@ using System.Reflection;
 using System.ServiceModel.Channels;
 using System.Threading;
 using CHC.Consent.Common.Core;
+using CHC.Consent.Common.Evidence;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Import;
 using CHC.Consent.Common.Import.Watchers;
@@ -103,15 +104,19 @@ namespace CHC.Consent.IntegrationTests
             Import(people, study);
         }
 
-        private void Import(IEnumerable<IPerson> people, IStudy study)
+        private void Import(IEnumerable<IImportRecord> records, IStudy study)
         {
-            foreach (var person in people)
+            foreach (var record in records)
             {
-                if (IsNewPerson(person.Identities))
+                if (IsNewPerson(record))
                 {
+                    var person = CreateNewPerson(record);
+                    
                     var subjectIdentifer = GetNewSubjectIdentifer(study);
 
-                    RecordConsentFor(subjectIdentifer, person);
+                    StoreSubjectIdentifier(person, subjectIdentifer);
+
+                    RecordConsentFor(subjectIdentifer, record.Evidence);
                 }
                 else
                 {
@@ -120,9 +125,15 @@ namespace CHC.Consent.IntegrationTests
             }
         }
 
-        private static void RecordConsentFor(ISubjectIdentifier subjectIdentifer, IPerson person)
+        private IPerson CreateNewPerson(IImportRecord importRecord)
+        {
+            identityStore.UpsertIdentity(importRecord.MatchIdentity, importRecord.Identities);
+        }
+
+        private static void RecordConsentFor(ISubjectIdentifier subjectIdentifer, IReadOnlyList<Evidence> importRecord)
         {
             //TODO: record consent for identifier
+            throw new NotImplementedException();
         }
 
         private ISubjectIdentifier GetNewSubjectIdentifer(IStudy study)
@@ -130,10 +141,9 @@ namespace CHC.Consent.IntegrationTests
             return new SubjectIdentifier(study, subjectIdentfierAllocator.AllocateNewIdentifier(study));
         }
 
-        private static bool IsNewPerson(IDictionary<IdentityKind, Identity> personIdentities)
+        private bool IsNewPerson(IImportRecord importRecord)
         {
-            //TODO: check for subjects by identity
-            throw new NotImplementedException();
+            return identityStore.FindExisitingIdentiesFor(importRecord.MatchIdentity, importRecord.Identities) == null;
         }
 
         public IStudy CreateStudy()
