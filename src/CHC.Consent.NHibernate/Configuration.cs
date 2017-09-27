@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Xml.Serialization;
 using CHC.Consent.Common.Core;
 using CHC.Consent.Common.Identity;
@@ -35,13 +37,19 @@ namespace CHC.Consent.NHibernate
         {
             
             config = new global::NHibernate.Cfg.Configuration();
+            var mappingDocument = GetMappings();
+
+            var xmlMapping = new StringWriter();
+            new XmlSerializer(mappingDocument.GetType())
+                .Serialize(xmlMapping, mappingDocument);
+            
             config.DataBaseIntegration(db =>
                 {
                     db.LogFormattedSql = true;
                     db.KeywordsAutoImport = Hbm2DDLKeyWords.AutoQuote;
                     setup(db);
                 })
-                .AddMapping(GetMappings());
+                .AddMapping(mappingDocument);
             sessionFactory = config.BuildSessionFactory();
         }
 
@@ -108,6 +116,13 @@ namespace CHC.Consent.NHibernate
                         j.Cascade(Cascade.Persist);
                         j.Inverse(true);
                     });
+                m.Bag(
+                    _ => _.SubjectIdentifiers,
+                    j =>
+                    {
+                        j.Cascade(Cascade.Persist);
+                        j.Inverse(true);
+                    });
             });
             
             mapper.Class<PersistedIdentity>(m =>
@@ -116,6 +131,17 @@ namespace CHC.Consent.NHibernate
                     _ => _.Person,
                     j => { j.Index("IX_PersistedIdentity_Person"); });
             });
+            
+            mapper.Class<PersistedSubjectIdentifier>(
+                m =>
+                {
+                    m.Bag(_ => _.Identities,
+                        Do.Nothing,
+                        j =>
+                        {
+                            j.ManyToMany();
+                        });
+                });
             
             mapper.IsTablePerClassHierarchy((s, b) => typeof(PersistedIdentity).IsAssignableFrom(s));
             
@@ -126,6 +152,7 @@ namespace CHC.Consent.NHibernate
                     typeof(IdentityKind), 
                     typeof(PersistedIdentity), 
                     typeof(PersistedSimpleIdentity), 
+                    typeof(PersistedSubjectIdentifier),
                     typeof(Study)
                 });
         }

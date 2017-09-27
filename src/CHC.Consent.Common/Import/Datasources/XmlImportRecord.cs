@@ -12,7 +12,7 @@ namespace CHC.Consent.Common.Import.Datasources
 
         public List<Evidence.Evidence> Evidence { get; } = new List<Evidence.Evidence>();
         IReadOnlyList<Evidence.Evidence> IImportRecord.Evidence => Evidence;
-        public IReadOnlyList<Match.Match> MatchIdentity { get; set; }
-        public IReadOnlyList<Match.Match> MatchStudyIdentity { get; set; }
+        public IReadOnlyList<Match.MatchRecord> MatchIdentity { get; set; }
+        public IReadOnlyList<Match.MatchRecord> MatchStudyIdentity { get; set; }
     }
 }

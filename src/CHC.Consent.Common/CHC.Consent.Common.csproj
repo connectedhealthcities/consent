@@ -10,4 +10,11 @@
   <ItemGroup>
     <None Remove="~StandardData.xsd" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CHC.Consent.Core\CHC.Consent.Core.csproj">
+      <Project>{B75A35F5-BDBC-4401-BC6D-F07830D8C547}</Project>
+      <Name>CHC.Consent.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CHC.Consent.Identity.Core\CHC.Consent.Identity.Core.csproj" />
+  </ItemGroup>
 </Project>

@@ -2,16 +2,29 @@
 using System.Collections;
 using System.Linq;
 using CHC.Consent.Common.Identity;
-using CHC.Consent.Common.Import.Match;
+using CHC.Consent.Identity.Core;
 using CHC.Consent.NHibernate.Identity;
+using NHibernate;
+using NHibernate.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace CHC.Consent.NHibernate.Tests
 {
+    
+    
     [Collection(DatabaseCollection.Name)]
     public class IdentityStoreTests : IDisposable
     {
+        private class IdentityMatch : IIdentityMatch
+        {
+            public IIdentity Match { get;  }
+
+            public IdentityMatch(IIdentity match)
+            {
+                Match = match;
+            }
+        }
         private readonly DatabaseFixture db;
 
         public IdentityStoreTests(DatabaseFixture db, ITestOutputHelper output)
@@ -27,51 +40,41 @@ namespace CHC.Consent.NHibernate.Tests
         public void CanFindAPersonBySimpleIdentityMatch()
         {
             const string identityExternalId = "chc:CanFindAPersonBySimpleIdentityMatch";
+
+            var identityKindId = SaveIdentityKind(identityExternalId);
             
             MakePersonFrom(new PersistedSimpleIdentity
             {
-                IdentityKind = new IdentityKind{ExternalId = identityExternalId},
+                IdentityKindId = identityKindId,
                 Value = "1234"
             });
             
             var identityStore = new NHibernateIdentityStore(db);
 
-            var found = identityStore.FindExisitingIdentiesFor(
-                new Match[] {new IdentityKindId {Id = identityExternalId}},
-                new[]
+            var found = identityStore.FindPerson(
+                new IMatch[]
                 {
-                    new PersistedSimpleIdentity
-                    {
-                        Value = "1234",
-                        IdentityKind = new IdentityKind {ExternalId = identityExternalId}
-                    },
-                }).ToArray();
+                    new IdentityMatch(new PersistedSimpleIdentity {IdentityKindId = identityKindId, Value = "1234"})
+                });
 
-            Assert.Single((IEnumerable) found);
-            var expected = found.Cast<ISimpleIdentity>().Single();
+            
+            var expected = found.Identities.Cast<ISimpleIdentity>().Single();
             Assert.Equal("1234", expected.Value);
-            Assert.Equal(identityExternalId, expected.IdentityKind.ExternalId);
+            Assert.Equal(identityKindId, expected.IdentityKindId);
 
         }
 
-        public void MakePersonFrom(params PersistedIdentity[] identities)
+        private Guid SaveIdentityKind(string identityExternalId)
+        {
+            return db.AsTransaction(s => (Guid)s.Save(new IdentityKind {ExternalId = identityExternalId}));
+        }
+
+        public void MakePersonFrom(params IIdentity[] identities)
         {
             db.AsTransaction(
                 s =>
                 {
-                    foreach (var identityKind in identities.Select(_ => _.IdentityKind).Distinct())
-                    {
-                        s.SaveOrUpdate(identityKind);
-                    }
-
-                    var person = new PersistedPerson();
-
-                    foreach (var persistedIdentity in identities)
-                    {
-                        person.Identities.Add(persistedIdentity);
-                        persistedIdentity.Person = person;
-                    }
-
+                    var person = new PersistedPerson(identities);
                     s.Save(person);
                 });
         }
@@ -79,83 +82,81 @@ namespace CHC.Consent.NHibernate.Tests
         [Fact]
         public void CanFindAPersonBySimpleIdentityMatchWhenPersonHasMoreThanOneIdentity()
         {
-            const string identityExternalId1 = "chc:CanFindAPersonBySimpleIdentityMatchWhenPersonHasMoreThanOneIdentity:1";
-            const string identityExternalId2 = "chc:CanFindAPersonBySimpleIdentityMatchWhenPersonHasMoreThanOneIdentity:2";
-            
-            var identityKind1 = new IdentityKind {ExternalId = identityExternalId1};
-            var identityKind2 = new IdentityKind {ExternalId = identityExternalId2};
+            var identityKind1 = SaveIdentityKind("chc:CanFindAPersonBySimpleIdentityMatchWhenPersonHasMoreThanOneIdentity:1");
+            var identityKind2 = SaveIdentityKind("chc:CanFindAPersonBySimpleIdentityMatchWhenPersonHasMoreThanOneIdentity:2");
 
 
             MakePersonFrom(
-                new PersistedSimpleIdentity {IdentityKind = identityKind1, Value = "1234"},
-                new PersistedSimpleIdentity {IdentityKind = identityKind2, Value = "97"}
+                new PersistedSimpleIdentity {IdentityKindId = identityKind1, Value = "1234"},
+                new PersistedSimpleIdentity {IdentityKindId = identityKind2, Value = "97"}
             );
             
             var identityStore = new NHibernateIdentityStore(db);
 
-            var result = identityStore.FindExisitingIdentiesFor(
-                new Match[] {new IdentityKindId {Id = identityExternalId1}},
-                new[]
+            var result = identityStore.FindPerson(
+                new []
                 {
-                    new PersistedSimpleIdentity {IdentityKind = new IdentityKind {ExternalId = identityExternalId1}, Value = "1234"}
-
-                });
+                    new IdentityMatch(new PersistedSimpleIdentity {Value = "1234", IdentityKindId = identityKind1})
+                }
+            );
             
             Assert.NotNull(result);
 
-            var found = result.ToArray();
+            Assert.Equal(2, result.Identities.Count());
             
-
-            Assert.Equal(2, found.Length);
-            
-            Assert.All(found, _ => Assert.IsType<PersistedSimpleIdentity>(_));
+            Assert.All(result.Identities, _ => Assert.IsType<PersistedSimpleIdentity>(_));
 
             Assert.Contains(
-                found.Cast<PersistedSimpleIdentity>(),
+                result.Identities.Cast<PersistedSimpleIdentity>(),
                 expected =>
                     "1234" == expected.Value
-                    && expected.IdentityKind.ExternalId == identityExternalId1);
+                    && expected.IdentityKindId == identityKind1);
 
             Assert.Contains(
-                found.Cast<PersistedSimpleIdentity>(),
+                result.Identities.Cast<PersistedSimpleIdentity>(),
                 id =>
                     "97" == id.Value
-                    && id.IdentityKind.ExternalId == identityExternalId2);
+                    && id.IdentityKindId == identityKind2);
         }
 
         [Fact]
-        public void CorrectlyUpdatesIdentity()
+        public void CorrectlyCreatesPerson()
         {
             const string identityExternalId1 = "chc:CorrectlyUpdatesIdentity:1";
             const string identityExternalId2 = "chc:CorrectlyUpdatesIdentity:2";
-            MakePersonFrom(new PersistedSimpleIdentity{ IdentityKind = new IdentityKind { ExternalId = identityExternalId1 }, Value = "the key"});
-            
+
+            var identityKindId1 = SaveIdentityKind(identityExternalId1);
+            var identityKindId2 = SaveIdentityKind(identityExternalId2);
+
             var identityStore = new NHibernateIdentityStore(db);
 
-            var match = new Match[] {new IdentityKindId {Id = identityExternalId1}};
-            var keyIdentity = new PersistedSimpleIdentity { IdentityKind = new IdentityKind { ExternalId = identityExternalId1 } , Value = "the key"  };
-            db.AsTransaction(_ => _.Save(new IdentityKind {ExternalId = identityExternalId2}));
-            
-            identityStore.UpsertIdentity(
-                match,
+
+            var person = (PersistedPerson)identityStore.CreatePerson(
                 new[]
                 {
-                    keyIdentity,
-                    new PersistedSimpleIdentity{ IdentityKind = new IdentityKind { ExternalId = identityExternalId2}, Value = "Updated" }
+                    new PersistedSimpleIdentity
+                    {
+                        IdentityKindId = identityKindId1,
+                        Value = "theKey"
+                    }
                 });
 
-            var found = identityStore.FindExisitingIdentiesFor(
-                match,
-                new [] { keyIdentity }
-            );
-            
-            Assert.Contains(
-                found.Cast<PersistedSimpleIdentity>(),
-                id =>
-                    id.Value == "Updated" &&
-                    id.IdentityKind.ExternalId == identityExternalId2
-                    
-            );
+            var saved = 
+                db.AsTransaction(
+                s =>
+                {
+                    var loaded = s.Get<PersistedPerson>(person.Id);
+                    NHibernateUtil.Initialize(loaded.Identities);
+                    NHibernateUtil.Initialize(loaded.SubjectIdentifiers);
+                    return loaded;
+                });
+
+            Assert.NotNull(saved);
+            Assert.Single(
+                saved.Identities,
+                i => i.IdentityKindId == identityKindId1 && ((PersistedSimpleIdentity) i).Value == "theKey");
+            Assert.Empty(saved.SubjectIdentifiers);
+
         }
     }
 }

@@ -1,13 +1,13 @@
 ﻿using System;
-using CHC.Consent.Common.Identity;
+using CHC.Consent.Identity.Core;
 
 namespace CHC.Consent.NHibernate.Identity
 {
-    public abstract class PersistedIdentity 
+    public abstract class PersistedIdentity : IIdentity 
     {
         public virtual long Id { get; set; }
-        public virtual IdentityKind IdentityKind { get; set; }
+        public virtual Guid IdentityKindId { get; set; }
         public virtual PersistedPerson Person { get; set; }
-        public abstract bool HasSameValueAs(Common.Identity.IIdentity newIdentity);
+        public abstract bool HasSameValueAs(IIdentity newIdentity);
     }
 }

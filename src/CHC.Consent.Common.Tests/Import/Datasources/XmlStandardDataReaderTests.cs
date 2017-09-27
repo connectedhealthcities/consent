@@ -4,7 +4,6 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using CHC.Consent.Common.Core;
-using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Import;
 using CHC.Consent.Common.Import.Datasources;
 using CHC.Consent.Common.Import.Match;
@@ -75,11 +74,11 @@ namespace CHC.Consent.Common.Tests.Import.Datasources
             var matchIdentity = person.MatchIdentity.First();
             var matchStudyIdentity = person.MatchStudyIdentity.First(); 
 
-            Assert.IsType<IdentityKindId>(matchIdentity );
-            Assert.Equal("id", ((IdentityKindId)matchIdentity).Id);
+            Assert.IsType<MatchByIdentityKindIdRecord>(matchIdentity );
+            Assert.Equal("id", ((MatchByIdentityKindIdRecord)matchIdentity).IdentityKindExternalId);
 
-            Assert.IsType<IdentityKindId>(matchStudyIdentity);
-            Assert.Equal("id", ((IdentityKindId)matchStudyIdentity).Id);
+            Assert.IsType<MatchByIdentityKindIdRecord>(matchStudyIdentity);
+            Assert.Equal("id", ((MatchByIdentityKindIdRecord)matchStudyIdentity).IdentityKindExternalId);
         }
 
 

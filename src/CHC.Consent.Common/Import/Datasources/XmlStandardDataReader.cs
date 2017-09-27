@@ -33,7 +33,6 @@ namespace CHC.Consent.Common.Import.Datasources
         
         private readonly FileDatasource datasource;
         
-
         public XmlStandardDataReader(FileDatasource datasource)
         {
             this.datasource = datasource;
@@ -68,7 +67,7 @@ namespace CHC.Consent.Common.Import.Datasources
             }
         }
 
-        private IEnumerable<Match.Match> ReadMatches(XContainer matchIdentities)
+        private IEnumerable<MatchRecord> ReadMatches(XContainer matchIdentities)
         {
             if (matchIdentities == null)
             {
@@ -81,7 +80,11 @@ namespace CHC.Consent.Common.Import.Datasources
                 {
                     if (logicElement.Name == X.IdentityKindId)
                     {
-                        yield return new IdentityKindId{Id = logicElement.Value};
+                        
+                        yield return new MatchByIdentityKindIdRecord
+                        {
+                            IdentityKindExternalId = logicElement.Value
+                        };
                     }
                 }
             }

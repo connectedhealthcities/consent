@@ -1,8 +1,9 @@
 ﻿using System;
+using CHC.Consent.Identity.Core;
 
 namespace CHC.Consent.Common.Identity
 {
-    public class IdentityKind
+    public class IdentityKind : IIdentityKind
     {
         public virtual IdentityKindFormat Format { get; set; }
         public virtual string ExternalId { get; set; }

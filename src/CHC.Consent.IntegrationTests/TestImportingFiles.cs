@@ -12,6 +12,7 @@ using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Import;
 using CHC.Consent.Common.Import.Watchers;
 using CHC.Consent.Common.SubjectIdentifierCreation;
+using CHC.Consent.Identity.Core;
 using CHC.Consent.NHibernate;
 using CHC.Consent.NHibernate.Identity;
 using Xunit;
@@ -127,7 +128,7 @@ namespace CHC.Consent.IntegrationTests
 
         private IPerson CreateNewPerson(IImportRecord importRecord)
         {
-            identityStore.UpsertIdentity(importRecord.MatchIdentity, importRecord.Identities);
+            identityStore.CreatePerson(importRecord.Identities);
         }
 
         private static void RecordConsentFor(ISubjectIdentifier subjectIdentifer, IReadOnlyList<Evidence> importRecord)
@@ -136,14 +137,14 @@ namespace CHC.Consent.IntegrationTests
             throw new NotImplementedException();
         }
 
-        private ISubjectIdentifier GetNewSubjectIdentifer(IStudy study)
+        private string GetNewSubjectIdentifer(IStudy study)
         {
-            return new SubjectIdentifier(study, subjectIdentfierAllocator.AllocateNewIdentifier(study));
+            return subjectIdentfierAllocator.AllocateNewIdentifier(study);
         }
 
         private bool IsNewPerson(IImportRecord importRecord)
         {
-            return identityStore.FindExisitingIdentiesFor(importRecord.MatchIdentity, importRecord.Identities) == null;
+            return identityStore.FindPerson(importRecord.MatchIdentity) == null;
         }
 
         public IStudy CreateStudy()

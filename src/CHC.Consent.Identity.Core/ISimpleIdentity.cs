@@ -1,4 +1,4 @@
-﻿namespace CHC.Consent.Common.Identity
+﻿namespace CHC.Consent.Identity.Core
 {
     public interface ISimpleIdentity : IIdentity
     {

@@ -54,18 +54,14 @@ namespace CHC.Consent.NHibernate.Tests
         public void TestSimpleIdentityPersistence()
         {
             object id = null;
+            var identityKindId = Guid.NewGuid();
             db.AsTransaction(
                 _ =>
                 {
-                    var identityKind =
-                        new IdentityKind {Format = IdentityKindFormat.Simple, ExternalId = "chc:external:testing"};
-                    
-                    _.Save(identityKind);
-
                     id = _.Save(
                         new PersistedSimpleIdentity
                         {
-                            IdentityKind = identityKind,
+                            IdentityKindId = identityKindId,
                             Value = "simple value"
                         });
 
@@ -76,12 +72,11 @@ namespace CHC.Consent.NHibernate.Tests
                 session =>
                 {
                     var simpleIdentity = session.Get<PersistedIdentity>(id);
-                    NHibernateUtil.Initialize(simpleIdentity.IdentityKind);
-
+                    
                     Assert.NotEqual(default(long), simpleIdentity.Id);
                     Assert.IsType<PersistedSimpleIdentity>(simpleIdentity);
 
-                    Assert.Equal("chc:external:testing", simpleIdentity.IdentityKind.ExternalId);
+                    Assert.Equal(identityKindId, simpleIdentity.IdentityKindId);
                     Assert.Equal("simple value", ((PersistedSimpleIdentity) simpleIdentity).Value);
                 }
             );
