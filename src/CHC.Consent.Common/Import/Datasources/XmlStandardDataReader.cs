@@ -60,7 +60,7 @@ namespace CHC.Consent.Common.Import.Datasources
                     person.Identities.AddRange(ReadIdentities(currentNode));
                     
                     person.MatchIdentity = ReadMatches(currentNode.Element(X.MatchIdenty)).ToArray();
-                    person.MatchStudyIdentity = ReadMatches(currentNode.Element(X.MatchStudyIdentity)).ToArray();
+                    person.MatchStudyIdentity = ReadIdentityElements(currentNode.Element(X.MatchStudyIdentity)).ToArray();
 
                     yield return person;
                 }
@@ -76,18 +76,26 @@ namespace CHC.Consent.Common.Import.Datasources
             }
             foreach (var matchElement in matchIdentities.Elements(X.Match))
             {
-                foreach (var logicElement in matchElement.Elements())
-                {
-                    if (logicElement.Name == X.IdentityKindId)
-                    {
-                        
-                        yield return new MatchByIdentityKindIdRecord
-                        {
-                            IdentityKindExternalId = logicElement.Value
-                        };
-                    }
-                }
+                foreach (var matchRecord in ReadIdentityElements(matchElement)) yield return matchRecord;
             }
+        }
+
+        private static IEnumerable<MatchByIdentityKindIdRecord> ReadIdentityElements(XElement matchElement)
+        {
+            //TODO logging of wrong elements  
+            return
+                from logicElement in matchElement.Elements()
+                where IsIdentityKindId(logicElement)
+                select
+                    new MatchByIdentityKindIdRecord
+                    {
+                        IdentityKindExternalId = logicElement.Value
+                    };
+        }
+
+        private static bool IsIdentityKindId(XElement logicElement)
+        {
+            return logicElement.Name == X.IdentityKindId;
         }
 
         private IEnumerable<IdentityRecord> ReadIdentities(XContainer person)

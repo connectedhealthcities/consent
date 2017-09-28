@@ -9,6 +9,6 @@ namespace CHC.Consent.Common.Import
         IReadOnlyList<IdentityRecord> Identities { get; }
         IReadOnlyList<Evidence.Evidence> Evidence { get; }
         IReadOnlyList<Match.MatchRecord> MatchIdentity { get; }
-        IReadOnlyList<Match.MatchRecord> MatchStudyIdentity { get; }
+        IReadOnlyList<Match.MatchByIdentityKindIdRecord> MatchStudyIdentity { get; }
     }
 }

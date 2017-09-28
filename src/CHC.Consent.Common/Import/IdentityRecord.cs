@@ -2,11 +2,11 @@ namespace CHC.Consent.Common.Import
 {
     public abstract class IdentityRecord 
     {
-        protected IdentityRecord(string identityKindId)
+        protected IdentityRecord(string identityKindExternalId)
         {
-            IdentityKindId = identityKindId;
+            IdentityKindExternalId = identityKindExternalId;
         }
 
-        public string IdentityKindId { get; }
+        public string IdentityKindExternalId { get; }
     }
 }

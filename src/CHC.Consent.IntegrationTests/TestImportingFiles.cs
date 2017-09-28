@@ -100,24 +100,22 @@ namespace CHC.Consent.IntegrationTests
 
         private void HandleNewData(object sender, NewDataEventArgs e)
         {
-            var study = e.Datasource.Study;
-            var people = e.Datasource.People;
-            Import(people, study);
+            Import(e.Datasource);
         }
 
-        private void Import(IEnumerable<IImportRecord> records, IStudy study)
+        private void Import(IStandardDataDatasource datasource)
         {
-            foreach (var record in records)
+            foreach (var specification in new ImportFileReader(datasource, new IdentityKindStore(dbSessionFactory)))
             {
-                if (IsNewPerson(record))
+                if (IsNewPerson(specification))
                 {
-                    var person = CreateNewPerson(record);
+                    var person = CreateNewPerson(specification);
                     
-                    var subjectIdentifer = GetNewSubjectIdentifer(study);
+                    var subjectIdentifer = GetNewSubjectIdentifer(datasource.Study);
 
-                    StoreSubjectIdentifier(person, subjectIdentifer);
+                    StoreSubjectIdentifier(datasource.Study, person, subjectIdentifer);
 
-                    RecordConsentFor(subjectIdentifer, record.Evidence);
+                    RecordConsentFor(subjectIdentifer, specification.Evidence);
                 }
                 else
                 {
@@ -126,9 +124,9 @@ namespace CHC.Consent.IntegrationTests
             }
         }
 
-        private IPerson CreateNewPerson(IImportRecord importRecord)
+        private IPerson CreateNewPerson(PersonSpecification specification)
         {
-            identityStore.CreatePerson(importRecord.Identities);
+            return identityStore.CreatePerson(specification.Identities);
         }
 
         private static void RecordConsentFor(ISubjectIdentifier subjectIdentifer, IReadOnlyList<Evidence> importRecord)
@@ -142,9 +140,9 @@ namespace CHC.Consent.IntegrationTests
             return subjectIdentfierAllocator.AllocateNewIdentifier(study);
         }
 
-        private bool IsNewPerson(IImportRecord importRecord)
+        private bool IsNewPerson(PersonSpecification specification)
         {
-            return identityStore.FindPerson(importRecord.MatchIdentity) == null;
+            return identityStore.FindPerson(specification.MatchIdentity) == null;
         }
 
         public IStudy CreateStudy()

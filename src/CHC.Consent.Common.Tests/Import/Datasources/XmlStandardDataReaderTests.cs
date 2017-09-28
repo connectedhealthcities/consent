@@ -56,7 +56,7 @@ namespace CHC.Consent.Common.Tests.Import.Datasources
             Assert.NotEmpty(person.Identities);
             var identity = person.Identities.Single();
 
-            Assert.Equal("id", identity.IdentityKindId);
+            Assert.Equal("id", identity.IdentityKindExternalId);
             Assert.IsType<SimpleIdentityRecord>(identity);
             Assert.Equal("value", ((SimpleIdentityRecord) identity).Value);
         }

@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
+using CHC.Consent.Common.Import.Match;
 using CHC.Consent.Identity.Core;
 
 namespace CHC.Consent.Common.Import
@@ -17,61 +19,93 @@ namespace CHC.Consent.Common.Import
             this.identityKinds = identityKinds;
         }
 
+        public class SimpleIdentitySpecification : ISimpleIdentity
+        {
+            public SimpleIdentitySpecification(Guid identityKindId, string value)
+            {
+                Value = value;
+                IdentityKindId = identityKindId;
+            }
 
+            public Guid IdentityKindId { get;  }
+            public string Value { get;  }
+        }
+
+        public IEnumerable<PersonSpecification> People()
+        {
+            return source.People.Select(Convert);
+        }
+        
+        public PersonSpecification Convert(IImportRecord record)
+        {
+            var identities = record.Identities.Select(Convert).ToList();
+            return new PersonSpecification
+            {
+                Identities = identities,
+                MatchIdentity = record.MatchIdentity.Select(_ => Convert(_, identities)).ToList(),
+                MatchSubjectIdentity = record.MatchStudyIdentity.Select(_ => GetIdentityFor(_, identities)).ToList()
+            };
+        }
+
+        private IMatch Convert(MatchRecord record, IEnumerable<IIdentity> identities)
+        {
+            if (record is MatchByIdentityKindIdRecord byIdKindId)
+            {
+                return Convert(byIdKindId, identities);
+            }
+            throw new NotImplementedException($"Cannot convert Match from {record.GetType()}");
+        }
+
+        /// <remarks>
+        /// TODO: match identity by referenced ID from document
+        /// TODO: what if match is an invalid external id
+        /// TODO: what if the references are incorrect?
+        /// </remarks>
+        private IIdentityMatch Convert(MatchByIdentityKindIdRecord byIdKindId, IEnumerable<IIdentity> identities)
+        {
+            var identity = GetIdentityFor(byIdKindId, identities);
+            return
+                new IdentityMatch
+                {
+                    Match = identity
+                };
+        }
+
+        private IIdentity GetIdentityFor(MatchByIdentityKindIdRecord byIdKindId, IEnumerable<IIdentity> identities)
+        {
+            var id = identityKinds.FindIdentityKindByExternalId(byIdKindId.IdentityKindExternalId).Id;
+
+            var identity = identities.Single(_ => _.IdentityKindId == id);
+            return identity;
+        }
+
+        private class IdentityMatch : IIdentityMatch
+        {
+            /// <inheritdoc />
+            public IIdentity Match { get; set; }
+        }
+
+        public IIdentity Convert(IdentityRecord record)
+        {
+            //TODO: what if external id is invalid?
+            var identityKindId = identityKinds.FindIdentityKindByExternalId(record.IdentityKindExternalId).Id;
+
+            if(record is SimpleIdentityRecord simple)
+            {
+                return new SimpleIdentitySpecification(identityKindId, simple.Value);
+            }
+            
+            //TODO: report error rather than throwing error?
+            throw new InvalidOperationException($"Cannot convert IdentityRecord of type {record.GetType()}");
+        }
+        
         public IEnumerator<PersonSpecification> GetEnumerator()
         {
-            return new ImportFileEnumerator(source, identityKinds);
+            return People().GetEnumerator();
         }
 
-        public class ImportFileEnumerator : IEnumerator<PersonSpecification>
-        {
-            private IEnumerator<IImportRecord> sourceEnumerator;
-            public IStandardDataDatasource Source { get; }
-            public IIdentityKindStore IdentityKinds { get; }
-
-            public ImportFileEnumerator(IStandardDataDatasource source, IIdentityKindStore identityKinds)
-            {
-                Source = source;
-                sourceEnumerator = source.People.GetEnumerator();
-                IdentityKinds = identityKinds;
-            }
-
-            public bool MoveNext()
-            {
-                if (!sourceEnumerator.MoveNext())
-                {
-                    Current = null;
-                    return false;
-                }
-
-                Current = Convert(sourceEnumerator.Current);
-                return true;
-            }
-
-            public PersonSpecification Convert(IImportRecord import)
-            {
-                return new PersonSpecification
-                {
-                    
-                };
-            }
-
-            public void Reset()
-            {
-                throw new NotSupportedException();
-            }
-
-            public PersonSpecification Current { get; set; }
-            object IEnumerator.Current => Current;
-            public void Dispose()
-            {
-                sourceEnumerator.Dispose();
-            }
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
+
+    
 }

@@ -4,7 +4,7 @@
     {
         public string Value { get; }
 
-        public SimpleIdentityRecord(string identityKindId, string value) : base(identityKindId)
+        public SimpleIdentityRecord(string identityKindExternalId, string value) : base(identityKindExternalId)
         {
             Value = value;
         }

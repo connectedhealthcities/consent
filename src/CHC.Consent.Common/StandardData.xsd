@@ -92,7 +92,13 @@
                 </xs:complexType>
             </xs:element>
             <xs:element name="matchIdentity" type="match"/>
-            <xs:element name="matchStudyIdentity" type="match"/>
+            <xs:element name="matchStudyIdentity">
+                <xs:complexType>
+                    <xs:sequence minOccurs="1" maxOccurs="unbounded">
+                        <xs:group ref="logicIdentifiers" />
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
         </xs:sequence>
     </xs:complexType>
     <xs:element name="people">
