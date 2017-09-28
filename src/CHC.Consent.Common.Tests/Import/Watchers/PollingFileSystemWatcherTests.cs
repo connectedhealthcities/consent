@@ -7,6 +7,7 @@ using CHC.Consent.Common.Core;
 using CHC.Consent.Common.Import;
 using CHC.Consent.Common.Import.Datasources;
 using CHC.Consent.Common.Import.Watchers;
+using CHC.Consent.Common.Tests.Import.Utils;
 using Xunit;
 
 namespace CHC.Consent.Common.Tests.Import.Watchers
@@ -19,7 +20,7 @@ namespace CHC.Consent.Common.Tests.Import.Watchers
             public Queue<string[]> Files { get; } = new Queue<string[]>();
             
             public PollingFileSystemWatcherStub(CancellationTokenSource cancellationTokenSource) 
-                : base("", new Study(), TimeSpan.MaxValue, cancellationTokenSource.Token)
+                : base("", new StudyStub(), TimeSpan.MaxValue, cancellationTokenSource.Token)
             {
                 this.cancellationTokenSource = cancellationTokenSource;
             }

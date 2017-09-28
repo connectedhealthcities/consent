@@ -2,4 +2,10 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CHC.Consent.Core\CHC.Consent.Core.csproj">
+      <Project>{B75A35F5-BDBC-4401-BC6D-F07830D8C547}</Project>
+      <Name>CHC.Consent.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

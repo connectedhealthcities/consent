@@ -10,19 +10,23 @@ namespace CHC.Consent.NHibernate.Identity
     public class PersistedPerson : IPerson
     {
         public virtual Guid Id { get; set; }
-        public virtual ICollection<PersistedIdentity> Identities { get; protected set; } = new List<PersistedIdentity>();
+
+        public virtual ICollection<PersistedIdentity> Identities { get; protected set; } =
+            new List<PersistedIdentity>();
+
         IEnumerable<IIdentity> IPerson.Identities => Identities;
 
-        public virtual ICollection<PersistedSubjectIdentifier> SubjectIdentifiers { get; protected set; } = new List<PersistedSubjectIdentifier>();
+        public virtual ICollection<PersistedSubjectIdentifier> SubjectIdentifiers { get; protected set; } =
+            new List<PersistedSubjectIdentifier>();
+
         IEnumerable<ISubjectIdentifier> IPerson.SubjectIdentifiers => SubjectIdentifiers;
 
 
-        public virtual ISubjectIdentifier AddSubjectIdentifier(IStudy study, string subjectIdentifier, IEnumerable<IIdentity> identifiers)
+        /// <summary>
+        /// For persistence/rehydration
+        /// </summary>
+        protected PersistedPerson()
         {
-            //TODO:Check for existing identifier for identifiers
-            var persisted = new PersistedSubjectIdentifier(this, study.Id, subjectIdentifier, identifiers.Select(FindIdentity));
-            SubjectIdentifiers.Add(persisted);
-            return persisted;
         }
 
         public PersistedPerson(IEnumerable<IIdentity> identities)
@@ -41,13 +45,23 @@ namespace CHC.Consent.NHibernate.Identity
                 }
                 else
                 {
-                    throw new InvalidOperationException($"Cannot create a person from identity type {identity.GetType()}");
+                    throw new InvalidOperationException(
+                        $"Cannot create a person from identity type {identity.GetType()}");
                 }
             }
         }
 
-        protected PersistedPerson()
+        /// <remarks>TODO:Check for existing identifier for identifiers</remarks>
+        public virtual ISubjectIdentifier AddSubjectIdentifier(
+            IStudy study, string subjectIdentifier, IEnumerable<IIdentity> identifiers)
         {
+            var persisted = new PersistedSubjectIdentifier(
+                this,
+                study.Id,
+                subjectIdentifier,
+                identifiers.Select(FindIdentity));
+            SubjectIdentifiers.Add(persisted);
+            return persisted;
         }
 
         private PersistedIdentity FindIdentity(IIdentity existingIdentity)
@@ -57,7 +71,5 @@ namespace CHC.Consent.NHibernate.Identity
                      && _.HasSameValueAs(existingIdentity)
             );
         }
-
-        
     }
 }

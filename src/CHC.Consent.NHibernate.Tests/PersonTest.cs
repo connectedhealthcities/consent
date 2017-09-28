@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using CHC.Consent.Common.Core;
 using CHC.Consent.Identity.Core;
 using CHC.Consent.NHibernate.Identity;
 using NHibernate.Linq;
@@ -12,8 +13,14 @@ namespace CHC.Consent.NHibernate.Tests
     {
         private class SimpleIdentity : ISimpleIdentity
         {            
-            public Guid IdentityKindId { get; set; }
+            public Guid IdentityKindId { get; set; } = Guid.NewGuid();
             public string Value { get; set; }
+        }
+
+        private class Study : IStudy
+        {
+            /// <inheritdoc />
+            public Guid Id { get; set; }
         }
 
         private readonly DatabaseFixture db;
@@ -27,7 +34,7 @@ namespace CHC.Consent.NHibernate.Tests
         public void ANewPersonHasIdentities()
         {
             var person = new PersistedPerson(
-                new[] {new SimpleIdentity {IdentityKindId = Guid.NewGuid(), Value = "Test"},});
+                new[] {new SimpleIdentity { Value = "Test"},});
             
             Assert.NotEmpty(person.Identities);
             Assert.Single(
@@ -42,7 +49,7 @@ namespace CHC.Consent.NHibernate.Tests
                 s =>
                     s.Save(
                         new PersistedPerson(
-                            new[] {new SimpleIdentity {IdentityKindId = Guid.NewGuid(), Value = "Test Save"}})));
+                            new[] {new SimpleIdentity { Value = "Test Save"}})));
 
             var identities = db.AsTransaction(
                 s => s.Query<PersistedIdentity>().Where(_ => _.Person.Id == personId).ToArray());
@@ -51,6 +58,33 @@ namespace CHC.Consent.NHibernate.Tests
                 identities,
                 _ => _.IdentityKindId != Guid.Empty && ((PersistedSimpleIdentity) _).Value == "Test Save");
 
+        }
+
+        [Fact]
+        public void APersonCanAddNewSubjectIdentifiers()
+        {
+            var subjectIdentifierIdentity = new SimpleIdentity {Value = "Subject Identifier Identity"};
+            var study = new Study {Id = Guid.NewGuid()};
+            var person = new PersistedPerson(
+                new[]
+                {
+                    new SimpleIdentity {Value = "Something"},
+                    subjectIdentifierIdentity,
+                });
+
+
+            var addedSubjectIdentifier = person.AddSubjectIdentifier(
+                study,
+                "Subject Identifier",
+                new[] {subjectIdentifierIdentity});
+
+
+            Assert.Equal(study.Id, addedSubjectIdentifier.StudyId);
+            Assert.Equal("Subject Identifier", addedSubjectIdentifier.SubjectIdentifier);
+            Assert.Single(
+                addedSubjectIdentifier.Identities,
+                id => id.IdentityKindId == subjectIdentifierIdentity.IdentityKindId &&
+                      ((ISimpleIdentity) id).Value == subjectIdentifierIdentity.Value);
         }
     }
 }

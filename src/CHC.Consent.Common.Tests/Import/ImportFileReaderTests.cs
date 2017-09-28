@@ -6,6 +6,7 @@ using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Import;
 using CHC.Consent.Common.Import.Datasources;
 using CHC.Consent.Common.Import.Match;
+using CHC.Consent.Common.Tests.Import.Utils;
 using CHC.Consent.Identity.Core;
 using Xunit;
 
@@ -19,7 +20,7 @@ namespace CHC.Consent.Common.Tests.Import
 
             public WhenImportingAnEmptySource()
             {
-                converted = new ImportFileReader(new InlineDataSource(new Study()), new InMemoryIdentityKindStore()).ToArray();
+                converted = new ImportFileReader(new InlineDataSource(new StudyStub()), new InMemoryIdentityKindStore()).ToArray();
             }
 
             [Fact]
@@ -36,7 +37,7 @@ namespace CHC.Consent.Common.Tests.Import
             public WhenImportingASingleEmptyRecord()
             {
                 converted = new ImportFileReader(new InlineDataSource(
-                    new Study(), 
+                    new StudyStub(), 
                     new XmlImportRecord()), new InMemoryIdentityKindStore()).ToArray();
             }
 
@@ -58,7 +59,7 @@ namespace CHC.Consent.Common.Tests.Import
                 
                 converted = new ImportFileReader(
                         new InlineDataSource(
-                            new Study(),
+                            new StudyStub(),
                             new XmlImportRecord
                             {
                                 Identities =
@@ -113,7 +114,7 @@ namespace CHC.Consent.Common.Tests.Import
 
                 converted = new ImportFileReader(
                         new InlineDataSource(
-                            new Study(),
+                            new StudyStub(),
                             new XmlImportRecord
                             {
                                 Identities =

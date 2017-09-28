@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using System.Linq;
-using CHC.Consent.Common.Evidence;
-using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Import.Match;
 
 namespace CHC.Consent.Common.Import.Datasources
 {
@@ -12,7 +10,9 @@ namespace CHC.Consent.Common.Import.Datasources
 
         public List<Evidence.Evidence> Evidence { get; } = new List<Evidence.Evidence>();
         IReadOnlyList<Evidence.Evidence> IImportRecord.Evidence => Evidence;
-        public IReadOnlyList<Match.MatchRecord> MatchIdentity { get; set; }
-        public IReadOnlyList<Match.MatchByIdentityKindIdRecord> MatchStudyIdentity { get; set; }
+        public IReadOnlyList<MatchRecord> MatchIdentity { get; set; } = new MatchRecord[0];
+
+        public IReadOnlyList<MatchByIdentityKindIdRecord> MatchStudyIdentity { get; set; } =
+            new MatchByIdentityKindIdRecord[0];
     }
 }

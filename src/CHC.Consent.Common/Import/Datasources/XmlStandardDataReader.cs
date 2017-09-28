@@ -82,6 +82,7 @@ namespace CHC.Consent.Common.Import.Datasources
 
         private static IEnumerable<MatchByIdentityKindIdRecord> ReadIdentityElements(XElement matchElement)
         {
+            if (matchElement == null) return Enumerable.Empty<MatchByIdentityKindIdRecord>();
             //TODO logging of wrong elements  
             return
                 from logicElement in matchElement.Elements()

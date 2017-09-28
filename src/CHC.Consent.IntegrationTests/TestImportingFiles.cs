@@ -7,15 +7,17 @@ using System.Reflection;
 using System.ServiceModel.Channels;
 using System.Threading;
 using CHC.Consent.Common.Core;
-using CHC.Consent.Common.Evidence;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Import;
 using CHC.Consent.Common.Import.Watchers;
 using CHC.Consent.Common.SubjectIdentifierCreation;
 using CHC.Consent.Identity.Core;
 using CHC.Consent.NHibernate;
+using CHC.Consent.NHibernate.Consent;
 using CHC.Consent.NHibernate.Identity;
 using Xunit;
+using Evidence = CHC.Consent.Common.Evidence.Evidence;
+using Study = CHC.Consent.NHibernate.Consent.Study;
 
 namespace CHC.Consent.IntegrationTests
 {
@@ -58,6 +60,7 @@ namespace CHC.Consent.IntegrationTests
         private readonly CancellationTokenSource cancellationTokenSource;
         private ISubjectIdentfierAllocator subjectIdentfierAllocator;
         private IIdentityStore identityStore;
+        private IConsentStore consentStore;
         private readonly Configuration dbSessionFactory;
         public CancellationToken CancellationToken => cancellationTokenSource.Token;
         private BlockingCollection<IWatcher> Watchers { get; } = new BlockingCollection<IWatcher>();
@@ -71,6 +74,7 @@ namespace CHC.Consent.IntegrationTests
             dbSessionFactory.Create();
             
             identityStore = new NHibernateIdentityStore(dbSessionFactory);
+            consentStore = new NHibernateConsentStore(dbSessionFactory);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -105,7 +109,7 @@ namespace CHC.Consent.IntegrationTests
 
         private void Import(IStandardDataDatasource datasource)
         {
-            foreach (var specification in new ImportFileReader(datasource, new IdentityKindStore(dbSessionFactory)))
+            foreach (var specification in Transform(datasource))
             {
                 if (IsNewPerson(specification))
                 {
@@ -113,9 +117,9 @@ namespace CHC.Consent.IntegrationTests
                     
                     var subjectIdentifer = GetNewSubjectIdentifer(datasource.Study);
 
-                    StoreSubjectIdentifier(datasource.Study, person, subjectIdentifer);
+                    var personIdentifier = StoreSubjectIdentifier(datasource.Study, person, subjectIdentifer, specification.MatchSubjectIdentity);
 
-                    RecordConsentFor(subjectIdentifer, specification.Evidence);
+                    RecordConsentFor(personIdentifier, specification.Evidence);
                 }
                 else
                 {
@@ -124,15 +128,25 @@ namespace CHC.Consent.IntegrationTests
             }
         }
 
+        private ISubjectIdentifier StoreSubjectIdentifier(IStudy study, IPerson person, string subjectIdentifer, List<IIdentity> identities)
+        {
+            return person.AddSubjectIdentifier(study, subjectIdentifer, identities);
+        }
+
+        private ImportFileReader Transform(IStandardDataDatasource datasource)
+        {
+            return new ImportFileReader(datasource, new IdentityKindStore(dbSessionFactory));
+        }
+
         private IPerson CreateNewPerson(PersonSpecification specification)
         {
             return identityStore.CreatePerson(specification.Identities);
         }
 
-        private static void RecordConsentFor(ISubjectIdentifier subjectIdentifer, IReadOnlyList<Evidence> importRecord)
+        private void RecordConsentFor(ISubjectIdentifier subjectIdentifer, IReadOnlyList<IEvidence> evidence)
         {
             //TODO: record consent for identifier
-            throw new NotImplementedException();
+            consentStore.RecordConsent(subjectIdentifer.StudyId, subjectIdentifer.SubjectIdentifier, evidence.AsEnumerable());
         }
 
         private string GetNewSubjectIdentifer(IStudy study)

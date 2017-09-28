@@ -3,10 +3,10 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
-using CHC.Consent.Common.Core;
 using CHC.Consent.Common.Import;
 using CHC.Consent.Common.Import.Datasources;
 using CHC.Consent.Common.Import.Match;
+using CHC.Consent.Common.Tests.Import.Utils;
 using Xunit;
 using Xunit.Abstractions;
  
@@ -78,12 +78,16 @@ namespace CHC.Consent.Common.Tests.Import.Datasources
             Assert.Equal("id", ((MatchByIdentityKindIdRecord)matchIdentity).IdentityKindExternalId);
 
             Assert.IsType<MatchByIdentityKindIdRecord>(matchStudyIdentity);
-            Assert.Equal("id", ((MatchByIdentityKindIdRecord)matchStudyIdentity).IdentityKindExternalId);
+            Assert.Equal("id", matchStudyIdentity.IdentityKindExternalId);
         }
 
 
         private static XElement XPerson(
-            XElement identities = null, XElement matchIdentity = null, XElement matchStudyIdentity = null)
+            XElement identities = null, 
+            XElement matchIdentity = null, 
+            XElement matchStudyIdentity = null,
+            XElement evidence = null
+            )
         {
             var person = new XElement(X.Person);
             if(identities != null)
@@ -92,6 +96,8 @@ namespace CHC.Consent.Common.Tests.Import.Datasources
                 person.Add(matchIdentity);
             if(matchStudyIdentity != null)
                 person.Add(matchStudyIdentity);
+            if(evidence != null)
+                person.Add(evidence);
 
             return person;
         }
@@ -101,9 +107,9 @@ namespace CHC.Consent.Common.Tests.Import.Datasources
             return new XElement(X.IdentityKindId, id);
         }
         
-        private static XElement XMatchStudyIdentity(params XElement[] matches)
+        private static XElement XMatchStudyIdentity(params XElement[] identifierReferences)
         {
-            return matches.Any() ? new XElement(X.MatchStudyIdentity,  matches.Select(_ => new XElement(X.Match, _))) : null;
+            return identifierReferences.Any() ? new XElement(X.MatchStudyIdentity,  identifierReferences) : null;
         }
 
         private static XElement XMatchIdentity(params XElement[] matches)
@@ -145,13 +151,12 @@ namespace CHC.Consent.Common.Tests.Import.Datasources
             return people;
         }
 
-
         class XmlStandardDataReaderFromString : XmlStandardDataReader
         {
             private readonly XNode source;
             private readonly ITestOutputHelper output;
 
-            public XmlStandardDataReaderFromString(XNode source, ITestOutputHelper output) : base(new FileDatasource(string.Empty, new Study()))
+            public XmlStandardDataReaderFromString(XNode source, ITestOutputHelper output) : base(new FileDatasource(string.Empty, new StudyStub()))
             {
                 this.source = source;
                 this.output = output;

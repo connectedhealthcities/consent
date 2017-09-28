@@ -1,11 +1,17 @@
-﻿namespace CHC.Consent.Common.Core
+﻿using System;
+using System.Collections.Generic;
+
+namespace CHC.Consent.Common.Core
 {
     public interface IConsent
     {
-        IStudy Study { get; }
+        Guid StudyId { get; }
         string SubjectIdentifier { get; }
         
-        IEvidence ProvidedEvidence { get; }
-        IEvidence WithdrawnEvidence { get; }
+        DateTimeOffset DateProvisionRecorded { get; }
+        IEnumerable<IEvidence> ProvidedEvidence { get; }
+        
+        DateTimeOffset? DateWithdrawlRecorded { get; }
+        IEnumerable<IEvidence> WithdrawnEvidence { get; }
     }
 }

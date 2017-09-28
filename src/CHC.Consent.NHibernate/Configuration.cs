@@ -105,7 +105,31 @@ namespace CHC.Consent.NHibernate
             var mapper = new ChcConventionsModelMapper();
 
             mapper.Class<IdentityKind>(m => { m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid)); });
-            mapper.Class<Study>(m => { m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid)); });
+            mapper.Class<Consent.Study>(m => { m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid)); });
+            mapper.Class<Consent.Consent>(
+                m =>
+                {
+                    m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid));
+                    m.Bag(_ => _.ProvidedEvidence, 
+                        e =>
+                        {
+                            e.Cascade(Cascade.All | Cascade.DeleteOrphans);
+                            e.Table("Consent_ProvidedEvidence");
+                            e.Inverse(false);
+                        },
+                        j => j.ManyToMany());
+                    
+                    m.Bag(_ => _.WithdrawnEvidence, 
+                        e =>
+                        {
+                            e.Cascade(Cascade.All | Cascade.DeleteOrphans);
+                            e.Table("Consent_WithdrawnEvidence");
+                            e.Inverse(false);
+                        },
+                        j => j.ManyToMany());
+                    
+                });
+            mapper.Class<Consent.Evidence>(m => { m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid)); });
             mapper.Class<PersistedPerson>(m =>
             {
                 m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid));
@@ -145,6 +169,7 @@ namespace CHC.Consent.NHibernate
             
             mapper.IsTablePerClassHierarchy((s, b) => typeof(PersistedIdentity).IsAssignableFrom(s));
             
+            
             return mapper.CompileMappingFor(
                 new[]
                 {
@@ -153,7 +178,9 @@ namespace CHC.Consent.NHibernate
                     typeof(PersistedIdentity), 
                     typeof(PersistedSimpleIdentity), 
                     typeof(PersistedSubjectIdentifier),
-                    typeof(Study)
+                    typeof(Consent.Study),
+                    typeof(Consent.Consent),
+                    typeof(Consent.Evidence)
                 });
         }
     }

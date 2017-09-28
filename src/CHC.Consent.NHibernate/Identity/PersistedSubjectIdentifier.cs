@@ -9,7 +9,7 @@ namespace CHC.Consent.NHibernate.Identity
     {
         public virtual long Id { get; protected set; }
         public virtual Guid StudyId { get; protected set; }
-        public virtual string Identifier { get; protected set; }
+        public virtual string SubjectIdentifier { get; protected set; }
         
         public virtual PersistedPerson Person { get; protected set; }
 
@@ -32,7 +32,7 @@ namespace CHC.Consent.NHibernate.Identity
         {
             Person = person;
             StudyId = studyId;
-            Identifier = identifier;
+            SubjectIdentifier  = identifier;
             Identities = identities.ToArray();
         }
     }

@@ -1,4 +1,5 @@
-﻿using CHC.Consent.Common.Core;
+﻿using System;
+using CHC.Consent.Common.Core;
 using CHC.Consent.Common.Import.Datasources;
 using Xunit;
 
@@ -6,7 +7,12 @@ namespace CHC.Consent.Common.Tests.Import.Datasources
 {
     public class FileDatasourceTests
     {
-        readonly Study study = new Study();
+        private class Study:IStudy {
+            /// <inheritdoc />
+            public Guid Id { get; } = Guid.NewGuid();
+        }
+        
+        readonly IStudy study = new Study();
         
         [Fact]
         public void CreatesXmlDatasourceForXmlFiles()

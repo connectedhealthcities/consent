@@ -4,6 +4,7 @@ using Xunit;
 
 namespace CHC.Consent.NHibernate.Tests
 {
+    using Study = NHibernate.Consent.Study;
     [Collection(DatabaseCollection.Name)]
     public class StudyTest
     {
