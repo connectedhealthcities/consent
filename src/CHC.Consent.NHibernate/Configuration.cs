@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Xml.Serialization;
 using CHC.Consent.Common.Core;
 using CHC.Consent.Common.Identity;
@@ -94,6 +96,30 @@ namespace CHC.Consent.NHibernate
 
             private void UseNativeGenerator(IModelInspector inspector, Type type, IClassAttributesMapper customizer)
             {
+                var idMembers = MembersProvider.GetEntityMembersForPoid(type).Where(inspector.IsPersistentId).ToArray();
+                if (idMembers.Length > 1) return;
+                
+                var idMember = idMembers.FirstOrDefault();
+                if (idMember == null) return;
+
+                if (idMember is FieldInfo fieldInfo)
+                {
+                    if (fieldInfo.FieldType == typeof(Guid))
+                    {
+                        customizer.Id(id => id.Generator(Generators.Guid));
+                        return;
+                    }
+                }
+
+                if (idMember is PropertyInfo propertyInfo)
+                {
+                    if (propertyInfo.PropertyType == typeof(Guid))
+                    {
+                        customizer.Id(id => id.Generator(Generators.Guid));
+                        return;
+                    }
+                }
+                
                 customizer.Id(id => id.Generator(Generators.Native));
             }
             
@@ -106,6 +132,7 @@ namespace CHC.Consent.NHibernate
 
             mapper.Class<IdentityKind>(m => { m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid)); });
             mapper.Class<Consent.Study>(m => { m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid)); });
+            
             mapper.Class<Consent.Consent>(
                 m =>
                 {
@@ -130,6 +157,7 @@ namespace CHC.Consent.NHibernate
                     
                 });
             mapper.Class<Consent.Evidence>(m => { m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid)); });
+            mapper.Class<Consent.EvidenceKind>(m => { m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid)); });
             mapper.Class<PersistedPerson>(m =>
             {
                 m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid));
@@ -180,7 +208,8 @@ namespace CHC.Consent.NHibernate
                     typeof(PersistedSubjectIdentifier),
                     typeof(Consent.Study),
                     typeof(Consent.Consent),
-                    typeof(Consent.Evidence)
+                    typeof(Consent.Evidence),
+                    typeof(Consent.EvidenceKind)
                 });
         }
     }

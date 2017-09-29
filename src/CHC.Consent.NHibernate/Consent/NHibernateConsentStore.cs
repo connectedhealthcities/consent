@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using CHC.Consent.Common.Core;
+using CHC.Consent.Core;
+using NHibernate.Linq;
 
 namespace CHC.Consent.NHibernate.Consent
 {
-    public class NHibernateConsentStore : IConsentStore
+    public class NHibernateConsentStore : IConsentStore, IEvidenceKindStore
     {
         private readonly ISessionFactory sessionFactory;
 
@@ -32,6 +34,12 @@ namespace CHC.Consent.NHibernate.Consent
             return consent;
         }
 
-        
+
+        /// <inheritdoc />
+        public IEvidenceKind FindEvidenceKindByExternalId(string externalId)
+        {
+            return sessionFactory.AsTransaction(
+                s => s.Query<EvidenceKind>().FirstOrDefault(_ => _.ExternalId == externalId));
+        }
     }
 }

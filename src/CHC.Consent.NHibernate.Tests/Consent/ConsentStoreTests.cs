@@ -19,7 +19,6 @@ namespace CHC.Consent.NHibernate.Tests.Consent
         {
             this.db = db;
             this.store = new NHibernateConsentStore(db);
-            LoggerProvider.SetLoggersFactory(new OutputLoggerFactory(output));
         }
 
         [Fact]
@@ -49,6 +48,18 @@ namespace CHC.Consent.NHibernate.Tests.Consent
                 Assert.Null(saved.DateWithdrawlRecorded);
                 Assert.Empty(saved.WithdrawnEvidence);
             }
+        }
+
+        [Fact]
+        public void CanFindEvidenceKinds()
+        {
+            var externalId = "urn:chc:consent:evidence-kind:persistence:test:" + Guid.NewGuid();
+            var id = (Guid)db.AsTransaction(s => s.Save(new EvidenceKind {ExternalId = externalId}));
+
+            var found = store.FindEvidenceKindByExternalId(externalId);
+            Assert.NotNull(found);
+            Assert.Equal(id, found.Id);
+            Assert.Equal(externalId, found.ExternalId);
         }
     }
 }

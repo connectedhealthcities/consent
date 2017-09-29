@@ -5,9 +5,9 @@ namespace CHC.Consent.NHibernate.Consent
 {
     public class EvidenceKind : IEvidenceKind
     {
-        public virtual Guid Id { get; private set; }
+        public virtual Guid Id { get; protected set; }
 
         /// <inheritdoc />
-        public string ExternalId { get; set; }
+        public virtual string ExternalId { get; set; }
     }
 }
