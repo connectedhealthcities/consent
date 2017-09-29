@@ -16,7 +16,6 @@ using CHC.Consent.NHibernate;
 using CHC.Consent.NHibernate.Consent;
 using CHC.Consent.NHibernate.Identity;
 using Xunit;
-using Evidence = CHC.Consent.Common.Evidence.Evidence;
 using Study = CHC.Consent.NHibernate.Consent.Study;
 
 namespace CHC.Consent.IntegrationTests

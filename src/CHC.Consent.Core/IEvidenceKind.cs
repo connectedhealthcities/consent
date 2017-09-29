@@ -5,5 +5,6 @@ namespace CHC.Consent.Common.Core
     public interface IEvidenceKind
     {
         Guid Id { get; }
+        string ExternalId { get; }
     }
 }

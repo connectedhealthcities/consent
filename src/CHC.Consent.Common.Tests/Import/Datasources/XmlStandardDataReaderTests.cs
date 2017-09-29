@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
@@ -81,6 +82,25 @@ namespace CHC.Consent.Common.Tests.Import.Datasources
             Assert.Equal("id", matchStudyIdentity.IdentityKindExternalId);
         }
 
+        [Fact]
+        public void ReadsEvidenceCorrectly()
+        {
+            var evidenceKindId = Guid.NewGuid().ToString("D");
+            var someEvidence = "some evidence";
+            var xPerson = XPerson(evidence: Evidence(Evidence(evidenceKindId, someEvidence)));
+
+            var person = ReadPeople(xPerson).First();
+            
+            Assert.Single(person.Evidence);
+
+            Assert.Single(
+                person.Evidence,
+                r =>
+                    r.EvidenceKindExternalId == evidenceKindId &&
+                    r.Evidence == someEvidence
+            );
+        }
+
 
         private static XElement XPerson(
             XElement identities = null, 
@@ -102,24 +122,34 @@ namespace CHC.Consent.Common.Tests.Import.Datasources
             return person;
         }
 
+        private static XElement Evidence(string evidenceKindId, string evidence)
+        {
+            return new XElement(
+                X.Evidence,
+                new XElement(X.EvidenceKindId, evidenceKindId),
+                new XElement(X.Evidence, evidence)
+            );
+        }
+
+        public static XElement Evidence(params XElement[] evidence) => Wrap(X.Evidence, evidence);
+
         private static XElement XIdentityKindId(string id)
         {
             return new XElement(X.IdentityKindId, id);
         }
-        
-        private static XElement XMatchStudyIdentity(params XElement[] identifierReferences)
-        {
-            return identifierReferences.Any() ? new XElement(X.MatchStudyIdentity,  identifierReferences) : null;
-        }
+
+        private static XElement XMatchStudyIdentity(params XElement[] identifierReferences) 
+            => Wrap(X.MatchStudyIdentity, identifierReferences);
 
         private static XElement XMatchIdentity(params XElement[] matches)
-        {
-            return matches.Any() ? new XElement(X.MatchIdenty, matches.Select(_ => new XElement(X.Match, _))) : null;
-        }
-        
+            => Wrap(X.MatchIdenty, matches.Select(_ => new XElement(X.Match, _)));
+
         private static XElement XIdentities(params XElement[] identities)
+            => Wrap(X.Identities, identities);
+        
+        private static XElement Wrap(XName wrapper, IEnumerable<XElement> wrapped)
         {
-            return identities.Any() ? new XElement(X.Identities, identities) : null;
+            return wrapped.Any() ? new XElement(wrapper, wrapped.Cast<object>().ToArray()) : null;
         }
         
         private static XElement XSimpleIdentity(string kindId, string value, string id = null)

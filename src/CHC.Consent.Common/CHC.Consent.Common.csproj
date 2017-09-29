@@ -17,4 +17,7 @@
     </ProjectReference>
     <ProjectReference Include="..\CHC.Consent.Identity.Core\CHC.Consent.Identity.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Evidence" />
+  </ItemGroup>
 </Project>

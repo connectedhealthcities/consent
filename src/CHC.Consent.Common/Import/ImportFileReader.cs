@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
+using CHC.Consent.Common.Core;
 using CHC.Consent.Common.Import.Match;
+using CHC.Consent.Core;
 using CHC.Consent.Identity.Core;
 
 namespace CHC.Consent.Common.Import
@@ -12,11 +15,16 @@ namespace CHC.Consent.Common.Import
     {
         private readonly IStandardDataDatasource source;
         private readonly IIdentityKindStore identityKinds;
+        private readonly IEvidenceKindStore evidenceKinds;
 
-        public ImportFileReader(IStandardDataDatasource source, IIdentityKindStore identityKinds)
+        public ImportFileReader(
+            IStandardDataDatasource source, 
+            IIdentityKindStore identityKinds,
+            IEvidenceKindStore evidenceKinds)
         {
             this.source = source;
             this.identityKinds = identityKinds;
+            this.evidenceKinds = evidenceKinds;
         }
 
         public class SimpleIdentitySpecification : ISimpleIdentity
@@ -43,8 +51,47 @@ namespace CHC.Consent.Common.Import
             {
                 Identities = identities,
                 MatchIdentity = record.MatchIdentity.Select(_ => Convert(_, identities)).ToList(),
-                MatchSubjectIdentity = record.MatchStudyIdentity.Select(_ => GetIdentityFor(_, identities)).ToList()
+                MatchSubjectIdentity = record.MatchStudyIdentity.Select(_ => GetIdentityFor(_, identities)).ToList(),
+                Evidence = Convert(record.Evidence)
             };
+        }
+
+        public List<IEvidence> Convert(IEnumerable<EvidenceRecord> evidenceRecords)
+        {
+            return evidenceRecords.Select(Convert).ToList();
+        }
+
+        /// <remarks>
+        /// TODO: What if evidence kind is invalid/non-existant?
+        /// </remarks>
+        public IEvidence Convert(EvidenceRecord record)
+        {
+            if (record == null) throw new ArgumentNullException(nameof(record), "Cannot convert evidence from a null record");
+            var evidenceKind = FindEvidenceKindByExternalId(record.EvidenceKindExternalId);
+            if (evidenceKind == null)
+            {
+                throw new InvalidOperationException(
+                    $"Cannot find evidence kind with external id {record.EvidenceKindExternalId}");
+            }
+            return new ReadEvidence
+            {
+                Evidence = record.Evidence,
+                EvidenceKindId = evidenceKind.Id
+            };
+        }
+
+        public IEvidenceKind FindEvidenceKindByExternalId(string evidenceKindExternalId)
+        {
+            return evidenceKinds.FindEvidenceKindByExternalId(evidenceKindExternalId);
+        }
+
+        private class ReadEvidence : IEvidence
+        {
+            /// <inheritdoc />
+            public Guid EvidenceKindId { get; set; }
+
+            /// <inheritdoc />
+            public string Evidence { get; set; }
         }
 
         private IMatch Convert(MatchRecord record, IEnumerable<IIdentity> identities)
@@ -106,6 +153,4 @@ namespace CHC.Consent.Common.Import
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
-
-    
 }

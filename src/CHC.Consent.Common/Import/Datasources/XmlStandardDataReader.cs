@@ -29,6 +29,8 @@ namespace CHC.Consent.Common.Import.Datasources
             public static readonly XName MatchIdenty = ChcNs + "matchIdentity";
             public static readonly XName MatchStudyIdentity = ChcNs + "matchStudyIdentity";
             public static readonly XName Match = ChcNs + "match";
+            public static readonly XName Evidence = ChcNs + "evidence";
+            public static readonly XName EvidenceKindId = ChcNs + "evidenceKindId";
         }
         
         private readonly FileDatasource datasource;
@@ -62,8 +64,32 @@ namespace CHC.Consent.Common.Import.Datasources
                     person.MatchIdentity = ReadMatches(currentNode.Element(X.MatchIdenty)).ToArray();
                     person.MatchStudyIdentity = ReadIdentityElements(currentNode.Element(X.MatchStudyIdentity)).ToArray();
 
+                    person.Evidence.AddRange(ReadEvidence(currentNode.Element(X.Evidence)));
+
                     yield return person;
                 }
+            }
+        }
+
+        private IEnumerable<EvidenceRecord> ReadEvidence(XElement element)
+        {
+            if(element == null) yield break;
+            foreach (var evidenceElement in element.Elements())
+            {
+                if (evidenceElement.Name == X.Evidence)
+                {
+                    // TODO: check descendents of evidence element
+                    yield return new EvidenceRecord
+                    {
+                        EvidenceKindExternalId = evidenceElement.Element(X.EvidenceKindId)?.Value,
+                        Evidence = evidenceElement.Element(X.Evidence).Value
+                    };
+                }
+                else
+                {
+                    // TODO: error handling/recording
+                }
+                
             }
         }
 
