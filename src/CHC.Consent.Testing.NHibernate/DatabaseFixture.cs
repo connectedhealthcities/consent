@@ -2,11 +2,13 @@ using System;
 using System.Data.SqlClient;
 using System.IO;
 using System.Threading;
+using CHC.Consent.NHibernate;
 using NHibernate;
 using Xunit.Abstractions;
-using Xunit.Sdk;
+using ISessionFactory = CHC.Consent.NHibernate.ISessionFactory;
 
-namespace CHC.Consent.NHibernate.Tests
+
+namespace CHC.Consent.Testing.NHibernate
 {
     public class DatabaseFixture : IDisposable, ISessionFactory
     {

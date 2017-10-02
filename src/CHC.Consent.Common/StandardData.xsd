@@ -99,6 +99,20 @@
                     </xs:sequence>
                 </xs:complexType>
             </xs:element>
+            <xs:element name="evidence">
+                <xs:complexType>
+                    <xs:sequence maxOccurs="unbounded">
+                        <xs:element name="evidence">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="evidenceKindId" type="xs:string" />
+                                    <xs:element name="evidence" type="xs:string" />
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
         </xs:sequence>
     </xs:complexType>
     <xs:element name="people">

@@ -1,5 +1,5 @@
+﻿using CHC.Consent.Testing.NHibernate;
 using Xunit;
-
 
 namespace CHC.Consent.NHibernate.Tests
 {

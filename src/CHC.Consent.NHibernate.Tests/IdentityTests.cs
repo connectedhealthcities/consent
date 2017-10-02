@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Utils;
 using CHC.Consent.NHibernate.Identity;
+using CHC.Consent.Testing.NHibernate;
 using NHibernate;
 using Xunit;
 using Xunit.Abstractions;

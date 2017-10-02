@@ -13,13 +13,17 @@
         </identities>
         <matchIdentity>
             <match>
-                <identity ref="id1" />
+                <identityKindId>SimpleKind</identityKindId>
             </match>
         </matchIdentity>
         <matchStudyIdentity>
-            <match>
-                <identityKindId>SimpleKind2</identityKindId>
-            </match>
+            <identityKindId>SimpleKind2</identityKindId>
         </matchStudyIdentity>
+        <evidence>
+            <evidence>
+                <evidenceKindId>EvidenceKind1</evidenceKindId>
+                <evidence>The evidence that was sent</evidence>
+            </evidence>
+        </evidence>
     </person>
 </people>

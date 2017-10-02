@@ -23,5 +23,15 @@ namespace CHC.Consent.NHibernate.Identity
                     .FirstOrDefault(_ => _.ExternalId == externalId);
             }
         }
+
+        public IIdentityKind AddIdentity(string externalId) =>
+            sessionFactory.AsTransaction(
+                s =>
+                {
+                    var identityKind = new IdentityKind {ExternalId = externalId};
+                    s.Save(identityKind);
+                    return identityKind;
+                });
+        
     }
 }

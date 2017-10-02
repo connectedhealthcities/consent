@@ -41,5 +41,16 @@ namespace CHC.Consent.NHibernate.Consent
             return sessionFactory.AsTransaction(
                 s => s.Query<EvidenceKind>().FirstOrDefault(_ => _.ExternalId == externalId));
         }
+
+        public IEvidenceKind AddEvidenceKind(string externalId) =>
+            sessionFactory.AsTransaction(
+                s =>
+                {
+                    var evidenceKind = new EvidenceKind {ExternalId = externalId};
+                    s.Save(evidenceKind);
+                    return evidenceKind;
+                }
+            );
+
     }
 }

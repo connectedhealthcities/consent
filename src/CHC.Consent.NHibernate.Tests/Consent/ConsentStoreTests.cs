@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Linq;
 using CHC.Consent.NHibernate.Consent;
-using NHibernate;
-using NHibernate.Util;
+using CHC.Consent.Testing.NHibernate;
 using Xunit;
 using Xunit.Abstractions;
 
