@@ -15,10 +15,6 @@ namespace CHC.Consent.NHibernate
                 return result;
             }
         }
-
-        public static void AsTransaction<T>(this ISession session, Action<ISession> run) =>
-            session.AsTransaction(run.AsUnitFunc());
-        
         
         public static T AsTransaction<T>(this ISessionFactory factory, Func<ISession, T> run)
         {

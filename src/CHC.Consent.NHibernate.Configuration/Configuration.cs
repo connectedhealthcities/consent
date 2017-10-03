@@ -94,30 +94,24 @@ namespace CHC.Consent.NHibernate.Configuration
 
             private void UseNativeGenerator(IModelInspector inspector, Type type, IClassAttributesMapper customizer)
             {
-                var idMembers = Enumerable.ToArray<MemberInfo>(MembersProvider.GetEntityMembersForPoid(type).Where(inspector.IsPersistentId));
+                var idMembers = MembersProvider.GetEntityMembersForPoid(type).Where(inspector.IsPersistentId).ToArray();
                 if (idMembers.Length > 1) return;
                 
                 var idMember = idMembers.FirstOrDefault();
                 if (idMember == null) return;
 
-                if (idMember is FieldInfo fieldInfo)
+                if (idMember is FieldInfo fieldInfo && fieldInfo.FieldType == typeof(Guid))
                 {
-                    if (fieldInfo.FieldType == typeof(Guid))
-                    {
-                        customizer.Id(id => id.Generator(Generators.Guid));
-                        return;
-                    }
+                    customizer.Id(id => id.Generator(Generators.Guid));
+                    return;
                 }
 
-                if (idMember is PropertyInfo propertyInfo)
+                if (idMember is PropertyInfo propertyInfo && propertyInfo.PropertyType == typeof(Guid))
                 {
-                    if (propertyInfo.PropertyType == typeof(Guid))
-                    {
-                        customizer.Id(id => id.Generator(Generators.Guid));
-                        return;
-                    }
+                    customizer.Id(id => id.Generator(Generators.Guid));
+                    return;
                 }
-                
+
                 customizer.Id(id => id.Generator(Generators.Native));
             }
             

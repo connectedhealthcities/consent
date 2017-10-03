@@ -12,17 +12,19 @@ namespace CHC.Consent.NHibernate.Identity
     {
         private readonly ISessionFactory sessionFactory;
         private readonly IIdentityKindHelperProvider identityKindHelperProvider;
+        private readonly IdentityQueryGenerator queryGenerator;
 
         public NHibernateIdentityStore(ISessionFactory sessionFactory, IIdentityKindHelperProvider identityKindHelperProvider)
         {
             this.sessionFactory = sessionFactory;
             this.identityKindHelperProvider = identityKindHelperProvider;
+            queryGenerator = new IdentityQueryGenerator(identityKindHelperProvider);
         }
 
         public IPerson FindPerson(IReadOnlyCollection<IMatch> matches)
         {
             return matches
-                .Select(CreateMatchQuery)
+                .Select(queryGenerator.CreateMatchQuery)
                 .Select(Search)
                 .FirstOrDefault(matchedPerson => matchedPerson != null);
         }
@@ -32,7 +34,7 @@ namespace CHC.Consent.NHibernate.Identity
             return sessionFactory.AsTransaction(
                 s =>
                 {
-                    var persistedPerson = new PersistedPerson(identities.Select(identityKindHelperProvider.CreatePersistedIdentity));
+                    var persistedPerson = new PersistedPerson(CreatePersistedIdentities(identities));
 
                     s.Save(persistedPerson);
 
@@ -40,8 +42,10 @@ namespace CHC.Consent.NHibernate.Identity
                 });
         }
 
-        
-
+        private IEnumerable<PersistedIdentity> CreatePersistedIdentities(IEnumerable<IIdentity> identities)
+        {
+            return identities.Select(identityKindHelperProvider.CreatePersistedIdentity);
+        }
 
         private PersistedPerson Search(Expression<Func<PersistedIdentity, bool>> matchExpression)
         {
@@ -64,23 +68,6 @@ namespace CHC.Consent.NHibernate.Identity
             return matched.FetchMany(_ => _.Identities).ToFuture().SingleOrDefault();
 
             //TODO: optimise this for the case where they are more than a few matches!
-        }
-
-        private Expression<Func<PersistedIdentity, bool>> CreateMatchQuery(IMatch match)
-        {
-             Expression<Func<IIdentity, bool>> matchExpression;
-            if (match is IIdentityMatch matchByIdentity)
-            {
-                //TODO: error handling
-                //TODO: Composite identity matching
-
-                return identityKindHelperProvider.CreateQuery(matchByIdentity.Match);
-            }
-            else
-            {
-                //TODO: Match other matches - identity by Id and Logical Matches 
-                throw new NotImplementedException();
-            }   
         }
     }
 }
