@@ -1,4 +1,4 @@
-namespace CHC.Consent.Common.Import
+namespace CHC.Consent.Import.Core
 {
     public abstract class IdentityRecord 
     {

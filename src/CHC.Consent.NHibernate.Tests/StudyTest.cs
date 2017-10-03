@@ -1,5 +1,4 @@
 ﻿using System;
-using CHC.Consent.Common.Core;
 using CHC.Consent.Testing.NHibernate;
 using Xunit;
 

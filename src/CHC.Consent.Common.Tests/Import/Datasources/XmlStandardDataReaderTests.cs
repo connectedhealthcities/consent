@@ -8,6 +8,8 @@ using CHC.Consent.Common.Import;
 using CHC.Consent.Common.Import.Datasources;
 using CHC.Consent.Common.Import.Match;
 using CHC.Consent.Common.Tests.Import.Utils;
+using CHC.Consent.Identity.SimpleIdentity;
+using CHC.Consent.Import.Core;
 using Xunit;
 using Xunit.Abstractions;
  
@@ -157,7 +159,7 @@ namespace CHC.Consent.Common.Tests.Import.Datasources
             var xSimpleIdentity = new XElement(
                 X.SimpleIdentity,
                 new XElement(X.IdentityKindId, kindId),
-                new XElement(X.Value, value)
+                new XElement(XmlNames.Value, value)
             );
             if (id != null)
             {
@@ -196,7 +198,7 @@ namespace CHC.Consent.Common.Tests.Import.Datasources
             {
                 output.WriteLine(source.ToString());
                 var xmlReaderSettings = new XmlReaderSettings();
-                xmlReaderSettings.Schemas.Add(ChcStandardDataNamespace, "StandardData.xsd");
+                xmlReaderSettings.Schemas.Add(XmlNames.ChcStandardDataNamespace, "StandardData.xsd");
                 xmlReaderSettings.Schemas.Compile();
                 xmlReaderSettings.XmlResolver = new XmlUrlResolver();
                 xmlReaderSettings.ValidationType = ValidationType.Schema;

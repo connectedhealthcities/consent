@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CHC.Consent.Common.Import.Match
+﻿namespace CHC.Consent.Common.Import.Match
 {
     public class MatchByIdentityKindIdRecord : MatchRecord
     {

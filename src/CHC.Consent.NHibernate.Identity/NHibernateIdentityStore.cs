@@ -2,26 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Runtime.InteropServices.ComTypes;
-using System.Xml.Serialization;
-using CHC.Consent.Common.Core;
-using CHC.Consent.Common.Identity;
-using CHC.Consent.Common.Import.Match;
-using CHC.Consent.Common.Utils;
 using CHC.Consent.Identity.Core;
 using NHibernate;
 using NHibernate.Linq;
-using PredicateExtensions;
 
 namespace CHC.Consent.NHibernate.Identity
 {
     public class NHibernateIdentityStore : IIdentityStore
     {
         private readonly ISessionFactory sessionFactory;
+        private readonly IIdentityKindHelperProvider identityKindHelperProvider;
 
-        public NHibernateIdentityStore(ISessionFactory sessionFactory)
+        public NHibernateIdentityStore(ISessionFactory sessionFactory, IIdentityKindHelperProvider identityKindHelperProvider)
         {
             this.sessionFactory = sessionFactory;
+            this.identityKindHelperProvider = identityKindHelperProvider;
         }
 
         public IPerson FindPerson(IReadOnlyCollection<IMatch> matches)
@@ -37,7 +32,7 @@ namespace CHC.Consent.NHibernate.Identity
             return sessionFactory.AsTransaction(
                 s =>
                 {
-                    var persistedPerson = new PersistedPerson(identities);
+                    var persistedPerson = new PersistedPerson(identities.Select(identityKindHelperProvider.CreatePersistedIdentity));
 
                     s.Save(persistedPerson);
 
@@ -46,6 +41,8 @@ namespace CHC.Consent.NHibernate.Identity
         }
 
         
+
+
         private PersistedPerson Search(Expression<Func<PersistedIdentity, bool>> matchExpression)
         {
             return sessionFactory.AsTransaction(_ => Search(_, matchExpression));    
@@ -53,9 +50,10 @@ namespace CHC.Consent.NHibernate.Identity
 
         private PersistedPerson Search(ISession s, Expression<Func<PersistedIdentity, bool>> matchExpression)
         {
-            var matched = s.Query<PersistedIdentity>()
-                .Where(matchExpression)
-                .Select(_ => _.Person);
+            var matched = 
+                s.Query<PersistedIdentity>()
+                    .Where(matchExpression)
+                    .Select(_ => _.Person);
 
             if (matched.LongCount() > 1)
             {
@@ -68,40 +66,21 @@ namespace CHC.Consent.NHibernate.Identity
             //TODO: optimise this for the case where they are more than a few matches!
         }
 
-        private static Expression<Func<PersistedIdentity, bool>> CreateMatchQuery(IMatch match)
+        private Expression<Func<PersistedIdentity, bool>> CreateMatchQuery(IMatch match)
         {
-            
-            
-            Expression<Func<PersistedIdentity, bool>> matchExpression = null;
+             Expression<Func<IIdentity, bool>> matchExpression;
             if (match is IIdentityMatch matchByIdentity)
             {
                 //TODO: error handling
                 //TODO: Composite identity matching
 
-                if (matchByIdentity.Match is ISimpleIdentity simpleIdentity)
-                {
-                    Expression<Func<PersistedIdentity, bool>> identityIdMatch = id => id.IdentityKindId == simpleIdentity.IdentityKindId;
-
-                    var identityValue = simpleIdentity.Value;
-
-
-                    matchExpression = identityIdMatch.And(
-                        id =>
-                            id is PersistedSimpleIdentity &&
-                            ((PersistedSimpleIdentity) id).Value == identityValue);
-                }
-                else
-                {
-                    throw new NotImplementedException("Can only match by simple identity");
-                }
+                return identityKindHelperProvider.CreateQuery(matchByIdentity.Match);
             }
             else
             {
                 //TODO: Match other matches - identity by Id and Logical Matches 
                 throw new NotImplementedException();
-            }
-            return matchExpression;
-            
+            }   
         }
     }
 }

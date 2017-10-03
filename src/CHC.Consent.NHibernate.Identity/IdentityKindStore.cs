@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using CHC.Consent.Common.Identity;
 using CHC.Consent.Identity.Core;
 using NHibernate.Linq;
 

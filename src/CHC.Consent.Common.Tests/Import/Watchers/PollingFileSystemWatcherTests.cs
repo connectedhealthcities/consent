@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading;
-using CHC.Consent.Common.Core;
 using CHC.Consent.Common.Import;
 using CHC.Consent.Common.Import.Datasources;
 using CHC.Consent.Common.Import.Watchers;

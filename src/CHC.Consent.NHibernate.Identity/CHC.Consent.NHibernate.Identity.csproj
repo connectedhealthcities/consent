@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\CHC.Consent.Identity.Core\CHC.Consent.Identity.Core.csproj"/>
+        <ProjectReference Include="..\CHC.Consent.NHibernate\CHC.Consent.NHibernate.csproj"/>
+    </ItemGroup>
+</Project>

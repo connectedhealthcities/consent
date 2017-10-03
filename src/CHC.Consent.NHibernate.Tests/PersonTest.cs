@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using CHC.Consent.Common.Core;
-using CHC.Consent.Identity.Core;
+using CHC.Consent.Identity.SimpleIdentity;
 using CHC.Consent.NHibernate.Identity;
 using CHC.Consent.Testing.NHibernate;
 using NHibernate.Linq;
@@ -12,11 +12,7 @@ namespace CHC.Consent.NHibernate.Tests
     [Collection(DatabaseCollection.Name)]
     public class PersonTest
     {
-        private class SimpleIdentity : ISimpleIdentity
-        {            
-            public Guid IdentityKindId { get; set; } = Guid.NewGuid();
-            public string Value { get; set; }
-        }
+        
 
         private class Study : IStudy
         {
@@ -35,7 +31,7 @@ namespace CHC.Consent.NHibernate.Tests
         public void ANewPersonHasIdentities()
         {
             var person = new PersistedPerson(
-                new[] {new SimpleIdentity { Value = "Test"},});
+                new[] {SimpleIdentity(value:"Test"),});
             
             Assert.NotEmpty(person.Identities);
             Assert.Single(
@@ -50,7 +46,7 @@ namespace CHC.Consent.NHibernate.Tests
                 s =>
                     s.Save(
                         new PersistedPerson(
-                            new[] {new SimpleIdentity { Value = "Test Save"}})));
+                            new[] {SimpleIdentity(value:"Test Save")})));
 
             var identities = db.AsTransaction(
                 s => s.Query<PersistedIdentity>().Where(_ => _.Person.Id == personId).ToArray());
@@ -64,12 +60,12 @@ namespace CHC.Consent.NHibernate.Tests
         [Fact]
         public void APersonCanAddNewSubjectIdentifiers()
         {
-            var subjectIdentifierIdentity = new SimpleIdentity {Value = "Subject Identifier Identity"};
+            var subjectIdentifierIdentity = SimpleIdentity(value:"Subject Identifier Identity");
             var study = new Study {Id = Guid.NewGuid()};
             var person = new PersistedPerson(
                 new[]
                 {
-                    new SimpleIdentity {Value = "Something"},
+                    SimpleIdentity(value:"Something"),
                     subjectIdentifierIdentity,
                 });
 
@@ -86,6 +82,11 @@ namespace CHC.Consent.NHibernate.Tests
                 addedSubjectIdentifier.Identities,
                 id => id.IdentityKindId == subjectIdentifierIdentity.IdentityKindId &&
                       ((ISimpleIdentity) id).Value == subjectIdentifierIdentity.Value);
+        }
+
+        private PersistedSimpleIdentity SimpleIdentity(string value)
+        {
+            return new PersistedSimpleIdentity { Value = value, IdentityKindId = Guid.NewGuid() };
         }
     }
 }

@@ -1,5 +1,3 @@
-using System;
-
 namespace CHC.Consent.Common.Import
 {
     public class EvidenceRecord

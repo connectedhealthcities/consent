@@ -16,8 +16,10 @@
       <Name>CHC.Consent.Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\CHC.Consent.Identity.Core\CHC.Consent.Identity.Core.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Evidence" />
+      <ProjectReference Include="..\CHC.Consent.Identity.SimpleIdentity\CHC.Consent.Identity.SimpleIdentity.csproj">
+          <Project>{25FFEFA0-58AD-428D-83C6-55C0C5454EDD}</Project>
+          <Name>CHC.Consent.Identity.SimpleIdentity</Name>
+      </ProjectReference>
+      <ProjectReference Include="..\CHC.Consent.Import.Core\CHC.Consent.Import.Core.csproj"/>
   </ItemGroup>
 </Project>

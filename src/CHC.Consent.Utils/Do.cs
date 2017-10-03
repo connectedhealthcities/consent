@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CHC.Consent.Common.Utils
+﻿namespace CHC.Consent.Utils
 {
     public static class Do
     {    

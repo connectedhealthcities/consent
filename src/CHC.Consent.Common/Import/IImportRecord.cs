@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using CHC.Consent.Common.Import.Datasources;
+using CHC.Consent.Import.Core;
 
 namespace CHC.Consent.Common.Import
 {

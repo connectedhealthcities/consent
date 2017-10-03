@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections;
 using System.Linq;
-using CHC.Consent.Common.Identity;
 using CHC.Consent.Identity.Core;
+using CHC.Consent.Identity.SimpleIdentity;
 using CHC.Consent.NHibernate.Identity;
 using CHC.Consent.Testing.NHibernate;
 using NHibernate;
-using NHibernate.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -27,10 +25,12 @@ namespace CHC.Consent.NHibernate.Tests
             }
         }
         private readonly DatabaseFixture db;
+        private readonly NHibernateIdentityStore identityStore;
 
         public IdentityStoreTests(DatabaseFixture db, ITestOutputHelper output)
         {
             this.db = db;
+            identityStore = new NHibernateIdentityStore(db, new NaiveIdentityKindProviderHelper());
         }
 
         public void Dispose()
@@ -49,10 +49,8 @@ namespace CHC.Consent.NHibernate.Tests
                 IdentityKindId = identityKindId,
                 Value = "1234"
             });
-            
-            var identityStore = new NHibernateIdentityStore(db);
 
-            var found = identityStore.FindPerson(
+            var found = this.identityStore.FindPerson(
                 new IMatch[]
                 {
                     new IdentityMatch(new PersistedSimpleIdentity {IdentityKindId = identityKindId, Value = "1234"})
@@ -70,7 +68,7 @@ namespace CHC.Consent.NHibernate.Tests
             return db.AsTransaction(s => (Guid)s.Save(new IdentityKind {ExternalId = identityExternalId}));
         }
 
-        public void MakePersonFrom(params IIdentity[] identities)
+        public void MakePersonFrom(params PersistedIdentity[] identities)
         {
             db.AsTransaction(
                 s =>
@@ -92,7 +90,7 @@ namespace CHC.Consent.NHibernate.Tests
                 new PersistedSimpleIdentity {IdentityKindId = identityKind2, Value = "97"}
             );
             
-            var identityStore = new NHibernateIdentityStore(db);
+            var identityStore = this.identityStore;
 
             var result = identityStore.FindPerson(
                 new []
@@ -129,7 +127,7 @@ namespace CHC.Consent.NHibernate.Tests
             var identityKindId1 = SaveIdentityKind(identityExternalId1);
             var identityKindId2 = SaveIdentityKind(identityExternalId2);
 
-            var identityStore = new NHibernateIdentityStore(db);
+            var identityStore = this.identityStore;
 
 
             var person = (PersistedPerson)identityStore.CreatePerson(

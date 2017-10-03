@@ -4,7 +4,6 @@ using System.Linq;
 using CHC.Consent.Common.Core;
 using CHC.Consent.Identity.Core;
 
-
 namespace CHC.Consent.NHibernate.Identity
 {
     public class PersistedPerson : IPerson
@@ -29,26 +28,19 @@ namespace CHC.Consent.NHibernate.Identity
         {
         }
 
-        public PersistedPerson(IEnumerable<IIdentity> identities)
+        public PersistedPerson(IEnumerable<PersistedIdentity> identities)
         {
             foreach (var identity in identities)
             {
-                if (identity is ISimpleIdentity simpleIdentity)
-                {
-                    Identities.Add(
-                        new PersistedSimpleIdentity
-                        {
-                            IdentityKindId = simpleIdentity.IdentityKindId,
-                            Value = simpleIdentity.Value,
-                            Person = this
-                        });
-                }
-                else
-                {
-                    throw new InvalidOperationException(
-                        $"Cannot create a person from identity type {identity.GetType()}");
-                }
+                AddIdentity(identity);
             }
+            
+        }
+
+        private void AddIdentity(PersistedIdentity identity)
+        {
+            identity.Person = this;
+            Identities.Add(identity);
         }
 
         /// <remarks>TODO:Check for existing identifier for identifiers</remarks>

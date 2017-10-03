@@ -1,4 +1,4 @@
-﻿namespace CHC.Consent.Common.Utils
+﻿namespace CHC.Consent.Utils
 {
     /// <summary>
     /// An classy alternative to Void 

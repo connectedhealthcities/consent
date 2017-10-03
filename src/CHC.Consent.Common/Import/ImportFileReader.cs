@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using CHC.Consent.Common.Core;
 using CHC.Consent.Common.Import.Match;
 using CHC.Consent.Core;
 using CHC.Consent.Identity.Core;
+using CHC.Consent.Identity.SimpleIdentity;
+using CHC.Consent.Import.Core;
 
 namespace CHC.Consent.Common.Import
 {
@@ -25,18 +25,6 @@ namespace CHC.Consent.Common.Import
             this.source = source;
             this.identityKinds = identityKinds;
             this.evidenceKinds = evidenceKinds;
-        }
-
-        public class SimpleIdentitySpecification : ISimpleIdentity
-        {
-            public SimpleIdentitySpecification(Guid identityKindId, string value)
-            {
-                Value = value;
-                IdentityKindId = identityKindId;
-            }
-
-            public Guid IdentityKindId { get;  }
-            public string Value { get;  }
         }
 
         public IEnumerable<PersonSpecification> People()
@@ -137,9 +125,9 @@ namespace CHC.Consent.Common.Import
             //TODO: what if external id is invalid?
             var identityKindId = identityKinds.FindIdentityKindByExternalId(record.IdentityKindExternalId).Id;
 
-            if(record is SimpleIdentityRecord simple)
+            if(record is SimpleIdentityRecord)
             {
-                return new SimpleIdentitySpecification(identityKindId, simple.Value);
+                return new SimpleIdentityKindProvider().ConvertToIdentity(identityKindId, record);
             }
             
             //TODO: report error rather than throwing error?

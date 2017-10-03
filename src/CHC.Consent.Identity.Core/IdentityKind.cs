@@ -1,7 +1,6 @@
 ﻿using System;
-using CHC.Consent.Identity.Core;
 
-namespace CHC.Consent.Common.Identity
+namespace CHC.Consent.Identity.Core
 {
     public class IdentityKind : IIdentityKind
     {

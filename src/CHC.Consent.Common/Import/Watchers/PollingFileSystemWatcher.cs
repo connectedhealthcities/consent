@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CHC.Consent.Common.Core;
 using CHC.Consent.Common.Import.Datasources;
-using CHC.Consent.Common.Utils;
+using CHC.Consent.Utils;
 
 namespace CHC.Consent.Common.Import.Watchers
 {

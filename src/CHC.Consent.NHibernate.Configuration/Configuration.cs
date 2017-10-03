@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Serialization;
-using CHC.Consent.Common.Core;
-using CHC.Consent.Common.Identity;
-using CHC.Consent.Common.Utils;
+using CHC.Consent.Identity.Core;
+using CHC.Consent.Identity.SimpleIdentity;
 using CHC.Consent.NHibernate.Identity;
+using CHC.Consent.Utils;
 using NHibernate;
 using NHibernate.Cfg;
 using NHibernate.Cfg.Loquacious;
@@ -17,7 +16,7 @@ using NHibernate.Driver;
 using NHibernate.Mapping.ByCode;
 using NHibernate.Tool.hbm2ddl;
 
-namespace CHC.Consent.NHibernate
+namespace CHC.Consent.NHibernate.Configuration
 {
     public class Configuration : ISessionFactory
     {
@@ -42,8 +41,7 @@ namespace CHC.Consent.NHibernate
             var mappingDocument = GetMappings();
 
             var xmlMapping = new StringWriter();
-            new XmlSerializer(mappingDocument.GetType())
-                .Serialize(xmlMapping, mappingDocument);
+            new XmlSerializer(mappingDocument.GetType()).Serialize((TextWriter) xmlMapping, (object) mappingDocument);
             
             config.DataBaseIntegration(db =>
                 {
@@ -96,7 +94,7 @@ namespace CHC.Consent.NHibernate
 
             private void UseNativeGenerator(IModelInspector inspector, Type type, IClassAttributesMapper customizer)
             {
-                var idMembers = MembersProvider.GetEntityMembersForPoid(type).Where(inspector.IsPersistentId).ToArray();
+                var idMembers = Enumerable.ToArray<MemberInfo>(MembersProvider.GetEntityMembersForPoid(type).Where(inspector.IsPersistentId));
                 if (idMembers.Length > 1) return;
                 
                 var idMember = idMembers.FirstOrDefault();

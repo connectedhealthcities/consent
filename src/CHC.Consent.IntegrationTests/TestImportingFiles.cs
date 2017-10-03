@@ -9,11 +9,11 @@ using CHC.Consent.Common.Import;
 using CHC.Consent.Common.Import.Watchers;
 using CHC.Consent.Common.SubjectIdentifierCreation;
 using CHC.Consent.Identity.Core;
+using CHC.Consent.Identity.SimpleIdentity;
 using CHC.Consent.NHibernate;
 using CHC.Consent.NHibernate.Consent;
 using CHC.Consent.NHibernate.Identity;
 using CHC.Consent.Testing.NHibernate;
-using NHibernate;
 using NHibernate.Linq;
 using Xunit;
 using ISessionFactory = CHC.Consent.NHibernate.ISessionFactory;
@@ -143,7 +143,7 @@ namespace CHC.Consent.IntegrationTests
 
             dbSessionFactory = fixture;
             
-            identityStore = new NHibernateIdentityStore(dbSessionFactory);
+            identityStore = new NHibernateIdentityStore(dbSessionFactory, new NaiveIdentityKindProviderHelper());
             consentStore = new NHibernateConsentStore(dbSessionFactory);
             identityKindStore = new IdentityKindStore(dbSessionFactory);
         }

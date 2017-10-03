@@ -2,11 +2,9 @@ using System;
 using System.Data.SqlClient;
 using System.IO;
 using System.Threading;
-using CHC.Consent.NHibernate;
+using CHC.Consent.NHibernate.Configuration;
 using NHibernate;
-using Xunit.Abstractions;
 using ISessionFactory = CHC.Consent.NHibernate.ISessionFactory;
-
 
 namespace CHC.Consent.Testing.NHibernate
 {
@@ -19,7 +17,7 @@ namespace CHC.Consent.Testing.NHibernate
 
         ISession  ISessionFactory.StartSession() => StartSession();
         
-        public ISession StartSession(ITestOutputHelper output=null)
+        public ISession StartSession(Action<string> output=null)
         {
             if (!setup)
             {
@@ -50,7 +48,7 @@ namespace CHC.Consent.Testing.NHibernate
                 
                 configuration = new Configuration(Configuration.SqlServer(connectionString));
                 
-                configuration.Create(output == null ? (Action<string>)null : output.WriteLine, execute:true);
+                configuration.Create(output, execute:true);
             }
 
             return configuration.StartSession();

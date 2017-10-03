@@ -1,5 +1,5 @@
 ﻿using System;
-using CHC.Consent.Common.Utils;
+using CHC.Consent.Utils;
 using NHibernate;
 
 namespace CHC.Consent.NHibernate

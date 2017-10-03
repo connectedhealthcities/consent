@@ -1,4 +1,6 @@
-﻿namespace CHC.Consent.Common.Import
+﻿using CHC.Consent.Import.Core;
+
+namespace CHC.Consent.Identity.SimpleIdentity
 {
     public class SimpleIdentityRecord : IdentityRecord
     {

@@ -1,21 +1,18 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Xml;
 using System.Xml.Linq;
-using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Import.Match;
+using CHC.Consent.Identity.SimpleIdentity;
+using CHC.Consent.Import.Core;
 
 namespace CHC.Consent.Common.Import.Datasources
 {
     public class XmlStandardDataReader : StandardDataReader
     {
-        public const string ChcStandardDataNamespace = "urn:chc:consent:standard-data:v0.1";
-        
-
         public static class X
         {
-            private static readonly XNamespace ChcNs = ChcStandardDataNamespace;
+            private static readonly XNamespace ChcNs = XmlNames.ChcNs;
             
             public static readonly XName People = ChcNs + "people";
             public static readonly XName Person = ChcNs + "person";
@@ -23,8 +20,6 @@ namespace CHC.Consent.Common.Import.Datasources
 
             public static readonly XName SimpleIdentity = ChcNs + "simpleIdentity";
             public static readonly XName IdentityKindId = ChcNs + "identityKindId";
-
-            public static readonly XName Value = ChcNs + "value";
 
             public static readonly XName MatchIdenty = ChcNs + "matchIdentity";
             public static readonly XName MatchStudyIdentity = ChcNs + "matchStudyIdentity";
@@ -45,9 +40,9 @@ namespace CHC.Consent.Common.Import.Datasources
             using (var reader = CreateReader())
             {
                 reader.MoveToContent();
-                reader.ReadToDescendant("person", ChcStandardDataNamespace);
+                reader.ReadToDescendant("person", XmlNames.ChcStandardDataNamespace);
 
-                while (reader.IsStartElement("person", ChcStandardDataNamespace))
+                while (reader.IsStartElement("person", XmlNames.ChcStandardDataNamespace))
                 {
                     var currentNode = XNode.ReadFrom(reader) as XElement;
 
@@ -132,10 +127,8 @@ namespace CHC.Consent.Common.Import.Datasources
                 if (identityElement.Name == X.SimpleIdentity)
                 {
                     //TODO: Validate simple identity from xml - external kind id and value 
-
-                    yield return new SimpleIdentityRecord(
-                        identityElement.Element(X.IdentityKindId).Value,
-                        identityElement.Element(X.Value).Value);
+                    var identityKindExternalId = identityElement.Element(X.IdentityKindId).Value;
+                    yield return new SimpleIdentityKindProvider().ReadXml(identityKindExternalId, identityElement);
                 }
                 else
                 {

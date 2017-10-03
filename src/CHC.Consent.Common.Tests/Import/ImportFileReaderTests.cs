@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using CHC.Consent.Common.Core;
-using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Import;
 using CHC.Consent.Common.Import.Datasources;
 using CHC.Consent.Common.Import.Match;
 using CHC.Consent.Common.Tests.Import.Utils;
 using CHC.Consent.Core;
 using CHC.Consent.Identity.Core;
+using CHC.Consent.Identity.SimpleIdentity;
 using Xunit;
 
 namespace CHC.Consent.Common.Tests.Import

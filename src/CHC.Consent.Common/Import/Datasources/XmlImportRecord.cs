@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using CHC.Consent.Common.Core;
 using CHC.Consent.Common.Import.Match;
+using CHC.Consent.Import.Core;
 
 namespace CHC.Consent.Common.Import.Datasources
 {
