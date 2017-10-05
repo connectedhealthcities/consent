@@ -1,0 +1,10 @@
+{
+  "realm": "CHC",
+  "auth-server-url": "http://localhost:8080/auth",
+  "ssl-required": "external",
+  "resource": "chc-web",
+  "credentials": {
+    "secret": "e45db6c1-c025-44af-a7c5-24fb469142f6"
+  },
+  "use-resource-role-mappings": true
+}
