@@ -16,12 +16,10 @@ namespace CHC.Consent.Web.UI.Controllers
     public class HomeController : Controller
     {
         private IAuthenticationService authenticationService;
-        private IAuthorizationPolicyProvider policyProvider;
 
-        public HomeController(IAuthenticationService authenticationService, IAuthorizationPolicyProvider policyProvider)
+        public HomeController(IAuthenticationService authenticationService)
         {
             this.authenticationService = authenticationService;
-            this.policyProvider = policyProvider;
         }
 
         public async Task<IActionResult> Index()

@@ -1,25 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using TokenValidatedContext = Microsoft.AspNetCore.Authentication.OpenIdConnect.TokenValidatedContext;
 
 namespace CHC.Consent.Web.UI
 {
-    public class Startup
+    public partial class Startup
     {
         public Startup(IConfiguration configuration)
         {
@@ -40,6 +32,8 @@ namespace CHC.Consent.Web.UI
 
             services.AddResponseCompression();
 
+            services.AddTransient<CookieAuthenticationEventsHandler>();
+
             services.AddAuthentication(
                     sharedOptions =>
                     {
@@ -53,6 +47,7 @@ namespace CHC.Consent.Web.UI
                         _.Cookie.HttpOnly = true;
                         _.Cookie.SameSite = SameSiteMode.Strict;
                         _.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                        _.EventsType = typeof(CookieAuthenticationEventsHandler);
                     })
                 .AddOpenIdConnect(
                     options =>
@@ -65,13 +60,14 @@ namespace CHC.Consent.Web.UI
                         options.Scope.Add(OpenIdConnectScope.UserImpersonation);
                         options.Scope.Add("roles");
                     
-                        options.ResponseType = OpenIdConnectResponseType.IdTokenToken;
+                        options.ResponseType = OpenIdConnectResponseType.Code;
                         options.GetClaimsFromUserInfoEndpoint = true;
                         options.UseTokenLifetime = true;
                         options.SaveTokens = true;
 
                         options.TokenValidationParameters.RoleClaimType = "roles";
                         options.TokenValidationParameters.NameClaimType = "name";
+                        options.TokenValidationParameters.ValidateLifetime = true;
                     }
                 );
 
@@ -80,6 +76,11 @@ namespace CHC.Consent.Web.UI
                 {
                     options.AddPolicy("Test", policy => policy.RequireClaim(ClaimTypes.Role, "test_role"));
                 });
+        }
+
+        private async Task OnValidatePrincipal(CookieValidatePrincipalContext context)
+        {
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
