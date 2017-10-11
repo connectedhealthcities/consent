@@ -33,15 +33,9 @@ namespace CHC.Consent.Web.UI
             Clock = clock;
         }
 
-        /// <inheritdoc />
-        public override async Task ValidatePrincipal(CookieValidatePrincipalContext context)
+        private async Task<(OpenIdConnectOptions options, OpenIdConnectConfiguration config)>  GetOptionsAndConfigFrom(
+            CookieValidatePrincipalContext context)
         {
-            if (!ShouldTryToRenewTicket(context))
-            {
-                context.ShouldRenew = true;
-                return;
-            }
-            
             var handler = (OpenIdConnectHandler) await AuthenticationHandlerProvider.GetHandlerAsync(
                 context.HttpContext,
                 OpenIdConnectDefaults.AuthenticationScheme);
@@ -49,6 +43,34 @@ namespace CHC.Consent.Web.UI
             var options = handler.Options;
             var config =
                 await options.ConfigurationManager.GetConfigurationAsync(context.HttpContext.RequestAborted);
+            
+            return (options, config);
+        }
+        
+        /// <inheritdoc />
+        public override async Task ValidatePrincipal(CookieValidatePrincipalContext context)
+        {
+            var (options, config) = await GetOptionsAndConfigFrom(context);
+            
+            if (!ShouldTryToRenewTicket(context))
+            {
+                try
+                {
+                    ValidateToken(
+                        config,
+                        options,
+                        context.Properties.GetTokenValue(OpenIdConnectParameterNames.IdToken));
+                }
+                catch (SecurityTokenValidationException e)
+                {
+                    Logger.LogInformation(e ,"Identity Token validation failed");
+                    context.RejectPrincipal();
+                }
+                
+                return;
+            }
+
+            
 
             var refreshToken = context.Properties.GetTokenValue(OpenIdConnectParameterNames.RefreshToken);
 
@@ -153,6 +175,23 @@ namespace CHC.Consent.Web.UI
             OpenIdConnectConfiguration config, OpenIdConnectOptions options, string newAccessToken,
             string oldAccessToken)
         {
+            var newToken = ValidateToken(config, options, newAccessToken);
+
+            var matchesOldToken = MatchesOldToken(oldAccessToken, newToken);
+            if (!matchesOldToken)
+            {
+                throw new SecurityTokenException(
+                    String.Format(
+                        "Refreshed token does not match old token:\n\tnew: {0}\n\told: {1}",
+                        newToken,
+                        oldAccessToken));
+            }
+
+            return newToken;
+        }
+
+        private JwtSecurityToken ValidateToken(OpenIdConnectConfiguration config, OpenIdConnectOptions options, string newAccessToken)
+        {
             if (!options.SecurityTokenValidator.CanReadToken(newAccessToken))
             {
                 Logger.LogError(
@@ -169,7 +208,7 @@ namespace CHC.Consent.Web.UI
                 newAccessToken,
                 GetTokenValidationParameters(config, options),
                 out SecurityToken validatedToken);
-            
+
             if (validatedToken == null)
             {
                 Logger.LogError(
@@ -192,16 +231,6 @@ namespace CHC.Consent.Web.UI
                         CultureInfo.InvariantCulture,
                         "The Validated Security Token must be of type JwtSecurityToken, but instead its type is: '{0}'.",
                         validatedToken?.GetType()));
-            }
-
-            var matchesOldToken = MatchesOldToken(oldAccessToken, newToken);
-            if (!matchesOldToken)
-            {
-                throw new SecurityTokenException(
-                    String.Format(
-                        "Refreshed token does not match old token:\n\tnew: {0}\n\told: {1}",
-                        newToken,
-                        oldAccessToken));
             }
 
             return newToken;

@@ -31,6 +31,7 @@ namespace CHC.Consent.NHibernate.Tests
         {
             this.db = db;
             identityStore = new NHibernateIdentityStore(db, new NaiveIdentityKindProviderHelper());
+            LoggerProvider.SetLoggersFactory(new OutputLoggerFactory(output));
         }
 
         public void Dispose()

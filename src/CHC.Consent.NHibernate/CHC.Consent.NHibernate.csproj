@@ -8,6 +8,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CHC.Consent.Identity.Core\CHC.Consent.Identity.Core.csproj" />
-      <ProjectReference Include="..\CHC.Consent.Utils\CHC.Consent.Utils.csproj"/>
+    <ProjectReference Include="..\CHC.Consent.Security\CHC.Consent.Security.csproj" />
+    <ProjectReference Include="..\CHC.Consent.Utils\CHC.Consent.Utils.csproj" />
   </ItemGroup>
 </Project>
