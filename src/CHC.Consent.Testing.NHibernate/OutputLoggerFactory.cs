@@ -2,7 +2,7 @@
 using NHibernate;
 using Xunit.Abstractions;
 
-namespace CHC.Consent.NHibernate.Tests
+namespace CHC.Consent.Testing.NHibernate
 {
     public class OutputLoggerFactory : ILoggerFactory
     {

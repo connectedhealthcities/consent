@@ -18,7 +18,7 @@ namespace CHC.Consent.Common.Import.Datasources
             public static readonly XName Person = ChcNs + "person";
             public static readonly XName Identities = ChcNs + "identities";
 
-            public static readonly XName SimpleIdentity = ChcNs + "simpleIdentity";
+            public static readonly XName Identity = ChcNs + "identity";
             public static readonly XName IdentityKindId = ChcNs + "identityKindId";
 
             public static readonly XName MatchIdenty = ChcNs + "matchIdentity";
@@ -124,7 +124,7 @@ namespace CHC.Consent.Common.Import.Datasources
         {
             foreach (var identityElement in person.Elements(X.Identities).Elements())
             {
-                if (identityElement.Name == X.SimpleIdentity)
+                if (identityElement.Name == X.Identity)
                 {
                     //TODO: Validate simple identity from xml - external kind id and value 
                     var identityKindExternalId = identityElement.Element(X.IdentityKindId).Value;

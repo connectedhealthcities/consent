@@ -17,7 +17,7 @@
             </match>
         </matchIdentity>
         <matchStudyIdentity>
-          <identity ref="id2"/>
+          <identityKindId>urn:chc:consent:sample:identitykind:two</identityKindId>
         </matchStudyIdentity>
         <evidence>
             <evidence>

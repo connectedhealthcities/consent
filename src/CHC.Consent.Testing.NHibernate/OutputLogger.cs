@@ -2,7 +2,7 @@
 using NHibernate;
 using Xunit.Abstractions;
 
-namespace CHC.Consent.NHibernate.Tests
+namespace CHC.Consent.Testing.NHibernate
 {
     public class OutputLogger : IInternalLogger
     {
@@ -18,8 +18,17 @@ namespace CHC.Consent.NHibernate.Tests
 
         private void Log(string level, object message, Exception exception)
         {
-            if(name.Contains("SQL"))
-            output.WriteLine($"{level} {name} {message} {exception}");
+            if (name.Contains("SQL"))
+            {
+                try
+                {
+                    output.WriteLine($"{level} {name} {message} {exception}");
+                }
+                catch (InvalidOperationException e) when (e.Message == "There is no currently active test.")
+                {
+                    //sometimes the logger is held onto beyond the lifetime of the test
+                }
+            }
         }
 
         private void LogError(object message, Exception exception = null) => Log("Error", message, exception);

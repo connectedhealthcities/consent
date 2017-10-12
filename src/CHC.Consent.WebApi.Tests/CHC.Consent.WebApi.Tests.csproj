@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.0;net461</TargetFrameworks>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
@@ -9,9 +9,7 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CHC.Consent.Common\CHC.Consent.Common.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <DotNetCliToolReference Include="Microsoft.DotNet.Watcher.Tools" Version="2.0.0" />
+    <ProjectReference Include="..\CHC.Consent.WebApi.Abstractions\CHC.Consent.WebApi.Abstractions.csproj" />
+    <ProjectReference Include="..\CHC.Consent.WebApi\CHC.Consent.WebApi.csproj" />
   </ItemGroup>
 </Project>

@@ -52,10 +52,10 @@ namespace CHC.Consent.IntegrationTests
             {
                 study = system.CreateStudy();
 
-                identityKind1 = system.AddIdentityKind(externalId:"SimpleKind");
-                identityKind2 = system.AddIdentityKind(externalId: "SimpleKind2");
+                identityKind1 = system.AddIdentityKind(externalId:"urn:chc:consent:sample:identitykind:one");
+                identityKind2 = system.AddIdentityKind(externalId: "urn:chc:consent:sample:identitykind:two");
 
-                evidenceKind = system.AddEvidenceKind(externalId: "EvidenceKind1");
+                evidenceKind = system.AddEvidenceKind(externalId: "urn:chc:consent:sample:evidencekind:one");
 
                 
                 system.UseSubjectIdentifiersFrom(subjectIdentifiers);
@@ -65,7 +65,7 @@ namespace CHC.Consent.IntegrationTests
 
                 File.Copy(
                     Path.Combine(Environment.CurrentDirectory, @"data\import.xml"),
-                    Path.Combine(mailDropLocation, $"import-{DateTime.UtcNow:yyyyMMddThhmmss}.xml"));
+                    Path.Combine(mailDropLocation, $"import-{DateTime.UtcNow:yyyyMMddTHHmmss}.xml"));
 
                 Assert.True(system.WaitForAnImportToComplete(TimeSpan.FromSeconds(30)));
             }
@@ -82,20 +82,20 @@ namespace CHC.Consent.IntegrationTests
 
             using (var session = db.StartSession())
             {
-                var identity = session.Query<PersistedPerson>().FirstOrDefault();
+                var person = session.Query<PersistedPerson>().FirstOrDefault();
                 
-                Assert.NotEmpty(identity.Identities);
+                Assert.NotEmpty(person.Identities);
 
                 Assert.Single(
-                    identity.Identities,
+                    person.Identities,
                     _ => _.IdentityKindId == identityKind1.Id && ((ISimpleIdentity) _).Value == "111-111-111");
 
                 Predicate<PersistedIdentity> isIdentity2 = _ => _.IdentityKindId == identityKind2.Id && ((ISimpleIdentity) _).Value == "222";
-                Assert.Single(identity.Identities,isIdentity2);
+                Assert.Single(person.Identities,isIdentity2);
 
-                Assert.Single(identity.SubjectIdentifiers);
+                Assert.Single(person.SubjectIdentifiers);
 
-                var subjectIdentifier = identity.SubjectIdentifiers.Single();
+                var subjectIdentifier = person.SubjectIdentifiers.Single();
                 Assert.Equal(subjectIdentifiers.LastId, subjectIdentifier.SubjectIdentifier);
                 Assert.Equal(study.Id, subjectIdentifier.StudyId);
                 Assert.Single(subjectIdentifier.Identities);
@@ -184,6 +184,7 @@ namespace CHC.Consent.IntegrationTests
         {
             foreach (var specification in Transform(datasource))
             {
+                
                 if (IsNewPerson(specification))
                 {
                     var person = CreateNewPerson(specification);

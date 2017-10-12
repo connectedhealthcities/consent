@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using CHC.Consent.WebApi.Abstractions;
 using CHC.Consent.WebApi.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,21 +16,21 @@ namespace CHC.Consent.WebApi.Features.Person
     [Route("/v{version:apiVersion}/person")]
     public class PersonController : Controller
     {
+        private readonly IPersonRepository people;
+
         /// <inheritdoc />
-        public PersonController()
+        public PersonController(IPersonRepository people)
         {
+            this.people = people;
         }
 
         [HttpGet]
-        public IEnumerable<ResponseModels.Person> Get()
+        public IEnumerable<ResponseModels.Person> Get([FromQuery]RequestModels.GetPeople request)
         {
-            var issuer = User.FindFirstValue("iss");
-            var subject = User.FindFirstValue("sub");
-            User.IsInRole("study_administrator");
-
-            Response.Headers.Add("X-Issuer-Subject", $"{issuer};{subject}");
-
-            return Enumerable.Empty<ResponseModels.Person>();
+            return people.GetPeople()
+                .Skip(request.Page * request.PageSize).Take(request.PageSize)
+                .Select(_ => new ResponseModels.Person {Id = _.Id})
+                .AsEnumerable();
         }
     }
 }

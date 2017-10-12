@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CHC.Consent.Identity.Core\CHC.Consent.Identity.Core.csproj">
+      <Project>{96EEB3E8-8D62-4587-ADFB-D61855AF4DB7}</Project>
+      <Name>CHC.Consent.Identity.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CHC.Consent.Security\CHC.Consent.Security.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Threading.Tasks;
 using CHC.Consent.WebApi.Features.Person;
+using CHC.Consent.WebApi.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -67,8 +66,8 @@ namespace CHC.Consent.WebApi
 
             services.AddTransient<IUserAccessor, HttpContextUserAccessor>();
 
-            services.Decorate<IPersonRepository, PersonRepositoryWithSecurity>();
-            services.AddTransient<IPersonRepository, PersonRepositoryWithSecurity>()
+            
+            services.Decorate<IPersonRepository>((p, s) => new PersonRepositoryWithSecurity(p, s.GetService<IUserAccessor>()));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -81,89 +80,6 @@ namespace CHC.Consent.WebApi
 
             app.UseAuthentication();
             app.UseMvc();
-            app.UseSwagger();
         }
     }
-    
-    public static class ServiceCollectionExtensions
-{
-    public static IServiceCollection Decorate<TService>(this IServiceCollection services, Func<TService, IServiceProvider, TService> decorator)
-    {
-        var descriptors = services.GetDescriptors<TService>();
-
-        foreach (var descriptor in descriptors)
-        {
-            services.Replace(descriptor.Decorate(decorator));
-        }
-
-        return services;
-    }
-
-    public static IServiceCollection Decorate<TService>(this IServiceCollection services, Func<TService, TService> decorator)
-    {
-        var descriptors = services.GetDescriptors<TService>();
-
-        foreach (var descriptor in descriptors)
-        {
-            services.Replace(descriptor.Decorate(decorator));
-        }
-
-        return services;
-    }
-
-    private static List<ServiceDescriptor> GetDescriptors<TService>(this IServiceCollection services)
-    {
-        var descriptors = new List<ServiceDescriptor>();
-
-        foreach (var service in services)
-        {
-            if (service.ServiceType == typeof(TService))
-            {
-                descriptors.Add(service);
-            }
-        }
-
-        if (descriptors.Count == 0)
-        {
-            throw new InvalidOperationException($"Could not find any registered services for type '{typeof(TService).FullName}'.");
-        }
-
-        return descriptors;
-    }
-
-    private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, IServiceProvider, TService> decorator)
-    {
-        return descriptor.WithFactory(provider => decorator((TService) descriptor.GetInstance(provider), provider));
-    }
-
-    private static ServiceDescriptor Decorate<TService>(this ServiceDescriptor descriptor, Func<TService, TService> decorator)
-    {
-        return descriptor.WithFactory(provider => decorator((TService) descriptor.GetInstance(provider)));
-    }
-
-    private static ServiceDescriptor WithFactory(this ServiceDescriptor descriptor, Func<IServiceProvider, object> factory)
-    {
-        return ServiceDescriptor.Describe(descriptor.ServiceType, factory, descriptor.Lifetime);
-    }
-
-    private static object GetInstance(this ServiceDescriptor descriptor, IServiceProvider provider)
-    {
-        if (descriptor.ImplementationInstance != null)
-        {
-            return descriptor.ImplementationInstance;
-        }
-
-        if (descriptor.ImplementationType != null)
-        {
-            return provider.GetServiceOrCreateInstance(descriptor.ImplementationType);
-        }
-
-        return descriptor.ImplementationFactory(provider);
-    }
-
-    private static object GetServiceOrCreateInstance(this IServiceProvider provider, Type type)
-    {
-        return ActivatorUtilities.GetServiceOrCreateInstance(provider, type);
-    }
-}
 }

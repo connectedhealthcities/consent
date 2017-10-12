@@ -14,5 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CHC.Consent.Core\CHC.Consent.Core.csproj" />
     <ProjectReference Include="..\CHC.Consent.Identity.Core\CHC.Consent.Identity.Core.csproj" />
+    <ProjectReference Include="..\CHC.Consent.Security\CHC.Consent.Security.csproj" />
+    <ProjectReference Include="..\CHC.Consent.WebApi.Abstractions\CHC.Consent.WebApi.Abstractions.csproj" />
   </ItemGroup>
 </Project>

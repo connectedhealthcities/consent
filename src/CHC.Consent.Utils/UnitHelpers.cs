@@ -13,4 +13,10 @@ namespace CHC.Consent.Utils
             };
         }
     }
+
+    public static class FuncHelpers
+    {
+        public static Func<TArgs, T> IgnoreParams<TArgs, T>(this Func<T> getValue) => _ => getValue();
+
+    }
 }

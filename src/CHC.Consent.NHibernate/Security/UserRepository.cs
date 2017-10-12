@@ -4,7 +4,7 @@ using NHibernate.Linq;
 
 namespace CHC.Consent.NHibernate.Security
 {
-    public class UserRepository : IJwtIdentifiedUserRepostiory
+    public class UserRepository : IJwtIdentifiedUserRepository
     {
         private ISessionFactory SessionFactory { get; }
 

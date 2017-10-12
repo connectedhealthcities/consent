@@ -53,7 +53,7 @@ namespace CHC.Consent.Common.Tests.Import.Datasources
         [Fact]
         public void ReadsOnePersonWithSimpleIdentity()
         {
-            var xml = XPerson(identities: XIdentities(XSimpleIdentity("id", "value")));
+            var xml = XPerson(identities: XIdentities(XIdentity("id", "value")));
             var person = ReadPeople(xml).First();
             
             Assert.NotEmpty(person.Identities);
@@ -68,7 +68,7 @@ namespace CHC.Consent.Common.Tests.Import.Datasources
         public void ReadsSimpleMatchCorrectly()
         {
             var xPerson = XPerson(
-                XIdentities(XSimpleIdentity("id", Guid.NewGuid().ToString())),
+                XIdentities(XIdentity("id", Guid.NewGuid().ToString())),
                 XMatchIdentity(XIdentityKindId("id")),
                 XMatchStudyIdentity(XIdentityKindId("id"))
             );
@@ -154,10 +154,10 @@ namespace CHC.Consent.Common.Tests.Import.Datasources
             return wrapped.Any() ? new XElement(wrapper, wrapped.Cast<object>().ToArray()) : null;
         }
         
-        private static XElement XSimpleIdentity(string kindId, string value, string id = null)
+        private static XElement XIdentity(string kindId, string value, string id = null)
         {
             var xSimpleIdentity = new XElement(
-                X.SimpleIdentity,
+                X.Identity,
                 new XElement(X.IdentityKindId, kindId),
                 new XElement(XmlNames.Value, value)
             );

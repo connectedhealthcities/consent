@@ -8,5 +8,10 @@ namespace CHC.Consent.Utils
         {
             handler?.Invoke(sender, args);
         }
+
+        public static void Trigger(this EventHandler handler, object sender, EventArgs args=null)
+        {
+            handler?.Invoke(sender, args ?? EventArgs.Empty);
+        }
     }
 }

@@ -10,7 +10,12 @@ namespace CHC.Consent.NHibernate.Security
         /// <inheritdoc />
         IRole ISecurityPrincipal.Role => Role;
 
+        public virtual ICollection<PermissionEntry> PermissionEntries { get; protected set; } =
+            new List<PermissionEntry>();
+
         /// <inheritdoc />
-        public virtual IEnumerable<IPermissionEntry> PermissionEntries { get; set; }
+        IEnumerable<IPermissionEntry> ISecurityPrincipal.PermissionEntries => PermissionEntries;
     }
+    
+    
 }

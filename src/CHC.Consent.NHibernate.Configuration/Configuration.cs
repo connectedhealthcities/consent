@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using System.Xml.Serialization;
 using CHC.Consent.Identity.Core;
 using CHC.Consent.Identity.SimpleIdentity;
@@ -21,6 +22,94 @@ using NHibernate.Tool.hbm2ddl;
 
 namespace CHC.Consent.NHibernate.Configuration
 {
+    public class SessionWrapper : IDisposable
+    {
+        private readonly bool createdSession;
+        public SessionWrapper(ISession session, Func<ISession> createSession, Action<ISession> sessionDisposing)
+        {
+            SessionDisposing = sessionDisposing;
+            if (session != null)
+            {
+                Session = session;
+            }
+            else
+            {
+                Session = createSession();
+                createdSession = true;
+            }
+            
+        }
+
+        public ISession Session { get; }
+
+        public Action<ISession> SessionDisposing { get; }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            if (!createdSession) return;
+            SessionDisposing(Session);
+            Session.Dispose();
+        }
+    }
+
+    public class UnitOfWorkFactory
+    {
+        private readonly ISessionFactory sessionFactory;
+        private AsyncLocal<UnitOfWork> current = new AsyncLocal<UnitOfWork>();
+
+        public UnitOfWork GetCurrentUnitOfWork()
+        {
+            if(current.Value == null) throw new InvalidOperationException("Not in a unit of work");
+            return current.Value;
+        }
+
+        public UnitOfWork Start()
+        {
+            if(current.Value != null) throw new InvalidOperationException();
+
+            return current.Value = new UnitOfWork(sessionFactory, ClearSession);
+        }
+
+        private void ClearSession()
+        {
+            current.Value = null;
+        }
+
+        /// <inheritdoc />
+        public UnitOfWorkFactory(ISessionFactory sessionFactory)
+        {
+            this.sessionFactory = sessionFactory;
+        }
+    }
+
+    public class UnitOfWork : IDisposable
+    {
+        private readonly ISessionFactory sessionFactory;
+        private readonly Action onDisposed;
+
+        public ISession CurrentSession { get; private set; }
+
+        /// <inheritdoc />
+        public UnitOfWork(ISessionFactory sessionFactory, Action onDisposed)
+        {
+            this.sessionFactory = sessionFactory;
+            this.onDisposed = onDisposed;
+        }
+
+        public ISession GetSession()
+        {
+            return CurrentSession ?? (CurrentSession = sessionFactory.StartSession());
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            onDisposed();
+            CurrentSession?.Dispose();
+        }
+    }
+
     public class Configuration : ISessionFactory
     {
         private readonly global::NHibernate.ISessionFactory sessionFactory;
@@ -35,7 +124,7 @@ namespace CHC.Consent.NHibernate.Configuration
                     db.ConnectionString = connectionString;
                 };
 
-        
+        public string HbmXml { get; }
 
         public Configuration(Action<IDbIntegrationConfigurationProperties> setup)
         {
@@ -44,7 +133,8 @@ namespace CHC.Consent.NHibernate.Configuration
             var mappingDocument = GetMappings();
 
             var xmlMapping = new StringWriter();
-            new XmlSerializer(mappingDocument.GetType()).Serialize((TextWriter) xmlMapping, (object) mappingDocument);
+            new XmlSerializer(mappingDocument.GetType()).Serialize(xmlMapping, mappingDocument);
+            HbmXml = xmlMapping.ToString();
             
             config.DataBaseIntegration(db =>
                 {
@@ -86,16 +176,21 @@ namespace CHC.Consent.NHibernate.Configuration
             {
                 BeforeMapClass += UseNativeGenerator;
                 BeforeMapManyToOne += UseNicerForeignKeyNameForManyToOne;
-                BeforeMapBag += UseNicerForeignKeyColumnNameForBag;
-                AfterMapBag += UseNicerForeignKeyColumnNameForBag;
+                BeforeMapBag += UserNiceFKName;
+                BeforeMapSet += UserNiceFKName;
+
+                //AfterMapBag += UseNicerForeignKeyColumnNameForBag;
             }
 
-            private void UseNicerForeignKeyColumnNameForBag(IModelInspector inspector, PropertyPath member, IBagPropertiesMapper customizer)
+            private void UserNiceFKName(IModelInspector inspector, PropertyPath member, ICollectionPropertiesMapper customizer)
             {
-                var idMembers = GetIdMembers(inspector, ((PropertyInfo)member.LocalMember).PropertyType);
+                var propertyType = ((PropertyInfo) member.LocalMember).PropertyType;
+
+                var entityType = propertyType.GetGenericArguments()[0];
+                var idMembers = GetIdMembers(inspector, entityType);
                 if (idMembers.Length == 1)
                 {
-                    customizer.Key(key => key.Column(member.ToColumnName("_") + idMembers[0].Name));
+                    customizer.Key(key => key.Column(namingStrategy.ClassToTableName(member.LocalMember.DeclaringType.Name) + idMembers[0].Name));
                 }
             }
 
@@ -106,11 +201,12 @@ namespace CHC.Consent.NHibernate.Configuration
                 customizer.ForeignKey(
                     "FK_" + namingStrategy.ClassToTableName(classType.Name) + "_" +
                     member.ToColumnName("_"));
-                
-                var idMembers = GetIdMembers(inspector, ((PropertyInfo)member.LocalMember).PropertyType);
+
+                var fkType = ((PropertyInfo)member.LocalMember).PropertyType;
+                var idMembers = GetIdMembers(inspector, fkType);
                 if (idMembers.Length == 1)
                 {
-                    customizer.Column(member.ToColumnName("_") + idMembers[0].Name);
+                    customizer.Column(namingStrategy.ClassToTableName(fkType.Name) + idMembers[0].Name);
                 }
             }
 
@@ -139,7 +235,8 @@ namespace CHC.Consent.NHibernate.Configuration
 
             private MemberInfo[] GetIdMembers(IModelInspector inspector, Type type)
             {
-                var idMembers = MembersProvider.GetEntityMembersForPoid(type).Where(inspector.IsPersistentId).ToArray();
+                var entityMembersForPoid = MembersProvider.GetEntityMembersForPoid(type).ToArray();
+                var idMembers = entityMembersForPoid.Where(inspector.IsPersistentId).ToArray();
                 return idMembers;
             }
         }
@@ -185,7 +282,6 @@ namespace CHC.Consent.NHibernate.Configuration
                     _ => _.Identities,
                     j =>
                     {
-                        j.Key(k => k.Column("PersonId"));
                         j.Cascade(Cascade.Persist);
                         j.Inverse(true);
                     });
@@ -193,7 +289,6 @@ namespace CHC.Consent.NHibernate.Configuration
                     _ => _.SubjectIdentifiers,
                     j =>
                     {
-                        j.Key(k => k.Column("PersonId"));
                         j.Cascade(Cascade.Persist);
                         j.Inverse(true);
                     });
@@ -210,14 +305,10 @@ namespace CHC.Consent.NHibernate.Configuration
                 m =>
                 {
                     m.Bag(_ => _.Identities,
-                        c =>
-                        {
-                            c.Key(k => k.NotNullable(true));
-                        },
-                        j =>
-                        {
-                            j.ManyToMany();
-                        });
+                        c => c.Key(k => k.NotNullable(true)),
+                        j => j.ManyToMany());
+
+                    m.Property(_ => _.StudyId, p => p.NotNullable(true));
                 });
 
             mapper.Class<SecurityPrincipal>(
@@ -226,6 +317,7 @@ namespace CHC.Consent.NHibernate.Configuration
                     m.Abstract(true);
                     m.ManyToOne(_ => _.Role, a => a.NotNullable(false));
                     m.Discriminator(d => d.Column("Type"));
+                    m.Set(_ => _.PermissionEntries, c => { c.Cascade(Cascade.All); });
                 });
             
             mapper.Class<Authenticatable>(

@@ -2,9 +2,11 @@ using System;
 using System.Data.SqlClient;
 using System.IO;
 using System.Threading;
+using CHC.Consent.NHibernate;
 using CHC.Consent.NHibernate.Configuration;
 using NHibernate;
 using ISessionFactory = CHC.Consent.NHibernate.ISessionFactory;
+using CHC.Consent.Utils;
 
 namespace CHC.Consent.Testing.NHibernate
 {
@@ -16,7 +18,36 @@ namespace CHC.Consent.Testing.NHibernate
         private string connectionString = $@"Data Source=(LocalDB)\.;Integrated Security=True;";
 
         ISession  ISessionFactory.StartSession() => StartSession();
+        public UnitOfWorkFactory UnitOfWorkFactory { get; }
+        /// <inheritdoc />
+        public DatabaseFixture()
+        {
+            UnitOfWorkFactory = new UnitOfWorkFactory(this);
+        }
+
+        public T AsUnitOfWork<T>(Func<UnitOfWork, T> run)
+        {
+            using (var uow = UnitOfWorkFactory.Start())
+            {
+                return run(uow);
+            }
+        }
+
+        public ISession SessionProvider()
+        {
+            return UnitOfWorkFactory.GetCurrentUnitOfWork().GetSession();
+        }
+
+        public T InTransactionalUnitOfWork<T>(Func<ISession, T> doWork)
+        {
+            return AsUnitOfWork(uow => uow.GetSession().AsTransaction(doWork));
+        }
+
+        public void InTransactionalUnitOfWork(Action<ISession> doWork) => InTransactionalUnitOfWork(doWork.AsUnitFunc());
+
+        public T InTransactionalUnitOfWork<T>(Func<T> doWork) => InTransactionalUnitOfWork(doWork.IgnoreParams<ISession, T>());
         
+
         public ISession StartSession(Action<string> output=null)
         {
             if (!setup)
@@ -47,11 +78,15 @@ namespace CHC.Consent.Testing.NHibernate
                 connectionString += "Initial Catalog=nhibernate_tests";
                 
                 configuration = new Configuration(Configuration.SqlServer(connectionString));
-                
+
+                (output ?? Do.Nothing)(configuration.HbmXml);
+
                 configuration.Create(output, execute:true);
             }
 
-            return configuration.StartSession();
+            var session = configuration.StartSession();
+
+            return session;
         }
 
 

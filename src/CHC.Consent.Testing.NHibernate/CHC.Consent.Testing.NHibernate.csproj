@@ -4,9 +4,15 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NHibernate" Version="5.0.0-ci-00138-dbg-NH-3807" />
+    <PackageReference Include="xunit.abstractions" Version="2.0.1" />
   </ItemGroup>
   <ItemGroup>
-      <ProjectReference Include="..\CHC.Consent.NHibernate.Configuration\CHC.Consent.NHibernate.Configuration.csproj"/>
+      <ProjectReference Include="..\CHC.Consent.NHibernate.Configuration\CHC.Consent.NHibernate.Configuration.csproj" />
     <ProjectReference Include="..\CHC.Consent.NHibernate\CHC.Consent.NHibernate.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="xunit.abstractions">
+      <HintPath>..\..\..\..\..\Users\David Kemp\.nuget\packages\xunit.abstractions\2.0.1\lib\net35\xunit.abstractions.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>
