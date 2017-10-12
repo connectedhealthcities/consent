@@ -1,127 +1,177 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <xs:schema
         xmlns:xs="http://www.w3.org/2001/XMLSchema"
-        xmlns="urn:chc:consent:standard-data:v0.1"
-        targetNamespace="urn:chc:consent:standard-data:v0.1"
-
+        xmlns="urn:chc:consent:standard-data:v0.2"
+        targetNamespace="urn:chc:consent:standard-data:v0.2"
         elementFormDefault="qualified">
-    <xs:simpleType name="identityKindId">
-        <xs:restriction base="xs:string">
-            <xs:minLength value="1"/>
-        </xs:restriction>
-    </xs:simpleType>
-    <xs:complexType name="identity" abstract="true">
-        <xs:sequence>
-            <xs:element name="identityKindId" type="identityKindId"/>
-        </xs:sequence>
-        <xs:attribute name="id" type="xs:ID" use="optional"/>
-    </xs:complexType>
-    <xs:complexType name="simpleIdentity">
-        <xs:complexContent>
-            <xs:extension base="identity">
-                <xs:sequence>
-                    <xs:element name="value">
-                        <xs:simpleType>
-                            <xs:restriction base="xs:string">
-                                <xs:minLength value="1"/>
-                                <xs:pattern value=".*[^\s].*"/>
-                            </xs:restriction>
-                        </xs:simpleType>
-                    </xs:element>
-                </xs:sequence>
-            </xs:extension>
-        </xs:complexContent>
-    </xs:complexType>
-    <xs:complexType name="compositeIdentityValue">
-        <xs:sequence>
-            <xs:any processContents="lax"/>
-        </xs:sequence>
-    </xs:complexType>
-    <xs:complexType name="compositeIdentity">
-        <xs:complexContent>
-            <xs:extension base="identity">
-                <xs:sequence>
-                    <xs:element name="value" type="compositeIdentityValue"/>
-                </xs:sequence>
-            </xs:extension>
-        </xs:complexContent>
-    </xs:complexType>
-    <xs:complexType name="identityReference">
-        <xs:attribute name="ref" type="xs:IDREF"/>
-    </xs:complexType>
 
-    <xs:group name="logicIdentifiers">
-        <xs:choice>
-            <xs:element name="identity" type="identityReference"/>
-            <xs:element name="identityKindId" type="identityKindId"/>
-        </xs:choice>
-    </xs:group>
+  <xs:element name="people">
+    <xs:annotation>
+      <xs:documentation>Root element containing list of people</xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="person" type="person"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
 
-    <xs:complexType name="andLogic">
-        <xs:choice minOccurs="2" maxOccurs="unbounded">
-            <xs:element name="or" type="orLogic"/>
-            <xs:group ref="logicIdentifiers"/>
-        </xs:choice>
-    </xs:complexType>
-    <xs:complexType name="orLogic">
-        <xs:choice minOccurs="2" maxOccurs="unbounded">
-            <xs:element name="and" type="andLogic"/>
-            <xs:group ref="logicIdentifiers"/>
-        </xs:choice>
-    </xs:complexType>
-    <xs:complexType name="matchLogic">
-        <xs:choice>
-            <xs:element name="or" type="orLogic"/>
-            <xs:element name="and" type="andLogic"/>
-            <xs:group ref="logicIdentifiers"/>
-        </xs:choice>
-    </xs:complexType>
-    <xs:complexType name="match">
-        <xs:sequence minOccurs="1" maxOccurs="unbounded">
-            <xs:element name="match" type="matchLogic"/>
-        </xs:sequence>
-    </xs:complexType>
-    <xs:complexType name="person">
-        <xs:sequence>
-            <xs:element name="identities" minOccurs="1">
-                <xs:complexType>
-                    <xs:choice minOccurs="0" maxOccurs="unbounded">
-                        <xs:element name="simpleIdentity" type="simpleIdentity"/>
-                        <xs:element name="compositeIdentity" type="compositeIdentity"/>
-                    </xs:choice>
-                </xs:complexType>
-            </xs:element>
-            <xs:element name="matchIdentity" type="match"/>
-            <xs:element name="matchStudyIdentity">
-                <xs:complexType>
-                    <xs:sequence minOccurs="1" maxOccurs="unbounded">
-                        <xs:group ref="logicIdentifiers" />
-                    </xs:sequence>
-                </xs:complexType>
-            </xs:element>
-            <xs:element name="evidence">
-                <xs:complexType>
-                    <xs:sequence maxOccurs="unbounded">
-                        <xs:element name="evidence">
-                            <xs:complexType>
-                                <xs:sequence>
-                                    <xs:element name="evidenceKindId" type="xs:string" />
-                                    <xs:element name="evidence" type="xs:string" />
-                                </xs:sequence>
-                            </xs:complexType>
-                        </xs:element>
-                    </xs:sequence>
-                </xs:complexType>
-            </xs:element>
-        </xs:sequence>
-    </xs:complexType>
-    <xs:element name="people">
+  <xs:complexType name="person">
+    <xs:annotation>
+      <xs:documentation>
+        A consented person
+        Contains
+        * a list of identites,
+        * rules about how to use thoses identites to match against:
+        * existing identites, and
+        * existing subject identifiers
+        * evidence about the consent
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="identities">
         <xs:complexType>
-            <xs:sequence minOccurs="0" maxOccurs="unbounded">
-                <xs:element name="person" type="person"/>
-            </xs:sequence>
+          <xs:sequence maxOccurs="unbounded">
+            <xs:element name="identity" type="identity"/>
+          </xs:sequence>
         </xs:complexType>
-    </xs:element>
+      </xs:element>
+      <xs:element name="matchIdentity" type="match">
+        <xs:annotation>
+          <xs:documentation>Defines how to match this person against existing person in the identity system</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="matchStudyIdentity" type="studyIdentifiers">
+        <xs:annotation>
+          <xs:documentation>Defines how to match this person's subject identifiers against existing subject identifiers in the consent system</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="evidence">
+        <xs:complexType>
+          <xs:sequence maxOccurs="unbounded">
+            <xs:element name="evidence" type="evidence" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="identityKindId">
+    <xs:annotation>
+      <xs:documentation>
+        Identity of an Indentity Kind. An Identity Kind is the definition of a unit of Identity.
+        Identity Kinds will need to be known to the consent system before importing them.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="identityValue" mixed="true">
+    <xs:annotation>
+      <xs:documentation>Allow any content for identity value</xs:documentation>
+    </xs:annotation>
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:any />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="identity">
+    <xs:annotation>
+      <xs:documentation>A unit of identity</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="identityKindId" type="identityKindId"/>
+      <xs:element name="value" type="identityValue">
+        <xs:annotation>
+          <xs:documentation>The format of the value element is defined by the Identity Kind</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:ID" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+          Allows for a direct reference in the matching sections of the person.
+          Note: as per xsd specification, this value must be unique in the whole document, not just the person
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="match">
+    <xs:annotation>
+      <xs:documentation>
+        Each element will be processed in turn until a match is found.
+        Later rules will not be processed once an existing person has been found.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence minOccurs="1" maxOccurs="unbounded">
+      <xs:element name="match" type="matchLogic"/>
+    </xs:sequence>
+  </xs:complexType>
+
+
+  <xs:complexType name="identityReference">
+    <xs:attribute name="ref" type="xs:IDREF"/>
+  </xs:complexType>
+
+  <xs:group name="logicIdentifiers">
+    <xs:annotation>
+      <xs:documentation>
+        Which identifier to match - either by an identityKindId or via a referenced id
+      </xs:documentation>
+    </xs:annotation>
+    <xs:choice>
+      <xs:element name="identity" type="identityReference"/>
+      <xs:element name="identityKindId" type="identityKindId"/>
+    </xs:choice>
+  </xs:group>
+
+
+  <xs:complexType name="matchLogic">
+    <xs:choice>
+      <xs:element name="or" type="orLogic"/>
+      <xs:element name="and" type="andLogic"/>
+      <xs:group ref="logicIdentifiers"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="andLogic">
+    <xs:choice minOccurs="2" maxOccurs="unbounded">
+      <xs:element name="or" type="orLogic"/>
+      <xs:group ref="logicIdentifiers"/>
+    </xs:choice>
+  </xs:complexType>
+  
+  <xs:complexType name="orLogic">
+    <xs:choice minOccurs="2" maxOccurs="unbounded">
+      <xs:element name="and" type="andLogic"/>
+      <xs:group ref="logicIdentifiers"/>
+    </xs:choice>
+  </xs:complexType>
+  
+  
+  <xs:complexType name="studyIdentifiers">
+    <xs:sequence minOccurs="1" maxOccurs="unbounded">
+      <xs:group ref="logicIdentifiers" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="evidence">
+    <xs:annotation>
+      <xs:documentation>
+        currently the least well defined element in the system
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="evidenceKindId" type="xs:string" />
+      <xs:element name="evidence" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+
+
+
 </xs:schema>
 
 

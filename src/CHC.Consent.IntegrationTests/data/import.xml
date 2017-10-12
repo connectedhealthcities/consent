@@ -1,27 +1,27 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<people xmlns="urn:chc:consent:standard-data:v0.1">
+<people xmlns="urn:chc:consent:standard-data:v0.2">
     <person>
         <identities>
-            <simpleIdentity id="id1">
-                <identityKindId>SimpleKind</identityKindId>
+            <identity>
+                <identityKindId>urn:chc:consent:sample:identitykind:one</identityKindId>
                 <value>111-111-111</value>
-            </simpleIdentity>
-            <simpleIdentity id="id2">
-                <identityKindId>SimpleKind2</identityKindId>
+            </identity>
+            <identity id="id2">
+                <identityKindId>urn:chc:consent:sample:identitykind:two</identityKindId>
                 <value>222</value>
-            </simpleIdentity>
+            </identity>
         </identities>
         <matchIdentity>
             <match>
-                <identityKindId>SimpleKind</identityKindId>
+                <identityKindId>urn:chc:consent:sample:identitykind:one</identityKindId>
             </match>
         </matchIdentity>
         <matchStudyIdentity>
-            <identityKindId>SimpleKind2</identityKindId>
+          <identity ref="id2"/>
         </matchStudyIdentity>
         <evidence>
             <evidence>
-                <evidenceKindId>EvidenceKind1</evidenceKindId>
+                <evidenceKindId>urn:chc:consent:sample:evidencekind:one</evidenceKindId>
                 <evidence>The evidence that was sent</evidence>
             </evidence>
         </evidence>
