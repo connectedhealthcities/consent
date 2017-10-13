@@ -4,7 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NHibernate" Version="5.0.0-ci-00138-dbg-NH-3807" />
-    <PackageReference Include="PredicateExtensions" Version="1.0.0" />
+    <PackageReference Include="PredicateExtensions.Source" Version="1.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CHC.Consent.Identity.Core\CHC.Consent.Identity.Core.csproj" />
