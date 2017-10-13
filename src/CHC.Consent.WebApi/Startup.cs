@@ -1,6 +1,6 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Threading.Tasks;
 using CHC.Consent.WebApi.Abstractions;
 using CHC.Consent.WebApi.Features.Person;
 using CHC.Consent.WebApi.Infrastructure;
@@ -15,6 +15,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Swagger;
+using CHC.Consent.NHibernate;
+using CHC.Consent.NHibernate.Configuration;
+using CHC.Consent.NHibernate.Security;
+using CHC.Consent.NHibernate.WebApi;
+using CHC.Consent.Security;
 
 namespace CHC.Consent.WebApi
 {
@@ -65,6 +70,19 @@ namespace CHC.Consent.WebApi
                     
                 });
 
+            services.AddSingleton<ISessionFactory>(
+                new Configuration(
+                    NHibernate.Configuration.Configuration.SqlServer(Configuration.GetConnectionString("Consent")))
+            );
+
+            services.AddScoped(s => new UnitOfWork(s.GetRequiredService<ISessionFactory>()));
+
+            services.AddScoped<Func<global::NHibernate.ISession>>(
+                s => () => s.GetRequiredService<UnitOfWork>().GetSession());
+
+            services.AddTransient<IJwtIdentifiedUserRepository, UserRepository>();
+            services.AddTransient<IPersonRepository, SecurePersonRepository>();
+            
             services.AddTransient<IUserAccessor, HttpContextUserAccessor>();
         }
 
@@ -76,6 +94,8 @@ namespace CHC.Consent.WebApi
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseSwagger();
+            
             app.UseAuthentication();
             app.UseMvc();
         }

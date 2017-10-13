@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
+using CHC.Consent.Utils;
 using CHC.Consent.WebApi.Abstractions;
 using CHC.Consent.WebApi.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
@@ -23,12 +23,12 @@ namespace CHC.Consent.WebApi.Features.Person
         {
             this.people = people;
         }
-
+        
         [HttpGet]
         public IEnumerable<ResponseModels.Person> Get([FromQuery]RequestModels.GetPeople request)
         {
             return people.GetPeople()
-                .Skip(request.Page * request.PageSize).Take(request.PageSize)
+                .GetPage(request.Page, request.PageSize)
                 .Select(_ => new ResponseModels.Person {Id = _.Id})
                 .AsEnumerable();
         }

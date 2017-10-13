@@ -28,6 +28,19 @@ namespace CHC.Consent.NHibernate.Tests
             LoggerProvider.SetLoggersFactory(new OutputLoggerFactory(output));
         }
 
+        public class Paging : IPagingProperties{
+            /// <inheritdoc />
+            public int Page { get; set; }
+
+            /// <inheritdoc />
+            public int PageSize { get; set; }
+        }
+
+        public class PersonProjection
+        {
+            public Guid Id { get; set; }
+        }
+
         [Fact]
         public void HasAccessToPeopleViaExplicitAccess()
         {
@@ -56,19 +69,68 @@ namespace CHC.Consent.NHibernate.Tests
             }
             
             Db.InTransactionalUnitOfWork(SavePeople);
-            
-          
-
-            var getUser = new Mock<IUserAccessor>();
-            getUser.Setup(_ => _.GetUser()).Returns(user);
 
 
-            var securePersonRepository = new SecurePersonRepository(new PersonRespository(Db.SessionAccessor), getUser.Object, Db.SessionAccessor);
+            var securePersonRepository = new SecurePersonRepository(UserAccessor(user), Db.SessionAccessor);
 
 
             var people = Db.InTransactionalUnitOfWork(
                 () => securePersonRepository
                     .GetPeople()
+
+                    .ToArray());
+            
+            Assert.NotEmpty(people);
+        }
+
+        private static IUserAccessor UserAccessor(User user)
+        {
+            var getUser = new Mock<IUserAccessor>();
+            getUser.Setup(_ => _.GetUser()).Returns(user);
+            return getUser.Object;
+        }
+
+        [Fact]
+        public void CanProjectPeople()
+        {
+            var user = new User();
+            var person = new PersistedPerson(Enumerable.Empty<PersistedIdentity>());
+
+            var read = new Permisson {Name = "read"};
+
+            void SavePeople(ISession s)
+            {
+                s.Save(person);
+                s.Save(read);
+
+                var securablePerson = new SecurablePerson {Person = person};
+                s.Save(securablePerson);
+
+                user.PermissionEntries.Add(
+                    new PermissionEntry
+                    {
+                        Permisson = read,
+                        Principal = user,
+                        Securable = securablePerson
+                    });
+
+                s.Save(user);
+            }
+            
+            Db.InTransactionalUnitOfWork(SavePeople);
+
+            var getUser = new Mock<IUserAccessor>();
+            getUser.Setup(_ => _.GetUser()).Returns(user);
+
+
+            var securePersonRepository = new SecurePersonRepository(getUser.Object, Db.SessionAccessor);
+
+
+            var people = Db.InTransactionalUnitOfWork(
+                () => securePersonRepository
+                    .GetPeople()
+                    .Skip(0).Take(10)
+                    .Select(p => new PersonProjection{ Id = p.Id})
                     .ToArray());
             
             Assert.NotEmpty(people);
@@ -108,10 +170,9 @@ namespace CHC.Consent.NHibernate.Tests
                 }
             );
 
-            var getUser = new Mock<IUserAccessor>();
-            getUser.Setup(_ => _.GetUser()).Returns(user);
+            
 
-            var securePersonRepository = new SecurePersonRepository(new PersonRespository(Db.SessionAccessor), getUser.Object, Db.SessionAccessor);
+            var securePersonRepository = new SecurePersonRepository(UserAccessor(user), Db.SessionAccessor);
 
             var people = Db.InTransactionalUnitOfWork(
                 () => securePersonRepository

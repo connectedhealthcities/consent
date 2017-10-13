@@ -1,4 +1,5 @@
 ﻿using System;
+using CHC.Consent.WebApi.Abstractions;
 
 namespace CHC.Consent.WebApi.Features.Person
 {
@@ -15,8 +16,7 @@ namespace CHC.Consent.WebApi.Features.Person
 
     namespace RequestModels
     {
-
-        public class GetPeople
+        public class GetPeople : IPagingProperties
         {
             public int Page { get; set; } = 0;
             public int PageSize { get; set; } = 500;

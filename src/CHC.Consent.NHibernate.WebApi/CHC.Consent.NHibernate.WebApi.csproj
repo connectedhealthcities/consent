@@ -3,6 +3,9 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="PredicateExtensions.Source" Version="1.0.0" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\CHC.Consent.Core\CHC.Consent.Core.csproj" />
     <ProjectReference Include="..\CHC.Consent.Identity.Core\CHC.Consent.Identity.Core.csproj" />
     <ProjectReference Include="..\CHC.Consent.NHibernate\CHC.Consent.NHibernate.csproj" />

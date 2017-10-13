@@ -1,4 +1,5 @@
 ﻿using System;
+using CHC.Consent.Utils;
 using NHibernate;
 
 namespace CHC.Consent.NHibernate
@@ -15,6 +16,11 @@ namespace CHC.Consent.NHibernate
         {
             this.sessionFactory = sessionFactory;
             this.onDisposed = onDisposed;
+        }
+
+        public UnitOfWork(ISessionFactory sessionFactory) : this(sessionFactory, onDisposed:Do.Nothing)
+        {
+            
         }
 
         public ISession GetSession()

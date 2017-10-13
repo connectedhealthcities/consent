@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using CHC.Consent.Identity.Core;
@@ -14,34 +15,32 @@ namespace CHC.Consent.NHibernate.WebApi
     public class SecurePersonRepository : IPersonRepository
     {
         public IUserAccessor UserAccessor { get; }
-        private readonly INHibernatePersonRespository inner;
-        private readonly Func<ISession> getSession;
+        private readonly Func<ISession> sessionAccessor;
 
-        public ISession Session => getSession();
+        public ISession Session => sessionAccessor();
 
         /// <inheritdoc />
         public SecurePersonRepository(
-            INHibernatePersonRespository inner,
             IUserAccessor userAccessor,
-            Func<ISession> getSession)
+            Func<ISession> sessionAccessor)
         {
             UserAccessor = userAccessor;
-            this.inner = inner;
-            this.getSession = getSession;
+            this.sessionAccessor = sessionAccessor;
         }
 
         /// <inheritdoc />
         public IQueryable<IPerson> GetPeople()
         {
             var user = (User)UserAccessor.GetUser();
-            return inner.GetPeople().Where(HasExplicitAccess(user).Or(HasAccessViaStudy(user)));
+            return sessionAccessor().Query<PersistedPerson>()
+                .Where(HasExplicitAccess(user).Or(HasAccessViaStudy(user)));
         }
 
         private Expression<Func<PersistedPerson, bool>> HasAccessViaStudy(SecurityPrincipal principal)
         {
             var accessibleStudies =
                 Session.Query<SecurableStudy>()
-                    .Where(GivesAccessTo<SecurableStudy>(principal));
+                    .Where(SecurableGrantsReadAccessTo<SecurableStudy>(principal));
             
             return person => accessibleStudies
                 .Any(s => person.SubjectIdentifiers.Any(si => si.StudyId == s.Study.Id));
@@ -49,12 +48,12 @@ namespace CHC.Consent.NHibernate.WebApi
 
         private Expression<Func<PersistedPerson, bool>> HasExplicitAccess(SecurityPrincipal principal)
         {
-            var accessiblePeople = Session.Query<SecurablePerson>().Where(GivesAccessTo<SecurablePerson>(principal));
+            var accessiblePeople = Session.Query<SecurablePerson>().Where(SecurableGrantsReadAccessTo<SecurablePerson>(principal));
 
             return person => accessiblePeople.Any(s => s.Person == person);
         }
 
-        private Expression<Func<T, bool>> GivesAccessTo<T>(SecurityPrincipal principal)
+        private Expression<Func<T, bool>> SecurableGrantsReadAccessTo<T>(SecurityPrincipal principal)
             where T : Securable =>
             x => x.Entries.Any(
                 e => e.Principal.Id == principal.Id &&

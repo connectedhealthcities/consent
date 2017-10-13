@@ -108,7 +108,7 @@ namespace CHC.Consent.NHibernate.Configuration
 
             private void UseNicerForeignKeyNameForManyToOne(IModelInspector inspector, PropertyPath member, IManyToOneMapper customizer)
             {
-                var classType = member.LocalMember.ReflectedType;
+                var classType = member.LocalMember.DeclaringType;
                 customizer.ForeignKey(
                     "FK_" + namingStrategy.ClassToTableName(classType.Name) + "_" +
                     member.ToColumnName("_"));
