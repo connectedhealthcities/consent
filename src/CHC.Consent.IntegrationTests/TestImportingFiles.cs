@@ -14,9 +14,10 @@ using CHC.Consent.NHibernate;
 using CHC.Consent.NHibernate.Consent;
 using CHC.Consent.NHibernate.Identity;
 using CHC.Consent.Testing.NHibernate;
+using CHC.Consent.Utils;
+using NHibernate;
 using NHibernate.Linq;
 using Xunit;
-using ISessionFactory = CHC.Consent.NHibernate.ISessionFactory;
 using Study = CHC.Consent.NHibernate.Consent.Study;
 
 namespace CHC.Consent.IntegrationTests
@@ -42,25 +43,28 @@ namespace CHC.Consent.IntegrationTests
             var mailDropLocation = Path.Combine(Environment.CurrentDirectory, "Import");
             Directory.CreateDirectory(mailDropLocation);
             var subjectIdentifiers = new SimpleSubjectIdentifierAllocator();
-            IStudy study;
-            IEvidenceKind evidenceKind;
+            IStudy study = null;
+            IEvidenceKind evidenceKind = null;
 
-            IIdentityKind identityKind1;
-            IIdentityKind identityKind2;
+            IIdentityKind identityKind1 = null;
+            IIdentityKind identityKind2 = null;
             
-            using (var system = new ConsentSystem(db))
+            using (var system = new ConsentSystem(db.UnitOfWorkFactory))
             {
-                study = system.CreateStudy();
+                db.InTransactionalUnitOfWork(
+                    () =>
+                    {
+                        study = system.CreateStudy();
 
-                identityKind1 = system.AddIdentityKind(externalId:"urn:chc:consent:sample:identitykind:one");
-                identityKind2 = system.AddIdentityKind(externalId: "urn:chc:consent:sample:identitykind:two");
+                        identityKind1 = system.AddIdentityKind(externalId: "urn:chc:consent:sample:identitykind:one");
+                        identityKind2 = system.AddIdentityKind(externalId: "urn:chc:consent:sample:identitykind:two");
 
-                evidenceKind = system.AddEvidenceKind(externalId: "urn:chc:consent:sample:evidencekind:one");
+                        evidenceKind = system.AddEvidenceKind(externalId: "urn:chc:consent:sample:evidencekind:one");
 
-                
-                system.UseSubjectIdentifiersFrom(subjectIdentifiers);
-                
-                
+                        system.UseSubjectIdentifiersFrom(subjectIdentifiers);
+                    }
+                );
+
                 system.WatchFileSystem(mailDropLocation, study);
 
                 File.Copy(
@@ -74,6 +78,7 @@ namespace CHC.Consent.IntegrationTests
             {
                 var imported = session.Query<NHibernate.Consent.Consent>().FirstOrDefault(_ => _.SubjectIdentifier == subjectIdentifiers.LastId);
 
+                Assert.NotNull(imported);
                 Assert.Equal(study.Id, imported.StudyId);
                 Assert.Single(imported.ProvidedEvidence);
                 Assert.Equal("The evidence that was sent", imported.ProvidedEvidence.First().TheEvidence);
@@ -84,14 +89,16 @@ namespace CHC.Consent.IntegrationTests
             {
                 var person = session.Query<PersistedPerson>().FirstOrDefault();
                 
+                Assert.NotNull(person);
                 Assert.NotEmpty(person.Identities);
 
                 Assert.Single(
                     person.Identities,
                     _ => _.IdentityKindId == identityKind1.Id && ((ISimpleIdentity) _).Value == "111-111-111");
 
-                Predicate<PersistedIdentity> isIdentity2 = _ => _.IdentityKindId == identityKind2.Id && ((ISimpleIdentity) _).Value == "222";
-                Assert.Single(person.Identities,isIdentity2);
+                Assert.Single(
+                    person.Identities,
+                    _ => _.IdentityKindId == identityKind2.Id && ((ISimpleIdentity) _).Value == "222");
 
                 Assert.Single(person.SubjectIdentifiers);
 
@@ -99,14 +106,14 @@ namespace CHC.Consent.IntegrationTests
                 Assert.Equal(subjectIdentifiers.LastId, subjectIdentifier.SubjectIdentifier);
                 Assert.Equal(study.Id, subjectIdentifier.StudyId);
                 Assert.Single(subjectIdentifier.Identities);
-                Assert.Contains(subjectIdentifier.Identities, isIdentity2);
+                Assert.Contains(subjectIdentifier.Identities, _ => _.IdentityKindId == identityKind2.Id && ((ISimpleIdentity) _).Value == "222");
             }
         }
     }
 
     public class SimpleSubjectIdentifierAllocator : ISubjectIdentfierAllocator
     {
-        private int nextId = 0;
+        private int nextId;
         private string lastId;
 
         public string AllocateNewIdentifier(IStudy study)
@@ -128,24 +135,25 @@ namespace CHC.Consent.IntegrationTests
     {
         private readonly CancellationTokenSource cancellationTokenSource;
         private ISubjectIdentfierAllocator subjectIdentfierAllocator;
-        private IIdentityStore identityStore;
+        private readonly IIdentityStore identityStore;
         private readonly NHibernateConsentStore consentStore;
         
         private readonly IdentityKindStore identityKindStore;
-        private ISessionFactory dbSessionFactory;
+        private readonly UnitOfWorkFactory unitOfWorkFactory;
         public CancellationToken CancellationToken => cancellationTokenSource.Token;
         private BlockingCollection<IWatcher> Watchers { get; } = new BlockingCollection<IWatcher>();
         public event EventHandler DatasourceImported;
 
-        public ConsentSystem(ISessionFactory fixture)
+        public ConsentSystem(UnitOfWorkFactory fixture)
         {
             cancellationTokenSource = new CancellationTokenSource();
 
-            dbSessionFactory = fixture;
-            
-            identityStore = new NHibernateIdentityStore(dbSessionFactory, new NaiveIdentityKindProviderHelper());
-            consentStore = new NHibernateConsentStore(dbSessionFactory);
-            identityKindStore = new IdentityKindStore(dbSessionFactory);
+            unitOfWorkFactory = fixture;
+
+            Func<ISession> sessionAccessor = () => fixture.GetCurrentUnitOfWork().GetSession();
+            identityStore = new NHibernateIdentityStore(sessionAccessor, new NaiveIdentityKindProviderHelper());
+            consentStore = new NHibernateConsentStore(sessionAccessor);
+            identityKindStore = new IdentityKindStore(sessionAccessor);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -182,40 +190,45 @@ namespace CHC.Consent.IntegrationTests
 
         private void Import(IStandardDataDatasource datasource)
         {
-            foreach (var specification in Transform(datasource))
+            using (var uow = unitOfWorkFactory.Start())
             {
-                
-                if (IsNewPerson(specification))
+                foreach (var specification in Transform(datasource))
                 {
-                    var person = CreateNewPerson(specification);
-                    
-                    var subjectIdentifer = GetNewSubjectIdentifer(datasource.Study);
+                    using (var transaction = uow.GetSession().BeginTransaction())
+                    {
+                        if (IsNewPerson(specification))
+                        {
+                            var person = CreateNewPerson(specification);
 
-                    var personIdentifier = StoreSubjectIdentifier(datasource.Study, person, subjectIdentifer, specification.MatchSubjectIdentity);
+                            var subjectIdentifer = GetNewSubjectIdentifer(datasource.Study);
 
-                    RecordConsentFor(personIdentifier, specification.Evidence);
-                }
-                else
-                {
-                    //TODO: handle person updates?
+                            var personIdentifier = StoreSubjectIdentifier(
+                                datasource.Study,
+                                person,
+                                subjectIdentifer,
+                                specification.MatchSubjectIdentity);
+
+                            RecordConsentFor(personIdentifier, specification.Evidence);
+                        }
+                        else
+                        {
+                            //TODO: handle person updates?
+                        }
+
+                        transaction.Commit();
+                    }
                 }
             }
 
-            DatasourceImported?.Invoke(this, EventArgs.Empty);
+            DatasourceImported.Trigger(this);
         }
 
         private ISubjectIdentifier StoreSubjectIdentifier(
             IStudy study,
             IPerson person,
             string subjectIdentifer,
-            List<IIdentity> identities) =>
-            dbSessionFactory.AsTransaction(
-                _ =>
-                {
-                    person = _.Merge(person);
-                    return person.AddSubjectIdentifier(study, subjectIdentifer, identities);
-                });
-        
+            List<IIdentity> identities) => person.AddSubjectIdentifier(study, subjectIdentifer, identities);
+
 
         private ImportFileReader Transform(IStandardDataDatasource datasource)
         {
@@ -245,19 +258,14 @@ namespace CHC.Consent.IntegrationTests
 
         public IStudy CreateStudy()
         {
-            return dbSessionFactory.AsTransaction(
-                session =>
-                {
-                    var study = new Study();
-                    session.Save(study);
-                    return study;
-                }
-            );
+            var study = new Study();
+            unitOfWorkFactory.GetCurrentUnitOfWork().GetSession().Save(study);
+            return study;
         }
 
         public void UseSubjectIdentifiersFrom(ISubjectIdentfierAllocator allocator) => subjectIdentfierAllocator = allocator;
 
-        public IIdentityKind AddIdentityKind(string externalId) => identityKindStore.AddIdentity(externalId);
+        public IIdentityKind AddIdentityKind(string externalId) => identityKindStore.AddIdentityKind(externalId);
         
 
         public IEvidenceKind AddEvidenceKind(string externalId) => consentStore.AddEvidenceKind(externalId);

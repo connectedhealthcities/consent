@@ -20,9 +20,9 @@ namespace CHC.Consent.NHibernate.Tests
         {
             object id = null;
             
-            db.AsTransaction(session => { id = session.Save(new Study()); });
+            db.InTransactionalUnitOfWork(session => { id = session.Save(new Study()); });
 
-            db.AsTransaction(
+            db.InTransactionalUnitOfWork(
                 session =>
                 {
                     var study = session.Get<Study>(id);

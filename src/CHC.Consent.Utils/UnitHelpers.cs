@@ -12,6 +12,15 @@ namespace CHC.Consent.Utils
                 return Unit.Value;
             };
         }
+
+        public static Func<Unit> AsUnitFunc(this Action action)
+        {
+            return () =>
+            {
+                action();
+                return Unit.Value;
+            }; 
+        }
     }
 
     public static class FuncHelpers

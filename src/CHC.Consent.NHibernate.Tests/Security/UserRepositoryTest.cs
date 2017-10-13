@@ -11,11 +11,13 @@ namespace CHC.Consent.NHibernate.Tests.Security
     public class UserRepositoryTest
     {
         private readonly DatabaseFixture db;
+        private readonly UserRepository userRepository;
 
         /// <inheritdoc />
         public UserRepositoryTest(DatabaseFixture db, ITestOutputHelper output)
         {
             this.db = db;
+            userRepository = new UserRepository(this.db.SessionAccessor);
         }
 
         [Fact]
@@ -25,9 +27,10 @@ namespace CHC.Consent.NHibernate.Tests.Security
             var jwtLogin = new JwtLogin("urn:chc:consent:nhibernate:userrepository:test", Guid.NewGuid().ToString());
             user.AddLogin(jwtLogin);
             
-            db.AsTransaction(s => { s.Save(user); });
-
-            var found = new UserRepository(db).FindUserBy(jwtLogin.Issuer, jwtLogin.Subject);
+            db.InTransactionalUnitOfWork(s => { s.Save(user); });
+            
+            var found =
+                db.InTransactionalUnitOfWork(() => userRepository.FindUserBy(jwtLogin.Issuer, jwtLogin.Subject));
 
             Assert.Equal(user.Id, ((User) found).Id);
             Assert.NotEmpty(user.Logins);

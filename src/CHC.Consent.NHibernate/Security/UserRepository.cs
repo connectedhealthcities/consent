@@ -1,28 +1,29 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using CHC.Consent.Security;
+using NHibernate;
 using NHibernate.Linq;
 
 namespace CHC.Consent.NHibernate.Security
 {
     public class UserRepository : IJwtIdentifiedUserRepository
     {
-        private ISessionFactory SessionFactory { get; }
+        private Func<ISession> SessionAccessor { get; }
 
         /// <inheritdoc />
-        public UserRepository(ISessionFactory sessionFactory)
+        public UserRepository(Func<ISession> sessionAccessor)
         {
-            SessionFactory = sessionFactory;
+            SessionAccessor = sessionAccessor;
         }
 
         /// <inheritdoc />
         public IUser FindUserBy(string issuer, string subject)
         {
-            return SessionFactory.AsTransaction(
-                s => s.Query<User>().SingleOrDefault(
-                    user =>
-                        user.Logins
-                            .OfType<JwtLogin>()
-                            .Any(id => id.Issuer == issuer && id.Subject == subject)));
+            return SessionAccessor().Query<User>().SingleOrDefault(
+                user =>
+                    user.Logins
+                        .OfType<JwtLogin>()
+                        .Any(id => id.Issuer == issuer && id.Subject == subject));
         }
     }
 }

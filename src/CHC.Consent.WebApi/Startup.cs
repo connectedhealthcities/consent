@@ -1,6 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Threading.Tasks;
+using CHC.Consent.WebApi.Abstractions;
 using CHC.Consent.WebApi.Features.Person;
 using CHC.Consent.WebApi.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -65,9 +66,6 @@ namespace CHC.Consent.WebApi
                 });
 
             services.AddTransient<IUserAccessor, HttpContextUserAccessor>();
-
-            
-            services.Decorate<IPersonRepository>((p, s) => new PersonRepositoryWithSecurity(p, s.GetService<IUserAccessor>()));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

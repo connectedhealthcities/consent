@@ -3,18 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using CHC.Consent.Common.Core;
 using CHC.Consent.Core;
+using NHibernate;
 using NHibernate.Linq;
 
 namespace CHC.Consent.NHibernate.Consent
 {
     public class NHibernateConsentStore : IConsentStore, IEvidenceKindStore
     {
-        private readonly ISessionFactory sessionFactory;
+        private readonly Func<ISession> sessionAccessor;
 
         /// <inheritdoc />
-        public NHibernateConsentStore(ISessionFactory sessionFactory)
+        public NHibernateConsentStore(Func<ISession> sessionAccessor)
         {
-            this.sessionFactory = sessionFactory;
+            this.sessionAccessor = sessionAccessor;
         }
 
         /// <inheritdoc />
@@ -29,28 +30,24 @@ namespace CHC.Consent.NHibernate.Consent
 
             consent.AddProvidedEvidence(evidence);
 
-            sessionFactory.AsTransaction(_ => _.Save(consent));
+            sessionAccessor().Save(consent);
 
             return consent;
         }
-
-
+        
         /// <inheritdoc />
         public IEvidenceKind FindEvidenceKindByExternalId(string externalId)
         {
-            return sessionFactory.AsTransaction(
-                s => s.Query<EvidenceKind>().FirstOrDefault(_ => _.ExternalId == externalId));
+            return sessionAccessor().Query<EvidenceKind>().FirstOrDefault(_ => _.ExternalId == externalId);
         }
 
-        public IEvidenceKind AddEvidenceKind(string externalId) =>
-            sessionFactory.AsTransaction(
-                s =>
-                {
-                    var evidenceKind = new EvidenceKind {ExternalId = externalId};
-                    s.Save(evidenceKind);
-                    return evidenceKind;
-                }
-            );
+        public IEvidenceKind AddEvidenceKind(string externalId)
+        {
+            var evidenceKind = new EvidenceKind { ExternalId = externalId };
+            sessionAccessor().Save(evidenceKind);
+            return evidenceKind;
+        }
 
     }
+
 }

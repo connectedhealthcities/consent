@@ -12,8 +12,6 @@ namespace CHC.Consent.NHibernate.Tests
     [Collection(DatabaseCollection.Name)]
     public class PersonTest
     {
-        
-
         private class Study : IStudy
         {
             /// <inheritdoc />
@@ -42,13 +40,13 @@ namespace CHC.Consent.NHibernate.Tests
         [Fact]
         public void SavingAPersonSavesIdentities()
         {
-            var personId = (Guid)db.AsTransaction(
+            var personId = (Guid)db.InTransactionalUnitOfWork(
                 s =>
                     s.Save(
                         new PersistedPerson(
                             new[] {SimpleIdentity(value:"Test Save")})));
 
-            var identities = db.AsTransaction(
+            var identities = db.InTransactionalUnitOfWork(
                 s => s.Query<PersistedIdentity>().Where(_ => _.Person.Id == personId).ToArray());
 
             Assert.Single(

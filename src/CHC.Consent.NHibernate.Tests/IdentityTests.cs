@@ -24,7 +24,7 @@ namespace CHC.Consent.NHibernate.Tests
         public void TestIdentityKindPersistence()
         {
             object id = null;
-            db.AsTransaction(
+            db.InTransactionalUnitOfWork(
                 session =>
                 {
                     id = session.Save(
@@ -35,7 +35,7 @@ namespace CHC.Consent.NHibernate.Tests
                         });
                 });
 
-            db.AsTransaction(
+            db.InTransactionalUnitOfWork(
                 session =>
                 {
                     var identityKind = session.Get<IdentityKind>(id);
@@ -53,7 +53,7 @@ namespace CHC.Consent.NHibernate.Tests
         {
             object id = null;
             var identityKindId = Guid.NewGuid();
-            db.AsTransaction(
+            db.InTransactionalUnitOfWork(
                 _ =>
                 {
                     id = _.Save(
@@ -66,7 +66,7 @@ namespace CHC.Consent.NHibernate.Tests
 
                 });
 
-            db.AsTransaction(
+            db.InTransactionalUnitOfWork(
                 session =>
                 {
                     var simpleIdentity = session.Get<PersistedIdentity>(id);

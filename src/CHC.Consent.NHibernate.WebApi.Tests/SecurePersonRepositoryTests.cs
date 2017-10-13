@@ -63,7 +63,7 @@ namespace CHC.Consent.NHibernate.Tests
             getUser.Setup(_ => _.GetUser()).Returns(user);
 
 
-            var securePersonRepository = new SecurePersonRepository(new PersonRespository(Db.SessionProvider), getUser.Object, Db.SessionProvider);
+            var securePersonRepository = new SecurePersonRepository(new PersonRespository(Db.SessionAccessor), getUser.Object, Db.SessionAccessor);
 
 
             var people = Db.InTransactionalUnitOfWork(
@@ -111,7 +111,7 @@ namespace CHC.Consent.NHibernate.Tests
             var getUser = new Mock<IUserAccessor>();
             getUser.Setup(_ => _.GetUser()).Returns(user);
 
-            var securePersonRepository = new SecurePersonRepository(new PersonRespository(Db.SessionProvider), getUser.Object, Db.SessionProvider);
+            var securePersonRepository = new SecurePersonRepository(new PersonRespository(Db.SessionAccessor), getUser.Object, Db.SessionAccessor);
 
             var people = Db.InTransactionalUnitOfWork(
                 () => securePersonRepository

@@ -17,7 +17,7 @@ namespace CHC.Consent.NHibernate.Tests.Identity
         public IdentityKindStoreTests(DatabaseFixture db)
         {
             Db = db;
-            store = new IdentityKindStore(Db);
+            store = new IdentityKindStore(Db.SessionAccessor);
         }
 
         [Fact]
@@ -25,9 +25,14 @@ namespace CHC.Consent.NHibernate.Tests.Identity
         {
             string externalId = "urn:chc:consent:tests:identitstore:newidentity:" + Guid.NewGuid();
             
-            store.AddIdentity(externalId);
+            Db.InTransactionalUnitOfWork(() => store.AddIdentityKind(externalId));
 
-            var stored = Db.AsTransaction(_ => _.Query<IdentityKind>().FirstOrDefault(k => k.ExternalId == externalId));
+            IdentityKind stored;
+            using (var startSession = Db.StartSession())
+            {
+                stored = startSession.Query<IdentityKind>().FirstOrDefault(k => k.ExternalId == externalId);
+            }
+            
 
             Assert.NotNull(stored);
             Assert.Equal(externalId, stored.ExternalId);
@@ -37,7 +42,9 @@ namespace CHC.Consent.NHibernate.Tests.Identity
         [Fact]
         public void ReturnsNullForNonExistantIdentityKinds()
         {
-            var identityKind = store.FindIdentityKindByExternalId("urn:chc:consent:tests:noidentitykind:rubbish:" + Guid.NewGuid());
+            var identityKind = Db.InTransactionalUnitOfWork(
+                () => store.FindIdentityKindByExternalId(
+                    "urn:chc:consent:tests:noidentitykind:rubbish:" + Guid.NewGuid()));
 
             Assert.Null(identityKind);
         }
@@ -47,9 +54,9 @@ namespace CHC.Consent.NHibernate.Tests.Identity
         {
             var externalId = "urn:chc:consent:tests:identitstore:find:" + Guid.NewGuid();
 
-            Db.AsTransaction(_ => _.Save(new IdentityKind {ExternalId = externalId}));
+            Db.InTransactionalUnitOfWork(_ => _.Save(new IdentityKind {ExternalId = externalId}));
 
-            var identityKind = store.FindIdentityKindByExternalId(externalId);
+            var identityKind = Db.InTransactionalUnitOfWork(() => store.FindIdentityKindByExternalId(externalId));
 
             Assert.NotNull(identityKind);
             Assert.Equal(externalId, identityKind.ExternalId);

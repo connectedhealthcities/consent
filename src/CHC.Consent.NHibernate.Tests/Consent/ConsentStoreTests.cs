@@ -17,7 +17,7 @@ namespace CHC.Consent.NHibernate.Tests.Consent
         public ConsentStoreTest(DatabaseFixture db, ITestOutputHelper output)
         {
             this.db = db;
-            this.store = new NHibernateConsentStore(db);
+            store = new NHibernateConsentStore(db.SessionAccessor);
         }
 
         [Fact]
@@ -26,10 +26,14 @@ namespace CHC.Consent.NHibernate.Tests.Consent
             var subjectIdentifier = "subject identifier" + Guid.NewGuid();
             var evidence = new Evidence {EvidenceKindId = Guid.NewGuid(), TheEvidence = "Some evidence" + Guid.NewGuid()};
             var studyId = Guid.NewGuid();
-            var consent = store.RecordConsent(
-                studyId,
-                subjectIdentifier,
-                new [] { evidence });
+
+
+            var consent = db.InTransactionalUnitOfWork(
+                () => store.RecordConsent(
+                    studyId,
+                    subjectIdentifier,
+                    new[] {evidence})
+                    );
 
             using (var session = db.StartSession())
             {
@@ -53,9 +57,9 @@ namespace CHC.Consent.NHibernate.Tests.Consent
         public void CanFindEvidenceKinds()
         {
             var externalId = "urn:chc:consent:evidence-kind:persistence:test:" + Guid.NewGuid();
-            var id = (Guid)db.AsTransaction(s => s.Save(new EvidenceKind {ExternalId = externalId}));
+            var id = db.InTransactionalUnitOfWork(s => s.Save(new EvidenceKind {ExternalId = externalId}));
 
-            var found = store.FindEvidenceKindByExternalId(externalId);
+            var found = db.InTransactionalUnitOfWork(() => store.FindEvidenceKindByExternalId(externalId));
             Assert.NotNull(found);
             Assert.Equal(id, found.Id);
             Assert.Equal(externalId, found.ExternalId);

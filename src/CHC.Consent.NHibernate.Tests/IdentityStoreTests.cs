@@ -30,7 +30,7 @@ namespace CHC.Consent.NHibernate.Tests
         public IdentityStoreTests(DatabaseFixture db, ITestOutputHelper output)
         {
             this.db = db;
-            identityStore = new NHibernateIdentityStore(db, new NaiveIdentityKindProviderHelper());
+            identityStore = new NHibernateIdentityStore(db.SessionAccessor, new NaiveIdentityKindProviderHelper());
             LoggerProvider.SetLoggersFactory(new OutputLoggerFactory(output));
         }
 
@@ -43,19 +43,27 @@ namespace CHC.Consent.NHibernate.Tests
         {
             const string identityExternalId = "chc:CanFindAPersonBySimpleIdentityMatch";
 
-            var identityKindId = SaveIdentityKind(identityExternalId);
-            
-            MakePersonFrom(new PersistedSimpleIdentity
-            {
-                IdentityKindId = identityKindId,
-                Value = "1234"
-            });
-
-            var found = this.identityStore.FindPerson(
-                new IMatch[]
+            Guid identityKindId = db.InTransactionalUnitOfWork(
+                () =>
                 {
-                    new IdentityMatch(new PersistedSimpleIdentity {IdentityKindId = identityKindId, Value = "1234"})
+                    var savedIdentityKindId = SaveIdentityKind(identityExternalId);
+
+                    MakePersonFrom(
+                        new PersistedSimpleIdentity
+                        {
+                            IdentityKindId = savedIdentityKindId,
+                            Value = "1234"
+                        });
+
+                    return savedIdentityKindId;
                 });
+
+            var found = db.InTransactionalUnitOfWork(
+                () => identityStore.FindPerson(
+                    new IMatch[]
+                    {
+                        new IdentityMatch(new PersistedSimpleIdentity {IdentityKindId = identityKindId, Value = "1234"})
+                    }));
 
             
             var expected = found.Identities.Cast<ISimpleIdentity>().Single();
@@ -66,39 +74,43 @@ namespace CHC.Consent.NHibernate.Tests
 
         private Guid SaveIdentityKind(string identityExternalId)
         {
-            return db.AsTransaction(s => (Guid)s.Save(new IdentityKind {ExternalId = identityExternalId}));
+            return (Guid)db.SessionAccessor().Save(new IdentityKind {ExternalId = identityExternalId});
         }
 
         public void MakePersonFrom(params PersistedIdentity[] identities)
         {
-            db.AsTransaction(
-                s =>
-                {
-                    var person = new PersistedPerson(identities);
-                    s.Save(person);
-                });
+            var person = new PersistedPerson(identities);
+            db.SessionAccessor().Save(person);
         }
         
         [Fact]
         public void CanFindAPersonBySimpleIdentityMatchWhenPersonHasMoreThanOneIdentity()
         {
-            var identityKind1 = SaveIdentityKind("chc:CanFindAPersonBySimpleIdentityMatchWhenPersonHasMoreThanOneIdentity:1");
-            var identityKind2 = SaveIdentityKind("chc:CanFindAPersonBySimpleIdentityMatchWhenPersonHasMoreThanOneIdentity:2");
+            var (identityKind1, identityKind2) =
+                db.InTransactionalUnitOfWork(
+                    () =>
+                    {
+                        var savedIdentityKind1 = SaveIdentityKind(
+                            "chc:CanFindAPersonBySimpleIdentityMatchWhenPersonHasMoreThanOneIdentity:1");
+                        var savedIdentityKind2 = SaveIdentityKind(
+                            "chc:CanFindAPersonBySimpleIdentityMatchWhenPersonHasMoreThanOneIdentity:2");
 
 
-            MakePersonFrom(
-                new PersistedSimpleIdentity {IdentityKindId = identityKind1, Value = "1234"},
-                new PersistedSimpleIdentity {IdentityKindId = identityKind2, Value = "97"}
-            );
-            
-            var identityStore = this.identityStore;
+                        MakePersonFrom(
+                            new PersistedSimpleIdentity {IdentityKindId = savedIdentityKind1, Value = "1234"},
+                            new PersistedSimpleIdentity {IdentityKindId = savedIdentityKind2, Value = "97"}
+                        );
 
-            var result = identityStore.FindPerson(
-                new []
-                {
-                    new IdentityMatch(new PersistedSimpleIdentity {Value = "1234", IdentityKindId = identityKind1})
-                }
-            );
+                        return (savedIdentityKind1, savedIdentityKind2);
+                    });
+
+            var result = db.InTransactionalUnitOfWork(
+                () => identityStore.FindPerson(
+                    new[]
+                    {
+                        new IdentityMatch(new PersistedSimpleIdentity {Value = "1234", IdentityKindId = identityKind1})
+                    }
+                ));
             
             Assert.NotNull(result);
 
@@ -125,13 +137,16 @@ namespace CHC.Consent.NHibernate.Tests
             const string identityExternalId1 = "chc:CorrectlyUpdatesIdentity:1";
             const string identityExternalId2 = "chc:CorrectlyUpdatesIdentity:2";
 
-            var identityKindId1 = SaveIdentityKind(identityExternalId1);
-            var identityKindId2 = SaveIdentityKind(identityExternalId2);
 
-            var identityStore = this.identityStore;
+            var identityKindId1 = db.InTransactionalUnitOfWork(
+                () =>
+                {
+                    SaveIdentityKind(identityExternalId2);
+                    return SaveIdentityKind(identityExternalId1);
+                });
 
 
-            var person = (PersistedPerson)identityStore.CreatePerson(
+            var person = db.InTransactionalUnitOfWork(() =>  identityStore.CreatePerson(
                 new[]
                 {
                     new PersistedSimpleIdentity
@@ -139,10 +154,10 @@ namespace CHC.Consent.NHibernate.Tests
                         IdentityKindId = identityKindId1,
                         Value = "theKey"
                     }
-                });
+                }));
 
             var saved = 
-                db.AsTransaction(
+                db.InTransactionalUnitOfWork(
                 s =>
                 {
                     var loaded = s.Get<PersistedPerson>(person.Id);

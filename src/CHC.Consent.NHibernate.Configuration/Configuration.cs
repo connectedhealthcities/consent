@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
 using System.Xml.Serialization;
 using CHC.Consent.Identity.Core;
 using CHC.Consent.Identity.SimpleIdentity;
@@ -22,94 +21,6 @@ using NHibernate.Tool.hbm2ddl;
 
 namespace CHC.Consent.NHibernate.Configuration
 {
-    public class SessionWrapper : IDisposable
-    {
-        private readonly bool createdSession;
-        public SessionWrapper(ISession session, Func<ISession> createSession, Action<ISession> sessionDisposing)
-        {
-            SessionDisposing = sessionDisposing;
-            if (session != null)
-            {
-                Session = session;
-            }
-            else
-            {
-                Session = createSession();
-                createdSession = true;
-            }
-            
-        }
-
-        public ISession Session { get; }
-
-        public Action<ISession> SessionDisposing { get; }
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            if (!createdSession) return;
-            SessionDisposing(Session);
-            Session.Dispose();
-        }
-    }
-
-    public class UnitOfWorkFactory
-    {
-        private readonly ISessionFactory sessionFactory;
-        private AsyncLocal<UnitOfWork> current = new AsyncLocal<UnitOfWork>();
-
-        public UnitOfWork GetCurrentUnitOfWork()
-        {
-            if(current.Value == null) throw new InvalidOperationException("Not in a unit of work");
-            return current.Value;
-        }
-
-        public UnitOfWork Start()
-        {
-            if(current.Value != null) throw new InvalidOperationException();
-
-            return current.Value = new UnitOfWork(sessionFactory, ClearSession);
-        }
-
-        private void ClearSession()
-        {
-            current.Value = null;
-        }
-
-        /// <inheritdoc />
-        public UnitOfWorkFactory(ISessionFactory sessionFactory)
-        {
-            this.sessionFactory = sessionFactory;
-        }
-    }
-
-    public class UnitOfWork : IDisposable
-    {
-        private readonly ISessionFactory sessionFactory;
-        private readonly Action onDisposed;
-
-        public ISession CurrentSession { get; private set; }
-
-        /// <inheritdoc />
-        public UnitOfWork(ISessionFactory sessionFactory, Action onDisposed)
-        {
-            this.sessionFactory = sessionFactory;
-            this.onDisposed = onDisposed;
-        }
-
-        public ISession GetSession()
-        {
-            return CurrentSession ?? (CurrentSession = sessionFactory.StartSession());
-        }
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            onDisposed();
-            CurrentSession?.Dispose();
-        }
-    }
-
     public class Configuration : ISessionFactory
     {
         private readonly global::NHibernate.ISessionFactory sessionFactory;

@@ -25,7 +25,7 @@ namespace CHC.Consent.Testing.NHibernate
             UnitOfWorkFactory = new UnitOfWorkFactory(this);
         }
 
-        public T AsUnitOfWork<T>(Func<UnitOfWork, T> run)
+        public T InUnitOfWork<T>(Func<UnitOfWork, T> run)
         {
             using (var uow = UnitOfWorkFactory.Start())
             {
@@ -33,19 +33,21 @@ namespace CHC.Consent.Testing.NHibernate
             }
         }
 
-        public ISession SessionProvider()
+        public ISession SessionAccessor()
         {
             return UnitOfWorkFactory.GetCurrentUnitOfWork().GetSession();
         }
 
         public T InTransactionalUnitOfWork<T>(Func<ISession, T> doWork)
         {
-            return AsUnitOfWork(uow => uow.GetSession().AsTransaction(doWork));
+            return InUnitOfWork(uow => uow.GetSession().AsTransaction(doWork));
         }
 
         public void InTransactionalUnitOfWork(Action<ISession> doWork) => InTransactionalUnitOfWork(doWork.AsUnitFunc());
 
         public T InTransactionalUnitOfWork<T>(Func<T> doWork) => InTransactionalUnitOfWork(doWork.IgnoreParams<ISession, T>());
+
+        public void InTransactionalUnitOfWork(Action doWork) => InTransactionalUnitOfWork(doWork.AsUnitFunc());
         
 
         public ISession StartSession(Action<string> output=null)

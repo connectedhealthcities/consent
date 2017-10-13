@@ -10,13 +10,13 @@ namespace CHC.Consent.NHibernate.Identity
 {
     public class NHibernateIdentityStore : IIdentityStore
     {
-        private readonly ISessionFactory sessionFactory;
+        private readonly Func<ISession> sessionAccessor;
         private readonly IIdentityKindHelperProvider identityKindHelperProvider;
         private readonly IdentityQueryGenerator queryGenerator;
 
-        public NHibernateIdentityStore(ISessionFactory sessionFactory, IIdentityKindHelperProvider identityKindHelperProvider)
+        public NHibernateIdentityStore(Func<ISession> sessionAccessor, IIdentityKindHelperProvider identityKindHelperProvider)
         {
-            this.sessionFactory = sessionFactory;
+            this.sessionAccessor = sessionAccessor;
             this.identityKindHelperProvider = identityKindHelperProvider;
             queryGenerator = new IdentityQueryGenerator(identityKindHelperProvider);
         }
@@ -29,17 +29,16 @@ namespace CHC.Consent.NHibernate.Identity
                 .FirstOrDefault(matchedPerson => matchedPerson != null);
         }
 
-        public IPerson CreatePerson(IEnumerable<IIdentity> identities)
+        public PersistedPerson CreatePerson(IEnumerable<PersistedIdentity> identites)
         {
-            return sessionFactory.AsTransaction(
-                s =>
-                {
-                    var persistedPerson = new PersistedPerson(CreatePersistedIdentities(identities));
+            var persistedPerson = new PersistedPerson(identites);
+            sessionAccessor().Save(persistedPerson);
+            return persistedPerson;
+        }
 
-                    s.Save(persistedPerson);
-
-                    return persistedPerson;
-                });
+        IPerson IIdentityStore.CreatePerson(IEnumerable<IIdentity> identities)
+        {
+            return CreatePerson(CreatePersistedIdentities(identities));
         }
 
         private IEnumerable<PersistedIdentity> CreatePersistedIdentities(IEnumerable<IIdentity> identities)
@@ -49,7 +48,7 @@ namespace CHC.Consent.NHibernate.Identity
 
         private PersistedPerson Search(Expression<Func<PersistedIdentity, bool>> matchExpression)
         {
-            return sessionFactory.AsTransaction(_ => Search(_, matchExpression));    
+            return Search(sessionAccessor(), matchExpression);    
         }
 
         private PersistedPerson Search(ISession s, Expression<Func<PersistedIdentity, bool>> matchExpression)

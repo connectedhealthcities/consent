@@ -14,18 +14,18 @@ namespace CHC.Consent.NHibernate.WebApi
 
     public class PersonRespository : INHibernatePersonRespository
     {
-        private readonly Func<ISession> db;
+        private readonly Func<ISession> sessionAccessor;
 
         /// <inheritdoc />
-        public PersonRespository(Func<ISession> db)
+        public PersonRespository(Func<ISession> sessionAccessor)
         {
-            this.db = db;
+            this.sessionAccessor = sessionAccessor;
         }
 
         /// <inheritdoc />
         public virtual IQueryable<PersistedPerson> GetPeople()
         {
-            return db().Query<PersistedPerson>();
+            return sessionAccessor().Query<PersistedPerson>();
         }
     }
 }

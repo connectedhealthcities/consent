@@ -1,36 +1,32 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using CHC.Consent.Identity.Core;
+using NHibernate;
 using NHibernate.Linq;
 
 namespace CHC.Consent.NHibernate.Identity
 {
     public class IdentityKindStore : IIdentityKindStore
     {
-        private readonly ISessionFactory sessionFactory;
+        private readonly Func<ISession> sessionAccessor;
 
-        public IdentityKindStore(ISessionFactory sessionFactory)
+        public IdentityKindStore(Func<ISession> sessionAccessor)
         {
-            this.sessionFactory = sessionFactory;
+            this.sessionAccessor = sessionAccessor;
         }
 
         public IIdentityKind FindIdentityKindByExternalId(string externalId)
         {
-            using (var session = sessionFactory.StartSession())
-            {
-                return session.Query<IdentityKind>()
-                    .SetOptions(o => { o.SetCacheable(true); })
-                    .FirstOrDefault(_ => _.ExternalId == externalId);
-            }
+            return sessionAccessor().Query<IdentityKind>()
+                .SetOptions(o => { o.SetCacheable(true); })
+                .FirstOrDefault(_ => _.ExternalId == externalId);
         }
 
-        public IIdentityKind AddIdentity(string externalId) =>
-            sessionFactory.AsTransaction(
-                s =>
-                {
-                    var identityKind = new IdentityKind {ExternalId = externalId};
-                    s.Save(identityKind);
-                    return identityKind;
-                });
-        
+        public IIdentityKind AddIdentityKind(string externalId) 
+        {
+            var identityKind = new IdentityKind {ExternalId = externalId};
+            sessionAccessor().Save(identityKind);
+            return identityKind;
+        }
     }
 }
