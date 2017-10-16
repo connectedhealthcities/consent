@@ -20,6 +20,7 @@ using CHC.Consent.NHibernate.Configuration;
 using CHC.Consent.NHibernate.Security;
 using CHC.Consent.NHibernate.WebApi;
 using CHC.Consent.Security;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace CHC.Consent.WebApi
 {
@@ -65,9 +66,18 @@ namespace CHC.Consent.WebApi
                     // add a swagger document for each discovered API version
                     foreach ( var description in provider.ApiVersionDescriptions )
                     {
-                        c.SwaggerDoc( description.GroupName,  new Info { Version = description.GroupName });
+                        c.SwaggerDoc(
+                            description.GroupName,
+                            new Info
+                            {
+                                Version = description.GroupName,
+                                Title = "CHC Consent API " + description.GroupName,
+                                
+                            });
                     }
-                    
+
+                    c.TagActionsBy(description => description.GroupName);
+                    c.OperationFilter<RemoveVersionPrefixFilter>();
                 });
 
             services.AddSingleton<ISessionFactory>(
@@ -98,6 +108,20 @@ namespace CHC.Consent.WebApi
             
             app.UseAuthentication();
             app.UseMvc();
+        }
+    }
+
+    public class RemoveVersionPrefixFilter : IOperationFilter
+    {
+        private static readonly int VersionPrefixLength = VersionPrefix.Length;
+        private const string VersionPrefix = "V{version";
+
+        /// <inheritdoc />
+        public void Apply(Operation operation, OperationFilterContext context)
+        {
+            operation.OperationId = operation.OperationId.StartsWith(VersionPrefix)
+                ? operation.OperationId.Substring(VersionPrefixLength)
+                : operation.OperationId;
         }
     }
 }

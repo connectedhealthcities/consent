@@ -3,6 +3,7 @@
 @inject IAuthenticationService AuthenticationService
 Hello @User.Identity.Name
 
+<pre>@ViewBag.Response</pre>
 <dl>
 @foreach (var kv in (IDictionary<string, string>) ViewBag.Tokens)
 {

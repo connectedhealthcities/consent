@@ -18,6 +18,7 @@
     <ProjectReference Include="..\CHC.Consent.NHibernate.WebApi\CHC.Consent.NHibernate.WebApi.csproj" />
     <ProjectReference Include="..\CHC.Consent.NHibernate\CHC.Consent.NHibernate.csproj" />
     <ProjectReference Include="..\CHC.Consent.Security\CHC.Consent.Security.csproj" />
+    <ProjectReference Include="..\CHC.Consent.Utils\CHC.Consent.Utils.csproj" />
     <ProjectReference Include="..\CHC.Consent.WebApi.Abstractions\CHC.Consent.WebApi.Abstractions.csproj" />
   </ItemGroup>
 </Project>

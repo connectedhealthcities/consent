@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using CHC.Consent.Web.UI.Models;
@@ -21,9 +23,12 @@ namespace CHC.Consent.Web.UI.Controllers
         {
             this.authenticationService = authenticationService;
         }
-
+        
         public async Task<IActionResult> Index()
         {
+            var client = new HttpClient {BaseAddress = new Uri("http://localhost:49410/v0.1-dev/")};
+            client.DefaultRequestHeaders.Authorization= new AuthenticationHeaderValue("bearer", await HttpContext.GetTokenAsync("id_token"));
+            ViewBag.Response = await client.GetStringAsync("person");
             Dictionary<string, string> tokens = new Dictionary<string, string>();
             if (User.Identity.IsAuthenticated)
             {
