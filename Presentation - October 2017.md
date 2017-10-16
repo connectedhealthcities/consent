@@ -58,7 +58,7 @@ Management of changes is outside scope of system
 * We need to **identify** people to tell if they have provided consent
 * (BiB4All) The method of identifying a child's consent is **different** to identifying a mother's consent
 
-#External Data (BiB4All) 
+# External Data (BiB4All) 
 
 * Merges data from external sources (Local Council, Education, etc)
 * This data does not contain the same identifiers 
