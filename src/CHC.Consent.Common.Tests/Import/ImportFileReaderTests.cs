@@ -46,7 +46,7 @@ namespace CHC.Consent.Common.Tests.Import
             [Fact]
             public void OneRecordWasConverted()
             {
-                Assert.Equal(1, converted.Length);
+                Assert.Single(converted);
             }
         }
         
@@ -78,7 +78,7 @@ namespace CHC.Consent.Common.Tests.Import
             [Fact]
             public void OneRecordWasConverted()
             {
-                Assert.Equal(1, converted.Length);
+                Assert.Single(converted);
             }
 
             [Fact]

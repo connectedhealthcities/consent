@@ -93,7 +93,7 @@ namespace CHC.Consent.Common.Tests.Import.Watchers
         {
             var raised = RunWatcher(NoFiles, FileList("a"));
             
-            Assert.Equal(1, raised.Length);
+            Assert.Single(raised);
         }
         
         [Fact]
