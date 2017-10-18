@@ -28,13 +28,13 @@ namespace CHC.Consent.NHibernate.Tests
         [Fact]
         public void ANewPersonHasIdentities()
         {
-            var person = new PersistedPerson(
+            var person = new Person(
                 new[] {SimpleIdentity(value:"Test"),});
             
             Assert.NotEmpty(person.Identities);
             Assert.Single(
                 person.Identities,
-                _ => _.IdentityKindId != Guid.Empty && ((PersistedSimpleIdentity) _).Value == "Test");
+                _ => _.IdentityKindId != Guid.Empty && ((SimpleIdentity) _).Value == "Test");
         }
 
         [Fact]
@@ -43,15 +43,15 @@ namespace CHC.Consent.NHibernate.Tests
             var personId = (Guid)db.InTransactionalUnitOfWork(
                 s =>
                     s.Save(
-                        new PersistedPerson(
+                        new Person(
                             new[] {SimpleIdentity(value:"Test Save")})));
 
             var identities = db.InTransactionalUnitOfWork(
-                s => s.Query<PersistedIdentity>().Where(_ => _.Person.Id == personId).ToArray());
+                s => s.Query<NHibernate.Identity.Identity>().Where(_ => _.Person.Id == personId).ToArray());
 
             Assert.Single(
                 identities,
-                _ => _.IdentityKindId != Guid.Empty && ((PersistedSimpleIdentity) _).Value == "Test Save");
+                _ => _.IdentityKindId != Guid.Empty && ((SimpleIdentity) _).Value == "Test Save");
 
         }
 
@@ -60,7 +60,7 @@ namespace CHC.Consent.NHibernate.Tests
         {
             var subjectIdentifierIdentity = SimpleIdentity(value:"Subject Identifier Identity");
             var study = new Study {Id = Guid.NewGuid()};
-            var person = new PersistedPerson(
+            var person = new Person(
                 new[]
                 {
                     SimpleIdentity(value:"Something"),
@@ -82,9 +82,9 @@ namespace CHC.Consent.NHibernate.Tests
                       ((ISimpleIdentity) id).Value == subjectIdentifierIdentity.Value);
         }
 
-        private PersistedSimpleIdentity SimpleIdentity(string value)
+        private SimpleIdentity SimpleIdentity(string value)
         {
-            return new PersistedSimpleIdentity { Value = value, IdentityKindId = Guid.NewGuid() };
+            return new SimpleIdentity { Value = value, IdentityKindId = Guid.NewGuid() };
         }
     }
 }

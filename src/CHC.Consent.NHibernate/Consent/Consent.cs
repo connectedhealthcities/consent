@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using CHC.Consent.Common.Core;
+using CHC.Consent.NHibernate.Security;
+using CHC.Consent.Security;
 
 namespace CHC.Consent.NHibernate.Consent
 {
-    public class Consent : IConsent
+    public class Consent : Entity, IConsent, INHibernateSecurable
     {
-        public virtual Guid Id { get; protected set; }
-        
         /// <inheritdoc />
         public virtual Guid StudyId { get; set; }
 
@@ -44,5 +44,11 @@ namespace CHC.Consent.NHibernate.Consent
                 TheEvidence = evidence.Evidence,
             };
         }
+
+        /// <inheritdoc />
+        IAccessControlList ISecurable.AccessControlList => Acl;
+
+        /// <inheritdoc />
+        public virtual AccessControlList Acl { get; protected set; } = new AccessControlList();
     }
 }

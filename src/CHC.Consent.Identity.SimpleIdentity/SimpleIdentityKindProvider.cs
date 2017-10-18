@@ -24,7 +24,7 @@ namespace CHC.Consent.Identity.SimpleIdentity
             return new SimpleIdentitySpecification(identityKindId, simple.Value);
         }
 
-        public Expression<Func<PersistedIdentity, bool>> CreateMatchQuery(IIdentity match)
+        public Expression<Func<NHibernate.Identity.Identity, bool>> CreateMatchQuery(IIdentity match)
         {
             if(!(match is ISimpleIdentity simpleIdentity))
             {
@@ -33,11 +33,11 @@ namespace CHC.Consent.Identity.SimpleIdentity
             
             return identity =>
                 identity.IdentityKindId == simpleIdentity.IdentityKindId &&
-                identity is PersistedSimpleIdentity &&
-                ((PersistedSimpleIdentity) identity).Value == simpleIdentity.Value;
+                identity is SimpleIdentity &&
+                ((SimpleIdentity) identity).Value == simpleIdentity.Value;
         }
 
-        public PersistedIdentity CreatePersistedIdentity(IIdentity identity)
+        public NHibernate.Identity.Identity CreatePersistedIdentity(IIdentity identity)
         {
             if (identity is IPersistedSimpleIdentitySource source)
             {

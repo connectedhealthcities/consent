@@ -29,9 +29,9 @@ namespace CHC.Consent.NHibernate.Identity
                 .FirstOrDefault(matchedPerson => matchedPerson != null);
         }
 
-        public PersistedPerson CreatePerson(IEnumerable<PersistedIdentity> identites)
+        public Person CreatePerson(IEnumerable<Identity> identites)
         {
-            var persistedPerson = new PersistedPerson(identites);
+            var persistedPerson = new Person(identites);
             sessionAccessor().Save(persistedPerson);
             return persistedPerson;
         }
@@ -41,20 +41,20 @@ namespace CHC.Consent.NHibernate.Identity
             return CreatePerson(CreatePersistedIdentities(identities));
         }
 
-        private IEnumerable<PersistedIdentity> CreatePersistedIdentities(IEnumerable<IIdentity> identities)
+        private IEnumerable<Identity> CreatePersistedIdentities(IEnumerable<IIdentity> identities)
         {
             return identities.Select(identityKindHelperProvider.CreatePersistedIdentity);
         }
 
-        private PersistedPerson Search(Expression<Func<PersistedIdentity, bool>> matchExpression)
+        private Person Search(Expression<Func<Identity, bool>> matchExpression)
         {
             return Search(sessionAccessor(), matchExpression);    
         }
 
-        private PersistedPerson Search(ISession s, Expression<Func<PersistedIdentity, bool>> matchExpression)
+        private Person Search(ISession s, Expression<Func<Identity, bool>> matchExpression)
         {
             var matched = 
-                s.Query<PersistedIdentity>()
+                s.Query<Identity>()
                     .Where(matchExpression)
                     .Select(_ => _.Person);
 

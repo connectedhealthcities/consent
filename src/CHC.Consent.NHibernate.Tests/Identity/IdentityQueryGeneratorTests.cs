@@ -14,7 +14,7 @@ namespace CHC.Consent.NHibernate.Tests.Identity
         [Fact]
         public void UsesIdentityGeneratorForMatchIdentity()
         {
-            Expression<Func<PersistedIdentity, bool>> query = _ => true;
+            Expression<Func<NHibernate.Identity.Identity, bool>> query = _ => true;
             
             var provider = new Mock<IIdentityKindHelperProvider>();
             var helper = new Mock<IIdentityKindHelper>();

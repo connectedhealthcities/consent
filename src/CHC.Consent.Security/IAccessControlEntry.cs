@@ -1,9 +1,9 @@
 ﻿namespace CHC.Consent.Security
 {
-    public interface IPermissionEntry
+    public interface IAccessControlEntry
     {
         ISecurityPrincipal Principal { get; }
         IPermisson Permisson { get; }
-        ISecurable Securable { get; }
+        IAccessControlList AccessControlList { get; }
     }
 }

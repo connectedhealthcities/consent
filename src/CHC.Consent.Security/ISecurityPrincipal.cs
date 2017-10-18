@@ -6,6 +6,6 @@ namespace CHC.Consent.Security
     {
         IRole Role { get; }
         
-        IEnumerable<IPermissionEntry> PermissionEntries { get; }
+        IEnumerable<IAccessControlEntry> PermissionEntries { get; }
     }
 }

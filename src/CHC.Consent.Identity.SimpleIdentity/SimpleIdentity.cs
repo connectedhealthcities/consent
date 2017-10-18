@@ -1,18 +1,15 @@
-﻿using System;
-using System.Linq.Expressions;
-using CHC.Consent.Identity.Core;
-using CHC.Consent.NHibernate.Identity;
+﻿using CHC.Consent.Identity.Core;
 
 namespace CHC.Consent.Identity.SimpleIdentity
 {
     /// <summary>
-    /// Represents a stored <see cref="SimpleIdentity"/>
+    /// Represents a stored <see cref="CHC.Consent.Identity.SimpleIdentity"/>
     /// </summary>
-    public class PersistedSimpleIdentity : PersistedIdentity, ISimpleIdentity, IPersistedSimpleIdentitySource
+    public class SimpleIdentity : NHibernate.Identity.Identity, ISimpleIdentity, IPersistedSimpleIdentitySource
     {
         public virtual string Value { get; set; }
 
-        public virtual PersistedIdentity CreatePersistedIdentity()
+        public virtual NHibernate.Identity.Identity CreatePersistedIdentity()
         {
             return this;
         }

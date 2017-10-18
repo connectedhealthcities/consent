@@ -27,5 +27,13 @@ namespace CHC.Consent.Utils
     {
         public static Func<TArgs, T> IgnoreParams<TArgs, T>(this Func<T> getValue) => _ => getValue();
 
+        public static Action<T> Then<T>(this Action<T> @this, Action<T> next)
+        {
+            return t =>
+            {
+                @this(t);
+                next(t);
+            };
+        }
     }
 }

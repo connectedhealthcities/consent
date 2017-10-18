@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using CHC.Consent.Identity.Core;
+using CHC.Consent.NHibernate.Consent;
 using NHibernate;
 using NHibernate.Linq;
 

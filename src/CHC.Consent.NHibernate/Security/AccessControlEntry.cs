@@ -3,25 +3,25 @@ using CHC.Consent.Security;
 
 namespace CHC.Consent.NHibernate.Security
 {
-    public class PermissionEntry : Entity, IPermissionEntry
+    public class AccessControlEntry : Entity, IAccessControlEntry
     {
         /// <inheritdoc />
         public virtual SecurityPrincipal Principal { get; set; }
 
         /// <inheritdoc />
-        ISecurityPrincipal IPermissionEntry.Principal => Principal;
+        ISecurityPrincipal IAccessControlEntry.Principal => Principal;
 
 
         /// <inheritdoc />
         public virtual Permisson Permisson { get; set; }
 
         /// <inheritdoc />
-        IPermisson IPermissionEntry.Permisson => Permisson;
+        IPermisson IAccessControlEntry.Permisson => Permisson;
 
         /// <inheritdoc />
-        public virtual Securable Securable { get; set; }
+        public virtual AccessControlList AccessControlList { get; set; }
 
         /// <inheritdoc />
-        ISecurable IPermissionEntry.Securable => this.Securable;
+        IAccessControlList IAccessControlEntry.AccessControlList => AccessControlList;
     }
 }

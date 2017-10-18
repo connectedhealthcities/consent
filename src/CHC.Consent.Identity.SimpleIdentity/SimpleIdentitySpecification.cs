@@ -16,9 +16,9 @@ namespace CHC.Consent.Identity.SimpleIdentity
         public string Value { get;  }
 
         /// <inheritdoc />
-        public PersistedIdentity CreatePersistedIdentity()
+        public NHibernate.Identity.Identity CreatePersistedIdentity()
         {
-            return new PersistedSimpleIdentity {Value = Value, IdentityKindId = IdentityKindId};
+            return new SimpleIdentity {Value = Value, IdentityKindId = IdentityKindId};
         }
     }
 }

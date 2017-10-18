@@ -2,5 +2,6 @@
 {
     public interface ISecurable
     {
+        IAccessControlList AccessControlList { get; }
     }
 }

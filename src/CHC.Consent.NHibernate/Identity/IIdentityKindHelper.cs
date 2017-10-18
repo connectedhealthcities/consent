@@ -6,7 +6,7 @@ namespace CHC.Consent.NHibernate.Identity
 {
     public interface IIdentityKindHelper
     {
-        Expression<Func<PersistedIdentity, bool>> CreateMatchQuery(IIdentity match);
-        PersistedIdentity CreatePersistedIdentity(IIdentity identity);
+        Expression<Func<Identity, bool>> CreateMatchQuery(IIdentity match);
+        Identity CreatePersistedIdentity(IIdentity identity);
     }
 }

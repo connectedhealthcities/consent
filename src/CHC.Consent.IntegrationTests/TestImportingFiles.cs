@@ -87,7 +87,7 @@ namespace CHC.Consent.IntegrationTests
 
             using (var session = db.StartSession())
             {
-                var person = session.Query<PersistedPerson>().FirstOrDefault();
+                var person = session.Query<Person>().FirstOrDefault();
                 
                 Assert.NotNull(person);
                 Assert.NotEmpty(person.Identities);
@@ -103,7 +103,7 @@ namespace CHC.Consent.IntegrationTests
                 Assert.Single(person.SubjectIdentifiers);
 
                 var subjectIdentifier = person.SubjectIdentifiers.Single();
-                Assert.Equal(subjectIdentifiers.LastId, subjectIdentifier.SubjectIdentifier);
+                Assert.Equal(subjectIdentifiers.LastId, subjectIdentifier.TheSubjectIdentifier);
                 Assert.Equal(study.Id, subjectIdentifier.StudyId);
                 Assert.Single(subjectIdentifier.Identities);
                 Assert.Contains(subjectIdentifier.Identities, _ => _.IdentityKindId == identityKind2.Id && ((ISimpleIdentity) _).Value == "222");

@@ -1,8 +1,10 @@
 using System;
 using CHC.Consent.Identity.Core;
 using CHC.Consent.Identity.SimpleIdentity;
+using CHC.Consent.NHibernate.Consent;
 using CHC.Consent.NHibernate.Identity;
 using CHC.Consent.Testing.NHibernate;
+using NHibernate;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -11,13 +13,12 @@ namespace CHC.Consent.NHibernate.Tests
     [Collection(DatabaseCollection.Name)]
     public class IdentityTests
     {
-        private readonly ITestOutputHelper output;
         private readonly DatabaseFixture db;
 
         public IdentityTests(ITestOutputHelper output, DatabaseFixture db)
         {
-            this.output = output;
             this.db = db;
+            LoggerProvider.SetLoggersFactory(new OutputLoggerFactory(output));
         }
 
         [Fact]
@@ -57,7 +58,7 @@ namespace CHC.Consent.NHibernate.Tests
                 _ =>
                 {
                     id = _.Save(
-                        new PersistedSimpleIdentity
+                        new SimpleIdentity
                         {
                             IdentityKindId = identityKindId,
                             Value = "simple value"
@@ -69,13 +70,13 @@ namespace CHC.Consent.NHibernate.Tests
             db.InTransactionalUnitOfWork(
                 session =>
                 {
-                    var simpleIdentity = session.Get<PersistedIdentity>(id);
+                    var simpleIdentity = session.Get<NHibernate.Identity.Identity>(id);
                     
-                    Assert.NotEqual(default(long), simpleIdentity.Id);
-                    Assert.IsType<PersistedSimpleIdentity>(simpleIdentity);
+                    Assert.NotEqual(default(Guid), simpleIdentity.Id);
+                    Assert.IsType<SimpleIdentity>(simpleIdentity);
 
                     Assert.Equal(identityKindId, simpleIdentity.IdentityKindId);
-                    Assert.Equal("simple value", ((PersistedSimpleIdentity) simpleIdentity).Value);
+                    Assert.Equal("simple value", ((SimpleIdentity) simpleIdentity).Value);
                 }
             );
         }

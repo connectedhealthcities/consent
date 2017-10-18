@@ -13,7 +13,7 @@ namespace CHC.Consent.NHibernate.Identity
             this.identityKindHelperProvider = identityKindHelperProvider;
         }
         
-        public Expression<Func<PersistedIdentity, bool>> CreateMatchQuery(IMatch match)
+        public Expression<Func<Identity, bool>> CreateMatchQuery(IMatch match)
         {
             if (match is IIdentityMatch matchByIdentity)
             {

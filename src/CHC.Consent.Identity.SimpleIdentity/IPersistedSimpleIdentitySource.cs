@@ -6,6 +6,6 @@ namespace CHC.Consent.Identity.SimpleIdentity
     public interface IPersistedSimpleIdentitySource
     {
         /// <inheritdoc />
-        PersistedIdentity CreatePersistedIdentity();
+        NHibernate.Identity.Identity CreatePersistedIdentity();
     }
 }

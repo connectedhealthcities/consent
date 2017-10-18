@@ -2,6 +2,7 @@
 using System.Linq;
 using CHC.Consent.Identity.Core;
 using CHC.Consent.Identity.SimpleIdentity;
+using CHC.Consent.NHibernate.Consent;
 using CHC.Consent.NHibernate.Identity;
 using CHC.Consent.Testing.NHibernate;
 using NHibernate;
@@ -49,7 +50,7 @@ namespace CHC.Consent.NHibernate.Tests
                     var savedIdentityKindId = SaveIdentityKind(identityExternalId);
 
                     MakePersonFrom(
-                        new PersistedSimpleIdentity
+                        new SimpleIdentity
                         {
                             IdentityKindId = savedIdentityKindId,
                             Value = "1234"
@@ -62,7 +63,7 @@ namespace CHC.Consent.NHibernate.Tests
                 () => identityStore.FindPerson(
                     new IMatch[]
                     {
-                        new IdentityMatch(new PersistedSimpleIdentity {IdentityKindId = identityKindId, Value = "1234"})
+                        new IdentityMatch(new SimpleIdentity {IdentityKindId = identityKindId, Value = "1234"})
                     }));
 
             
@@ -77,9 +78,9 @@ namespace CHC.Consent.NHibernate.Tests
             return (Guid)db.SessionAccessor().Save(new IdentityKind {ExternalId = identityExternalId});
         }
 
-        public void MakePersonFrom(params PersistedIdentity[] identities)
+        protected void MakePersonFrom(params NHibernate.Identity.Identity[] identities)
         {
-            var person = new PersistedPerson(identities);
+            var person = new Person(identities);
             db.SessionAccessor().Save(person);
         }
         
@@ -97,8 +98,8 @@ namespace CHC.Consent.NHibernate.Tests
 
 
                         MakePersonFrom(
-                            new PersistedSimpleIdentity {IdentityKindId = savedIdentityKind1, Value = "1234"},
-                            new PersistedSimpleIdentity {IdentityKindId = savedIdentityKind2, Value = "97"}
+                            new SimpleIdentity {IdentityKindId = savedIdentityKind1, Value = "1234"},
+                            new SimpleIdentity {IdentityKindId = savedIdentityKind2, Value = "97"}
                         );
 
                         return (savedIdentityKind1, savedIdentityKind2);
@@ -108,7 +109,7 @@ namespace CHC.Consent.NHibernate.Tests
                 () => identityStore.FindPerson(
                     new[]
                     {
-                        new IdentityMatch(new PersistedSimpleIdentity {Value = "1234", IdentityKindId = identityKind1})
+                        new IdentityMatch(new SimpleIdentity {Value = "1234", IdentityKindId = identityKind1})
                     }
                 ));
             
@@ -116,16 +117,16 @@ namespace CHC.Consent.NHibernate.Tests
 
             Assert.Equal(2, result.Identities.Count());
             
-            Assert.All(result.Identities, _ => Assert.IsType<PersistedSimpleIdentity>(_));
+            Assert.All(result.Identities, _ => Assert.IsType<SimpleIdentity>(_));
 
             Assert.Contains(
-                result.Identities.Cast<PersistedSimpleIdentity>(),
+                result.Identities.Cast<SimpleIdentity>(),
                 expected =>
                     "1234" == expected.Value
                     && expected.IdentityKindId == identityKind1);
 
             Assert.Contains(
-                result.Identities.Cast<PersistedSimpleIdentity>(),
+                result.Identities.Cast<SimpleIdentity>(),
                 id =>
                     "97" == id.Value
                     && id.IdentityKindId == identityKind2);
@@ -149,7 +150,7 @@ namespace CHC.Consent.NHibernate.Tests
             var person = db.InTransactionalUnitOfWork(() =>  identityStore.CreatePerson(
                 new[]
                 {
-                    new PersistedSimpleIdentity
+                    new SimpleIdentity
                     {
                         IdentityKindId = identityKindId1,
                         Value = "theKey"
@@ -160,7 +161,7 @@ namespace CHC.Consent.NHibernate.Tests
                 db.InTransactionalUnitOfWork(
                 s =>
                 {
-                    var loaded = s.Get<PersistedPerson>(person.Id);
+                    var loaded = s.Get<Person>(person.Id);
                     NHibernateUtil.Initialize(loaded.Identities);
                     NHibernateUtil.Initialize(loaded.SubjectIdentifiers);
                     return loaded;
@@ -169,7 +170,7 @@ namespace CHC.Consent.NHibernate.Tests
             Assert.NotNull(saved);
             Assert.Single(
                 saved.Identities,
-                i => i.IdentityKindId == identityKindId1 && ((PersistedSimpleIdentity) i).Value == "theKey");
+                i => i.IdentityKindId == identityKindId1 && ((SimpleIdentity) i).Value == "theKey");
             Assert.Empty(saved.SubjectIdentifiers);
 
         }

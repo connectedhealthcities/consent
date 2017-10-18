@@ -3,32 +3,31 @@ using System.Collections.Generic;
 using System.Linq;
 using CHC.Consent.Common.Core;
 using CHC.Consent.Identity.Core;
+using CHC.Consent.NHibernate.Security;
+using CHC.Consent.Security;
 
 namespace CHC.Consent.NHibernate.Identity
 {
-    public class PersistedPerson : IPerson
+    public class Person : Entity, IPerson, INHibernateSecurable
     {
-        public virtual Guid Id { get; set; }
-
-        public virtual ICollection<PersistedIdentity> Identities { get; protected set; } =
-            new List<PersistedIdentity>();
+        public virtual ICollection<Identity> Identities { get; protected set; } =
+            new List<Identity>();
 
         IEnumerable<IIdentity> IPerson.Identities => Identities;
 
-        public virtual ICollection<PersistedSubjectIdentifier> SubjectIdentifiers { get; protected set; } =
-            new List<PersistedSubjectIdentifier>();
+        public virtual ICollection<SubjectIdentifier> SubjectIdentifiers { get; protected set; } =
+            new List<SubjectIdentifier>();
 
         IEnumerable<ISubjectIdentifier> IPerson.SubjectIdentifiers => SubjectIdentifiers;
-
-
+        
         /// <summary>
         /// For persistence/rehydration
         /// </summary>
-        protected PersistedPerson()
+        protected Person()
         {
         }
 
-        public PersistedPerson(IEnumerable<PersistedIdentity> identities)
+        public Person(IEnumerable<Identity> identities)
         {
             foreach (var identity in identities)
             {
@@ -37,7 +36,7 @@ namespace CHC.Consent.NHibernate.Identity
             
         }
 
-        private void AddIdentity(PersistedIdentity identity)
+        private void AddIdentity(Identity identity)
         {
             identity.Person = this;
             Identities.Add(identity);
@@ -47,7 +46,7 @@ namespace CHC.Consent.NHibernate.Identity
         public virtual ISubjectIdentifier AddSubjectIdentifier(
             IStudy study, string subjectIdentifier, IEnumerable<IIdentity> identifiers)
         {
-            var persisted = new PersistedSubjectIdentifier(
+            var persisted = new SubjectIdentifier(
                 this,
                 study.Id,
                 subjectIdentifier,
@@ -56,12 +55,18 @@ namespace CHC.Consent.NHibernate.Identity
             return persisted;
         }
 
-        private PersistedIdentity FindIdentity(IIdentity existingIdentity)
+        private Identity FindIdentity(IIdentity existingIdentity)
         {
             return Identities.FirstOrDefault(
                 _ => _.IdentityKindId == existingIdentity.IdentityKindId
                      && _.HasSameValueAs(existingIdentity)
             );
         }
+
+        /// <inheritdoc />
+        IAccessControlList ISecurable.AccessControlList => Acl;
+
+        /// <inheritdoc />
+        public virtual AccessControlList Acl { get; protected set; } = new AccessControlList();
     }
 }

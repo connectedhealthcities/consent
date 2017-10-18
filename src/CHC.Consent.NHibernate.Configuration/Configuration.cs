@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Xml.Serialization;
 using CHC.Consent.Identity.Core;
 using CHC.Consent.Identity.SimpleIdentity;
+using CHC.Consent.NHibernate.Consent;
 using CHC.Consent.NHibernate.Identity;
 using CHC.Consent.NHibernate.Security;
 using CHC.Consent.Utils;
@@ -87,13 +86,13 @@ namespace CHC.Consent.NHibernate.Configuration
             {
                 BeforeMapClass += UseNativeGenerator;
                 BeforeMapManyToOne += UseNicerForeignKeyNameForManyToOne;
-                BeforeMapBag += UserNiceFKName;
-                BeforeMapSet += UserNiceFKName;
+                BeforeMapBag += UseNicerFKName;
+                BeforeMapSet += UseNicerFKName;
 
                 //AfterMapBag += UseNicerForeignKeyColumnNameForBag;
             }
-
-            private void UserNiceFKName(IModelInspector inspector, PropertyPath member, ICollectionPropertiesMapper customizer)
+            
+            private void UseNicerFKName(IModelInspector inspector, PropertyPath member, ICollectionPropertiesMapper customizer)
             {
                 var propertyType = ((PropertyInfo) member.LocalMember).PropertyType;
 
@@ -157,13 +156,12 @@ namespace CHC.Consent.NHibernate.Configuration
             var mapper = new ChcConventionsModelMapper();
 
             mapper.Class<IdentityKind>(m => { m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid)); });
-            mapper.Class<Consent.Study>(m => { m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid)); });
+            mapper.Class<Study>(m => { m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid)); });
             
             mapper.Class<Consent.Consent>(
                 m =>
                 {
-                    m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid));
-                    m.Bag(_ => _.ProvidedEvidence, 
+                    m.Set(_ => _.ProvidedEvidence, 
                         e =>
                         {
                             e.Key(k => k.Column("ConsentId"));
@@ -173,7 +171,7 @@ namespace CHC.Consent.NHibernate.Configuration
                         },
                         j => j.ManyToMany());
                     
-                    m.Bag(_ => _.WithdrawnEvidence, 
+                    m.Set(_ => _.WithdrawnEvidence, 
                         e =>
                         {
                             e.Key(k => k.Column("ConsentId"));
@@ -182,13 +180,12 @@ namespace CHC.Consent.NHibernate.Configuration
                             e.Inverse(false);
                         },
                         j => j.ManyToMany());
-                    
+
+                    m.HasAcl();
+
                 });
-            mapper.Class<Consent.Evidence>(m => { m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid)); });
-            mapper.Class<Consent.EvidenceKind>(m => { m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid)); });
-            mapper.Class<PersistedPerson>(m =>
+            mapper.Class<Person>(m =>
             {
-                m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid));
                 m.Bag(
                     _ => _.Identities,
                     j =>
@@ -203,16 +200,36 @@ namespace CHC.Consent.NHibernate.Configuration
                         j.Cascade(Cascade.Persist);
                         j.Inverse(true);
                     });
+
+                m.HasAcl();
             });
+
+            mapper.Class<Study>(
+                m =>
+                {
+                    m.HasAcl();
+                });
+
+            mapper.Class<AccessControlList>(
+                m =>
+                {
+                    m.Set(_ => _.Permissions,
+                        c =>
+                        {
+                            c.Cascade(Cascade.All | Cascade.DeleteOrphans);
+                            c.Inverse(false);
+                            c.Fetch(CollectionFetchMode.Subselect);
+                        });
+                });
             
-            mapper.Class<PersistedIdentity>(m =>
+            mapper.Class<Identity.Identity>(m =>
             {
                 m.ManyToOne(
                     _ => _.Person,
                     j => { j.Index("IX_PersistedIdentity_Person"); });
             });
             
-            mapper.Class<PersistedSubjectIdentifier>(
+            mapper.Class<SubjectIdentifier>(
                 m =>
                 {
                     m.Bag(_ => _.Identities,
@@ -238,71 +255,49 @@ namespace CHC.Consent.NHibernate.Configuration
                     m.Set(l => l.Logins, c => { c.Cascade(Cascade.All);});
                 });
             
+            mapper.Class<Login>(m => m.Discriminator(d => d.Column("Type")));
             mapper.Class<JwtLogin>(m => m.DiscriminatorValue("Jwt"));
-            
-            mapper.IsRootEntity((type, b) => type.BaseType == typeof(object) || type.BaseType == typeof(Entity));
-            mapper.IsTablePerClassHierarchy((type, b) => type.IsInheritedFrom<PersistedIdentity>() || IsTablePerClass(type));
+
+            mapper.IsRootEntity((type, b) => IsRootEntity(type));
+            mapper.IsTablePerClassHierarchy((type, b) => IsTablePerClass(type));
+
+            var classesToMap = typeof(Entity).Assembly.GetTypes().Where(t => t.IsSubclassOf<Entity>())
+                .Concat(new [] {typeof(SimpleIdentity)})
+                .ToArray();
 
             mapper.BeforeMapClass += (inspector, type, customizer) =>
             {
-                if (type.BaseType == typeof(Entity))
+                if (IsRootEntity(type) && classesToMap.Where(t => t != type).Any(s => s.IsSubclassOf(type)))
                 {
                     customizer.Discriminator(d => d.Column("Type"));
                 }
             };
 
-            return mapper.CompileMappingFor(
-                typeof(Entity).Assembly.GetTypes().Where(t => t.IsSubclassOf<Entity>())
-                    .Concat(
-                        new[]
-                        {
-                            typeof(PersistedPerson),
-                            typeof(IdentityKind),
-                            typeof(PersistedIdentity),
-                            typeof(PersistedSimpleIdentity),
-                            typeof(PersistedSubjectIdentifier),
-                            typeof(Consent.Study),
-                            typeof(Consent.Consent),
-                            typeof(Consent.Evidence),
-                            typeof(Consent.EvidenceKind),
-
-                        })
-                    .Distinct()
-            );
+            return mapper.CompileMappingFor(classesToMap);
         }
 
+        private static bool IsRootEntity(Type type)
+        {
+            return type.BaseType == typeof(object) || type.BaseType == typeof(Entity);
+        }
+        
         public static bool IsTablePerClass(Type t)
         {
             return t.BaseType != typeof(Entity) && t.IsSubclassOf<Entity>();
         }
+    }
 
-        private static void MapGuidSet<TEntity>(
-            ICollectionPropertiesContainerMapper<TEntity> m, Expression<Func<TEntity, IEnumerable<Guid>>> property,
-            string tableName, string valueColumn, string keyColumnId) where TEntity : class
+    public static class AclMappingExtensions
+    {
+        public static void HasAcl<T>(this IClassMapper<T> m) where T : class, INHibernateSecurable
         {
-
-            void CollectionMapping(ISetPropertiesMapper<TEntity, Guid> c)
+            m.ManyToOne(_ => _.Acl, c =>
             {
-                c.Table(tableName);
                 c.Cascade(Cascade.All);
-                c.Key(k => k.Column(keyColumnId));
-            }
-
-            m.Set(
-                property,
-                CollectionMapping,
-                r => r.Element(
-                    e =>
-                    {
-                        e.Type(NHibernateUtil.Guid);
-                        e.Column(
-                            c =>
-                            {
-                                c.Index($"IX_{tableName}_{valueColumn}");
-                                c.Name(valueColumn);
-                            });
-                        e.NotNullable(true);
-                    }));
+                c.Unique(true);
+                c.NotNullable(true);
+                c.Lazy(LazyRelation.NoLazy);
+            });
         }
     }
 }
