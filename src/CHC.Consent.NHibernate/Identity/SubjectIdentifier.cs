@@ -7,7 +7,6 @@ namespace CHC.Consent.NHibernate.Identity
 {
     public class SubjectIdentifier : Entity, ISubjectIdentifier
     {
-        public virtual long Id { get; protected set; }
         public virtual Guid StudyId { get; protected set; }
         public virtual string TheSubjectIdentifier { get; set; }
 
