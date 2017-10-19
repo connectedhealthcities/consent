@@ -25,7 +25,7 @@ namespace CHC.Consent.NHibernate.Identity
         /// </summary>
         protected Person()
         {
-            Acl = new AccessControlList { Owner = this };
+            Acl = new AccessControlList(this);
         }
 
         public Person(IEnumerable<Identity> identities) : this()

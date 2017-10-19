@@ -127,7 +127,7 @@ namespace CHC.Consent.NHibernate.WebApi.Tests
             {
                 s.Merge(readPermisson);
                 s.Merge(user);
-                study.Acl.Permissions.Add(new AccessControlEntry {Permisson = readPermisson, Principal = user});
+                study.Acl.Permissions.Add(new AccessControlEntry {Permisson = readPermisson, Principal = user, AccessControlList = study.Acl});
                 s.Save(study);
                 s.Flush();
             };

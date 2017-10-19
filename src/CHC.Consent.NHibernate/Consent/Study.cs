@@ -7,10 +7,15 @@ namespace CHC.Consent.NHibernate.Consent
 {
     public class Study : Entity, IStudy, INHibernateSecurable
     {
+        public Study()
+        {
+            Acl = new AccessControlList(this);
+        }
+
         /// <inheritdoc />
         IAccessControlList ISecurable.AccessControlList => Acl;
 
         /// <inheritdoc />
-        public virtual AccessControlList Acl { get; protected set; } = new AccessControlList();
+        public virtual AccessControlList Acl { get; protected set; }
     }
 }
