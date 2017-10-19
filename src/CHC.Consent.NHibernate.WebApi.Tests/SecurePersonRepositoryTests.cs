@@ -4,22 +4,22 @@ using CHC.Consent.Identity.Core;
 using CHC.Consent.NHibernate.Consent;
 using CHC.Consent.NHibernate.Identity;
 using CHC.Consent.NHibernate.Security;
-using CHC.Consent.NHibernate.WebApi;
+using CHC.Consent.NHibernate.Tests;
+using CHC.Consent.Security;
 using CHC.Consent.Testing.NHibernate;
 using CHC.Consent.Utils;
 using CHC.Consent.WebApi.Abstractions;
-using Moq;
 using NHibernate;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace CHC.Consent.NHibernate.Tests
+namespace CHC.Consent.NHibernate.WebApi.Tests
 {
     [Collection(DatabaseCollection.Name)]
     public class SecurePersonRepositoryTests
     {
-        private readonly User user;
-        private readonly Person person;
+        private User user;
+        private Person person;
         private readonly Permisson readPermisson = new Permisson {Name = "read"};
         private readonly SecurePersonRepository securePersonRepository;
         public DatabaseFixture Db { get; }
@@ -35,7 +35,7 @@ namespace CHC.Consent.NHibernate.Tests
             person = new Person(Enumerable.Empty<Identity.Identity>());
 
             Db.InTransactionalUnitOfWork(SavePeople);
-            securePersonRepository = new SecurePersonRepository(UserAccessor(user), Db.SessionAccessor);
+            securePersonRepository = new SecurePersonRepository(new UserAccessor(() => user), Db.SessionAccessor);
         }
 
         public class Paging : IPagingProperties{
@@ -52,19 +52,34 @@ namespace CHC.Consent.NHibernate.Tests
         }
 
         [Fact]
+        public void HasNotAccessToPersonByDefault()
+        {
+            Assert.Empty(GetAccessiblePeople());
+        }
+
+        [Fact]
         public void HasAccessToPeopleViaExplicitAccess()
         {
-            var people = Db.InTransactionalUnitOfWork(
+            Db.InTransactionalUnitOfWork(AddReadAccessForUser);
+
+            var people = GetAccessiblePeople();
+            
+            Assert.NotEmpty(people);
+        }
+
+        private IPerson[] GetAccessiblePeople()
+        {
+            return Db.InTransactionalUnitOfWork(
                 () => securePersonRepository
                     .GetPeople()
                     .ToArray());
-            
-            Assert.NotEmpty(people);
         }
 
         [Fact]
         public void CanProjectPeople()
         {
+            Db.InTransactionalUnitOfWork(AddReadAccessForUser);
+
             var people = Db.InTransactionalUnitOfWork(
                 () => securePersonRepository
                     .GetPeople()
@@ -76,19 +91,46 @@ namespace CHC.Consent.NHibernate.Tests
         }
 
         [Fact]
+        public void CanAccessPersonViaRole()
+        {
+            var role = new Role { Name = "access role" };
+
+            void AddRoleAccessToPerson(ISession session)
+            {
+                session.Save(role);
+                user = session.Merge(user);
+                user.Role = role;
+                
+                person = session.Merge(person);
+                
+                person.Acl.Permissions.Add(
+                    new AccessControlEntry
+                    {
+                        AccessControlList = person.Acl,
+                        Permisson = readPermisson,
+                        Principal = role
+                    });
+            }
+
+            Db.InTransactionalUnitOfWork(AddRoleAccessToPerson);
+
+            Assert.NotEmpty(GetAccessiblePeople());
+
+        }
+
+        [Fact]
         public void AccessToStudyDoesNotImplyAccessToPerson()
         {
             var study = new Study();
 
-            void GiveUserAccessToStudy(ISession s)
+            Action<ISession> GiveUserAccessToStudy = s =>
             {
                 s.Merge(readPermisson);
                 s.Merge(user);
-                study.Acl.Permissions.Add(new AccessControlEntry{Permisson = readPermisson, Principal = user});
+                study.Acl.Permissions.Add(new AccessControlEntry {Permisson = readPermisson, Principal = user});
                 s.Save(study);
                 s.Flush();
-                
-            }
+            };
 
             void AddPersonToStudy(ISession s)
             {
@@ -96,19 +138,9 @@ namespace CHC.Consent.NHibernate.Tests
                 person.AddSubjectIdentifier(study, Guid.NewGuid().ToString(), Enumerable.Empty<IIdentity>());
             }
 
-            Action<ISession> removeAccessToPerson = s =>
-            {
-                s.Merge(person);
-                s.Merge(person.Acl);
-                person.Acl.Permissions.Clear();
-            };
+            Db.InTransactionalUnitOfWork(GiveUserAccessToStudy.Then(AddPersonToStudy));
 
-            Db.InTransactionalUnitOfWork(removeAccessToPerson.Then(GiveUserAccessToStudy).Then(AddPersonToStudy));
-                
-            var people = Db.InTransactionalUnitOfWork(
-                () => securePersonRepository
-                    .GetPeople()
-                    .ToArray());
+            var people = GetAccessiblePeople();
 
             Assert.Empty(people);
         }
@@ -118,7 +150,11 @@ namespace CHC.Consent.NHibernate.Tests
             s.Save(person);
             s.Save(readPermisson);
             s.Save(user);
-            
+        }
+
+        private void AddReadAccessForUser(ISession s)
+        {
+            person = s.Merge(person);
             person.Acl.Permissions.Add(
                 new AccessControlEntry
                 {
@@ -126,15 +162,19 @@ namespace CHC.Consent.NHibernate.Tests
                     Principal = user,
                     AccessControlList = person.Acl
                 });
-
-            s.Flush();
         }
 
-        private static IUserAccessor UserAccessor(User user)
+        private class UserAccessor : IUserAccessor
         {
-            var getUser = new Mock<IUserAccessor>();
-            getUser.Setup(_ => _.GetUser()).Returns(user);
-            return getUser.Object;
+            private readonly Func<User> getuser;
+
+            public UserAccessor(Func<User> getuser)
+            {
+                this.getuser = getuser;
+            }
+
+            /// <inheritdoc />
+            public IUser GetUser() => getuser();
         }
     }
 }

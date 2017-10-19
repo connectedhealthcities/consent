@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.15
+VisualStudioVersion = 15.0.27004.2002
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CHC.Consent.Common", "CHC.Consent.Common\CHC.Consent.Common.csproj", "{3A2BA605-7F23-44EB-9E7B-2231553F5FD4}"
 EndProject
@@ -56,6 +56,11 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CHC.Consent.WebApi.Abstractions", "CHC.Consent.WebApi.Abstractions\CHC.Consent.WebApi.Abstractions.csproj", "{C5B40998-140C-486D-BF29-209C29A6DCCE}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CHC.Consent.NHibernate.WebApi.Tests", "CHC.Consent.NHibernate.WebApi.Tests\CHC.Consent.NHibernate.WebApi.Tests.csproj", "{0434A985-3F0C-40A9-9BD2-645D669135E9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{5D5D988B-738E-4634-8020-80724C2E3B45}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\Nuget.Config = .nuget\Nuget.Config
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

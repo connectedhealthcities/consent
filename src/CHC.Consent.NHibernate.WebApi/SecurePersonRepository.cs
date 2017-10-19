@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using CHC.Consent.Identity.Core;
@@ -10,6 +11,8 @@ using NHibernate.Linq;
 
 namespace CHC.Consent.NHibernate.WebApi
 {
+    using static PredicateExtensions.PredicateExtensions;
+
     public class SecurePersonRepository : IPersonRepository
     {
         public IUserAccessor UserAccessor { get; }
@@ -30,17 +33,22 @@ namespace CHC.Consent.NHibernate.WebApi
         public IQueryable<IPerson> GetPeople()
         {
             var user = (User)UserAccessor.GetUser();
-            return sessionAccessor().Query<Person>()
-                .Where(HasExplicitAccess(user));
+            var session = sessionAccessor();
+            
+            return session.Query<Person>()
+                .Where(HasReadOrWriteAccess(user));
         }
 
-        private Expression<Func<Person, bool>> HasExplicitAccess(SecurityPrincipal principal)
+        private Expression<Func<Person, bool>> HasReadOrWriteAccess(SecurityPrincipal principal)
+            => AclGrantsReadAcccessTo<Person>(principal);
+        
+
+        private static Expression<Func<T, bool>> AclGrantsReadAcccessTo<T>(SecurityPrincipal principal)
+            where T : INHibernateSecurable
         {
-            return AclGrantsReadAcccessTo<Person>(principal);
+            var allPrincials = principal.Membership().Select(_ => _.Id).ToArray();
+            return x => x.Acl.Permissions.Any(
+                e => allPrincials.Contains(e.Principal.Id) && (e.Permisson.Name == "read" || e.Permisson.Name == "write"));
         }
-
-        private Expression<Func<T, bool>> AclGrantsReadAcccessTo<T>(SecurityPrincipal principal)
-            where T : INHibernateSecurable =>
-            x => x.Acl.Permissions.Any(e => e.Principal.Id == principal.Id && (e.Permisson.Name == "read" || e.Permisson.Name == "write"));
     }
 }

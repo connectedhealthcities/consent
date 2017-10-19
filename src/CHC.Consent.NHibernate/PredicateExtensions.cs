@@ -44,13 +44,12 @@ namespace PredicateExtensions
             if (IsExpressionBodyConstant(left))
                 return (right);
 
-            ParameterExpression p = left.Parameters[0];
+            var firstLeftParameter = left.Parameters[0];
 
-            SubstituteParameterVisitor visitor = new SubstituteParameterVisitor();
-            visitor.Sub[right.Parameters[0]] = p;
+            var visitor = new SubstituteParameterVisitor {Sub = {[right.Parameters[0]] = firstLeftParameter}};
 
             Expression body = Expression.MakeBinary(expressionType, left.Body, visitor.Visit(right.Body));
-            return Expression.Lambda<Func<T, bool>>(body, p);
+            return Expression.Lambda<Func<T, bool>>(body, firstLeftParameter);
         }
   
         private static bool IsExpressionBodyConstant<T>(Expression<Func<T, bool>> left)
@@ -64,12 +63,7 @@ namespace PredicateExtensions
 
             protected override Expression VisitParameter(ParameterExpression node)
             {
-                Expression newValue;
-                if (Sub.TryGetValue(node, out newValue))
-                {
-                    return newValue;
-                }
-                return node;
+                return Sub.TryGetValue(node, out var newValue) ? newValue : node;
             }
         }
 

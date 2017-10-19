@@ -34,18 +34,19 @@ namespace CHC.Consent.NHibernate.Configuration
                     db.ConnectionString = connectionString;
                 };
 
-        public string HbmXml { get; }
-
-        public Configuration(Action<IDbIntegrationConfigurationProperties> setup)
+        public Configuration(Action<IDbIntegrationConfigurationProperties> setup, Action<string> logHbm=null)
         {
             
             config = new global::NHibernate.Cfg.Configuration();
             var mappingDocument = GetMappings();
 
-            var xmlMapping = new StringWriter();
-            new XmlSerializer(mappingDocument.GetType()).Serialize(xmlMapping, mappingDocument);
-            HbmXml = xmlMapping.ToString();
-            
+            if (logHbm != null)
+            {
+                var xmlMapping = new StringWriter();
+                new XmlSerializer(mappingDocument.GetType()).Serialize(xmlMapping, mappingDocument);
+                logHbm(xmlMapping.ToString());
+            }
+
             config.DataBaseIntegration(db =>
                 {
                     db.LogFormattedSql = true;
@@ -155,6 +156,11 @@ namespace CHC.Consent.NHibernate.Configuration
         {
             var mapper = new ChcConventionsModelMapper();
 
+            var classesToMap = typeof(Entity).Assembly.GetTypes().Where(t => t.IsSubclassOf<Entity>())
+                .Concat(new [] {typeof(SimpleIdentity)})
+                .ToArray();
+
+
             mapper.Class<IdentityKind>(m => { m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid)); });
             mapper.Class<Study>(m => { m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid)); });
             
@@ -204,6 +210,8 @@ namespace CHC.Consent.NHibernate.Configuration
                 m.HasAcl();
             });
 
+            
+
             mapper.Class<Study>(
                 m =>
                 {
@@ -220,7 +228,26 @@ namespace CHC.Consent.NHibernate.Configuration
                             c.Inverse(false);
                             c.Fetch(CollectionFetchMode.Subselect);
                         });
+
+                    m.Any(_ => _.Owner, typeof(Guid),
+                        a =>
+                        {
+                            a.MetaType<string>();
+                            foreach (var securableType in classesToMap.Where(_ => _.IsInheritedFrom<INHibernateSecurable>()))
+                            {
+                                a.MetaValue(securableType.Name, securableType);
+                            }
+                        });
                 });
+
+            mapper.Class<AccessControlEntry>(
+                m =>
+                {
+                    m.ManyToOne(_ => _.AccessControlList, c => c.NotNullable(true));
+                    m.ManyToOne(_ => _.Permisson, c => c.NotNullable(true));
+                    m.ManyToOne(_ => _.Principal, c => c.NotNullable(true));
+                }
+            );
             
             mapper.Class<Identity.Identity>(m =>
             {
@@ -261,10 +288,7 @@ namespace CHC.Consent.NHibernate.Configuration
             mapper.IsRootEntity((type, b) => IsRootEntity(type));
             mapper.IsTablePerClassHierarchy((type, b) => IsTablePerClass(type));
 
-            var classesToMap = typeof(Entity).Assembly.GetTypes().Where(t => t.IsSubclassOf<Entity>())
-                .Concat(new [] {typeof(SimpleIdentity)})
-                .ToArray();
-
+          
             mapper.BeforeMapClass += (inspector, type, customizer) =>
             {
                 if (IsRootEntity(type) && classesToMap.Where(t => t != type).Any(s => s.IsSubclassOf(type)))
@@ -293,10 +317,11 @@ namespace CHC.Consent.NHibernate.Configuration
         {
             m.ManyToOne(_ => _.Acl, c =>
             {
-                c.Cascade(Cascade.All);
-                c.Unique(true);
                 c.NotNullable(true);
-                c.Lazy(LazyRelation.NoLazy);
+                c.Unique(true);
+                c.Update(true);
+                c.Insert(true);
+                c.Cascade(Cascade.All);
             });
         }
     }

@@ -8,5 +8,7 @@ namespace CHC.Consent.NHibernate.Security
         public virtual ICollection<AccessControlEntry> Permissions { get; protected set; } = new List<AccessControlEntry>();
         /// <inheritdoc />
         IEnumerable<IAccessControlEntry> IAccessControlList.Permissions => Permissions;
+
+        public virtual INHibernateSecurable Owner { get; set; }
     }
 }

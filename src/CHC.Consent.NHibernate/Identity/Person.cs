@@ -25,15 +25,15 @@ namespace CHC.Consent.NHibernate.Identity
         /// </summary>
         protected Person()
         {
+            Acl = new AccessControlList { Owner = this };
         }
 
-        public Person(IEnumerable<Identity> identities)
+        public Person(IEnumerable<Identity> identities) : this()
         {
             foreach (var identity in identities)
             {
                 AddIdentity(identity);
             }
-            
         }
 
         private void AddIdentity(Identity identity)
@@ -67,6 +67,6 @@ namespace CHC.Consent.NHibernate.Identity
         IAccessControlList ISecurable.AccessControlList => Acl;
 
         /// <inheritdoc />
-        public virtual AccessControlList Acl { get; protected set; } = new AccessControlList();
+        public virtual AccessControlList Acl { get; protected set; }
     }
 }

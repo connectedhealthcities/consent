@@ -102,7 +102,7 @@ namespace CHC.Consent.NHibernate.Tests
                             new SimpleIdentity {IdentityKindId = savedIdentityKind2, Value = "97"}
                         );
 
-                        return (savedIdentityKind1, savedIdentityKind2);
+                        return (identity1:savedIdentityKind1, identity2:savedIdentityKind2);
                     });
 
             var result = db.InTransactionalUnitOfWork(

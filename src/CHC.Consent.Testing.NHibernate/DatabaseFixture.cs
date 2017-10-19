@@ -79,10 +79,8 @@ namespace CHC.Consent.Testing.NHibernate
                 }
                 connectionString += "Initial Catalog=nhibernate_tests";
                 
-                configuration = new Configuration(Configuration.SqlServer(connectionString));
-
-                (output ?? Do.Nothing)(configuration.HbmXml);
-
+                configuration = new Configuration(Configuration.SqlServer(connectionString), logHbm:output);
+                
                 configuration.Create(output, execute:true);
             }
 
