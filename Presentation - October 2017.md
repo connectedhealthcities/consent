@@ -1,3 +1,5 @@
+<!-- $theme: default -->
+
 # Consent
 The story of building a system to manage consent
 
@@ -24,8 +26,8 @@ Born In Bradford For All (BiB4All)
 
 # What is Consent? - Answers
 
-NOT OUR PROBLEM
-====
+**NOT OUR PROBLEM**
+===
     
 ---
 
@@ -44,13 +46,22 @@ NOT OUR PROBLEM
 * Grand Parents
 * Legal Guardians
 * Social workers
+
+---
+
+# Who Can Provide (and manage) Consent?
+
 * The subject themselves
 * Legal Power of Attorney
 * Court of protection?
 * Independent mental capacity advocate?
 
+---
+
+# Who Can Provide (and manage) Consent?
+
     
-**This list changes throughout the subject's lifetime**
+**This changes throughout the subject's lifetime**
 
 Raises **Data Governance** issues, and **disclosure** issues. 
 
@@ -77,11 +88,15 @@ Raises **Data Governance** issues, and **disclosure** issues.
 * We need to **identify** people to tell if they have provided consent
 * (BiB4All) The method of identifying a child's consent is **different** to identifying a mother's consent
 
+--- 
+
 # External Data (BiB4All) 
 
 * Merges data from external sources (Local Council, Education, etc)
 * This data does not contain the same identifiers 
 * **Need to find people by arbitrary identities**
+
+---
 
 # Identity - Subject Identifiers
 
@@ -126,6 +141,4 @@ Raises **Data Governance** issues, and **disclosure** issues.
 * Provide a way for that consent to be managed 
 
 **What are we missing?**
-
----
-
+===
