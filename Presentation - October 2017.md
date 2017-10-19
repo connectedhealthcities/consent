@@ -39,17 +39,36 @@ NOT OUR PROBLEM
 
 # Who Can Provide (and manage) Consent?
 
-* Mothers
+* Parent
 * Children
 * Grand Parents
 * Legal Guardians
 * Social workers
 * The subject themselves
+* Legal Power of Attorney
+* Court of protection?
+* Independent mental capacity advocate?
 
     
 **This list changes throughout the subject's lifetime**
 
-Management of changes is outside scope of system
+Raises **Data Governance** issues, and **disclosure** issues. 
+
+---
+
+# Consent vs Assent
+
+* [Consent=Allow, Assent=Agree][consent-vs-assent]
+* (BiB4All) Mother's *Consent* includes *Assent* for children of pregnancy to participate
+
+**Questions** 
+---
+
+* Where else does this apply?
+* Is this something a consent system should manage?
+
+
+[consent-vs-assent]: https://english.stackexchange.com/a/7099/25236
 
 ---
 
