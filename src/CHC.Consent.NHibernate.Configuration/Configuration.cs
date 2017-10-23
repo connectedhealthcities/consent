@@ -131,17 +131,26 @@ namespace CHC.Consent.NHibernate.Configuration
 
                 if (idMember is FieldInfo fieldInfo && fieldInfo.FieldType == typeof(Guid))
                 {
-                    customizer.Id(id => id.Generator(Generators.Guid));
+                    GuidId(customizer); 
                     return;
                 }
 
                 if (idMember is PropertyInfo propertyInfo && propertyInfo.PropertyType == typeof(Guid))
                 {
-                    customizer.Id(id => id.Generator(Generators.Guid));
+                    GuidId(customizer);
                     return;
                 }
 
                 customizer.Id(id => id.Generator(Generators.Native));
+            }
+
+            private static void GuidId(IClassAttributesMapper customizer)
+            {
+                customizer.Id(id =>
+                {
+                    id.Generator(Generators.Guid);
+                    id.Column(c => c.NotNullable(true));
+                });
             }
 
             private MemberInfo[] GetIdMembers(IModelInspector inspector, Type type)
@@ -221,7 +230,7 @@ namespace CHC.Consent.NHibernate.Configuration
             mapper.Class<AccessControlList>(
                 m =>
                 {
-                    m.Set(_ => _.Permissions,
+                    m.Set(_ => _.Entries,
                         c =>
                         {
                             c.Cascade(Cascade.All | Cascade.DeleteOrphans);
@@ -243,8 +252,11 @@ namespace CHC.Consent.NHibernate.Configuration
             mapper.Class<AccessControlEntry>(
                 m =>
                 {
-                    m.ManyToOne(_ => _.AccessControlList, c => c.NotNullable(true));
-                    m.ManyToOne(_ => _.Permisson, c => c.NotNullable(true));
+                    m.ManyToOne(_ => _.AccessControlList, c =>
+                    {
+                        c.NotNullable(true);   
+                    });
+                    m.ManyToOne(_ => _.Permission, c => c.NotNullable(true));
                     m.ManyToOne(_ => _.Principal, c => c.NotNullable(true));
                 }
             );

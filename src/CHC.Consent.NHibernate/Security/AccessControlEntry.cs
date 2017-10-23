@@ -13,10 +13,10 @@ namespace CHC.Consent.NHibernate.Security
 
 
         /// <inheritdoc />
-        public virtual Permisson Permisson { get; set; }
+        public virtual Permisson Permission { get; set; }
 
         /// <inheritdoc />
-        IPermisson IAccessControlEntry.Permisson => Permisson;
+        IPermisson IAccessControlEntry.Permission => Permission;
 
         /// <inheritdoc />
         public virtual AccessControlList AccessControlList { get; set; }

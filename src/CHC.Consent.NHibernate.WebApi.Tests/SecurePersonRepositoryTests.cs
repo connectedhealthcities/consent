@@ -103,11 +103,11 @@ namespace CHC.Consent.NHibernate.WebApi.Tests
                 
                 person = session.Merge(person);
                 
-                person.Acl.Permissions.Add(
+                person.Acl.Entries.Add(
                     new AccessControlEntry
                     {
                         AccessControlList = person.Acl,
-                        Permisson = readPermisson,
+                        Permission = readPermisson,
                         Principal = role
                     });
             }
@@ -127,7 +127,7 @@ namespace CHC.Consent.NHibernate.WebApi.Tests
             {
                 s.Merge(readPermisson);
                 s.Merge(user);
-                study.Acl.Permissions.Add(new AccessControlEntry {Permisson = readPermisson, Principal = user, AccessControlList = study.Acl});
+                study.Acl.Entries.Add(new AccessControlEntry {Permission = readPermisson, Principal = user, AccessControlList = study.Acl});
                 s.Save(study);
                 s.Flush();
             };
@@ -155,10 +155,10 @@ namespace CHC.Consent.NHibernate.WebApi.Tests
         private void AddReadAccessForUser(ISession s)
         {
             person = s.Merge(person);
-            person.Acl.Permissions.Add(
+            person.Acl.Entries.Add(
                 new AccessControlEntry
                 {
-                    Permisson = readPermisson,
+                    Permission = readPermisson,
                     Principal = user,
                     AccessControlList = person.Acl
                 });
