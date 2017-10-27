@@ -1,12 +1,9 @@
-﻿using System;
-using System.Security.Claims;
-using CHC.Consent.Common.Core;
+﻿using System.Security.Claims;
 using CHC.Consent.Security;
 using CHC.Consent.WebApi.Abstractions;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 
-namespace CHC.Consent.WebApi.Features.Person
+namespace CHC.Consent.WebApi.Infrastructure
 {
     public class HttpContextUserAccessor : IUserAccessor
     {

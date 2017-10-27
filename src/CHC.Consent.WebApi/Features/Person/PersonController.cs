@@ -27,7 +27,7 @@ namespace CHC.Consent.WebApi.Features.Person
         [HttpGet]
         public IEnumerable<ResponseModels.Person> Get([FromQuery]RequestModels.GetPeople request)
         {
-            return PagingExtensions.GetPage(people.GetPeople(), request.Page, request.PageSize)
+            return people.GetPeople().GetPage(request.Page, request.PageSize)
                 .Select(_ => new ResponseModels.Person {Id = _.Id})
                 .AsEnumerable();
         }

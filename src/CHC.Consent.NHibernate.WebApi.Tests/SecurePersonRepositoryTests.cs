@@ -21,7 +21,7 @@ namespace CHC.Consent.NHibernate.WebApi.Tests
         private User user;
         private Person person;
         private readonly Permisson readPermisson = new Permisson {Name = "read"};
-        private readonly SecurePersonRepository securePersonRepository;
+        private readonly PersonRepository personRepository;
         public DatabaseFixture Db { get; }
 
         /// <inheritdoc />
@@ -35,7 +35,7 @@ namespace CHC.Consent.NHibernate.WebApi.Tests
             person = new Person(Enumerable.Empty<Identity.Identity>());
 
             Db.InTransactionalUnitOfWork(SavePeople);
-            securePersonRepository = new SecurePersonRepository(new UserAccessor(() => user), Db.SessionAccessor);
+            personRepository = new PersonRepository(new UserAccessor(() => user), Db.SessionAccessor);
         }
 
         public class Paging : IPagingProperties{
@@ -70,7 +70,7 @@ namespace CHC.Consent.NHibernate.WebApi.Tests
         private IPerson[] GetAccessiblePeople()
         {
             return Db.InTransactionalUnitOfWork(
-                () => securePersonRepository
+                () => personRepository
                     .GetPeople()
                     .ToArray());
         }
@@ -81,7 +81,7 @@ namespace CHC.Consent.NHibernate.WebApi.Tests
             Db.InTransactionalUnitOfWork(AddReadAccessForUser);
 
             var people = Db.InTransactionalUnitOfWork(
-                () => securePersonRepository
+                () => personRepository
                     .GetPeople()
                     .Skip(0).Take(10)
                     .Select(p => new PersonProjection{ Id = p.Id})

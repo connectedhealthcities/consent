@@ -1,26 +1,25 @@
 ﻿using System;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using CHC.Consent.WebApi.Abstractions;
-using CHC.Consent.WebApi.Features.Person;
 using CHC.Consent.WebApi.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
-using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Swagger;
 using CHC.Consent.NHibernate;
 using CHC.Consent.NHibernate.Configuration;
 using CHC.Consent.NHibernate.Security;
 using CHC.Consent.NHibernate.WebApi;
 using CHC.Consent.Security;
-using Swashbuckle.AspNetCore.SwaggerGen;
+using CHC.Consent.WebApi.Abstractions.Consent;
+using NHibernate;
+using MicrosoftLoggerFactory = Microsoft.Extensions.Logging.ILoggerFactory;
+using ISessionFactory = CHC.Consent.NHibernate.ISessionFactory;
 
 namespace CHC.Consent.WebApi
 {
@@ -37,6 +36,7 @@ namespace CHC.Consent.WebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddLogging();
             services.AddMvcCore().AddVersionedApiExplorer( o => o.GroupNameFormat = "'v'VVV" );
             services.AddApiVersioning(
                 options =>
@@ -57,7 +57,8 @@ namespace CHC.Consent.WebApi
                         Configuration.Bind("Authentication:Jwt", options);
                     });
 
-            services.AddMvc();
+            services.AddMvc().AddXmlSerializerFormatters();
+
             services.AddSwaggerGen(
                 c =>
                 {
@@ -80,18 +81,22 @@ namespace CHC.Consent.WebApi
                     c.OperationFilter<RemoveVersionPrefixFilter>();
                 });
 
+
+            LoggerProvider.SetLoggersFactory(
+                new LoggerFactoryAdapter(services.BuildServiceProvider().GetService<MicrosoftLoggerFactory>()));
+
             services.AddSingleton<ISessionFactory>(
                 new Configuration(
                     NHibernate.Configuration.Configuration.SqlServer(Configuration.GetConnectionString("Consent")))
             );
 
             services.AddScoped(s => new UnitOfWork(s.GetRequiredService<ISessionFactory>()));
-
-            services.AddScoped<Func<global::NHibernate.ISession>>(
-                s => () => s.GetRequiredService<UnitOfWork>().GetSession());
+            services.AddScoped<Func<ISession>>(s => () => s.GetRequiredService<UnitOfWork>().GetSession());
 
             services.AddTransient<IJwtIdentifiedUserRepository, UserRepository>();
-            services.AddTransient<IPersonRepository, SecurePersonRepository>();
+            services.AddTransient<IPersonRepository, PersonRepository>();
+            services.AddTransient<ISubjectStore, SubjectStore>();
+            services.AddTransient<SecurityHelper>();
             
             services.AddTransient<IUserAccessor, HttpContextUserAccessor>();
         }
@@ -107,21 +112,19 @@ namespace CHC.Consent.WebApi
             app.UseSwagger();
             
             app.UseAuthentication();
+            app.Use(async (ctx, next) =>
+            {
+                using (var tx = ctx.RequestServices.GetService<UnitOfWork>().GetSession().BeginTransaction(IsolationLevel.Serializable))
+                {
+                    await next();
+                    tx.Commit();
+                }
+            });
+
             app.UseMvc();
-        }
-    }
 
-    public class RemoveVersionPrefixFilter : IOperationFilter
-    {
-        private static readonly int VersionPrefixLength = VersionPrefix.Length;
-        private const string VersionPrefix = "V{version";
 
-        /// <inheritdoc />
-        public void Apply(Operation operation, OperationFilterContext context)
-        {
-            operation.OperationId = operation.OperationId.StartsWith(VersionPrefix)
-                ? operation.OperationId.Substring(VersionPrefixLength)
-                : operation.OperationId;
+
         }
     }
 }

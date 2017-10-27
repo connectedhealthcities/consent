@@ -49,14 +49,27 @@ namespace CHC.Consent.NHibernate
             return (GetRealType().ToString() + Id).GetHashCode();
         }
  
+        /// <summary>
+        /// Has this object been saved?
+        /// </summary>
         public virtual bool IsTransient()
         {
             return Id == default(Guid);
         }
  
+        /// <summary>
+        /// Gets the un-proxied type of this instance
+        /// </summary>
+        /// <remarks>Has side effects - see <see cref="NHibernateUtil.GetClass"/></remarks>
         public virtual Type GetRealType()
         {
             return NHibernateUtil.GetClass(this);
+        }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"{GetRealType().Name}#{Id}";
         }
     }
 }

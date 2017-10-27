@@ -6,5 +6,8 @@ namespace CHC.Consent.NHibernate.Security
     {
         /// <inheritdoc />
         public virtual string Name { get; set; }
+
+        public const string Read = "read";
+        public const string Write = "write";
     }
 }

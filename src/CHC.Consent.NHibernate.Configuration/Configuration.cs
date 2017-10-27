@@ -72,6 +72,13 @@ namespace CHC.Consent.NHibernate.Configuration
             schemaExport.Create(output ?? Do.Nothing, true);
         }
 
+        public void Update(Action<string> output, bool execute)
+        {
+            var schemaExport = new SchemaUpdate(config);
+
+            schemaExport.Execute(output, execute);
+        }
+
         public ISession StartSession()
         {
             var session = sessionFactory.OpenSession();
