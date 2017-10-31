@@ -29,8 +29,8 @@ namespace CHC.Consent.NHibernate.Configuration
             =>
                 db =>
                 {
-                    db.Dialect<MsSql2012Dialect>();
                     db.Driver<SqlServer2008Driver>();
+                    db.Dialect<MsSql2008Dialect>();
                     db.ConnectionString = connectionString;
                 };
 
@@ -51,6 +51,7 @@ namespace CHC.Consent.NHibernate.Configuration
                 {
                     db.LogFormattedSql = true;
                     db.KeywordsAutoImport = Hbm2DDLKeyWords.AutoQuote;
+                    db.BatchSize = 50;
                     setup(db);
                 })
                 .AddMapping(mappingDocument);
@@ -248,7 +249,7 @@ namespace CHC.Consent.NHibernate.Configuration
                         c =>
                         {
                             c.Cascade(Cascade.All | Cascade.DeleteOrphans);
-                            c.Inverse(false);
+                            c.Inverse(true);
                             c.Fetch(CollectionFetchMode.Subselect);
                         });
 
