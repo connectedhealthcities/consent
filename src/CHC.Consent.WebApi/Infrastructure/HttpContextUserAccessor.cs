@@ -17,7 +17,7 @@ namespace CHC.Consent.WebApi.Infrastructure
         }
 
         /// <inheritdoc />
-        public IUser GetUser()
+        public IAuthenticatable GetUser()
         {
             var webUser = contextAccessor.HttpContext.User;
             return users.FindUserBy(webUser.FindFirstValue("iss"), webUser.FindFirstValue("sub"));

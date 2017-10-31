@@ -18,7 +18,10 @@ using CHC.Consent.NHibernate.WebApi;
 using CHC.Consent.Security;
 using CHC.Consent.Utils;
 using CHC.Consent.WebApi.Abstractions.Consent;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using NHibernate;
+using ISession = NHibernate.ISession;
 using MicrosoftLoggerFactory = Microsoft.Extensions.Logging.ILoggerFactory;
 using ISessionFactory = CHC.Consent.NHibernate.ISessionFactory;
 
@@ -82,6 +85,8 @@ namespace CHC.Consent.WebApi
                     c.OperationFilter<RemoveVersionPrefixFilter>();
                 });
 
+
+            services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             LoggerProvider.SetLoggersFactory(
                 new LoggerFactoryAdapter(services.BuildServiceProvider().GetService<MicrosoftLoggerFactory>()));

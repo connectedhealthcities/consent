@@ -176,7 +176,7 @@ namespace CHC.Consent.NHibernate.WebApi.Tests
             }
 
             /// <inheritdoc />
-            public IUser GetUser() => getuser();
+            public IAuthenticatable GetUser() => getuser();
         }
     }
 }
