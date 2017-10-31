@@ -38,7 +38,7 @@ namespace CHC.Consent.NHibernate.WebApi
         }
 
         /// <inheritdoc />
-        public ISubject AddSubject(Guid studyId, string id)
+        public ISubject AddSubject(Guid studyId, string subjectIdentifier)
         {
             var session = getSession();
 
@@ -53,12 +53,12 @@ namespace CHC.Consent.NHibernate.WebApi
                 throw new AccessDeniedException($"User#{security.UserAccessor.GetUser()} cannot add subject to to {study}");
             }
 
-            if (session.Query<Subject>().Any(_ => _.Study == study && _.Identifier == id))
+            if (session.Query<Subject>().Any(_ => _.Study == study && _.Identifier == subjectIdentifier))
             {
-                throw new SubjectAlreadyExistsException(study, id);
+                throw new SubjectAlreadyExistsException(study, subjectIdentifier);
             }
 
-            var subject = new Subject(study, id)
+            var subject = new Subject(study, subjectIdentifier)
             {
                 Authenticatable = security.GetCurrentAuthenticatable(),
                 Date = Clock.CurrentDateTimeOffset()

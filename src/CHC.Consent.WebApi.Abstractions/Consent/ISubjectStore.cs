@@ -8,6 +8,6 @@ namespace CHC.Consent.WebApi.Abstractions.Consent
     {
         IQueryable<ISubject> GetSubjects(Guid studyId);
         ISubject GetSubject(Guid studyId, string id);
-        ISubject AddSubject(Guid studyId, string id);
+        ISubject AddSubject(Guid studyId, string subjectIdentifier);
     }
 }
