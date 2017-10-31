@@ -69,7 +69,7 @@ namespace CHC.Consent.NHibernate.Configuration
         public void Create(Action<string> output = null, bool execute = false)
         {
             var schemaExport = new SchemaExport(config);
-            schemaExport.Create(output ?? Do.Nothing, true);
+            schemaExport.Create(output ?? Do.Nothing, execute);
         }
 
         public void Update(Action<string> output, bool execute)
