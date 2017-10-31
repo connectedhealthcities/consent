@@ -2,6 +2,6 @@
 {
     public interface IJwtIdentifiedUserRepository
     {
-        IUser FindUserBy(string issuer, string subject);
+        IAuthenticatable FindUserBy(string issuer, string subject);
     }
 }

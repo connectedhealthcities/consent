@@ -8,6 +8,7 @@ namespace CHC.Consent.NHibernate.Security
 {
     public class UserRepository : IJwtIdentifiedUserRepository
     {
+        private Authenticatable currentUser;
         private Func<ISession> SessionAccessor { get; }
 
         /// <inheritdoc />
@@ -17,26 +18,32 @@ namespace CHC.Consent.NHibernate.Security
         }
 
         /// <inheritdoc />
-        public IUser FindUserBy(string issuer, string subject)
+        public IAuthenticatable FindUserBy(string issuer, string subject)
+        {
+            return currentUser ?? LoadJwtUser(issuer, subject);
+        }
+
+        private Authenticatable LoadJwtUser(string issuer, string subject)
         {
             var session = SessionAccessor();
-            var foundUser = session.Query<User>().SingleOrDefault(
-                user =>
-                    user.Logins
-                        .OfType<JwtLogin>()
-                        .Any(id => id.Issuer == issuer && id.Subject == subject));
+            currentUser = session.Query<Authenticatable>()
+                .SingleOrDefault(
+                    user =>
+                        user.Logins
+                            .OfType<JwtLogin>()
+                            .Any(id => id.Issuer == issuer && id.Subject == subject));
 
-            LoadRoleHierarchy(foundUser);
-
-            return foundUser;
+            LoadRoleHierarchy();
+            
+            return currentUser;
         }
 
         /// <remarks>
         /// TODO: Replace N+1 hierarchical loading with something better
         /// </remarks>
-        private static void LoadRoleHierarchy(SecurityPrincipal foundUser)
+        private void LoadRoleHierarchy()
         {
-            var currentPrincipal = foundUser;
+            SecurityPrincipal currentPrincipal = currentUser;
             while (currentPrincipal != null)
             {
                 NHibernateUtil.Initialize(currentPrincipal.Role);

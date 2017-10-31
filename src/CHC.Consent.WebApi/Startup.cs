@@ -96,7 +96,7 @@ namespace CHC.Consent.WebApi
             services.AddScoped(s => new UnitOfWork(s.GetRequiredService<ISessionFactory>()));
             services.AddScoped<Func<ISession>>(s => () => s.GetRequiredService<UnitOfWork>().GetSession());
 
-            services.AddTransient<IJwtIdentifiedUserRepository, UserRepository>();
+            services.AddScoped<IJwtIdentifiedUserRepository, UserRepository>();
             services.AddTransient<IPersonRepository, PersonRepository>();
             services.AddTransient<ISubjectStore, SubjectStore>();
             services.AddTransient<SecurityHelper>();
