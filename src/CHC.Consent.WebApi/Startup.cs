@@ -16,6 +16,7 @@ using CHC.Consent.NHibernate.Configuration;
 using CHC.Consent.NHibernate.Security;
 using CHC.Consent.NHibernate.WebApi;
 using CHC.Consent.Security;
+using CHC.Consent.Utils;
 using CHC.Consent.WebApi.Abstractions.Consent;
 using NHibernate;
 using MicrosoftLoggerFactory = Microsoft.Extensions.Logging.ILoggerFactory;
@@ -84,6 +85,8 @@ namespace CHC.Consent.WebApi
 
             LoggerProvider.SetLoggersFactory(
                 new LoggerFactoryAdapter(services.BuildServiceProvider().GetService<MicrosoftLoggerFactory>()));
+
+            services.AddSingleton<IClock, UtcSystemClock>();
 
             services.AddSingleton<ISessionFactory>(
                 new Configuration(

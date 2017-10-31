@@ -18,7 +18,7 @@ namespace CHC.Consent.Testing.NHibernate
 
         private void Log(string level, object message, Exception exception)
         {
-            /*if (name.Contains("SQL"))*/
+            if (name.Contains("SQL"))
             {
                 try
                 {

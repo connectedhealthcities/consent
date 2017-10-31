@@ -27,15 +27,17 @@ namespace CHC.Consent.NHibernate.WebApi.Tests
         /// <inheritdoc />
         public SecurePersonRepositoryTests(DatabaseFixture db, ITestOutputHelper output)
         {
-            Db = db;
-            Db.StartSession(output.WriteLine).Dispose();
-            
             LoggerProvider.SetLoggersFactory(new OutputLoggerFactory(output));
+            
+            Db = db;
+            Db.StartSession().Dispose();
+            
+            
             user = new User();
             person = new Person(Enumerable.Empty<Identity.Identity>());
 
             Db.InTransactionalUnitOfWork(SavePeople);
-            personRepository = new PersonRepository(new UserAccessor(() => user), Db.SessionAccessor);
+            personRepository = new PersonRepository(new SecurityHelper(new UserAccessor(() => user), Db.SessionAccessor));
         }
 
         public class Paging : IPagingProperties{

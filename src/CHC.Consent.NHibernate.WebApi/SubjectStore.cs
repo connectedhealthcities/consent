@@ -3,6 +3,7 @@ using System.Linq;
 using CHC.Consent.Core;
 using CHC.Consent.NHibernate.Consent;
 using CHC.Consent.NHibernate.Security;
+using CHC.Consent.Utils;
 using CHC.Consent.WebApi.Abstractions;
 using CHC.Consent.WebApi.Abstractions.Consent;
 using NHibernate;
@@ -12,12 +13,14 @@ namespace CHC.Consent.NHibernate.WebApi
 {
     public class SubjectStore : ISubjectStore
     {
+        public IClock Clock { get; }
         private readonly SecurityHelper security;
         private readonly Func<ISession> getSession;
 
         /// <inheritdoc />
-        public SubjectStore(SecurityHelper security, Func<ISession> getSession)
+        public SubjectStore(SecurityHelper security, Func<ISession> getSession, IClock clock)
         {
+            Clock = clock;
             this.security = security;
             this.getSession = getSession;
         }
@@ -38,7 +41,9 @@ namespace CHC.Consent.NHibernate.WebApi
         public ISubject AddSubject(Guid studyId, string id)
         {
             var session = getSession();
-            var study = security.Readable(_ => _.Query<Study>()).SingleOrDefault(_ => _.Id == studyId);
+
+            var study = security.Readable(db => db.Query<Study>()).SingleOrDefault(_ => _.Id == studyId);
+
             if (study == null)
             {
                 throw new StudyNotFoundException(studyId);
@@ -52,8 +57,12 @@ namespace CHC.Consent.NHibernate.WebApi
             {
                 throw new SubjectAlreadyExistsException(study, id);
             }
-            
-            var subject = new Subject(study, id);
+
+            var subject = new Subject(study, id)
+            {
+                Authenticatable = security.GetCurrentAuthenticatable(),
+                Date = Clock.CurrentDateTimeOffset()
+            };
             
             session.Save(subject);
             

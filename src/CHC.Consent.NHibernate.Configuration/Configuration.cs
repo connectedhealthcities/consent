@@ -191,7 +191,10 @@ namespace CHC.Consent.NHibernate.Configuration
                             e.Table("Consent_ProvidedEvidence");
                             e.Inverse(false);
                         },
-                        j => j.ManyToMany());
+                        j => j.ManyToMany(n =>
+                        {
+                            n.ForeignKey("FK_Consent_ProvidedEvidence");
+                        }));
                     
                     m.Set(_ => _.WithdrawnEvidence, 
                         e =>
@@ -201,7 +204,10 @@ namespace CHC.Consent.NHibernate.Configuration
                             e.Table("Consent_WithdrawnEvidence");
                             e.Inverse(false);
                         },
-                        j => j.ManyToMany());
+                        j => j.ManyToMany(n =>
+                        {
+                            n.ForeignKey("FK_Consent_WithdrawnEvidence");
+                        }));
 
                     m.HasAcl();
 
@@ -214,6 +220,7 @@ namespace CHC.Consent.NHibernate.Configuration
                     {
                         j.Cascade(Cascade.Persist);
                         j.Inverse(true);
+                        
                     });
                 m.Bag(
                     _ => _.SubjectIdentifiers,
@@ -262,9 +269,18 @@ namespace CHC.Consent.NHibernate.Configuration
                     m.ManyToOne(_ => _.AccessControlList, c =>
                     {
                         c.NotNullable(true);   
+                        c.Fetch(FetchKind.Join);
                     });
-                    m.ManyToOne(_ => _.Permission, c => c.NotNullable(true));
-                    m.ManyToOne(_ => _.Principal, c => c.NotNullable(true));
+                    m.ManyToOne(_ => _.Permission, c =>
+                    {
+                        c.NotNullable(true);
+                        c.Fetch(FetchKind.Join);
+                    });
+                    m.ManyToOne(_ => _.Principal, c =>
+                    {
+                        c.NotNullable(true);
+                        c.Fetch(FetchKind.Join);
+                    });
                 }
             );
             
@@ -272,7 +288,11 @@ namespace CHC.Consent.NHibernate.Configuration
             {
                 m.ManyToOne(
                     _ => _.Person,
-                    j => { j.Index("IX_PersistedIdentity_Person"); });
+                    j =>
+                    {
+                        j.Index("IX_Identity_Person");
+                        j.ForeignKey("FK_Identity_Person");
+                    });
             });
             
             mapper.Class<SubjectIdentifier>(

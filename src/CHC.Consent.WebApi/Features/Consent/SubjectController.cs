@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CHC.Consent.WebApi.Abstractions;
 using CHC.Consent.WebApi.Abstractions.Consent;
+using CHC.Consent.WebApi.Infrastructure;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -49,6 +50,7 @@ namespace CHC.Consent.WebApi.Features.Consent
             }
             catch (SubjectAlreadyExistsException)
             {
+                return new ConflictResult("Index", routeValues: new { studyId, id });
             }
             catch (StudyNotFoundException)
             {
@@ -58,7 +60,7 @@ namespace CHC.Consent.WebApi.Features.Consent
             {
                 return Forbid();
             }
-            return CreatedAtAction("Index", new {studyId = studyId, id = id}, null);
+            return CreatedAtAction("Index", new {studyId, id}, null);
         }
     }
 }

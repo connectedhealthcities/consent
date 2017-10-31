@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CHC.Consent.Common.Core;
 using CHC.Consent.Core;
 using CHC.Consent.NHibernate.Security;
@@ -39,5 +40,8 @@ namespace CHC.Consent.NHibernate.Consent
 
         /// <inheritdoc />
         public virtual AccessControlList Acl { get; }
+
+        public virtual Authenticatable Authenticatable { get; set; }
+        public virtual DateTimeOffset Date { get; set; }
     }
 }
