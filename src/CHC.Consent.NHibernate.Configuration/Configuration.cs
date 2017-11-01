@@ -181,9 +181,11 @@ namespace CHC.Consent.NHibernate.Configuration
             mapper.Class<IdentityKind>(m => { m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid)); });
             mapper.Class<Study>(m => { m.Id(_ => _.Id, id => id.Generator(Generators.NativeGuid)); });
             
+            mapper.Class<Subject>(m => m.Bag(_ => _.Consents, c => c.Inverse(true)));
             mapper.Class<Consent.Consent>(
                 m =>
                 {
+                    m.Property(_ => _.DateProvisionRecorded, p => p.NotNullable(true));
                     m.Set(_ => _.ProvidedEvidence, 
                         e =>
                         {
@@ -209,8 +211,6 @@ namespace CHC.Consent.NHibernate.Configuration
                         {
                             n.ForeignKey("FK_Consent_WithdrawnEvidence");
                         }));
-
-                    m.HasAcl();
 
                 });
             mapper.Class<Person>(m =>

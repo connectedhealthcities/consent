@@ -76,10 +76,10 @@ namespace CHC.Consent.IntegrationTests
 
             using (var session = db.StartSession())
             {
-                var imported = session.Query<NHibernate.Consent.Consent>().FirstOrDefault(_ => _.SubjectIdentifier == subjectIdentifiers.LastId);
+                var imported = session.Query<NHibernate.Consent.Consent>().FirstOrDefault(_ => _.Subject.Identifier == subjectIdentifiers.LastId);
 
                 Assert.NotNull(imported);
-                Assert.Equal(study.Id, imported.StudyId);
+                Assert.Equal(study.Id, imported.Subject.Study.Id);
                 Assert.Single(imported.ProvidedEvidence);
                 Assert.Equal("The evidence that was sent", imported.ProvidedEvidence.First().TheEvidence);
                 Assert.Equal(evidenceKind.Id, imported.ProvidedEvidence.First().EvidenceKindId);

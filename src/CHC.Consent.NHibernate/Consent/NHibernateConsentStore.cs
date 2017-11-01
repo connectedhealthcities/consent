@@ -21,16 +21,18 @@ namespace CHC.Consent.NHibernate.Consent
         /// <inheritdoc />
         public IConsent RecordConsent(Guid studyId, string subjectIdentifier, IEnumerable<IEvidence> evidence)
         {
-            var consent = new Consent
-            {
-                DateProvisionRecorded = DateTimeOffset.UtcNow,
-                StudyId = studyId,
-                SubjectIdentifier = subjectIdentifier
-            };
+            var session = sessionAccessor();
+            var study = session.Get<Study>(studyId);
+            var subject = session.Query<Subject>().SingleOrDefault(_ => _.Study == study && _.Identifier == subjectIdentifier)
+            ?? new Subject(study, subjectIdentifier);
+            session.SaveOrUpdate(subject);
 
-            consent.AddProvidedEvidence(evidence);
-
-            sessionAccessor().Save(consent);
+            var consent = new Consent(
+                subject,
+                DateTimeOffset.UtcNow,
+                evidence.Select(Consent.MakeEvidence));
+            
+            session.Save(consent);
 
             return consent;
         }

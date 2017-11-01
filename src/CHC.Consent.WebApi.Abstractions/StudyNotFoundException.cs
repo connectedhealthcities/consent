@@ -2,7 +2,7 @@
 
 namespace CHC.Consent.WebApi.Abstractions
 {
-    public class StudyNotFoundException : Exception
+    public class StudyNotFoundException : NotFoundException
     {
         public Guid StudyId { get; }
 

@@ -26,16 +26,20 @@ namespace CHC.Consent.WebApi.Infrastructure
         {
             var request = context.HttpContext.Request;
 
-            var location = (UrlHelper ?? context.HttpContext.RequestServices.GetRequiredService<IUrlHelperFactory>().GetUrlHelper(context)).Action(
-                Action,
-                ControllerName,
-                RouteValues,
-                request.Scheme,
-                request.Host.ToUriComponent());
-
-            if (!string.IsNullOrEmpty(location))
+            if (Action != null)
             {
-                context.HttpContext.Response.Headers["Location"] = location;
+                var location = (UrlHelper ?? context.HttpContext.RequestServices.GetRequiredService<IUrlHelperFactory>()
+                                    .GetUrlHelper(context)).Action(
+                    Action,
+                    ControllerName,
+                    RouteValues,
+                    request.Scheme,
+                    request.Host.ToUriComponent());
+
+                if (!string.IsNullOrEmpty(location))
+                {
+                    context.HttpContext.Response.Headers["Location"] = location;
+                }
             }
 
             base.ExecuteResult(context);

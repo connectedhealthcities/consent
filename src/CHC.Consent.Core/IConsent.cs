@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using CHC.Consent.Core;
 
 namespace CHC.Consent.Common.Core
 {
     public interface IConsent
     {
-        Guid StudyId { get; }
-        string SubjectIdentifier { get; }
+        ISubject Subject { get; }
         
         DateTimeOffset DateProvisionRecorded { get; }
         IEnumerable<IEvidence> ProvidedEvidence { get; }

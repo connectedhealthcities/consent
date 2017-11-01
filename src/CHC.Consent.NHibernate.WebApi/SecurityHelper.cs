@@ -33,7 +33,7 @@ namespace CHC.Consent.NHibernate.WebApi
         private IQueryable<T> Filter<T>(Func<ISession, IQueryable<T>> getSecurables, params string[] requiredPermissions) where T : INHibernateSecurable
         {
             var session = getSession();
-            var allPrincials = AllPrincials((SecurityPrincipal) UserAccessor.GetUser());
+            var allPrincipalIds = AllPrincials((SecurityPrincipal) UserAccessor.GetUser());
             var aces = session.Query<AccessControlEntry>();
             var securables = getSecurables(session);
 
@@ -42,8 +42,8 @@ namespace CHC.Consent.NHibernate.WebApi
                     securable => aces.Any(
                         entry =>
                             requiredPermissions.Contains(entry.Permission.Name) &&
-                            allPrincials.Contains(entry.Principal.Id) &&
-                            entry.AccessControlList.Id == securable.Acl.Id));
+                            allPrincipalIds.Contains(entry.Principal.Id) &&
+                            entry.AccessControlList == securable.Acl));
         }
 
         private static Guid[] AllPrincials(SecurityPrincipal user)

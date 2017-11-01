@@ -39,8 +39,8 @@ namespace CHC.Consent.NHibernate.Tests.Consent
             {
                 var saved = session.Get<Consent>(((Consent) consent).Id);
                 
-                Assert.Equal(studyId, saved.StudyId);
-                Assert.Equal(subjectIdentifier, saved.SubjectIdentifier);
+                Assert.Equal(studyId, saved.Subject.Study.Id);
+                Assert.Equal(subjectIdentifier, saved.Subject.Identifier);
                 
                 Assert.NotEmpty(saved.ProvidedEvidence);
                 Assert.Equal(evidence.EvidenceKindId, saved.ProvidedEvidence.First().EvidenceKindId);

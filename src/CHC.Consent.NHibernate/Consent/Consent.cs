@@ -2,24 +2,31 @@
 using System.Collections.Generic;
 using System.Linq;
 using CHC.Consent.Common.Core;
+using CHC.Consent.Core;
 using CHC.Consent.NHibernate.Security;
 using CHC.Consent.Security;
 
 namespace CHC.Consent.NHibernate.Consent
 {
-    public class Consent : Entity, IConsent, INHibernateSecurable
+    public class Consent : Entity, IConsent
     {
-        public Consent()
+        protected Consent()
         {
-            Acl = new AccessControlList(this);
         }
 
         /// <inheritdoc />
-        public virtual Guid StudyId { get; set; }
+        public Consent(Subject subject, DateTimeOffset dateProvisionRecorded, IEnumerable<Evidence> providedEvidence)
+        {
+            Subject = subject;
+            DateProvisionRecorded = dateProvisionRecorded;
+            ProvidedEvidence = providedEvidence.ToList();
+        }
+
+        public virtual Subject Subject { get; protected set; }
 
         /// <inheritdoc />
-        public virtual string SubjectIdentifier { get; set; }
-
+        ISubject IConsent.Subject => Subject;
+        
         /// <inheritdoc />
         public virtual DateTimeOffset DateProvisionRecorded { get; set; }
 
@@ -40,8 +47,8 @@ namespace CHC.Consent.NHibernate.Consent
         {
             ProvidedEvidence = ProvidedEvidence.Concat(evidence.Select(MakeEvidence)).ToList();
         }
-        
-        private Evidence MakeEvidence(IEvidence evidence)
+
+        public static Evidence MakeEvidence(IEvidence evidence)
         {
             return new Evidence
             {
@@ -50,10 +57,7 @@ namespace CHC.Consent.NHibernate.Consent
             };
         }
 
-        /// <inheritdoc />
-        IAccessControlList ISecurable.AccessControlList => Acl;
-
-        /// <inheritdoc />
-        public virtual AccessControlList Acl { get; protected set; }
+        public virtual Authenticatable Authenticatable { get; set; }
+        public virtual DateTimeOffset Date { get; set; }
     }
 }

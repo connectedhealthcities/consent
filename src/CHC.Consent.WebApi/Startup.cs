@@ -124,8 +124,16 @@ namespace CHC.Consent.WebApi
             {
                 using (var tx = ctx.RequestServices.GetService<UnitOfWork>().GetSession().BeginTransaction(IsolationLevel.Serializable))
                 {
-                    await next();
-                    tx.Commit();
+                    try
+                    {
+                        await next();
+                        tx.Commit();
+                    }
+                    catch(Exception e) 
+                    {
+                        tx.Rollback();
+                        throw;
+                    }
                 }
             });
 

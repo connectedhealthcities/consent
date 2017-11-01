@@ -39,7 +39,7 @@ namespace CHC.Consent.NHibernate.Consent
         IAccessControlList ISecurable.AccessControlList => Acl;
 
         /// <inheritdoc />
-        public virtual AccessControlList Acl { get; }
+        public virtual AccessControlList Acl { get; protected set; }
 
         public virtual Authenticatable Authenticatable { get; set; }
         public virtual DateTimeOffset Date { get; set; }
