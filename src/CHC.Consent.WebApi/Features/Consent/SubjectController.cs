@@ -33,6 +33,7 @@ namespace CHC.Consent.WebApi.Features.Consent
                 /// the subject identifier
                 /// </summary>
                 public string Id { get; set; }
+                public bool? HasConsent { get; set; }
             }
 
             public class ConsentCreated
@@ -54,22 +55,31 @@ namespace CHC.Consent.WebApi.Features.Consent
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="studyId"></param>
+        /// <returns></returns>
         [HttpGet]
         public IEnumerable<Responses.SubjectSummary> Index(Guid studyId)
         {
             //TODO: Does a person need access to a study to get subjects that it has access to?
-            return Subjects.GetSubjects(studyId).Select(s => new Responses.SubjectSummary{ Id = s.Identifier }).ToArray();
+            return Subjects.GetSubjects(studyId).Select(s => new Responses.SubjectSummary{ Id = s.Identifier, HasConsent = s.Consents.Any(_ => _.DateWithdrawlRecorded == null)}).ToArray();
         }
 
-        [Route("{id}"),HttpGet]
+        [HttpGet("{id}")]
+        [ProducesResponseType(typeof(Responses.SubjectSummary), 200)]
         public IActionResult Index(Guid studyId, string id)
         {
-            var subject = Subjects.GetSubject(studyId, id);
+            var subject = Subjects.GetSubjects(studyId)
+                .Where(_ => _.Identifier == id)
+                .Select(s => new Responses.SubjectSummary{ Id = s.Identifier, HasConsent = s.Consents.Any(_ => _.DateWithdrawlRecorded == null)})
+                .SingleOrDefault();
             if (subject == null) return NotFound();
-            return Ok(new Responses.SubjectSummary {Id = subject.Identifier});
+            return Ok(subject);
         }
 
-        [Route("{id}"),HttpPost]
+        [HttpPost("{id}")]
         public IActionResult Post(Guid studyId, string id)
         {
             try
@@ -91,7 +101,8 @@ namespace CHC.Consent.WebApi.Features.Consent
             return CreatedAtAction("Index", new {studyId, id}, null);
         }
 
-        [Route("{id}/consent"), HttpPost]
+        [HttpPost("{id}/consent")]
+        [ProducesResponseType(typeof(Responses.ConsentCreated), 200)]
         public IActionResult Post(Guid studyId, string id, [FromBody,Required]Requests.Consent consent)
         {
             if (!ModelState.IsValid)

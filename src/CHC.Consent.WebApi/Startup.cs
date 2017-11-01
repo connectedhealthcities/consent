@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using CHC.Consent.WebApi.Abstractions;
 using CHC.Consent.WebApi.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -20,7 +22,9 @@ using CHC.Consent.Utils;
 using CHC.Consent.WebApi.Abstractions.Consent;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.PlatformAbstractions;
 using NHibernate;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using ISession = NHibernate.ISession;
 using MicrosoftLoggerFactory = Microsoft.Extensions.Logging.ILoggerFactory;
 using ISessionFactory = CHC.Consent.NHibernate.ISessionFactory;
@@ -83,6 +87,10 @@ namespace CHC.Consent.WebApi
 
                     c.TagActionsBy(description => description.GroupName);
                     c.OperationFilter<RemoveVersionPrefixFilter>();
+                    c.OperationFilter<AddSecurityFilter>();
+                    c.AddSecurityDefinition("oidc", new OAuth2Scheme{});
+                    var filePath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Api.xml");
+                    c.IncludeXmlComments(filePath);
                 });
 
 
@@ -141,6 +149,21 @@ namespace CHC.Consent.WebApi
 
 
 
+        }
+    }
+
+    public class AddSecurityFilter : IOperationFilter
+    {
+        /// <inheritdoc />
+        public void Apply(Operation operation, OperationFilterContext context)
+        {
+            operation.Security = new List<IDictionary<string, IEnumerable<string>>>
+            {
+                new Dictionary<string, IEnumerable<string>>
+                {
+                    {"oauth2", new string[] { }}
+                }
+            };
         }
     }
 }
