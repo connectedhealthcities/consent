@@ -8,8 +8,10 @@ namespace CHC.Consent.NHibernate.Security
         protected JwtLogin() {}
         
         /// <inheritdoc />
-        public JwtLogin(string issuer, string subject) 
+        public JwtLogin(string issuer, string subject)
         {
+            Issuer = issuer;
+            Subject = subject;
         }
         
         public virtual string Issuer { get; protected set; }

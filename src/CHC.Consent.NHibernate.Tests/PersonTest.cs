@@ -3,6 +3,7 @@ using System.Linq;
 using CHC.Consent.Common.Core;
 using CHC.Consent.Identity.SimpleIdentity;
 using CHC.Consent.NHibernate.Identity;
+using CHC.Consent.Security;
 using CHC.Consent.Testing.NHibernate;
 using NHibernate.Linq;
 using Xunit;
@@ -16,6 +17,9 @@ namespace CHC.Consent.NHibernate.Tests
         {
             /// <inheritdoc />
             public Guid Id { get; set; }
+
+            /// <inheritdoc />
+            public IAccessControlList AccessControlList => throw new NotImplementedException();
         }
 
         private readonly DatabaseFixture db;

@@ -11,37 +11,33 @@ using Microsoft.AspNetCore.Mvc;
 using CHC.Consent.Web.UI.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 
 namespace CHC.Consent.Web.UI.Controllers
 {
     [Authorize]
-    public class HomeController : Controller
+    public partial class HomeController : Controller
     {
         private IAuthenticationService authenticationService;
+        private readonly ApiClient apiClient;
 
-        public HomeController(IAuthenticationService authenticationService)
+        public HomeController(IAuthenticationService authenticationService, ApiClient apiClient)
         {
             this.authenticationService = authenticationService;
+            this.apiClient = apiClient;
         }
-        
+
         public async Task<IActionResult> Index()
         {
-            var client = new HttpClient {BaseAddress = new Uri("http://localhost:49410/v0.1-dev/")};
-            client.DefaultRequestHeaders.Authorization= new AuthenticationHeaderValue("bearer", await HttpContext.GetTokenAsync("id_token"));
-            ViewBag.Response = await client.GetStringAsync("person");
-            Dictionary<string, string> tokens = new Dictionary<string, string>();
+           
+            ViewBag.Response = await apiClient.GetStringAsync("person");
+            var tokens = new Dictionary<string, string>();
             if (User.Identity.IsAuthenticated)
             {
                 var authenicationResult = await authenticationService.AuthenticateAsync(HttpContext, null);
 
                 tokens = authenicationResult.Properties.GetTokens()
                     .ToDictionary(_ => _.Name, _ => _.Value);
-
-                string accessToken = await HttpContext.GetTokenAsync("access_token");
-                string idToken = await HttpContext.GetTokenAsync("id_token");
-                
-                // Now you can use them. For more info on when and how to use the 
-                // access_token and id_token, see https://auth0.com/docs/tokens
             }
             ViewBag.Tokens = tokens;
             
@@ -57,7 +53,6 @@ namespace CHC.Consent.Web.UI.Controllers
             return View();
         }
 
-        [Authorize(Policy = "Test")]
         public IActionResult Contact()
         {
             ViewData["Message"] = "Your contact page.";

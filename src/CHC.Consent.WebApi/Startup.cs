@@ -19,6 +19,7 @@ using CHC.Consent.NHibernate.Security;
 using CHC.Consent.NHibernate.WebApi;
 using CHC.Consent.Security;
 using CHC.Consent.Utils;
+using CHC.Consent.WebApi.Abstractions.Bootstrap;
 using CHC.Consent.WebApi.Abstractions.Consent;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -95,7 +96,7 @@ namespace CHC.Consent.WebApi
 
 
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-
+            
             LoggerProvider.SetLoggersFactory(
                 new LoggerFactoryAdapter(services.BuildServiceProvider().GetService<MicrosoftLoggerFactory>()));
 
@@ -113,6 +114,7 @@ namespace CHC.Consent.WebApi
             services.AddTransient<IPersonRepository, PersonRepository>();
             services.AddTransient<ISubjectStore, SubjectStore>();
             services.AddTransient<SecurityHelper>();
+            services.AddTransient<IBootstrapper, BootStrapper>();
             
             services.AddTransient<IUserAccessor, HttpContextUserAccessor>();
         }

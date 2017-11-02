@@ -1,6 +1,7 @@
 ﻿using System;
 using CHC.Consent.Common.Core;
 using CHC.Consent.Common.Import.Datasources;
+using CHC.Consent.Security;
 using Xunit;
 
 namespace CHC.Consent.Common.Tests.Import.Datasources
@@ -10,6 +11,9 @@ namespace CHC.Consent.Common.Tests.Import.Datasources
         private class Study:IStudy {
             /// <inheritdoc />
             public Guid Id { get; } = Guid.NewGuid();
+
+            /// <inheritdoc />
+            public IAccessControlList AccessControlList => throw new NotImplementedException();
         }
         
         readonly IStudy study = new Study();

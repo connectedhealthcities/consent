@@ -1,12 +1,19 @@
-﻿using System.Security.Claims;
+﻿using System.Diagnostics;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using CHC.Consent.Web.UI.Controllers;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Internal;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace CHC.Consent.Web.UI
@@ -29,6 +36,7 @@ namespace CHC.Consent.Web.UI
                     {
                         setup.RootDirectory = "/Pages";
                     });
+            services.AddSingleton<CheckForInitialisationHandler>();
 
             services.AddResponseCompression();
 
@@ -71,11 +79,10 @@ namespace CHC.Consent.Web.UI
                     }
                 );
 
-            services.AddAuthorization(
-                options =>
-                {
-                    options.AddPolicy("Test", policy => policy.RequireClaim(ClaimTypes.Role, "test_role"));
-                });
+            services.AddAuthorization();
+
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddScoped<HomeController.ApiClient>();
         }
 
         private async Task OnValidatePrincipal(CookieValidatePrincipalContext context)
@@ -104,8 +111,31 @@ namespace CHC.Consent.Web.UI
             app.UseMvc(
                 routes =>
                 {
+                    routes.DefaultHandler = app.ApplicationServices.GetRequiredService<CheckForInitialisationHandler>();
                     routes.MapRoute("mvc", template: "{controller=Home}/{action=Index}/{id?}");
                 });
         }
+    }
+
+    public class CheckForInitialisationHandler : IRouter
+    {
+        private readonly MvcRouteHandler mvcRouteHandler;
+
+        /// <inheritdoc />
+        public CheckForInitialisationHandler(MvcRouteHandler mvcRouteHandler)
+        {
+            this.mvcRouteHandler = mvcRouteHandler;
+        }
+        
+        /// <inheritdoc />
+        public async Task RouteAsync(RouteContext context)
+        {
+            /*var snapshot = context.RouteData.PushState(null, new RouteValueDictionary(new {page = "Setup", controller = (string)null, action = (string)null}), null);*/
+            await mvcRouteHandler.RouteAsync(context);
+            /*snapshot.Restore();*/
+        }
+
+        /// <inheritdoc />
+        public VirtualPathData GetVirtualPath(VirtualPathContext context) => mvcRouteHandler.GetVirtualPath(context);
     }
 }

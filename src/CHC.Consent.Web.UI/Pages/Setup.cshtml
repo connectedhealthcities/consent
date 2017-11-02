@@ -1,0 +1,26 @@
+﻿@page
+@model CHC.Consent.Web.UI.Pages.SetupModel
+@{
+    ViewData["Title"] = "Setup";
+}
+
+<h2>Setup</h2>
+
+@switch (Model.CurrentStep)
+{
+    case SetupModel.Step.Start:
+        <form method="get">
+            <a asp-page="Setup" asp-page-handler="StartSetup" class="btn btn-primary">Start Setup</a>
+        </form>
+        break;
+    case SetupModel.Step.Authenticated:
+        break;
+    case SetupModel.Step.UnAuthenticated:
+        break;
+    default:
+        throw new ArgumentOutOfRangeException();
+}
+
+@section Scripts {
+    @*@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}*@
+}

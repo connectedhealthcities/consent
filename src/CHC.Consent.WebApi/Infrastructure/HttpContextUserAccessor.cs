@@ -15,12 +15,18 @@ namespace CHC.Consent.WebApi.Infrastructure
             this.contextAccessor = contextAccessor;
             this.users = users;
         }
-
+        
         /// <inheritdoc />
         public IAuthenticatable GetUser()
         {
+            var (issuer, subject) = GetJwtCredentials();
+            return users.FindUserBy(issuer, subject);
+        }
+
+        public (string issuer, string subject) GetJwtCredentials()
+        {
             var webUser = contextAccessor.HttpContext.User;
-            return users.FindUserBy(webUser.FindFirstValue("iss"), webUser.FindFirstValue("sub"));
+            return (issuer:webUser.FindFirstValue("iss"),subject: webUser.FindFirstValue("sub"));
         }
     }
 }
