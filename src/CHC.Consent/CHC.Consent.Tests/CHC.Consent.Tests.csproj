@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" />
+    <PackageReference Include="xunit" Version="2.3.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
+    <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CHC.Consent.Common\CHC.Consent.Common.csproj">
+      <Project>{5CF2CE95-0242-4068-B31A-116171037E8B}</Project>
+      <Name>CHC.Consent.Common</Name>
+    </ProjectReference>
+  </ItemGroup>
+</Project>
