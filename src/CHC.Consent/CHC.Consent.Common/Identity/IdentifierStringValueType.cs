@@ -1,14 +1,14 @@
 ﻿namespace CHC.Consent.Common.Identity
 {
-    public class IdentifierValueStringType : IdentifierValueType
+    public class IdentifierStringValueType : IdentifierValueType<IdentifierStringValue>
     {
         /// <inheritdoc />
-        public override Identifier Parse(string value, IdentifierType identifierType)
+        public override IdentifierStringValue ParseToValue(string value)
         {
-            return new Identifier(identifierType, this, new IdentifierStringValue(value));
+            return new IdentifierStringValue(value);
         }
 
-        protected bool Equals(IdentifierValueStringType other) => true;
+        protected bool Equals(IdentifierStringValueType other) => true;
 
         /// <inheritdoc />
         public override bool Equals(object obj)
@@ -16,7 +16,7 @@
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((IdentifierValueStringType) obj);
+            return Equals((IdentifierStringValueType) obj);
         }
 
         /// <inheritdoc />

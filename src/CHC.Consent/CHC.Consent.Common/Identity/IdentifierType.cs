@@ -1,30 +1,29 @@
 ﻿using System;
+using System.Linq.Expressions;
 using CHC.Consent.Common.Identity;
 
 namespace CHC.Consent.Common
 {
-    public class IdentifierType
+    /// <remarks>It's easier to inherit from <see cref="IdentifierType{TValue}"/></remarks>
+    public abstract class IdentifierType
     {
-        public int Id { get; }
-
         public string ExternalId { get; }
 
-        public bool Unique { get; }
+        public bool CanHaveMultipleValues { get; }
 
         public IdentifierValueType ValueType { get; }
 
         /// <inheritdoc />
-        public IdentifierType(int id, string externalId, bool unique, IdentifierValueType valueType)
+        public IdentifierType(string externalId, bool canHaveMultipleValues, IdentifierValueType valueType)
         {
-            Id = id;
             ExternalId = externalId;
-            Unique = unique;
+            CanHaveMultipleValues = canHaveMultipleValues;
             ValueType = valueType;
         }
 
-        public Identifier Parse(string representation)
+        public virtual Identifier Parse(string representation)
         {
-            return ValueType.Parse(representation, this);
+            return new Identifier(this, ValueType, ValueType.Parse(representation));
         }
 
         protected bool Equals(IdentifierType other)
@@ -47,16 +46,48 @@ namespace CHC.Consent.Common
             return (ExternalId != null ? StringComparer.InvariantCulture.GetHashCode(ExternalId) : 0);
         }
 
-        public static readonly IdentifierType NhsNumber = new IdentifierType(
-            id: 1,
-            externalId: "nhs.uk/nhs-number",
-            unique: true,
-            valueType: new IdentifierValueStringType());
+        public static IdentifierType NhsNumber { get; } = new NhsNumber();
+        public static IdentifierType BradfordHospitalNumber { get; } = new BradfordHospitalNumber();
+        public abstract Expression<Func<Person, bool>> GetMatchExpression(IdentifierValue value);
+        public abstract void Update(Person person, IdentifierValue value);
+    }
 
-        public static IdentifierType BradfordHospitalNumber { get; } = new IdentifierType(
-            id: 2,
-            externalId: "bradfordhospitals.nhs.uk/hosptial-id",
-            unique: false,
-            valueType: new IdentifierValueStringType());
+    public abstract class IdentifierType<TValue> : IdentifierType where TValue : IdentifierValue
+    {
+        /// <inheritdoc />
+        protected IdentifierType(string externalId, bool canHaveMultipleValues, IdentifierValueType valueType) 
+            : base(externalId, canHaveMultipleValues, valueType)
+        {
+        }
+
+        /// <inheritdoc />
+        public override Expression<Func<Person, bool>> GetMatchExpression(IdentifierValue value)
+        {
+            return GetMatchExpression(GetValueAsType(value));
+        }
+
+        private static TValue GetValueAsType(IdentifierValue value)
+        {
+            switch (value)
+            {
+                case null:
+                    throw new ArgumentNullException(nameof(value));
+                case TValue typedValue:
+                    return typedValue;
+                default:
+                    throw new InvalidOperationException(
+                        $"Expecting a value of type {typeof(TValue)} but got {value?.GetType()}");
+            }
+        }
+
+        protected abstract Expression<Func<Person, bool>> GetMatchExpression(TValue value);
+
+        /// <inheritdoc />
+        public override void Update(Person person, IdentifierValue value)
+        {
+            Update(person, GetValueAsType(value));
+        }
+
+        protected abstract void Update(Person person, TValue value);
     }
 }

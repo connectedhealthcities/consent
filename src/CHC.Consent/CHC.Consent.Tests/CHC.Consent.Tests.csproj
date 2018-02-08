@@ -10,6 +10,10 @@
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CHC.Consent.Api\CHC.Consent.Api.csproj">
+      <Project>{DB92F0CE-E26C-42FF-90FF-40720930E233}</Project>
+      <Name>CHC.Consent.Api</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CHC.Consent.Common\CHC.Consent.Common.csproj">
       <Project>{5CF2CE95-0242-4068-B31A-116171037E8B}</Project>
       <Name>CHC.Consent.Common</Name>

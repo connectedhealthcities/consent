@@ -1,6 +1,11 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using CHC.Consent.Common;
+using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Infrastructure.Data;
 using Xunit;
 
 namespace CHC.Consent.Tests
@@ -22,19 +27,6 @@ namespace CHC.Consent.Tests
             Assert.NotStrictEqual(
                 Create.NhsNumber("44344323"),
                 Create.NhsNumber("87759567"));
-        }
-
-        [Fact]
-        public void Test1()
-        {
-            var nhsNumber = "123332332";
-            var aPerson = new Person { NhsNumber = nhsNumber, };
-
-            var nhsNumberIdentifier = Create.NhsNumber(nhsNumber);
-
-            var identifiers = aPerson.GetIdentifier(IdentifierType.NhsNumber);
-            Assert.Single(identifiers);
-            Assert.Equal(nhsNumberIdentifier, identifiers[0]);
         }
 
         [Fact]
@@ -64,6 +56,21 @@ namespace CHC.Consent.Tests
             Assert.Equal(repository.FindPersonBy(Create.BradfordHospitalNumber("7787773")), null);
             
         }
+
+        [Fact]
+        public void Test4()
+        {
+            var personOne = new Person{NhsNumber = "45"}.WithBradfordHosptialNumbers("7");
+            
+            IdentityRepository repository = Create.AnIdentityRepository.WithPeople(personOne);
+
+            var found = repository.FindPersonBy(
+                Create.NhsNumber(personOne.NhsNumber),
+                Create.BradfordHospitalNumber("7")
+            );
+            
+            Assert.Equal(personOne, found);
+        }
     }
 
     public static class PersonTestHelpers
@@ -83,66 +90,132 @@ namespace CHC.Consent.Tests
     {
         public static Identifier NhsNumber(string value) => IdentifierType.NhsNumber.Parse(value);
 
+        public static Identifier BradfordHospitalNumber(string hosptialNumber) =>
+            IdentifierType.BradfordHospitalNumber.Parse(hosptialNumber);
+
         public static IndentityRepositoryBuilder AnIdentityRepository => new IndentityRepositoryBuilder();
-        
-        public class IndentityRepositoryBuilder
+
+        public abstract class Builder<TBuilt, TBuilder>
         {
-            private Person[] people;
-
-            public IndentityRepositoryBuilder WithPeople(params Person[] newPeople)
+            protected TBuilder Copy(Action<TBuilder> change)
             {
-                return Copy(with: @new => @new.people = (Person[])newPeople.Clone());
-            }
-
-            private IndentityRepositoryBuilder Copy(Action<IndentityRepositoryBuilder> with)
-            {
-                var copy = (IndentityRepositoryBuilder)MemberwiseClone();
-                with(copy);
+                var copy = (TBuilder)MemberwiseClone();
+                change(copy);
                 return copy;
             }
 
-            public static implicit operator IdentityRepository(IndentityRepositoryBuilder builder)
+            public static implicit operator TBuilt(Builder<TBuilt, TBuilder> builder)
             {
                 return builder.Build();
             }
 
-            public IdentityRepository Build()
+            protected abstract TBuilt Build();
+
+            /// <summary>
+            /// <para>Helper to clone arrays because cloning arrays is verbose</para>
+            /// <para>Creates a shallow copy of <paramref name="source"/></para>
+            /// </summary>
+            protected static T[] Clone<T>(T[] source)
             {
-                return new IdentityRepository(people.AsQueryable());
+                return (T[]) source.Clone();
             }
         }
 
-
-        public static Identifier BradfordHospitalNumber(string hosptialNumber) =>
-            IdentifierType.BradfordHospitalNumber.Parse(hosptialNumber);
-
-    }
-    
-    public class IdentityRepository
-    {
-        private readonly IQueryable<Person> people;
-
-        public IdentityRepository(IQueryable<Person> people)
+        public class MockStore<T> : IStore<T>
         {
-            this.people = people;
+            private readonly List<T> contents;
+            private readonly IQueryable<T> contentsAsQueryable;
+            private readonly List<T> additions = new List<T>();
+
+            public IEnumerable<T> Contents => contents;
+            public IEnumerable<T> Additions => additions;
+
+            /// <inheritdoc />
+            public MockStore(params T[] contents) : this(contents.AsEnumerable())
+            {
+            }
+
+            public MockStore(IEnumerable<T> contents)
+            {
+                this.contents = new List<T>(contents);
+                contentsAsQueryable = this.contents.AsQueryable();
+            }
+
+            /// <inheritdoc />
+            public T Add(T value)
+            {
+                contents.Add(value);
+                additions.Add(value);
+                return value;
+            }
+
+            /// <inheritdoc />
+            public IEnumerator<T> GetEnumerator()
+            {
+                return contents.GetEnumerator();
+            }
+
+            /// <inheritdoc />
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+            /// <inheritdoc />
+            public Type ElementType => contentsAsQueryable.ElementType;
+
+            /// <inheritdoc />
+            public Expression Expression => contentsAsQueryable.Expression;
+
+            /// <inheritdoc />
+            public IQueryProvider Provider => contentsAsQueryable.Provider;
         }
 
-        public Person FindPersonBy(Identifier identifier)
+        public static StoreBuilder<T> AMockStore<T>() => new StoreBuilder<T>();
+        
+        public class StoreBuilder<T> : Builder<MockStore<T>, StoreBuilder<T>>
         {
-            if (Equals(identifier.Type, IdentifierType.NhsNumber))
+            private T[] contents = Array.Empty<T>();
+
+            public StoreBuilder<T> WithContents(params T[] newContents) => WithContents(newContents.AsEnumerable());
+
+            private StoreBuilder<T> WithContents(IEnumerable<T> newContents)
             {
-                var nhsNumber = ((IdentifierStringValue) identifier.Value).Value;
-                return people.FirstOrDefault(_ => _.NhsNumber == nhsNumber);
+                return Copy(@new => @new.contents = Clone(newContents.ToArray()));
             }
 
-            if(Equals(identifier.Type, IdentifierType.BradfordHospitalNumber))
+            /// <inheritdoc />
+            protected override MockStore<T> Build()
             {
-                var hosptialNumber = ((IdentifierStringValue) identifier.Value).Value;
-                return people.FirstOrDefault(
-                    _ => _.BradfordHosptialNumbers.Contains(hosptialNumber));
+                return new MockStore<T>(contents);
+            }
+        }
+        
+        public class IndentityRepositoryBuilder : Builder<IdentityRepository, IndentityRepositoryBuilder>
+        {
+            private Person[] people = Array.Empty<Person>();
+            private IStore<Person> peopleStore = null;
+            private IdentifierType[] identifierTypes = Array.Empty<IdentifierType>();
+
+            public IndentityRepositoryBuilder WithPeople(params Person[] newPeople)
+            {
+                return Copy(change: @new => @new.people = Clone(newPeople));
             }
 
-            throw new InvalidOperationException($"Don't handle querying '{identifier.Type.ExternalId}'");
+            protected override IdentityRepository Build()
+            {
+                return new IdentityRepository(
+                    peopleStore ?? new MockStore<Person>(people),
+                    identifierTypes.AsQueryable()
+                );
+            }
+
+            public IndentityRepositoryBuilder WithIdentifierTypes(params IdentifierType[] newIdentifierTypes)
+            {
+                return Copy(change: @new => @new.identifierTypes = Clone(newIdentifierTypes));
+            }
+
+            public IndentityRepositoryBuilder WithPeopleStore(IStore<Person> newPeopleStore)
+            {
+                return Copy(change: @new => @new.peopleStore = newPeopleStore);
+            }
         }
     }
 }

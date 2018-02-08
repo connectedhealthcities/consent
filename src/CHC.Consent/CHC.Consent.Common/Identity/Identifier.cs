@@ -1,34 +1,26 @@
-﻿using System.Dynamic;
-using CHC.Consent.Common.Identity;
+﻿using System;
+using System.Linq.Expressions;
 
-namespace CHC.Consent.Common
+namespace CHC.Consent.Common.Identity
 {
     public class Identifier
     {
-        public int Id { get; protected set; }
-        public IdentifierType Type { get; protected set; }
-        public IdentifierValueType ValueType { get; protected set; }
-        public IdentifierValue Value { get; protected set; }
+        
+        public IdentifierType IdentifierType { get; }
+        public IdentifierValueType ValueType { get; }
+        public IdentifierValue Value { get; }
 
         /// <inheritdoc />
-        protected Identifier(int id, IdentifierType type, IdentifierValueType valueType)
+        public Identifier(IdentifierType identifierType, IdentifierValueType valueType, IdentifierValue value)
         {
-            Id = id;
-            Type = type;
-            ValueType = valueType;
-        }
-
-        /// <inheritdoc />
-        public Identifier(IdentifierType type, IdentifierValueType valueType, IdentifierValue value)
-        {
-            Type = type;
+            IdentifierType = identifierType;
             ValueType = valueType;
             Value = value;
         }
 
         private bool Equals(Identifier other)
         {
-            return Equals(Type, other.Type) && Equals(ValueType, other.ValueType) && Equals(Value, other.Value);
+            return Equals(IdentifierType, other.IdentifierType) && Equals(ValueType, other.ValueType) && Equals(Value, other.Value);
         }
 
         /// <inheritdoc />
@@ -44,45 +36,21 @@ namespace CHC.Consent.Common
         {
             unchecked
             {
-                var hashCode = (Type != null ? Type.GetHashCode() : 0);
+                var hashCode = (IdentifierType != null ? IdentifierType.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (ValueType != null ? ValueType.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Value != null ? Value.GetHashCode() : 0);
                 return hashCode;
             }
         }
-    }
-    
-    public class IdentifierStringValue : IdentifierValue
-    {
-        public string Value { get; }
 
-        /// <inheritdoc />
-        public IdentifierStringValue(string value)
+        public virtual Expression<Func<Person, bool>> GetMatchExpression()
         {
-            Value = value;
+            return IdentifierType.GetMatchExpression(Value);
         }
 
-        protected bool Equals(IdentifierStringValue other)
+        public virtual void Update(Person person)
         {
-            return string.Equals(Value, other.Value);
+            IdentifierType.Update(person, Value);
         }
-
-        /// <inheritdoc />
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == this.GetType() && Equals((IdentifierStringValue) obj);
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            return (Value != null ? Value.GetHashCode() : 0);
-        }
-    }
-
-    public abstract class IdentifierValue
-    {
     }
 }
