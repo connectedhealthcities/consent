@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Identity.IdentifierValues;
 using CHC.Consent.Common.Infrastructure.Data;
 using Xunit;
 
@@ -228,7 +229,7 @@ namespace CHC.Consent.Tests
             return new Identifier(
                 IdentifierType.DateOfBirth,
                 IdentifierType.DateOfBirth.ValueType,
-                new IdentifierDateValue(value));
+                new DateIdentifierValue(value));
         }
     }
 }

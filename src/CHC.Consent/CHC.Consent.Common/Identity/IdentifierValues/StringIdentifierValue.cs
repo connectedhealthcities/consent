@@ -1,16 +1,16 @@
-﻿namespace CHC.Consent.Common
+﻿namespace CHC.Consent.Common.Identity.IdentifierValues
 {
-    public class IdentifierStringValue : IdentifierValue
+    public class StringIdentifierValue : IdentifierValue
     {
         public string Value { get; }
 
         /// <inheritdoc />
-        public IdentifierStringValue(string value)
+        public StringIdentifierValue(string value)
         {
             Value = value;
         }
 
-        protected bool Equals(IdentifierStringValue other)
+        protected bool Equals(StringIdentifierValue other)
         {
             return string.Equals(Value, other.Value);
         }
@@ -20,7 +20,7 @@
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == this.GetType() && Equals((IdentifierStringValue) obj);
+            return obj.GetType() == this.GetType() && Equals((StringIdentifierValue) obj);
         }
 
         /// <inheritdoc />

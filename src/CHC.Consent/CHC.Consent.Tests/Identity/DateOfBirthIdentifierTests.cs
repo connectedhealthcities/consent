@@ -1,6 +1,7 @@
 ﻿using System;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Identity.IdentifierValues;
 using Xunit;
 
 namespace CHC.Consent.Tests.Identity
@@ -10,9 +11,9 @@ namespace CHC.Consent.Tests.Identity
         [Fact]
         public void ParsesDateCorrectly()
         {
-            var value = new IdentifierDateValueType().Parse("2018-11-01");
-            Assert.IsType<IdentifierDateValue>(value);
-            Assert.Equal(new DateTime(2018, 11, 1), ((IdentifierDateValue) value).Value);
+            var value = new DateIdentifierValueType().Parse("2018-11-01");
+            Assert.IsType<DateIdentifierValue>(value);
+            Assert.Equal(new DateTime(2018, 11, 1), ((DateIdentifierValue) value).Value);
         }
 
         [Fact]
