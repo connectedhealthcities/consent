@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace CHC.Consent.Common.Identity
+namespace CHC.Consent.Common.Identity.IdentifierTypes
 {
     public class BradfordHospitalNumber : IdentifierType<IdentifierStringValue>
     {

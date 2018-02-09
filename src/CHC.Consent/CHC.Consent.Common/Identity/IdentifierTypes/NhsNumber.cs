@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-namespace CHC.Consent.Common.Identity
+namespace CHC.Consent.Common.Identity.IdentifierTypes
 {
     public class NhsNumber : IdentifierType<IdentifierStringValue>
     {

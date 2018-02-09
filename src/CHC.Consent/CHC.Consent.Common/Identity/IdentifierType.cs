@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Identity.IdentifierTypes;
 
 namespace CHC.Consent.Common
 {
@@ -63,17 +64,17 @@ namespace CHC.Consent.Common
         /// <inheritdoc />
         public override Expression<Func<Person, bool>> GetMatchExpression(IdentifierValue value)
         {
-            return GetMatchExpression(GetValueAsType(value));
+            return GetMatchExpression(ConvertToCorrectType(value));
         }
 
-        private static TValue GetValueAsType(IdentifierValue value)
+        private static TValue ConvertToCorrectType(IdentifierValue value)
         {
             switch (value)
             {
-                case null:
-                    throw new ArgumentNullException(nameof(value));
                 case TValue typedValue:
                     return typedValue;
+                case null:
+                    throw new ArgumentNullException(nameof(value), $"Cannot convert null to {typeof(TValue)}");
                 default:
                     throw new InvalidOperationException(
                         $"Expecting a value of type {typeof(TValue)} but got {value?.GetType()}");
@@ -85,7 +86,7 @@ namespace CHC.Consent.Common
         /// <inheritdoc />
         public override void Update(Person person, IdentifierValue value)
         {
-            Update(person, GetValueAsType(value));
+            Update(person, ConvertToCorrectType(value));
         }
 
         protected abstract void Update(Person person, TValue value);
