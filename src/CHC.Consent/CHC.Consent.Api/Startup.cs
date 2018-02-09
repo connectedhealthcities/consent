@@ -23,7 +23,11 @@ namespace CHC.Consent.Api
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-            services.AddSwaggerGen(_ => _.SwaggerDoc("v1", new Info {Title = "Api"}));
+            services.AddSwaggerGen(gen =>
+            {
+                gen.SwaggerDoc("v1", new Info {Title = "Api"});
+                gen.DescribeAllEnumsAsStrings();
+            });
 
             var knownIdentifierTypes = new[]
                 {IdentifierType.NhsNumber, IdentifierType.BradfordHospitalNumber, IdentifierType.DateOfBirth,};
