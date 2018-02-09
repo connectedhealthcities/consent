@@ -217,5 +217,18 @@ namespace CHC.Consent.Tests
                 return Copy(change: @new => @new.peopleStore = newPeopleStore);
             }
         }
+
+        public static Identifier DateOfBirth(int year, int month, int day)
+        {
+            return DateOfBirth(new DateTime(year, month, day));
+        }
+
+        public static Identifier DateOfBirth(DateTime value)
+        {
+            return new Identifier(
+                IdentifierType.DateOfBirth,
+                IdentifierType.DateOfBirth.ValueType,
+                new IdentifierDateValue(value));
+        }
     }
 }

@@ -49,6 +49,8 @@ namespace CHC.Consent.Common
 
         public static IdentifierType NhsNumber { get; } = new NhsNumber();
         public static IdentifierType BradfordHospitalNumber { get; } = new BradfordHospitalNumber();
+        public static IdentifierType DateOfBirth { get; } = new DateOfBirth();
+        
         public abstract Expression<Func<Person, bool>> GetMatchExpression(IdentifierValue value);
         public abstract void Update(Person person, IdentifierValue value);
     }
