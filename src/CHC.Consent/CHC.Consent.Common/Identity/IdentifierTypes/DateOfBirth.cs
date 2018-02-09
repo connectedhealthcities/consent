@@ -5,31 +5,11 @@ using CHC.Consent.Common.Identity.IdentifierValues;
 
 namespace CHC.Consent.Common.Identity.IdentifierTypes
 {
-    public class DateOfBirth : IdentifierType<DateIdentifierValue>
+    public class DateOfBirth : SingleValueIdentifierType<DateIdentifierValue, DateIdentifierValueType, DateTime>
     {
         /// <inheritdoc />
-        public DateOfBirth() : base("date-of-birth", canHaveMultipleValues:false, valueType:new DateIdentifierValueType())
+        public DateOfBirth() : base("date-of-birth", _ => _.DateOfBirth)
         {
-        }
-
-        /// <inheritdoc />
-        protected override Expression<Func<Person, bool>> GetMatchExpression(DateIdentifierValue value)
-        {
-            var dateOfBirth = value.Value;
-            return p => p.DateOfBirth == dateOfBirth;
-        }
-
-        /// <inheritdoc />
-        protected override void Update(Person person, DateIdentifierValue value)
-        {
-            if (person.DateOfBirth == DateTime.MinValue)
-            {
-                person.DateOfBirth = value.Value;
-            }
-            else if (person.DateOfBirth != value.Value)
-            {
-                throw new InvalidOperationException($"Cannot update Date Of Birth for Person#{person.Id}");
-            }
         }
     }
 }

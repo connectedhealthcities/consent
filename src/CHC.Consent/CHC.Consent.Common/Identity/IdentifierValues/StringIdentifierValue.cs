@@ -1,6 +1,8 @@
-﻿namespace CHC.Consent.Common.Identity.IdentifierValues
+﻿using CHC.Consent.Common.Identity.IdentifierTypes;
+
+namespace CHC.Consent.Common.Identity.IdentifierValues
 {
-    public class StringIdentifierValue : IdentifierValue
+    public class StringIdentifierValue : IdentifierValue, IIdentifierValue<string>
     {
         public string Value { get; }
 

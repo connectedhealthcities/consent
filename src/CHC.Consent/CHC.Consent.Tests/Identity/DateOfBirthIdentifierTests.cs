@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.IdentifierValues;
@@ -14,6 +15,35 @@ namespace CHC.Consent.Tests.Identity
             var value = new DateIdentifierValueType().Parse("2018-11-01");
             Assert.IsType<DateIdentifierValue>(value);
             Assert.Equal(new DateTime(2018, 11, 1), ((DateIdentifierValue) value).Value);
+        }
+        
+        
+        [Fact]
+        public void CannotParseUnknownDate()
+        {
+            Assert.Throws<FormatException>(() => new DateIdentifierValueType().Parse("Peter Crowther"));
+        }
+
+        [Fact]
+        public void CanFilterPeopleByDateOfBirth()
+        {
+            var identifier = Create.DateOfBirth(1.November(2018));
+
+            var allPeople = new[]
+            {
+                new Person { DateOfBirth = 1.November(2018)},
+                new Person { DateOfBirth = 2.February(1976)},
+                new Person { DateOfBirth = 1.April(1876)},
+                new Person { DateOfBirth = 3.June(1945)},
+                new Person { DateOfBirth = 12.December(2004)},
+            }.AsQueryable();
+
+
+            var matchExpression = identifier.IdentifierType.GetMatchExpression(identifier.Value);
+
+            Assert.All(
+                allPeople.Where(matchExpression),
+                _ => Assert.Equal(1.November(2018), _.DateOfBirth));
         }
 
         [Fact]

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
 using Xunit;
@@ -23,6 +24,29 @@ namespace CHC.Consent.Tests.Identity
             nhsNumberIdentifier.Update(person);
             
             Assert.Equal(NhsNumber, person.NhsNumber);
+        }
+        
+        
+        [Fact]
+        public void CanFilterPeopleByDateOfBirth()
+        {
+            var identifier = nhsNumberIdentifier;
+
+            var allPeople = new[]
+            {
+                new Person { NhsNumber = "Ignored"},
+                new Person { NhsNumber = "Peter Crowther"},
+                new Person { NhsNumber = "Orange tips"},
+                new Person { NhsNumber = NhsNumber},
+                new Person { NhsNumber= "Blah Blah Blah"},
+            }.AsQueryable();
+
+
+            var matchExpression = identifier.IdentifierType.GetMatchExpression(identifier.Value);
+
+            Assert.All(
+                allPeople.Where(matchExpression),
+                _ => Assert.Equal(NhsNumber, _.NhsNumber));
         }
         
         
