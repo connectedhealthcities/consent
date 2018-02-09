@@ -6,7 +6,7 @@ namespace CHC.Consent.Common
 {
     public class Person
     {
-        public long Id { get; protected set; }
+        public long Id { get; set; }
         public string NhsNumber { get; set; }
         public DateTime DateOfBirth { get; set; }
         public Sex? Sex { get; set; }

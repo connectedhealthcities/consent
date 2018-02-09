@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Threading.Tasks;
 using CHC.Consent.Api.Features.Identity.Dto;
+using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,14 +19,15 @@ namespace CHC.Consent.Api.Features.Identity
             PersonSpecificationParser = new PersonSpecificationParser(identityRepository);
         }
 
+        [Route("/{id:int}")]
         [HttpGet]
         public IActionResult GetPerson(int id)
         {
-            throw new NotImplementedException();
+            return new NotImplementedResult();
         }
 
         [HttpPut]
-        public IActionResult PutPerson(PersonSpecification personSpecification)
+        public IActionResult PutPerson([FromBody]PersonSpecification personSpecification)
         {
             var identifiers = PersonSpecificationParser.Parse(personSpecification);
 
@@ -33,12 +36,12 @@ namespace CHC.Consent.Api.Features.Identity
             if (person == null)
             {
                 person = IdentityRepository.CreatePerson(identifiers);
-                return CreatedAtAction("GetPerson", new {id = person.Id});
+                return CreatedAtAction("GetPerson", new {id = person.Id}, null);
             }
             else
             {
                 person.UpdatePerson(identifiers);
-                return RedirectToAction("GetPerson", new {id = person.Id});
+                return new SeeOtherActionResult("GetPerson", new {id = person.Id});
             }
         }
     }

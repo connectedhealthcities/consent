@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿ using System.Collections.Generic;
 
 namespace CHC.Consent.Api.Features.Identity.Dto
 {
