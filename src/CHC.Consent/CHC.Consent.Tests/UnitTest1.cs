@@ -40,7 +40,7 @@ namespace CHC.Consent.Tests
 
             Assert.Equal(repository.FindPersonBy(Create.NhsNumber(personOne.NhsNumber)), personOne);
             Assert.Equal(repository.FindPersonBy(Create.NhsNumber(personTwo.NhsNumber)), personTwo);
-            Assert.Equal(repository.FindPersonBy(Create.NhsNumber("7787773")), null);
+            Assert.Null(repository.FindPersonBy(Create.NhsNumber("7787773")));
         }
         
         [Fact]
@@ -54,7 +54,7 @@ namespace CHC.Consent.Tests
             Assert.Equal(repository.FindPersonBy(Create.BradfordHospitalNumber("212925")), personOne);
             Assert.Equal(repository.FindPersonBy(Create.BradfordHospitalNumber("990099")), personOne);
             Assert.Equal(repository.FindPersonBy(Create.BradfordHospitalNumber("6655666")), personTwo);
-            Assert.Equal(repository.FindPersonBy(Create.BradfordHospitalNumber("7787773")), null);
+            Assert.Null(repository.FindPersonBy(Create.BradfordHospitalNumber("7787773")));
             
         }
 
@@ -193,7 +193,6 @@ namespace CHC.Consent.Tests
         {
             private Person[] people = Array.Empty<Person>();
             private IStore<Person> peopleStore = null;
-            private IdentifierType[] identifierTypes = Array.Empty<IdentifierType>();
 
             public IndentityRepositoryBuilder WithPeople(params Person[] newPeople)
             {
@@ -203,14 +202,8 @@ namespace CHC.Consent.Tests
             protected override IdentityRepository Build()
             {
                 return new IdentityRepository(
-                    peopleStore ?? new MockStore<Person>(people),
-                    identifierTypes.AsQueryable()
+                    peopleStore ?? new MockStore<Person>(people)
                 );
-            }
-
-            public IndentityRepositoryBuilder WithIdentifierTypes(params IdentifierType[] newIdentifierTypes)
-            {
-                return Copy(change: @new => @new.identifierTypes = Clone(newIdentifierTypes));
             }
 
             public IndentityRepositoryBuilder WithPeopleStore(IStore<Person> newPeopleStore)

@@ -1,6 +1,8 @@
 ﻿using System.Linq;
 using CHC.Consent.Api.Features.Identity;
 using CHC.Consent.Api.Features.Identity.Dto;
+using CHC.Consent.Api.Infrastructure;
+using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
@@ -15,9 +17,10 @@ namespace CHC.Consent.Tests.Api.Controllers
             var personWithNhsNumberAndHospitalNumber = new Person {NhsNumber = "444-333-111"}.WithBradfordHosptialNumbers("444333111");
 
             var controller = new IdentityController(
-                Create.AnIdentityRepository.WithPeople(personWithNhsNumberAndHospitalNumber).WithIdentifierTypes(
-                    IdentifierType.NhsNumber,
-                    IdentifierType.BradfordHospitalNumber));
+                Create.AnIdentityRepository.WithPeople(personWithNhsNumberAndHospitalNumber),
+                new PersonSpecificationParser(
+                    new IdentifierTypeRegistry { IdentifierType.NhsNumber, IdentifierType.BradfordHospitalNumber }
+                    ));
 
 
             var result = controller.PutPerson(
@@ -56,7 +59,7 @@ namespace CHC.Consent.Tests.Api.Controllers
 
             Assert.Contains("Added HospitalNumber", personWithNhsNumberAndHospitalNumber.BradfordHosptialNumbers);
 
-            Assert.IsType<RedirectToActionResult>(result);
+            Assert.IsType<SeeOtherActionResult>(result);
         }
         
         [Fact]
@@ -68,8 +71,8 @@ namespace CHC.Consent.Tests.Api.Controllers
             var controller = new IdentityController(
                 Create.AnIdentityRepository
                     
-                    .WithPeopleStore(peopleStore)
-                    .WithIdentifierTypes(IdentifierType.NhsNumber, IdentifierType.BradfordHospitalNumber));
+                    .WithPeopleStore(peopleStore),
+                new PersonSpecificationParser(new IdentifierTypeRegistry { IdentifierType.NhsNumber, IdentifierType.BradfordHospitalNumber }));
 
 
             var result = controller.PutPerson(

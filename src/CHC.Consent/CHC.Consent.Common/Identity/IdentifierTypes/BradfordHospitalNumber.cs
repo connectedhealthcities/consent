@@ -7,10 +7,12 @@ namespace CHC.Consent.Common.Identity.IdentifierTypes
 {
     public class BradfordHospitalNumber : IdentifierType<StringIdentifierValue>
     {
+        public const string TypeName = "bradfordhospitals.nhs.uk/hosptial-id";
+
         /// <inheritdoc />
         public BradfordHospitalNumber() : 
             base(
-                "bradfordhospitals.nhs.uk/hosptial-id", 
+                TypeName, 
                 canHaveMultipleValues:true, 
                 valueType:new StringIdentifierValueType())
         {

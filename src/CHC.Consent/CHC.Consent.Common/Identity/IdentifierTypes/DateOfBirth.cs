@@ -7,9 +7,13 @@ namespace CHC.Consent.Common.Identity.IdentifierTypes
 {
     public class DateOfBirth : SingleValueIdentifierType<DateIdentifierValue, DateIdentifierValueType, DateTime>
     {
+        public const string TypeName = "date-of-birth";
+
         /// <inheritdoc />
-        public DateOfBirth() : base("date-of-birth", _ => _.DateOfBirth)
+        public DateOfBirth() : base(TypeName, _ => _.DateOfBirth)
         {
         }
+        
+        
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using CHC.Consent.Api.Features.Identity.Dto;
+using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
 
@@ -10,11 +11,12 @@ namespace CHC.Consent.Api.Features.Identity
 {
     public class PersonSpecificationParser
     {
-        private IdentityRepository IdentityRepository { get; }
+        private readonly IIdentifierTypeRegistry identifierTypes;
 
-        public PersonSpecificationParser(IdentityRepository identityRepository)
+
+        public PersonSpecificationParser(IIdentifierTypeRegistry identifierTypes)
         {
-            IdentityRepository = identityRepository;
+            this.identifierTypes = identifierTypes;
         }
 
         public ParsedPersonSpecification Parse(PersonSpecification specification)
@@ -58,7 +60,7 @@ namespace CHC.Consent.Api.Features.Identity
 
         private IdentifierType GetIdentifierType(string externalId)
         {
-            var identifierType = IdentityRepository.FindIdentifierType(externalId);
+            var identifierType = identifierTypes.GetIdentifierType(externalId);
             if (identifierType == null) throw new InvalidOperationException($"Unknown identifier type {externalId}");
             return identifierType;
         }

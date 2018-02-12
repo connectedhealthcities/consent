@@ -13,10 +13,10 @@ namespace CHC.Consent.Api.Features.Identity
         private PersonSpecificationParser PersonSpecificationParser { get; }
         private IdentityRepository IdentityRepository { get; }
 
-        public IdentityController(IdentityRepository identityRepository)
+        public IdentityController(IdentityRepository identityRepository, PersonSpecificationParser parser)
         {
             IdentityRepository = identityRepository;
-            PersonSpecificationParser = new PersonSpecificationParser(identityRepository);
+            PersonSpecificationParser = parser;
         }
 
         [Route("/{id:int}")]
