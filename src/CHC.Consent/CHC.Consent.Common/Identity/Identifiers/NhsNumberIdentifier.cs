@@ -1,37 +1,29 @@
 ﻿using System;
 using System.Linq.Expressions;
-using CHC.Consent.Common.Identity.IdentifierValues;
 
 namespace CHC.Consent.Common.Identity.Identifiers
 {
-    public class NhsNumberIdentifier : Identifier
+    [Identifier(TypeName)]
+    public class NhsNumberIdentifier : IIdentifier
     {
-        private readonly SingleValueIdentifierTypeHelper<StringIdentifierValue, string> helper;
+        private readonly SingleValueIdentifierHelper<string> helper
+            = new SingleValueIdentifierHelper<string>(_ => _.NhsNumber);
         /// <inheritdoc />
-        public NhsNumberIdentifier(string nhsNumber = null) : base(
-            IdentifierType.NhsNumber,
-            new StringIdentifierValue(nhsNumber))
+        public NhsNumberIdentifier(string nhsNumber = null) 
         {
-            helper = new SingleValueIdentifierTypeHelper<StringIdentifierValue, string>(_ => _.NhsNumber);
+            Value = nhsNumber;
         }
 
-        public string Value
-        {
-            get => ((StringIdentifierValue) base.Value)?.Value;
-            set => base.Value = new StringIdentifierValue(value);
-        }
+        public string Value { get; set; }
+
 
         /// <inheritdoc />
-        public override Expression<Func<Person, bool>> GetMatchExpression()
-        {
-            return helper.GetMatchExpression((StringIdentifierValue) base.Value);
-        }
+        public Expression<Func<Person, bool>> GetMatchExpression()
+            => helper.GetMatchExpression(Value);
 
         /// <inheritdoc />
-        public override void Update(Person person)
-        {
-            helper.Update(person, (StringIdentifierValue) base.Value);
-        }
+        public void Update(Person person) => helper.Update(person, Value);
+        
 
         public const string TypeName = "nhs.uk/nhs-number";
     }

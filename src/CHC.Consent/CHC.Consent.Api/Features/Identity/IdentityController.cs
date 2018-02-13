@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure.Web;
@@ -10,13 +11,14 @@ namespace CHC.Consent.Api.Features.Identity
     [Route("/identities")]
     public class IdentityController : Controller
     {
-        private PersonSpecificationParser PersonSpecificationParser { get; }
+        private readonly IdentifierRegistry registry;
+
         private IdentityRepository IdentityRepository { get; }
 
-        public IdentityController(IdentityRepository identityRepository, PersonSpecificationParser parser)
+        public IdentityController(IdentityRepository identityRepository, IdentifierRegistry registry)
         {
+            this.registry = registry;
             IdentityRepository = identityRepository;
-            PersonSpecificationParser = parser;
         }
 
         [Route("/{id:int}")]
@@ -27,20 +29,20 @@ namespace CHC.Consent.Api.Features.Identity
         }
 
         [HttpPut]
-        public IActionResult PutPerson([FromBody]PersonSpecification personSpecification)
+        public IActionResult PutPerson([FromBody]PersonSpecification specification)
         {
-            var identifiers = PersonSpecificationParser.Parse(personSpecification);
-
-            var person = IdentityRepository.FindPerson(identifiers);
+            registry.EnsureHasNoInvalidDuplicates(specification.Identifiers);
+            
+            var person = IdentityRepository.FindPerson(specification.MatchSpecifications);
 
             if (person == null)
             {
-                person = IdentityRepository.CreatePerson(identifiers);
+                person = IdentityRepository.CreatePerson(specification.Identifiers);
                 return CreatedAtAction("GetPerson", new {id = person.Id}, null);
             }
             else
             {
-                person.UpdatePerson(identifiers);
+                person.UpdatePerson(specification.Identifiers);
                 return new SeeOtherActionResult("GetPerson", new {id = person.Id});
             }
         }

@@ -16,9 +16,9 @@ namespace CHC.Consent.Common.Identity
             this.people = people;
         }
 
-        public Person FindPersonBy(params Identifier[] identifiers) => FindPersonBy(identifiers.AsEnumerable());
+        public Person FindPersonBy(params IIdentifier[] identifiers) => FindPersonBy(identifiers.AsEnumerable());
         
-        public Person FindPersonBy(IEnumerable<Identifier> identifiers)
+        public Person FindPersonBy(IEnumerable<IIdentifier> identifiers)
         {
             var condition = identifiers
                 .Select(GetExpression)
@@ -30,7 +30,7 @@ namespace CHC.Consent.Common.Identity
             return people.AsExpandable().SingleOrDefault(condition);
         }
 
-        private static Expression<Func<Person, bool>> GetExpression(Identifier identifier)
+        private static Expression<Func<Person, bool>> GetExpression(IIdentifier identifier)
         {
             return identifier.GetMatchExpression();
         }

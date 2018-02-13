@@ -4,11 +4,12 @@ using System.Linq.Expressions;
 
 namespace CHC.Consent.Common.Identity.Identifiers
 {
+    [Identifier(TypeName, AllowMultipleValues = true)]
     public class BradfordHospitalNumberIdentifier : IIdentifier
     {
         public string Value { get; set; }
         
-        public BradfordHospitalNumberIdentifier(string value)
+        public BradfordHospitalNumberIdentifier(string value=null)
         {
             Value = value;
         }

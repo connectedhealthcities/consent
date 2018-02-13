@@ -1,6 +1,4 @@
-﻿using CHC.Consent.Common;
-
-namespace CHC.Consent.Api.Features.Identity.Dto
+﻿namespace CHC.Consent.Api.Features.Identity.Dto
 {
     public class IdentifierSpecification
     {

@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
-using CHC.Consent.Common.Identity.IdentifierTypes;
+using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -32,12 +32,12 @@ namespace CHC.Consent.Api
                 .AddMvc()
                 .AddXmlDataContractSerializerFormatters();
 
-            var identifierTypeRegistry = new IdentifierTypeRegistry();
-            identifierTypeRegistry.Add<NhsNumber>();
-            identifierTypeRegistry.Add<BradfordHospitalNumber>();
-            identifierTypeRegistry.Add<SexIdentifierType>();
-            identifierTypeRegistry.Add<SexIdentifierType>();
-            services.AddSingleton<IIdentifierTypeRegistry>(identifierTypeRegistry);
+            var identifierRegistry = new IdentifierRegistry();
+            identifierRegistry.Add<NhsNumberIdentifier>();
+            identifierRegistry.Add<BradfordHospitalNumberIdentifier>();
+            identifierRegistry.Add<SexIdentifier>();
+            identifierRegistry.Add<DateOfBirthIdentifier>();
+            services.AddSingleton(identifierRegistry);
             
             
             services.AddSwaggerGen(gen =>

@@ -1,32 +1,13 @@
 ﻿using System;
 using System.Linq;
 using CHC.Consent.Common;
-using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
-using CHC.Consent.Common.Identity.IdentifierTypes;
-using CHC.Consent.Common.Identity.IdentifierValues;
 using Xunit;
 
 namespace CHC.Consent.Tests.Identity
 {
     public class SexIdentifierTests
     {
-        private SexIdentifierType IdentifierType { get; }= new SexIdentifierType();
-
-        [Fact]
-        public void CanParseSex()
-        {
-            var value = IdentifierType.Parse("Male").Value;
-            Assert.IsType<SexIdentifierValue>(value);
-            Assert.Equal(Sex.Male, ((SexIdentifierValue)value).Sex);
-        }
-
-        [Fact]
-        public void CannotParseUnknownSex()
-        {
-            Assert.Throws<FormatException>(() => IdentifierType.Parse("Peter Crowther"));
-        }
-
         [Fact]
         public void CanFilterPeopleBySex()
         {

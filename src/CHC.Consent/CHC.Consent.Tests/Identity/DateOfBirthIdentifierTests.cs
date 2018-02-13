@@ -1,30 +1,13 @@
 ﻿using System;
 using System.Linq;
 using CHC.Consent.Common;
-using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
-using CHC.Consent.Common.Identity.IdentifierValues;
 using Xunit;
 
 namespace CHC.Consent.Tests.Identity
 {
     public class DateOfBirthIdentifierTests
     {
-        [Fact]
-        public void ParsesDateCorrectly()
-        {
-            var value = new DateIdentifierValueType().Parse("2018-11-01");
-            Assert.IsType<DateIdentifierValue>(value);
-            Assert.Equal(new DateTime(2018, 11, 1), ((DateIdentifierValue) value).Value);
-        }
-        
-        
-        [Fact]
-        public void CannotParseUnknownDate()
-        {
-            Assert.Throws<FormatException>(() => new DateIdentifierValueType().Parse("Peter Crowther"));
-        }
-
         [Fact]
         public void CanFilterPeopleByDateOfBirth()
         {

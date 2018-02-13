@@ -4,6 +4,8 @@ using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
+using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Identity.Identifiers;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
 
@@ -11,53 +13,35 @@ namespace CHC.Consent.Tests.Api.Controllers
 {
     public class IdentityControllerTests
     {
+        private readonly IdentifierRegistry identifierRegistry =
+            Create.IdentifierRegistry.WithIdentifiers<NhsNumberIdentifier, BradfordHospitalNumberIdentifier>();
+
         [Fact]
         public void UpdatesAnExistingPerson()
         {
-            var personWithNhsNumberAndHospitalNumber = new Person {NhsNumber = "444-333-111"}.WithBradfordHosptialNumbers("444333111");
+            const string hospitalNumber = "444333111";
+            const string nhsNumber = "444-333-111";
+            var personWithNhsNumberAndHospitalNumber = new Person {NhsNumber = nhsNumber }.WithBradfordHosptialNumbers(hospitalNumber);
 
             var controller = new IdentityController(
                 Create.AnIdentityRepository.WithPeople(personWithNhsNumberAndHospitalNumber),
-                new PersonSpecificationParser(
-                    new IdentifierTypeRegistry { IdentifierType.NhsNumber, IdentifierType.BradfordHospitalNumber }
-                    ));
+                identifierRegistry);
 
 
+            var nhsNumberIdentifier = new NhsNumberIdentifier(nhsNumber);
             var result = controller.PutPerson(
                 new PersonSpecification
                 {
                     Identifiers =
                     {
-                        new IdentifierSpecification
-                        {
-                            Type = IdentifierType.NhsNumber.ExternalId,
-                            Value = personWithNhsNumberAndHospitalNumber.NhsNumber
-                        },
-                        new IdentifierSpecification
-                        {
-                            Type = IdentifierType.BradfordHospitalNumber.ExternalId,
-                            Value = "Added HospitalNumber",
-                        },
-                        new NameIdentifier
-                        {
-                            Prefix = "Mr",
-                            Suffix = "BEM",
-                            Given = "Brian",
-                            Family = "Robinson"
-                        }
+                        nhsNumberIdentifier,
+                        new BradfordHospitalNumberIdentifier("Added HospitalNumber"),
                     },
                     MatchSpecifications =
                     {
                         new MatchSpecification
                         {
-                            Identifiers = new[]
-                            {
-                                new MatchIdentifierSpecification
-                                {
-                                    IdOrType = IdentifierType.NhsNumber.ExternalId,
-                                    MatchBy = MatchBy.Type
-                                },
-                            }
+                            Identifiers = new IIdentifier[] {nhsNumberIdentifier}
                         }
                     }
                 }
@@ -72,44 +56,33 @@ namespace CHC.Consent.Tests.Api.Controllers
         [Fact]
         public void CreatesAPerson()
         {
-            var personWithNhsNumberAndHospitalNumber = new Person {NhsNumber = "444-333-111"}.WithBradfordHosptialNumbers("444333111");
+            const string hospitalNumber = "444333111";
+            const string nhsNumber = "444-333-111";
+            var personWithNhsNumberAndHospitalNumber = 
+                new Person {NhsNumber = nhsNumber }.WithBradfordHosptialNumbers(hospitalNumber);
 
-            Create.MockStore<Person> peopleStore = Create.AMockStore<Person>().WithContents(personWithNhsNumberAndHospitalNumber);
+            Create.MockStore<Person> peopleStore =
+                Create.AMockStore<Person>().WithContents(personWithNhsNumberAndHospitalNumber);
             var controller = new IdentityController(
-                Create.AnIdentityRepository
-                    
-                    .WithPeopleStore(peopleStore),
-                new PersonSpecificationParser(new IdentifierTypeRegistry { IdentifierType.NhsNumber, IdentifierType.BradfordHospitalNumber }));
+                Create.AnIdentityRepository.WithPeopleStore(peopleStore),
+                identifierRegistry);
 
 
+            var newNhsNumberIdentifier = new NhsNumberIdentifier("New NHS Number"); 
             var result = controller.PutPerson(
                 new PersonSpecification
                 {
                     Identifiers =
                     {
-                        new IdentifierSpecification
-                        {
-                            Type = IdentifierType.NhsNumber.ExternalId,
-                            Value = "New NHS Number"
-                        },
-                        new IdentifierSpecification
-                        {
-                            Type = IdentifierType.BradfordHospitalNumber.ExternalId,
-                            Value = "New HospitalNumber",
-                        }
+                        
+                        newNhsNumberIdentifier,
+                        new BradfordHospitalNumberIdentifier("New HospitalNumber")
                     },
                     MatchSpecifications =
                     {
                         new MatchSpecification
                         {
-                            Identifiers = new[]
-                            {
-                                new MatchIdentifierSpecification
-                                {
-                                    IdOrType = IdentifierType.NhsNumber.ExternalId,
-                                    MatchBy = MatchBy.Type
-                                },
-                            }
+                            Identifiers = new IIdentifier[]{newNhsNumberIdentifier}
                         }
                     }
                 }
@@ -126,11 +99,4 @@ namespace CHC.Consent.Tests.Api.Controllers
         }
     }
 
-    public class NameIdentifier : IdentifierSpecification
-    {
-        public string Prefix { get; set; }
-        public string Suffix { get; set; }
-        public string Given { get; set; }
-        public string Family { get; set; }
-    }
 }
