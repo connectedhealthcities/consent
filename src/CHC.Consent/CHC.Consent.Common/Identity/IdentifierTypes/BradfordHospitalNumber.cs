@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Identity.IdentifierValues;
 
 namespace CHC.Consent.Common.Identity.IdentifierTypes
 {
     public class BradfordHospitalNumber : IdentifierType<StringIdentifierValue>
     {
-        public const string TypeName = "bradfordhospitals.nhs.uk/hosptial-id";
-
         /// <inheritdoc />
         public BradfordHospitalNumber() : 
             base(
-                TypeName, 
+                BradfordHospitalNumberIdentifier.TypeName, 
                 canHaveMultipleValues:true, 
                 valueType:new StringIdentifierValueType())
         {
@@ -22,7 +21,7 @@ namespace CHC.Consent.Common.Identity.IdentifierTypes
         protected override Expression<Func<Person, bool>> GetMatchExpression(StringIdentifierValue value)
         {
             var hospitalNumber = value.Value;
-            return p => p.BradfordHosptialNumbers.Any(h => h == hospitalNumber);
+            return p => p.BradfordHospitalNumbers.Any(h => h == hospitalNumber);
         }
 
         /// <inheritdoc />

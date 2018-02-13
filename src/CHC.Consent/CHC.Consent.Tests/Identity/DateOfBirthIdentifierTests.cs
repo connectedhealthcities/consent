@@ -2,6 +2,7 @@
 using System.Linq;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Identity.IdentifierValues;
 using Xunit;
 
@@ -27,11 +28,13 @@ namespace CHC.Consent.Tests.Identity
         [Fact]
         public void CanFilterPeopleByDateOfBirth()
         {
-            var identifier = Create.DateOfBirth(1.November(2018));
+            var matchedDateOfBirth = 1.November(2018);
+            var identifier = new DateOfBirthIdentifier {DateOfBirth = matchedDateOfBirth}; 
+                
 
             var allPeople = new[]
             {
-                new Person { DateOfBirth = 1.November(2018)},
+                new Person { DateOfBirth = matchedDateOfBirth},
                 new Person { DateOfBirth = 2.February(1976)},
                 new Person { DateOfBirth = 1.April(1876)},
                 new Person { DateOfBirth = 3.June(1945)},
@@ -39,11 +42,11 @@ namespace CHC.Consent.Tests.Identity
             }.AsQueryable();
 
 
-            var matchExpression = identifier.IdentifierType.GetMatchExpression(identifier.Value);
+            var matchExpression = identifier.GetMatchExpression();
 
             Assert.All(
                 allPeople.Where(matchExpression),
-                _ => Assert.Equal(1.November(2018), _.DateOfBirth));
+                _ => Assert.Equal(matchedDateOfBirth, _.DateOfBirth));
         }
 
         [Fact]
@@ -66,7 +69,7 @@ namespace CHC.Consent.Tests.Identity
             var dateOfBirth = Create.DateOfBirth(attemptedDateOfBirth);
             var person = new Person { DateOfBirth = originalDateOfBirth};
 
-            Assert.Throws<InvalidOperationException>(() => dateOfBirth.IdentifierType.Update(person, dateOfBirth.Value));
+            Assert.Throws<InvalidOperationException>(() => dateOfBirth.Update(person));
             
             Assert.Equal(originalDateOfBirth, person.DateOfBirth);
         }

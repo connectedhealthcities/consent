@@ -24,7 +24,7 @@ namespace CHC.Consent.Common
 
         public virtual Identifier Parse(string representation)
         {
-            return new Identifier(this, ValueType, ValueType.Parse(representation));
+            return new Identifier(this, ValueType.Parse(representation));
         }
 
         protected bool Equals(IdentifierType other)

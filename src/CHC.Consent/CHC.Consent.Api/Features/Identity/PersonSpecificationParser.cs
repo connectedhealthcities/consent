@@ -53,7 +53,12 @@ namespace CHC.Consent.Api.Features.Identity
 
         private Identifier ParseIdentifier(IdentifierSpecification identifierSpecification)
         {
-            var type = GetIdentifierType(externalId: identifierSpecification.Type);
+            var identifierType = identifierSpecification.Type;
+            if (identifierType == null)
+            {
+                throw new InvalidOperationException($"Identifier Type not specified for {identifierSpecification}");
+            }
+            var type = GetIdentifierType(externalId: identifierType);
             var value = type.Parse(identifierSpecification.Value);
             return value;
         }

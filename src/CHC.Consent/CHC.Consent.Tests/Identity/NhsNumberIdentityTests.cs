@@ -2,6 +2,7 @@
 using System.Linq;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Identity.Identifiers;
 using Xunit;
 
 namespace CHC.Consent.Tests.Identity
@@ -9,11 +10,11 @@ namespace CHC.Consent.Tests.Identity
     public class NhsNumberIdentityTests
     {
         private const string NhsNumber = "2134";
-        private readonly Identifier nhsNumberIdentifier;
+        private readonly IIdentifier nhsNumberIdentifier;
 
         public NhsNumberIdentityTests()
         {
-            nhsNumberIdentifier = Create.NhsNumber(NhsNumber);
+            nhsNumberIdentifier = new NhsNumberIdentifier { Value = NhsNumber };
         }
 
         [Fact]
@@ -42,7 +43,7 @@ namespace CHC.Consent.Tests.Identity
             }.AsQueryable();
 
 
-            var matchExpression = identifier.IdentifierType.GetMatchExpression(identifier.Value);
+            var matchExpression = identifier.GetMatchExpression();
 
             Assert.All(
                 allPeople.Where(matchExpression),

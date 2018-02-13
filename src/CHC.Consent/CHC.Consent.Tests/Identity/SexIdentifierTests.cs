@@ -2,6 +2,7 @@
 using System.Linq;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Identity.IdentifierTypes;
 using CHC.Consent.Common.Identity.IdentifierValues;
 using Xunit;
@@ -29,7 +30,7 @@ namespace CHC.Consent.Tests.Identity
         [Fact]
         public void CanFilterPeopleBySex()
         {
-            var identifier = IdentifierType.Parse("Male");
+            var identifier = new SexIdentifier { Sex = Sex.Male };
 
             var allPeople = new[]
             {
@@ -41,7 +42,7 @@ namespace CHC.Consent.Tests.Identity
             }.AsQueryable();
 
 
-            var matchExpression = identifier.IdentifierType.GetMatchExpression(identifier.Value);
+            var matchExpression = identifier.GetMatchExpression();
 
             Assert.All(
                 allPeople.Where(matchExpression),
@@ -81,9 +82,9 @@ namespace CHC.Consent.Tests.Identity
             Assert.Equal(Sex.Female, person.Sex);
         }
         
-        private Identifier CreateSexIdentifier(Sex sex)
+        private static SexIdentifier CreateSexIdentifier(Sex sex)
         {
-            return new Identifier(IdentifierType, IdentifierType.ValueType, new SexIdentifierValue(sex));
+            return new SexIdentifier {Sex = sex};
         }
     }
 }

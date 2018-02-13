@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Identity.IdentifierValues;
 using CHC.Consent.Common.Infrastructure.Data;
 using Xunit;
@@ -95,6 +96,29 @@ namespace CHC.Consent.Tests
             IdentifierType.BradfordHospitalNumber.Parse(hosptialNumber);
 
         public static IndentityRepositoryBuilder AnIdentityRepository => new IndentityRepositoryBuilder();
+        public static PersonBuilder Person => new PersonBuilder();
+
+        public class PersonBuilder : Builder<Person, PersonBuilder>
+        {
+            private string[] hospitalNumbers = Array.Empty<string>();
+
+            /// <inheritdoc />
+            protected override Person Build()
+            {
+                var person = new Person();
+                foreach (var hospitalNumber in hospitalNumbers)
+                {
+                    person.AddHospitalNumber(hospitalNumber);
+                }
+
+                return person;
+            }
+
+            public PersonBuilder WithHospitalNumbers(params string[] newHospitalNumbers)
+            {
+                return Copy(change: @new => @new.hospitalNumbers = Clone(newHospitalNumbers));
+            }
+        }
 
         public abstract class Builder<TBuilt, TBuilder>
         {
@@ -107,6 +131,8 @@ namespace CHC.Consent.Tests
 
             public static implicit operator TBuilt(Builder<TBuilt, TBuilder> builder)
             {
+                if (builder == null)
+                    throw new ArgumentNullException(nameof(builder), "Cannot build from a null builder");
                 return builder.Build();
             }
 
@@ -212,17 +238,14 @@ namespace CHC.Consent.Tests
             }
         }
 
-        public static Identifier DateOfBirth(int year, int month, int day)
+        public static IIdentifier DateOfBirth(int year, int month, int day)
         {
             return DateOfBirth(new DateTime(year, month, day));
         }
 
-        public static Identifier DateOfBirth(DateTime value)
+        public static IIdentifier DateOfBirth(DateTime value)
         {
-            return new Identifier(
-                IdentifierType.DateOfBirth,
-                IdentifierType.DateOfBirth.ValueType,
-                new DateIdentifierValue(value));
+            return new DateOfBirthIdentifier {DateOfBirth = value};
         }
     }
 }

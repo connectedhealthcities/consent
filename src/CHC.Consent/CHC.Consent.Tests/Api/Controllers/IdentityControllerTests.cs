@@ -37,6 +37,13 @@ namespace CHC.Consent.Tests.Api.Controllers
                         {
                             Type = IdentifierType.BradfordHospitalNumber.ExternalId,
                             Value = "Added HospitalNumber",
+                        },
+                        new NameIdentifier
+                        {
+                            Prefix = "Mr",
+                            Suffix = "BEM",
+                            Given = "Brian",
+                            Family = "Robinson"
                         }
                     },
                     MatchSpecifications =
@@ -57,7 +64,7 @@ namespace CHC.Consent.Tests.Api.Controllers
 
             );
 
-            Assert.Contains("Added HospitalNumber", personWithNhsNumberAndHospitalNumber.BradfordHosptialNumbers);
+            Assert.Contains("Added HospitalNumber", personWithNhsNumberAndHospitalNumber.BradfordHospitalNumbers);
 
             Assert.IsType<SeeOtherActionResult>(result);
         }
@@ -114,8 +121,16 @@ namespace CHC.Consent.Tests.Api.Controllers
             Assert.Single(peopleStore.Additions);
             var addedPerson = peopleStore.Additions.First();
             Assert.Equal("New NHS Number", addedPerson.NhsNumber);
-            Assert.Single(addedPerson.BradfordHosptialNumbers);
-            Assert.Equal("New HospitalNumber", addedPerson.BradfordHosptialNumbers.First());
+            Assert.Single(addedPerson.BradfordHospitalNumbers);
+            Assert.Equal("New HospitalNumber", addedPerson.BradfordHospitalNumbers.First());
         }
+    }
+
+    public class NameIdentifier : IdentifierSpecification
+    {
+        public string Prefix { get; set; }
+        public string Suffix { get; set; }
+        public string Given { get; set; }
+        public string Family { get; set; }
     }
 }

@@ -3,24 +3,22 @@ using System.Linq.Expressions;
 
 namespace CHC.Consent.Common.Identity
 {
-    public class Identifier
+    public class Identifier : IIdentifier
     {
         
         public IdentifierType IdentifierType { get; }
-        public IdentifierValueType ValueType { get; }
-        public IdentifierValue Value { get; }
+        public IdentifierValue Value { get; protected set; }
 
         /// <inheritdoc />
-        public Identifier(IdentifierType identifierType, IdentifierValueType valueType, IdentifierValue value)
+        public Identifier(IdentifierType identifierType, IdentifierValue value)
         {
             IdentifierType = identifierType;
-            ValueType = valueType;
             Value = value;
         }
 
         private bool Equals(Identifier other)
         {
-            return Equals(IdentifierType, other.IdentifierType) && Equals(ValueType, other.ValueType) && Equals(Value, other.Value);
+            return Equals(IdentifierType, other.IdentifierType) && Equals(Value, other.Value);
         }
 
         /// <inheritdoc />
@@ -37,7 +35,6 @@ namespace CHC.Consent.Common.Identity
             unchecked
             {
                 var hashCode = (IdentifierType != null ? IdentifierType.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (ValueType != null ? ValueType.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Value != null ? Value.GetHashCode() : 0);
                 return hashCode;
             }

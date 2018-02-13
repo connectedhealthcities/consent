@@ -15,7 +15,7 @@ namespace CHC.Consent.Common
 
         private readonly ISet<string> bradfordHosptialNumbers = new HashSet<string>();
 
-        public IEnumerable<string> BradfordHosptialNumbers => bradfordHosptialNumbers.AsEnumerable();
+        public IEnumerable<string> BradfordHospitalNumbers => bradfordHosptialNumbers.AsEnumerable();
 
         public bool AddHospitalNumber(string hospitalNumber) => bradfordHosptialNumbers.Add(hospitalNumber);
     }
