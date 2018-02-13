@@ -2,27 +2,10 @@ using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
 using Xunit;
 
-namespace CHC.Consent.Tests
+namespace CHC.Consent.Tests.Identity
 {
-    public class UnitTest1
+    public class IdentityRepositoryTests
     {
-        [Fact]
-        public void NhsNumbersWithTheSameValueAreEqual()
-        {
-            const string nhsNumberValue = "44344323";
-            Assert.StrictEqual(
-                Create.NhsNumber(nhsNumberValue),
-                Create.NhsNumber(nhsNumberValue));
-        }
-        
-        [Fact]
-        public void NhsNumbersWithTheDifferentValuesAreNotEqual()
-        {
-            Assert.NotStrictEqual(
-                Create.NhsNumber("44344323"),
-                Create.NhsNumber("87759567"));
-        }
-
         [Fact]
         public void Test2()
         {
@@ -64,19 +47,6 @@ namespace CHC.Consent.Tests
             );
             
             Assert.Equal(personOne, found);
-        }
-    }
-
-    public static class PersonTestHelpers
-    {
-        public static Person WithBradfordHosptialNumbers(this Person person, params string[] hospitalNumbers)
-        {
-            foreach (var hospitalNumber in hospitalNumbers)
-            {
-                person.AddHospitalNumber(hospitalNumber);
-            }
-
-            return person;
         }
     }
 }

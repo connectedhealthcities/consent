@@ -7,14 +7,31 @@ using Xunit;
 
 namespace CHC.Consent.Tests.Identity
 {
-    public class NhsNumberIdentityTests
+    public class NhsNumberIdentifierTests
     {
         private const string NhsNumber = "2134";
         private readonly IIdentifier nhsNumberIdentifier;
 
-        public NhsNumberIdentityTests()
+        public NhsNumberIdentifierTests()
         {
-            nhsNumberIdentifier = new NhsNumberIdentifier { Value = NhsNumber };
+            nhsNumberIdentifier = new NhsNumberIdentifier(NhsNumber);
+        }
+        
+        [Fact]
+        public void NhsNumbersWithTheSameValueAreEqual()
+        {
+            const string nhsNumberValue = "44344323";
+            Assert.StrictEqual(
+                Create.NhsNumber(nhsNumberValue),
+                Create.NhsNumber(nhsNumberValue));
+        }
+        
+        [Fact]
+        public void NhsNumbersWithTheDifferentValuesAreNotEqual()
+        {
+            Assert.NotStrictEqual(
+                Create.NhsNumber("44344323"),
+                Create.NhsNumber("87759567"));
         }
 
         [Fact]

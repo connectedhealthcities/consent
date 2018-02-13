@@ -11,17 +11,17 @@ using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.TestHost;
 using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace CHC.Consent.Tests.Api.Controllers
 {
+    [Collection(WebServerCollection.Name)]
     public class IdentityControllerTests
     {
+        private readonly WebServerFixture serverFixture;
         private readonly ITestOutputHelper output;
 
         private static readonly string PersonSpecificationJson =
@@ -38,8 +38,9 @@ namespace CHC.Consent.Tests.Api.Controllers
 
 
         /// <inheritdoc />
-        public IdentityControllerTests(ITestOutputHelper output)
+        public IdentityControllerTests(WebServerFixture serverFixture, ITestOutputHelper output)
         {
+            this.serverFixture = serverFixture;
             this.output = output;
         }
 
@@ -186,21 +187,18 @@ namespace CHC.Consent.Tests.Api.Controllers
         [Fact]
         public async void HandlesPutPerson()
         {
-            using (var server = new TestServer(
-                new WebHostBuilder().UseStartup<Startup>()))
-            using(var client = server.CreateClient())
-            {
-                var stringContent = new StringContent(
-                    PersonSpecificationJson,
-                    Encoding.UTF8,
-                    "application/json");
-                 
-                var response = await client.PutAsync(
-                    "/identities",
-                    stringContent);
+            var client = serverFixture.Client;
+            
+            var stringContent = new StringContent(
+                PersonSpecificationJson,
+                Encoding.UTF8,
+                "application/json");
 
-                Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-            }
+            var response = await client.PutAsync(
+                "/identities",
+                stringContent);
+
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         }
     }
 }

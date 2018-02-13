@@ -9,12 +9,12 @@ namespace CHC.Consent.Common.Identity.Identifiers
         private readonly SingleValueIdentifierHelper<string> helper
             = new SingleValueIdentifierHelper<string>(_ => _.NhsNumber);
         /// <inheritdoc />
-        public NhsNumberIdentifier(string nhsNumber = null) 
+        public NhsNumberIdentifier(string value = null) 
         {
-            Value = nhsNumber;
+            Value = value;
         }
 
-        public string Value { get; set; }
+        public string Value { get; }
 
 
         /// <inheritdoc />
@@ -26,5 +26,25 @@ namespace CHC.Consent.Common.Identity.Identifiers
         
 
         public const string TypeName = "nhs.uk/nhs-number";
+
+        protected bool Equals(NhsNumberIdentifier other)
+        {
+            return string.Equals(Value, other.Value);
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((NhsNumberIdentifier) obj);
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return (Value != null ? Value.GetHashCode() : 0);
+        }
     }
 }

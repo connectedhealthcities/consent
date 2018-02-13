@@ -21,6 +21,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="**/*.json" />
+    <EmbeddedResource Include="**/*.json" Exclude="bin/**/*.json;obj/**/*.json" />
   </ItemGroup>
 </Project>
