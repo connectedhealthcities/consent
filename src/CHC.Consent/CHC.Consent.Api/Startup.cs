@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Swashbuckle.AspNetCore.Swagger;
 
 namespace CHC.Consent.Api
@@ -28,16 +30,23 @@ namespace CHC.Consent.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services
-                .AddMvc()
-                .AddXmlDataContractSerializerFormatters();
-
             var identifierRegistry = new IdentifierRegistry();
             identifierRegistry.Add<NhsNumberIdentifier>();
             identifierRegistry.Add<BradfordHospitalNumberIdentifier>();
             identifierRegistry.Add<SexIdentifier>();
             identifierRegistry.Add<DateOfBirthIdentifier>();
             services.AddSingleton(identifierRegistry);
+
+            services
+                .AddMvc()
+                .AddXmlDataContractSerializerFormatters()
+                .AddJsonOptions(
+                    config =>
+                    {
+                        SerializerSettings(identifierRegistry, config.SerializerSettings);
+                    });
+
+            
             
             
             services.AddSwaggerGen(gen =>
@@ -73,6 +82,15 @@ namespace CHC.Consent.Api
             {
                 ui.SwaggerEndpoint("/swagger/v1/swagger.json", "Api");
             });
+        }
+
+        public static JsonSerializerSettings SerializerSettings(IdentifierRegistry identifierRegistry, JsonSerializerSettings existing=null)
+        {
+            var settings = existing ?? new JsonSerializerSettings();
+            settings.TypeNameHandling = TypeNameHandling.Auto;
+            settings.SerializationBinder = new IdentifierRegistrySerializationBinder(identifierRegistry);
+            settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+            return settings;
         }
     }
 }

@@ -81,5 +81,10 @@ namespace CHC.Consent.Common.Identity
             
             throw new InvalidOperationException(errors.ToString());
         }
+
+        public string GetName(Type type)
+        {
+            return typesToAttributes[type].Name;
+        }
     }
 }

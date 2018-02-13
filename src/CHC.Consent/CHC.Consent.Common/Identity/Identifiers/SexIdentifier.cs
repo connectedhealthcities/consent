@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 
 namespace CHC.Consent.Common.Identity.Identifiers
 {
+    [Identifier("sex")]
     public class SexIdentifier : IIdentifier
     {
         private static readonly SingleValueIdentifierHelper<Sex?> Helper =

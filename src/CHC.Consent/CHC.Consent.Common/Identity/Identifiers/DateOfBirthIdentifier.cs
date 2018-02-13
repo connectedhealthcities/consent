@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 
 namespace CHC.Consent.Common.Identity.Identifiers
 {
+    [Identifier("date-of-birth")]
     public class DateOfBirthIdentifier : IIdentifier
     {
         private static readonly SingleValueIdentifierHelper<DateTime> Helper

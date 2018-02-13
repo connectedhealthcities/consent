@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using CHC.Consent.Api.Features.Identity.Dto;
@@ -29,11 +30,11 @@ namespace CHC.Consent.Api.Features.Identity
         }
 
         [HttpPut]
-        public IActionResult PutPerson([FromBody]PersonSpecification specification)
+        public IActionResult PutPerson([FromBody, Required]PersonSpecification specification)
         {
             registry.EnsureHasNoInvalidDuplicates(specification.Identifiers);
             
-            var person = IdentityRepository.FindPerson(specification.MatchSpecifications);
+            var person = IdentityRepository.FindPerson(specification.MatchSpecifications.Select(_ => _.Identifiers));
 
             if (person == null)
             {

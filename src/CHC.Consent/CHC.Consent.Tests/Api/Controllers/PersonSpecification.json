@@ -1,0 +1,19 @@
+﻿{
+  "identifiers": [
+    {
+      "$type": "nhs.uk/nhs-number",
+      "value": "111-222-333",
+      
+    }
+  ],
+  "matchSpecifications": [
+    {
+      "identifiers": [
+        {
+          "$type": "nhs.uk/nhs-number",
+          "value": "111-222-333"
+        }
+      ]
+    }
+  ]
+}
