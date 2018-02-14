@@ -119,7 +119,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             var personWithNhsNumberAndHospitalNumber = 
                 new Person {NhsNumber = nhsNumber }.WithBradfordHosptialNumbers(hospitalNumber);
 
-            Create.MockStore<Person> peopleStore =
+            MockStore<Person> peopleStore =
                 Create.AMockStore<Person>().WithContents(personWithNhsNumberAndHospitalNumber);
             var controller = new IdentityController(
                 Create.AnIdentityRepository.WithPeopleStore(peopleStore),
