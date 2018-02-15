@@ -236,14 +236,14 @@ namespace CHC.Consent.Tests.Api.Controllers
             {
                 var givenEvidence = A.Dummy<Evidence>();
                 var dateGiven = 3.November(1472);
-                var pregnancyIdIdentifier = new PregnancyIdIdentifier(PregancyId);
+                var pregnancyIdIdentifier = new PregnancyNumberIdentifier(PregancyId);
                 existingConsent = new Consent(StudySubject, dateGiven, givenEvidence, Enumerable.Empty<Identifier>());
                 A.CallTo(
                         () =>
                             ConsentRepository.FindActiveConsent(
                                 StudySubject,
                                 A<IEnumerable<Identifier>>.That.Matches(
-                                    _ => (_.Single() as PregnancyIdIdentifier).Value == PregancyId)))
+                                    _ => (_.Single() as PregnancyNumberIdentifier).Value == PregancyId)))
                     .Returns(null);
                 
                 RecordConsent(givenEvidence, dateGiven, identifiers:pregnancyIdIdentifier);

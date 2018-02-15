@@ -19,7 +19,7 @@ namespace CHC.Consent.Tests
                 => WithIdentifier<T1>().WithIdentifier<T2>();
 
             /// <inheritdoc />
-            protected override IdentifierRegistry Build()
+            public override IdentifierRegistry Build()
             {
                 var registry = new IdentifierRegistry();
                 foreach (var identifierType in identifierTypes)

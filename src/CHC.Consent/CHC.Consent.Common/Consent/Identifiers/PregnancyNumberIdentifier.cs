@@ -1,11 +1,14 @@
-﻿namespace CHC.Consent.Common.Consent.Identifiers
+﻿using System;
+using System.Linq.Expressions;
+
+namespace CHC.Consent.Common.Consent.Identifiers
 {
-    public class PregnancyIdIdentifier : Identifier
+    public class PregnancyNumberIdentifier : Identifier
     {
         public string Value { get; }
 
         /// <inheritdoc />
-        public PregnancyIdIdentifier(string value = null)
+        public PregnancyNumberIdentifier(string value = null)
         {
             Value = value;
         }
@@ -14,6 +17,11 @@
         public override void Update(Consent consent)
         {
             consent.PregnancyNumber = Value;
+        }
+
+        public override Expression<Func<Consent,bool>> CreateMatchIdentifier()
+        {
+            return consent => consent.PregnancyNumber == Value;
         }
     }
 }

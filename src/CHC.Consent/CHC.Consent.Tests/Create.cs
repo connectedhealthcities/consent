@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
@@ -18,7 +19,7 @@ namespace CHC.Consent.Tests
             private string[] hospitalNumbers = Array.Empty<string>();
 
             /// <inheritdoc />
-            protected override Person Build()
+            public override Person Build()
             {
                 var person = new Person();
                 foreach (var hospitalNumber in hospitalNumbers)
@@ -35,7 +36,44 @@ namespace CHC.Consent.Tests
             }
         }
 
-        public abstract class Builder<TBuilt, TBuilder>
+        public abstract class Builder<T>
+        {
+            public abstract T Build();
+
+            public static implicit operator Builder<T>(T reference)
+            {
+                return (ReferenceBuilder) reference;
+            }
+
+            public static implicit operator T(Builder<T> builder)
+            {
+                return builder.Build();
+            }
+            
+            private class ReferenceBuilder : Builder<T>
+            {
+                private T reference;
+
+                /// <inheritdoc />
+                private ReferenceBuilder(T reference)
+                {
+                    this.reference = reference;
+                }
+
+                public static implicit operator ReferenceBuilder(T reference)
+                {
+                    return new ReferenceBuilder(reference);
+                }
+
+                /// <inheritdoc />
+                public override T Build()
+                {
+                    return reference;
+                }
+            }
+        }
+
+        public abstract class Builder<TBuilt, TBuilder> : Builder<TBuilt>
         {
             protected TBuilder Copy(Action<TBuilder> change)
             {
@@ -51,8 +89,7 @@ namespace CHC.Consent.Tests
                 return builder.Build();
             }
 
-            protected abstract TBuilt Build();
-
+            
             /// <summary>
             /// <para>Helper to clone arrays because cloning arrays is verbose</para>
             /// <para>Creates a shallow copy of <paramref name="source"/></para>
@@ -77,7 +114,7 @@ namespace CHC.Consent.Tests
             }
 
             /// <inheritdoc />
-            protected override MockStore<T> Build()
+            public override MockStore<T> Build()
             {
                 return new MockStore<T>(contents);
             }
@@ -93,7 +130,7 @@ namespace CHC.Consent.Tests
                 return Copy(change: @new => @new.people = Clone(newPeople));
             }
 
-            protected override IdentityRepository Build()
+            public override IdentityRepository Build()
             {
                 return new IdentityRepository(
                     peopleStore ?? new MockStore<Person>(people)
@@ -119,6 +156,5 @@ namespace CHC.Consent.Tests
         public static IIdentifier NhsNumber(string nhsNumber) => new NhsNumberIdentifier(nhsNumber);
 
         public static IIdentifier BradfordHospitalNumber(string hosptialNumber) => new BradfordHospitalNumberIdentifier(hosptialNumber);
-        
     }
 }
