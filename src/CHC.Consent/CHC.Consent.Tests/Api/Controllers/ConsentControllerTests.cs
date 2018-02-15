@@ -62,11 +62,13 @@ namespace CHC.Consent.Tests.Api.Controllers
             }
         }
 
-        public class WhenRecordingNewConsent_ForAnExistingStudySubject : ConsentControllerTestBase
+        public class WhenRecordingNewConsent_ForAnExistingStudySubject_WithoutActiveConsent : ConsentControllerTestBase
         {
             /// <inheritdoc />
-            public WhenRecordingNewConsent_ForAnExistingStudySubject()
+            public WhenRecordingNewConsent_ForAnExistingStudySubject_WithoutActiveConsent()
             {
+                A.CallTo(() => ConsentRepository.FindActiveConsent(StudySubject, A<IEnumerable<Identifier>>._))
+                    .Returns(null);
                 RecordConsent(new MedwayEvidence {ConsentTakenBy = "Peter Crowther"}, 2.January(1837));
             }
 
@@ -185,7 +187,6 @@ namespace CHC.Consent.Tests.Api.Controllers
                 Assert.Null(CreatedConsent);
             }
         }
-
 
         public class WhenTryingToRecordConsent_ForAnExistingStudySubject_WithActiveConsent : ConsentControllerTestBase
         {

@@ -1,4 +1,5 @@
-﻿using CHC.Consent.Common.Consent;
+﻿using System;
+using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 
@@ -36,7 +37,9 @@ namespace CHC.Consent.Api.Features.Consent
             }
             else
             {
-                var existingConsent = consentRepository.FindActiveConsent(studySubject, specification.Identifiers);
+                var existingConsent = consentRepository.FindActiveConsent(
+                    studySubject,
+                    specification.Identifiers ?? Array.Empty<Identifier>());
                 if (existingConsent != null)
                 {
                     //TODO: Decide what to do with evidence, etc, for existing consents, or if you can be consented twice
