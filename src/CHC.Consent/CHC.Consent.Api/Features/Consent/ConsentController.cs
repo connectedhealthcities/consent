@@ -8,7 +8,7 @@ namespace CHC.Consent.Api.Features.Consent
     [Route("/consent")]
     public class ConsentController : Controller
     {
-        private IConsentRepository consentRepository;
+        private readonly IConsentRepository consentRepository;
 
         public ConsentController(IConsentRepository consentRepository)
         {
@@ -34,7 +34,16 @@ namespace CHC.Consent.Api.Features.Consent
                 studySubject = new StudySubject(study, specification.SubjectIdentifier, specification.PersonId);
                 consentRepository.AddStudySubject(studySubject);
             }
-            
+            else
+            {
+                var existingConsent = consentRepository.FindActiveConsent(studySubject, specification.Identifiers);
+                if (existingConsent != null)
+                {
+                    //TODO: Decide what to do with evidence, etc, for existing consents, or if you can be consented twice
+                    return RedirectToAction("Get", new {id = 0});
+
+                }
+            }
 
             consentRepository.AddConsent(
                 new Consent(

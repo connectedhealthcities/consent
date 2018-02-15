@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using CHC.Consent.Api.Features.Consent;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
@@ -61,10 +62,10 @@ namespace CHC.Consent.Tests.Api.Controllers
             }
         }
 
-        public class WhenRecordingNewConsentForAnExistingStudyAndSubject : ConsentControllerTestBase
+        public class WhenRecordingNewConsent_ForAnExistingStudySubject : ConsentControllerTestBase
         {
             /// <inheritdoc />
-            public WhenRecordingNewConsentForAnExistingStudyAndSubject()
+            public WhenRecordingNewConsent_ForAnExistingStudySubject()
             {
                 RecordConsent(new MedwayEvidence {ConsentTakenBy = "Peter Crowther"}, 2.January(1837));
             }
@@ -88,10 +89,10 @@ namespace CHC.Consent.Tests.Api.Controllers
             }
         }
 
-        public class WhenTryingToRecordConsentForAnNonExistantStudy : ConsentControllerTestBase
+        public class WhenRecordingConsent_ForANonExistantStudy : ConsentControllerTestBase
         {
             /// <inheritdoc />
-            public WhenTryingToRecordConsentForAnNonExistantStudy()
+            public WhenRecordingConsent_ForANonExistantStudy()
             {
                 var nonExistentStudyId = Study.Id + "NotExists";
 
@@ -113,7 +114,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             }
         }
         
-        public class WhenTryingToRecordConsentForAnNewStudySubject : ConsentControllerTestBase
+        public class WhenRecordingConsent_ForANewStudySubject : ConsentControllerTestBase
         {
             private readonly string newSubjectIdentifier;
             private readonly long newPersonId;
@@ -121,7 +122,7 @@ namespace CHC.Consent.Tests.Api.Controllers
 
 
             /// <inheritdoc />
-            public WhenTryingToRecordConsentForAnNewStudySubject()
+            public WhenRecordingConsent_ForANewStudySubject()
             {
                 newSubjectIdentifier = StudySubject.SubjectIdentifier + "New";
                 newPersonId = StudySubject.PersonId + 1;
@@ -157,12 +158,12 @@ namespace CHC.Consent.Tests.Api.Controllers
 
 
         public class
-            WhenTryingToRecordConsentForAnExistiedStudySubjectWithANewSubjectIdentifier : ConsentControllerTestBase
+            WhenRecordingConsent_ForAnExistingStudySubject_WithANewSubjectIdentifier : ConsentControllerTestBase
         {
             private readonly string newSubjectIdentifier;
             
             /// <inheritdoc />
-            public WhenTryingToRecordConsentForAnExistiedStudySubjectWithANewSubjectIdentifier()
+            public WhenRecordingConsent_ForAnExistingStudySubject_WithANewSubjectIdentifier()
             {
                 newSubjectIdentifier = StudySubject.SubjectIdentifier + "New";
                 
@@ -178,6 +179,35 @@ namespace CHC.Consent.Tests.Api.Controllers
                 Assert.IsType<BadRequestResult>(Result);
             }
 
+            [Fact]
+            public void DoesNotCreateConsent()
+            {
+                Assert.Null(CreatedConsent);
+            }
+        }
+
+
+        public class WhenTryingToRecordConsent_ForAnExistingStudySubject_WithActiveConsent : ConsentControllerTestBase
+        {
+            private readonly Consent existingConsent;
+
+            public WhenTryingToRecordConsent_ForAnExistingStudySubject_WithActiveConsent()
+            {
+                var givenEvidence = A.Dummy<Evidence>();
+                var dateGiven = 3.November(1472);
+                existingConsent = new Consent(StudySubject, dateGiven, givenEvidence);
+                A.CallTo(() => ConsentRepository.FindActiveConsent(StudySubject, A<IEnumerable<Identifier>>.That.IsEmpty()))
+                    .Returns(existingConsent);
+                
+                RecordConsent(givenEvidence, dateGiven);
+            }
+
+            [Fact]
+            public void ReturnsFoundResponse()
+            {
+                Assert.IsType<RedirectToActionResult>(Result);
+            }
+            
             [Fact]
             public void DoesNotCreateConsent()
             {
