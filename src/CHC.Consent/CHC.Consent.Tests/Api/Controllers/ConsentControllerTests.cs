@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using CHC.Consent.Api.Features.Consent;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
+using CHC.Consent.Common.Consent.Identifiers;
 using FakeItEasy;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
@@ -41,7 +43,15 @@ namespace CHC.Consent.Tests.Api.Controllers
                 return consentRepository;
             }
 
-            protected void RecordConsent(Evidence evidence, DateTime dateGiven, IConsentRepository consentRepository=null, string studyId=null, string subjectIdentifier=null, long? personId=null)
+            protected void RecordConsent(
+                Evidence evidence,
+                DateTime dateGiven,
+                IConsentRepository consentRepository = null,
+                string studyId = null,
+                string subjectIdentifier = null,
+                long? personId = null,
+                params Identifier[] identifiers
+            )
             {
                 
                 Result = CreateConsentController(consentRepository??ConsentRepository)
@@ -52,7 +62,8 @@ namespace CHC.Consent.Tests.Api.Controllers
                             SubjectIdentifier = subjectIdentifier??StudySubject.SubjectIdentifier,
                             PersonId = personId??StudySubject.PersonId,
                             Evidence = evidence,
-                            DateGiven = dateGiven
+                            DateGiven = dateGiven,
+                            Identifiers = identifiers
                         });
             }
 
@@ -100,7 +111,7 @@ namespace CHC.Consent.Tests.Api.Controllers
 
                 A.CallTo(() => ConsentRepository.GetStudy(nonExistentStudyId)).Returns(null);
                 
-                RecordConsent(A.Dummy<Evidence>(), A.Dummy<DateTime>(), studyId:nonExistentStudyId);
+                RecordConsent(A.Dummy<Evidence>(), A.Dummy<DateTime>(), studyId: nonExistentStudyId);
             }
 
             [Fact]
@@ -134,7 +145,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 A.CallTo(() => ConsentRepository.AddStudySubject(A<StudySubject>._))
                     .Invokes((StudySubject created) => createdStudySubject = created);
                 
-                RecordConsent(A.Dummy<Evidence>(), A.Dummy<DateTime>(), subjectIdentifier:newSubjectIdentifier, personId:newPersonId);
+                RecordConsent(A.Dummy<Evidence>(), A.Dummy<DateTime>(), subjectIdentifier: newSubjectIdentifier, personId: newPersonId);
             }
 
             [Fact]
@@ -172,7 +183,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 A.CallTo(() => ConsentRepository.FindStudySubject(Study, newSubjectIdentifier)).Returns(null);
                 
                 
-                RecordConsent(A.Dummy<Evidence>(), A.Dummy<DateTime>(), subjectIdentifier:newSubjectIdentifier);
+                RecordConsent(A.Dummy<Evidence>(), A.Dummy<DateTime>(), subjectIdentifier: newSubjectIdentifier);
             }
 
             [Fact]
@@ -196,7 +207,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             {
                 var givenEvidence = A.Dummy<Evidence>();
                 var dateGiven = 3.November(1472);
-                existingConsent = new Consent(StudySubject, dateGiven, givenEvidence);
+                existingConsent = new Consent(StudySubject, dateGiven, givenEvidence, Enumerable.Empty<Identifier>());
                 A.CallTo(() => ConsentRepository.FindActiveConsent(StudySubject, A<IEnumerable<Identifier>>.That.IsEmpty()))
                     .Returns(existingConsent);
                 
@@ -213,6 +224,47 @@ namespace CHC.Consent.Tests.Api.Controllers
             public void DoesNotCreateConsent()
             {
                 Assert.Null(CreatedConsent);
+            }
+        }
+        
+        public class WhenTryingToRecordConsent_ForAnExistingStudySubject_WithActiveConsentForDifferentIdentifiers : ConsentControllerTestBase
+        {
+            private readonly Consent existingConsent;
+            private const string PregancyId = "1";
+
+            public WhenTryingToRecordConsent_ForAnExistingStudySubject_WithActiveConsentForDifferentIdentifiers()
+            {
+                var givenEvidence = A.Dummy<Evidence>();
+                var dateGiven = 3.November(1472);
+                var pregnancyIdIdentifier = new PregnancyIdIdentifier(PregancyId);
+                existingConsent = new Consent(StudySubject, dateGiven, givenEvidence, Enumerable.Empty<Identifier>());
+                A.CallTo(
+                        () =>
+                            ConsentRepository.FindActiveConsent(
+                                StudySubject,
+                                A<IEnumerable<Identifier>>.That.Matches(
+                                    _ => (_.Single() as PregnancyIdIdentifier).Value == PregancyId)))
+                    .Returns(null);
+                
+                RecordConsent(givenEvidence, dateGiven, identifiers:pregnancyIdIdentifier);
+            }
+
+            [Fact]
+            public void ReturnsFoundResponse()
+            {
+                Assert.IsType<CreatedAtActionResult>(Result);
+            }
+            
+            [Fact]
+            public void CreatesConsent()
+            {
+                Assert.NotNull(CreatedConsent);
+            }
+
+            [Fact]
+            public void CreatedConsentHasCorrectPregnancyId()
+            {
+                Assert.Equal(PregancyId, CreatedConsent.PregnancyNumber);
             }
         }
 

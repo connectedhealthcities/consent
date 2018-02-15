@@ -9,5 +9,11 @@
         {
             Value = value;
         }
+
+        /// <inheritdoc />
+        public override void Update(Consent consent)
+        {
+            consent.PregnancyNumber = Value;
+        }
     }
 }

@@ -2,6 +2,6 @@
 {
     public abstract class Identifier
     {
-        
+        public abstract void Update(Consent consent);
     }
 }

@@ -52,7 +52,8 @@ namespace CHC.Consent.Api.Features.Consent
                 new Consent(
                     studySubject,
                     specification.DateGiven,
-                    specification.Evidence));
+                    specification.Evidence,
+                    specification.Identifiers));
 
             return CreatedAtAction("Get", new {id = 0}, null);
         }
