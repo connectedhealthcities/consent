@@ -1,6 +1,7 @@
 using System;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
+using FakeItEasy;
 
 namespace CHC.Consent.Tests
 {
@@ -41,6 +42,9 @@ namespace CHC.Consent.Tests
             private DateTime dateGiven = 5.April(1914);
             private Evidence evidence = new MedwayEvidence {ConsentTakenBy = "Gary Leeming"};
 
+            private DateTime? withdrawnDate = null;
+            private Evidence withdrawnEvidence = null;
+
             public ConsentBuilder GivenOn(DateTime when) => Copy(_ => _.dateGiven = when);
             public ConsentBuilder WithGivenEvidence(Evidence newEvidence) => Copy(_ => _.evidence = newEvidence);
             
@@ -50,12 +54,21 @@ namespace CHC.Consent.Tests
             public ConsentBuilder WithStudySubject(Builder<StudySubject> newStudySubject)
                 => Copy(_ => _.studySubject = newStudySubject);
 
+            public ConsentBuilder Withdrawn(DateTime? newWithdrawnDate = null, Evidence newWithdrawnEvidence = null) => Copy(
+                _ =>
+                {
+                    _.withdrawnDate = newWithdrawnDate ?? dateGiven.AddMonths(1);
+                    _.withdrawnEvidence = newWithdrawnEvidence ?? A.Dummy<Evidence>();
+                });
+
             /// <inheritdoc />
             public override Common.Consent.Consent Build()
             {
                 return new Common.Consent.Consent(studySubject, dateGiven, evidence, identifiers)
                 {
-                    PregnancyNumber = pregnancyNumber
+                    PregnancyNumber = pregnancyNumber,
+                    Withdrawn = withdrawnDate,
+                    WithdrawnEvidence = withdrawnEvidence
                 };
             }
         }

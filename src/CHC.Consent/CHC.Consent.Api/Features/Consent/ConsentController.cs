@@ -58,7 +58,8 @@ namespace CHC.Consent.Api.Features.Consent
             return CreatedAtAction("Get", new {id = 0}, null);
         }
 
-        public IActionResult Get(int id)
+        [HttpGet, Route("{id}")]
+        public IActionResult Get(long id)
         {
             throw new System.NotImplementedException();
         }

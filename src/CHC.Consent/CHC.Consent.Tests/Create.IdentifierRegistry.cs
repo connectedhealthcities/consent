@@ -6,7 +6,7 @@ namespace CHC.Consent.Tests
 {
     public static partial class Create 
     {
-        public class IdentifierRegistryBuilder : Builder<IdentifierRegistry, IdentifierRegistryBuilder>
+        public class IdentifierRegistryBuilder : Builder<PersonIdentifierRegistry, IdentifierRegistryBuilder>
         {
             private Type[] identifierTypes = Array.Empty<Type>();
 
@@ -19,9 +19,9 @@ namespace CHC.Consent.Tests
                 => WithIdentifier<T1>().WithIdentifier<T2>();
 
             /// <inheritdoc />
-            public override IdentifierRegistry Build()
+            public override PersonIdentifierRegistry Build()
             {
-                var registry = new IdentifierRegistry();
+                var registry = new PersonIdentifierRegistry();
                 foreach (var identifierType in identifierTypes)
                 {
                     registry.Add(identifierType);

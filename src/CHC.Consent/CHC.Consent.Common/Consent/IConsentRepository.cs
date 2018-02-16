@@ -7,12 +7,12 @@ namespace CHC.Consent.Common.Consent
     {
         Study GetStudy(string studyId);
 
-        StudySubject FindStudySubject(Study studyId, string specificationSubjectIdentifier);
-        StudySubject FindStudySubject(Study studyId, long personid);
+        StudySubject FindStudySubject(Study study, string subjectIdentifier);
+        StudySubject FindStudySubject(Study study, long personId);
         Consent FindActiveConsent(StudySubject studySubject, IEnumerable<Identifier> identifiers);
 
-        void AddConsent(Consent consent);
-        void AddStudySubject(StudySubject studySubject);
+        Consent AddConsent(Consent consent);
+        StudySubject AddStudySubject(StudySubject studySubject);
     }
 
     public static class ConsentRepositoryHelpers

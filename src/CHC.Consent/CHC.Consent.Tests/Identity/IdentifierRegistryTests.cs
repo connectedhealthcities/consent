@@ -9,7 +9,7 @@ namespace CHC.Consent.Tests.Identity
 {
     public class IdentifierRegistryTests
     {
-        private readonly IdentifierRegistry registry = new IdentifierRegistry();
+        private readonly PersonIdentifierRegistry registry = new PersonIdentifierRegistry();
 
         // ReSharper disable once ClassNeverInstantiated.Local
         private class NoIdentifierAttribute : IIdentifier

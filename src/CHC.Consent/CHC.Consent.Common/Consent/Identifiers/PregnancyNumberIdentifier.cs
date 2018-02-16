@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 
 namespace CHC.Consent.Common.Consent.Identifiers
 {
+    [ConsentIdentifier("pregnancy-number.consent.bib4all.bradfordhospitals.nhs.uk")]
     public class PregnancyNumberIdentifier : Identifier
     {
         public string Value { get; }

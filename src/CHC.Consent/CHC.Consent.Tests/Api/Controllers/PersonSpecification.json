@@ -1,8 +1,8 @@
 ﻿{
   "identifiers": [
     {
-      "$type": "nhs.uk/nhs-number",
-      "value": "111-222-333",
+      "$type": "uk.nhs.nhs-number",
+      "value": "111-222-333"
       
     }
   ],
@@ -10,7 +10,7 @@
     {
       "identifiers": [
         {
-          "$type": "nhs.uk/nhs-number",
+          "$type": "uk.nhs.nhs-number",
           "value": "111-222-333"
         }
       ]

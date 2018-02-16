@@ -101,6 +101,8 @@ namespace CHC.Consent.Tests
         }
 
         public static StoreBuilder<T> AMockStore<T>() => new StoreBuilder<T>();
+
+        public static IStore<T> AStore<T>(params T[] contents) => AMockStore<T>().WithContents(contents).Build();
         
         public class StoreBuilder<T> : Builder<MockStore<T>, StoreBuilder<T>>
         {

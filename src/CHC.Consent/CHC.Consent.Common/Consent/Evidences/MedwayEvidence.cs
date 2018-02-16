@@ -1,5 +1,6 @@
 ﻿namespace CHC.Consent.Common.Consent.Evidences
 {
+    [Evidence("medway.evidence.bib4all.bradfordhospitals.nhs.uk")]
     public class MedwayEvidence : Evidence
     {
         public string CompetentStatus { get; set; }

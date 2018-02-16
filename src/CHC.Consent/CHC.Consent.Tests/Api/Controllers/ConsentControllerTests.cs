@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
 using CHC.Consent.Api.Features.Consent;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Consent.Identifiers;
+using CHC.Consent.Common.Infrastructure.Data;
 using FakeItEasy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Rest;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace CHC.Consent.Tests.Api.Controllers
 {
@@ -268,5 +273,37 @@ namespace CHC.Consent.Tests.Api.Controllers
             }
         }
 
+    }
+
+    [Collection(WebServerCollection.Name)]
+    public class ConsentControllerIntegrationTests
+    {
+        public ITestOutputHelper Output { get; }
+        private HttpClient Client { get; }
+
+        /// <inheritdoc />
+        public ConsentControllerIntegrationTests(WebServerFixture fixture, ITestOutputHelper output)
+        {
+            Output = output;
+            Client = fixture.Client;
+            ((IStore<Study>) fixture.Server.Host.Services.GetService(typeof(IStore<Study>))).Add(
+                new Study(id: "4444333"));
+        }
+
+        [Fact]
+        public async void SavesConsent()
+        {
+            var result = await Client.PutAsync(
+                "/consent",
+                new StringContent(
+                    "{ studyId: \"4444333\", subjectIdentifier: \"887766\", identifiers: [{ \"$type\": \"pregnancy-number.consent.bib4all.bradfordhospitals.nhs.uk\", value: \"Rachel\" }], evidence: { \"$type\": \"medway.evidence.bib4all.bradfordhospitals.nhs.uk\", consentGivenBy: \"Rachel\"} }",
+                    Encoding.UTF8,
+                    "application/json"
+                )
+            );
+
+            Output.WriteLine(result.AsFormattedString());
+            result.EnsureSuccessStatusCode();
+        }
     }
 }

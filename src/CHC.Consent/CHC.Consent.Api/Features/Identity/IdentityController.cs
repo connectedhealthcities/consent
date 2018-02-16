@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure.Web;
@@ -12,11 +13,11 @@ namespace CHC.Consent.Api.Features.Identity
     [Route("/identities")]
     public class IdentityController : Controller
     {
-        private readonly IdentifierRegistry registry;
+        private readonly PersonIdentifierRegistry registry;
 
         private IdentityRepository IdentityRepository { get; }
 
-        public IdentityController(IdentityRepository identityRepository, IdentifierRegistry registry)
+        public IdentityController(IdentityRepository identityRepository, PersonIdentifierRegistry registry)
         {
             this.registry = registry;
             IdentityRepository = identityRepository;
@@ -29,9 +30,11 @@ namespace CHC.Consent.Api.Features.Identity
             return new NotImplementedResult();
         }
 
-        [HttpPut]
+        [HttpPut,ProducesResponseType((int)HttpStatusCode.Created),ProducesResponseType((int)HttpStatusCode.Found)]
         public IActionResult PutPerson([FromBody, Required]PersonSpecification specification)
         {
+            if(!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
+            
             registry.EnsureHasNoInvalidDuplicates(specification.Identifiers);
             
             var person = IdentityRepository.FindPerson(specification.MatchSpecifications.Select(_ => _.Identifiers));

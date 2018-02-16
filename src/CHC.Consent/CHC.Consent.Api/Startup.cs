@@ -1,20 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Reflection;
 using System.Runtime.Serialization;
+using CHC.Consent.Api.Features.Consent;
+using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure;
+using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
+using CHC.Consent.Common.Consent;
+using CHC.Consent.Common.Consent.Evidences;
+using CHC.Consent.Common.Consent.Identifiers;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.Common.Infrastructure.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Server.Kestrel.Transport.Libuv.Internal.Networking;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Swashbuckle.AspNetCore.Swagger;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace CHC.Consent.Api
 {
@@ -30,35 +39,54 @@ namespace CHC.Consent.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var identifierRegistry = new IdentifierRegistry();
-            identifierRegistry.Add<NhsNumberIdentifier>();
-            identifierRegistry.Add<BradfordHospitalNumberIdentifier>();
-            identifierRegistry.Add<SexIdentifier>();
-            identifierRegistry.Add<DateOfBirthIdentifier>();
-            services.AddSingleton(identifierRegistry);
+            var personIdentifierRegistry = new PersonIdentifierRegistry();
+            personIdentifierRegistry.Add<NhsNumberIdentifier>();
+            personIdentifierRegistry.Add<BradfordHospitalNumberIdentifier>();
+            personIdentifierRegistry.Add<SexIdentifier>();
+            personIdentifierRegistry.Add<DateOfBirthIdentifier>();
+            services.AddSingleton(personIdentifierRegistry);
+            
+            var consentIdentifierRegistry = new ConsentIdentifierRegistry();
+            consentIdentifierRegistry.Add<PregnancyNumberIdentifier>();
+            services.AddSingleton(consentIdentifierRegistry);
+            
+            var evidenceRegistry = new EvidenceRegistry();
+            evidenceRegistry.Add<MedwayEvidence>();
+            services.AddSingleton(evidenceRegistry);
 
+            services.AddSingleton<ConsentTypeRegistry>();
+
+            services.AddTransient<IConfigureOptions<MvcOptions>, IdentityModelBinderProviderConfiguration<PersonIdentifierRegistry, PersonSpecification>>();
+            services.AddTransient<IConfigureOptions<MvcOptions>, IdentityModelBinderProviderConfiguration<ConsentTypeRegistry, ConsentSpecification>>();
+            
             services
-                .AddMvc()
-                .AddXmlDataContractSerializerFormatters()
+                .AddMvc(
+                    options =>
+                    {
+                        options.ReturnHttpNotAcceptable = true;
+                        options.RespectBrowserAcceptHeader = true;
+                    })
+                .AddFeatureFolders()
                 .AddJsonOptions(
                     config =>
                     {
-                        SerializerSettings(identifierRegistry, config.SerializerSettings);
+                        SerializerSettings(config.SerializerSettings);
                     });
-
-            
-            
             
             services.AddSwaggerGen(gen =>
             {
-                gen.SwaggerDoc("v1", new Info {Title = "Api"});
+                gen.SwaggerDoc("v1", new Info {Title = "Api", Version = "1"});
                 gen.DescribeAllEnumsAsStrings();
+                gen.SchemaFilter<SwaggerSchemaIdentityTypeProvider<IIdentifier, PersonIdentifierRegistry>>();
+                gen.SchemaFilter<SwaggerSchemaIdentityTypeProvider<Identifier, ConsentIdentifierRegistry>>();
+                gen.CustomSchemaIds(t => personIdentifierRegistry.GetName(t) ?? consentIdentifierRegistry.GetName(t) ?? t.FriendlyId(fullyQualified:false));
             });
-
+            
             
             services.AddSingleton(typeof(IStore<>), typeof(InMemoryStore<>));
             services.AddSingleton(MakePersonStore());
             services.AddScoped<IdentityRepository>();
+            services.AddScoped<IConsentRepository,ConsentRepository>();
         }
 
         private static IStore<Person> MakePersonStore()
@@ -84,13 +112,12 @@ namespace CHC.Consent.Api
             });
         }
 
-        public static JsonSerializerSettings SerializerSettings(IdentifierRegistry identifierRegistry, JsonSerializerSettings existing=null)
+        public static JsonSerializerSettings SerializerSettings(JsonSerializerSettings Settings)
         {
-            var settings = existing ?? new JsonSerializerSettings();
-            settings.TypeNameHandling = TypeNameHandling.Auto;
-            settings.SerializationBinder = new IdentifierRegistrySerializationBinder(identifierRegistry);
-            settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-            return settings;
+            Settings.TypeNameHandling = TypeNameHandling.Auto;
+            Settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+            Settings.Formatting = Formatting.Indented;
+            return Settings;
         }
     }
 }

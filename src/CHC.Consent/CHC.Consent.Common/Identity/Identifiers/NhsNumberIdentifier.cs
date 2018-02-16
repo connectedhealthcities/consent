@@ -6,8 +6,11 @@ namespace CHC.Consent.Common.Identity.Identifiers
     [Identifier(TypeName)]
     public class NhsNumberIdentifier : IIdentifier
     {
+        public const string TypeName = "uk.nhs.nhs-number";
+
         private readonly SingleValueIdentifierHelper<string> helper
             = new SingleValueIdentifierHelper<string>(_ => _.NhsNumber);
+
         /// <inheritdoc />
         public NhsNumberIdentifier(string value = null) 
         {
@@ -23,9 +26,7 @@ namespace CHC.Consent.Common.Identity.Identifiers
 
         /// <inheritdoc />
         public void Update(Person person) => helper.Update(person, Value);
-        
 
-        public const string TypeName = "nhs.uk/nhs-number";
 
         protected bool Equals(NhsNumberIdentifier other)
         {

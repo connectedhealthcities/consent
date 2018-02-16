@@ -7,11 +7,13 @@ using System.Text;
 using CHC.Consent.Api;
 using CHC.Consent.Api.Features.Identity;
 using CHC.Consent.Api.Features.Identity.Dto;
+using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Rest;
 using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
@@ -33,7 +35,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 .ReadToEnd();
             
 
-        private readonly IdentifierRegistry identifierRegistry =
+        private readonly PersonIdentifierRegistry personIdentifierRegistry =
             Create.IdentifierRegistry.WithIdentifiers<NhsNumberIdentifier, BradfordHospitalNumberIdentifier>();
 
 
@@ -65,10 +67,6 @@ namespace CHC.Consent.Tests.Api.Controllers
                     },
                     Formatting.Indented,
                     Startup.SerializerSettings(
-                        Create.IdentifierRegistry
-                            .WithIdentifier<NhsNumberIdentifier>()
-                            .WithIdentifier<DateOfBirthIdentifier>()
-                            .WithIdentifier<BradfordHospitalNumberIdentifier>(),
                         new JsonSerializerSettings())
                 )
             );
@@ -83,7 +81,7 @@ namespace CHC.Consent.Tests.Api.Controllers
 
             var controller = new IdentityController(
                 Create.AnIdentityRepository.WithPeople(personWithNhsNumberAndHospitalNumber),
-                identifierRegistry);
+                personIdentifierRegistry);
 
 
             var nhsNumberIdentifier = new NhsNumberIdentifier(nhsNumber);
@@ -123,7 +121,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 Create.AMockStore<Person>().WithContents(personWithNhsNumberAndHospitalNumber);
             var controller = new IdentityController(
                 Create.AnIdentityRepository.WithPeopleStore(peopleStore),
-                identifierRegistry);
+                personIdentifierRegistry);
 
 
             var newNhsNumberIdentifier = new NhsNumberIdentifier("New NHS Number"); 
@@ -160,14 +158,15 @@ namespace CHC.Consent.Tests.Api.Controllers
         [Fact]
         public void CanDeserializePersonSpecificationFromJson()
         {
-            var personSpecification = 
-                JsonConvert.DeserializeObject<PersonSpecification>(PersonSpecificationJson,
-                    Startup.SerializerSettings(
-                        Create.IdentifierRegistry
-                            .WithIdentifier<NhsNumberIdentifier>()
-                            .WithIdentifier<DateOfBirthIdentifier>()
-                            .WithIdentifier<BradfordHospitalNumberIdentifier>(),
-                        new JsonSerializerSettings()));
+            var personSpecification =
+                JsonConvert.DeserializeObject<PersonSpecification>(
+                    PersonSpecificationJson,
+                    Create.IdentifierRegistry
+                        .WithIdentifier<NhsNumberIdentifier>()
+                        .WithIdentifier<DateOfBirthIdentifier>()
+                        .WithIdentifier<BradfordHospitalNumberIdentifier>()
+                        .Build()
+                        .CreateSerializerSettings());
             
             Assert.NotNull(personSpecification);
             var identifier = Assert.Single(personSpecification.Identifiers);
@@ -198,6 +197,10 @@ namespace CHC.Consent.Tests.Api.Controllers
                 "/identities",
                 stringContent);
 
+            if (!Equals(HttpStatusCode.Created, response.StatusCode))
+            {
+                output.WriteLine(response.AsFormattedString());
+            }
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         }
     }

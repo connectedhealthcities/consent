@@ -1,14 +1,15 @@
 ﻿using System;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Infrastructure;
 using Newtonsoft.Json.Serialization;
 
 namespace CHC.Consent.Api.Infrastructure
 {
     public class IdentifierRegistrySerializationBinder : ISerializationBinder
     {
-        private readonly IdentifierRegistry registry;
+        private readonly ITypeRegistry registry;
 
-        public IdentifierRegistrySerializationBinder(IdentifierRegistry registry)
+        public IdentifierRegistrySerializationBinder(ITypeRegistry registry)
         {
             this.registry = registry;
         }

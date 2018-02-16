@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
+using CHC.Consent.Common.Infrastructure;
 
 namespace CHC.Consent.Common.Identity
 {
-    public class IdentifierRegistry : IEnumerable<(string name, Type type)>
+    public class PersonIdentifierRegistry : TypeRegistry<IIdentifier, IdentifierAttribute>
     {
         private readonly IDictionary<string, Type> namesToTypes = new Dictionary<string, Type>();
 
@@ -15,44 +14,20 @@ namespace CHC.Consent.Common.Identity
             new Dictionary<Type, (string Name, bool AllowMultiple)>();
 
 
-        public void Add<T>() where T:IIdentifier
+        /// <inheritdoc />
+        protected override void Add(Type identifierType, IdentifierAttribute attribute)
         {
-            Add(typeof(T));
+            base.Add(identifierType, attribute);
+            typesToAttributes.Add(identifierType, (attribute.Name, attribute.AllowMultipleValues));
         }
 
-        public void Add(Type identifierType)
-        {
-            var identifierAttributes = GetIdentifierAttributes(identifierType);
-            namesToTypes.Add(identifierAttributes.Name, identifierType);
-            typesToAttributes.Add(identifierType, identifierAttributes);
-        }
-
-        private static (string Name, bool AllowMultiple) GetIdentifierAttributes(Type identifierType)
-        {
-            var identifierAttribute = identifierType.GetCustomAttribute<IdentifierAttribute>();
-
-            if (identifierAttribute != null) 
-                return (identifierAttribute.Name, identifierAttribute.AllowMultipleValues);
-            
-            throw new ArgumentException($"Cannot get attributes for {identifierType} as it has no IdentifierAttribute");
-        }
-
-        public bool CanHaveMultipleValues<T>(T identifier) where T : IIdentifier
+        private bool CanHaveMultipleValues<T>(T identifier) where T : IIdentifier
         {
             var identifierType = identifier.GetType();
 
             if (typesToAttributes.TryGetValue(identifierType, out var attributes)) return attributes.AllowMultiple;
             
             throw new InvalidOperationException($"Don't know about identifiers of type {identifierType}");
-        }
-
-        public Type this[string name] => namesToTypes[name];
-
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        public IEnumerator<(string name, Type type)> GetEnumerator()
-        {
-            return namesToTypes.Select(_ => (name:_.Key, type:_.Value)).GetEnumerator();
         }
 
         public void EnsureHasNoInvalidDuplicates(IEnumerable<IIdentifier> identifiers)
@@ -80,11 +55,6 @@ namespace CHC.Consent.Common.Identity
             }
             
             throw new InvalidOperationException(errors.ToString());
-        }
-
-        public string GetName(Type type)
-        {
-            return typesToAttributes[type].Name;
         }
     }
 }
