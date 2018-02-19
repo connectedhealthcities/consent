@@ -6,11 +6,11 @@ namespace CHC.Consent.Common
 {
     public class Person
     {
-        public long Id { get; set; }
-        public string NhsNumber { get; set; }
-        public DateTime DateOfBirth { get; set; }
-        public Sex? Sex { get; set; }
-        public ushort? BirthOrder { get; set; }
+        public virtual long Id { get; set; }
+        public virtual string NhsNumber { get; set; }
+        public virtual DateTime? DateOfBirth { get; set; }
+        public virtual Sex? Sex { get; set; }
+        public virtual ushort? BirthOrder { get; set; }
 
 
         private readonly ISet<string> bradfordHosptialNumbers = new HashSet<string>();

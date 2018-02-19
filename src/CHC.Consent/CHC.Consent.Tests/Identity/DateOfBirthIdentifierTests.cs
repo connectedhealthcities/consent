@@ -2,6 +2,7 @@
 using System.Linq;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Testing.Utils;
 using Xunit;
 
 namespace CHC.Consent.Tests.Identity

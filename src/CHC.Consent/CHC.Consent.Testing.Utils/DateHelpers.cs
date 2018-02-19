@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CHC.Consent.Tests
+namespace CHC.Consent.Testing.Utils
 {
     public static class DateHelpers
     {

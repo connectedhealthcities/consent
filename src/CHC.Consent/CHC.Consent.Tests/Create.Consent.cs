@@ -1,6 +1,7 @@
 using System;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
+using CHC.Consent.Testing.Utils;
 using FakeItEasy;
 
 namespace CHC.Consent.Tests

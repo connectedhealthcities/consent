@@ -6,8 +6,8 @@ namespace CHC.Consent.Common.Identity.Identifiers
     [Identifier("date-of-birth")]
     public class DateOfBirthIdentifier : IIdentifier
     {
-        private static readonly SingleValueIdentifierHelper<DateTime> Helper
-            = new SingleValueIdentifierHelper<DateTime>(_ => _.DateOfBirth);
+        private static readonly SingleValueIdentifierHelper<DateTime?> Helper
+            = new SingleValueIdentifierHelper<DateTime?>(_ => _.DateOfBirth);
 
         /// <inheritdoc />
         public DateOfBirthIdentifier()

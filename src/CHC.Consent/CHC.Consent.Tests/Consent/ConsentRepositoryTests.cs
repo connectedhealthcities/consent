@@ -1,4 +1,5 @@
 ﻿using CHC.Consent.Common.Consent;
+using CHC.Consent.Testing.Utils;
 using FakeItEasy;
 using Xunit;
 
