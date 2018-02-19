@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -7,6 +8,7 @@ using CHC.Consent.Testing.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -77,21 +79,28 @@ namespace CHC.Consent.EFCore.Tests
         private static void Initialise(ITestOutputHelper output)
         {
             var context = CreateContext(output);
-
-
+            
             context.Database.EnsureDeleted();
             context.Database.Migrate();
         }
 
-        private static ConsentContext CreateContext(ITestOutputHelper output)
+        private static ConsentContext CreateContext(ITestOutputHelper output, DbConnection connection) => CreateContext(
+            output,
+            new DbContextOptionsBuilder<ConsentContext>().UseSqlServer(connection));
+
+        private static ConsentContext CreateContext(ITestOutputHelper output, DbContextOptionsBuilder<ConsentContext> sqlOptions)
         {
-            var options = new DbContextOptionsBuilder<ConsentContext>()
-                .UseSqlServer(
-                    $@"Server=(localdb)\MSSqlLocalDB;Integrated Security=true;Initial Catalog=ChCEntityFrameworkTest")
+            var options = sqlOptions
                 .UseLoggerFactory(new XunitLoggerProvider(output));
-            var context = new ConsentContext(options.Options);
-            return context;
+            return new ConsentContext(options.Options);
         }
+
+        private static ConsentContext CreateContext(ITestOutputHelper output) =>
+            CreateContext(
+                output,
+                new DbContextOptionsBuilder<ConsentContext>()
+                    .UseSqlServer(
+                        $@"Server=(localdb)\MSSqlLocalDB;Integrated Security=true;Initial Catalog=ChCEntityFrameworkTest"));
 
         private void EnsureInitialised(ITestOutputHelper output)
         {
@@ -109,6 +118,12 @@ namespace CHC.Consent.EFCore.Tests
             EnsureInitialised(output);
             return CreateContext(output);
         }
+        
+        public ConsentContext GetContext(ITestOutputHelper output, DbConnection connection)
+        {
+            EnsureInitialised(output);
+            return CreateContext(output, connection);
+        }
     }
     
     [CollectionDefinition(Name)]
@@ -121,12 +136,23 @@ namespace CHC.Consent.EFCore.Tests
     public class PersonStoreTests : IDisposable
     {
         private readonly IDbContextTransaction transaction;
+        private readonly ITestOutputHelper outputHelper;
+        private readonly DatabaseFixture fixture;
         private ConsentContext Context { get; }
+
+        private ConsentContext CreateNewContextInSameTransaction()
+        {
+            var newContext = fixture.GetContext(outputHelper, Context.Database.GetDbConnection());
+            newContext.Database.UseTransaction(transaction.GetDbTransaction());
+            return newContext;
+        }
 
 
         /// <inheritdoc />
         public PersonStoreTests(ITestOutputHelper outputHelper, DatabaseFixture fixture)
         {
+            this.outputHelper = outputHelper;
+            this.fixture = fixture;
             Context = fixture.GetContext(outputHelper);
             transaction = Context.Database.BeginTransaction();
         }
@@ -146,14 +172,12 @@ namespace CHC.Consent.EFCore.Tests
         [Fact]
         public void CanQueryPeople()
         {
-            Context.People.AddRange(new []
-            {
+            Context.People.AddRange(
                 new PersonEntity { NhsNumber = "11-11-111"},
                 new PersonEntity { NhsNumber = "22-22-222"},
                 new PersonEntity { NhsNumber = "33-33-333"},
                 new PersonEntity { NhsNumber = "44-44-444"},
-                new PersonEntity { NhsNumber = "55-55-555"},
-            });
+                new PersonEntity { NhsNumber = "55-55-555"});
             Context.SaveChanges();
 
             var store = new PersonStore(Context.People);
@@ -163,6 +187,41 @@ namespace CHC.Consent.EFCore.Tests
             var person = Assert.Single(foundPeople);
             Assert.NotNull(person);
             Assert.Equal("33-33-333", person.NhsNumber);
+        }
+
+        [Fact]
+        public void SavesHosptialNumbers()
+        {
+            var person = new Person();
+            person.AddHospitalNumber("HOSPITAL");
+            var saved = new PersonStore(Context.People).Add(person);
+            Context.SaveChanges();
+
+            var hospitalNumber =
+                CreateNewContextInSameTransaction()
+                    .Set<BradfordHospitalNumberEntity>()
+                    .SingleOrDefault(_ => _.PersonEntity.Id == saved.Id);
+            
+            Assert.NotNull(hospitalNumber);
+            Assert.Equal("HOSPITAL", hospitalNumber.HospitalNumber);
+        }
+
+        [Fact]
+        public void HosptialNumbersAreLoaded()
+        {
+            var person = new PersonEntity();
+            person.AddHospitalNumber("LOADED");
+            Context.People.Add(person);
+            Context.SaveChanges();
+
+            
+            var store = new PersonStore(CreateNewContextInSameTransaction().People);
+
+            var first = store.FirstOrDefault(_ => _.Id == person.Id);
+
+            Assert.NotNull(first);
+            Assert.Equal("LOADED", Assert.Single(first.BradfordHospitalNumbers));
+            
         }
 
         /// <inheritdoc />

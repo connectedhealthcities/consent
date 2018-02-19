@@ -8,28 +8,30 @@ using CHC.Consent.Common;
 using CHC.Consent.Common.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace CHC.Consent.EFCore
 {
     public class PersonStore : IStore<Person>
     {
         private readonly DbSet<PersonEntity> people;
-        
+        private IQueryable<PersonEntity> queryable;
+
         /// <inheritdoc />
         public PersonStore(DbSet<PersonEntity> people)
         {
             this.people = people;
-            
+            queryable = people.Include(_ => _.BradfordHospitalNumberEntities);
         }
 
         /// <inheritdoc />
         public Type ElementType => typeof(Person);
 
         /// <inheritdoc />
-        public Expression Expression => ((IQueryable) people).Expression;
+        public Expression Expression => queryable.Expression;
 
         /// <inheritdoc />
-        public IQueryProvider Provider => ((IQueryable) people).Provider;
+        public IQueryProvider Provider => queryable.Provider;
 
         /// <inheritdoc />
         public Person Add(Person value)
@@ -40,15 +42,19 @@ namespace CHC.Consent.EFCore
             }
             else
             {
-                return people.Add(
-                    new PersonEntity
-                    {
-                        Id = value.Id,
-                        BirthOrder = value.BirthOrder,
-                        DateOfBirth = value.DateOfBirth,
-                        NhsNumber = value.NhsNumber,
-                        Sex = value.Sex
-                    }).Entity;
+                var newEntity = new PersonEntity
+                {
+                    Id = value.Id,
+                    BirthOrder = value.BirthOrder,
+                    DateOfBirth = value.DateOfBirth,
+                    NhsNumber = value.NhsNumber,
+                    Sex = value.Sex
+                };
+                foreach (var hospitalNumber in value.BradfordHospitalNumbers)
+                {
+                    newEntity.AddHospitalNumber(hospitalNumber);
+                }
+                return people.Add(newEntity).Entity;
             }
         }
 

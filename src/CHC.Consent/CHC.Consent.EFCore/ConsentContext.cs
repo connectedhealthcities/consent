@@ -9,14 +9,17 @@ namespace CHC.Consent.EFCore
         {
         }
 
-
         public virtual DbSet<PersonEntity> People { get; set; }
 
         /// <inheritdoc />
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<PersonEntity>().Ignore(_ => _.BirthOrder);
-            modelBuilder.Entity<PersonEntity>().Property(_ => _.BirthOrderValue).HasColumnName(nameof(PersonEntity.BirthOrder));
+            modelBuilder.Entity<PersonEntity>()
+                .Property(_ => _.BirthOrderValue)
+                .HasColumnName(nameof(PersonEntity.BirthOrder));
+
+            modelBuilder.Entity<PersonEntity>().HasMany(_ => _.BradfordHospitalNumberEntities).WithOne(_ => _.PersonEntity);
         }
     }
 }
