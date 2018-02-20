@@ -1,137 +1,20 @@
 ﻿using System;
-using System.Data.Common;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using CHC.Consent.Common;
 using CHC.Consent.Testing.Utils;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions.Internal;
 using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace CHC.Consent.EFCore.Tests
 {
-    
-    public class XunitLoggerProvider : ILoggerFactory
-    {
-        private readonly ITestOutputHelper _testOutputHelper;
-
-        public XunitLoggerProvider(ITestOutputHelper testOutputHelper)
-        {
-            _testOutputHelper = testOutputHelper;
-        }
-
-        public ILogger CreateLogger(string categoryName) => new XunitLogger(_testOutputHelper, categoryName);
-
-        /// <inheritdoc />
-        public void AddProvider(ILoggerProvider provider)
-        {
-            
-        }
-
-        public void Dispose()
-        { }
-    }
-
-    public class XunitLogger : ILogger
-    {
-        private readonly ITestOutputHelper _testOutputHelper;
-        private readonly string _categoryName;
-
-        public XunitLogger(ITestOutputHelper testOutputHelper, string categoryName)
-        {
-            _testOutputHelper = testOutputHelper;
-            _categoryName = categoryName;
-        }
-
-        public IDisposable BeginScope<TState>(TState state) => NoopDisposable.Instance;
-
-        public bool IsEnabled(LogLevel logLevel) => true;
-
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
-        {
-            _testOutputHelper.WriteLine($"{_categoryName} [{eventId}] {formatter(state, exception)}");
-            if (exception != null)
-                _testOutputHelper.WriteLine(exception.ToString());
-        }
-
-        private class NoopDisposable : IDisposable
-        {
-            public static IDisposable Instance { get; } = new NoopDisposable();
-            public void Dispose() { }
-        }
-    }
-
-
-    public class DatabaseFixture
-    {
-        private bool initialised = false;
-        private static readonly object Sync = new object();
-
-
-        private static readonly string DbFileLocation = Path.Combine(
-            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-            "CHC.Consent.Tests.mdf");
-
-        private static void Initialise(ITestOutputHelper output)
-        {
-            var context = CreateContext(output);
-            
-            context.Database.EnsureDeleted();
-            context.Database.Migrate();
-        }
-
-        private static ConsentContext CreateContext(ITestOutputHelper output, DbConnection connection) => CreateContext(
-            output,
-            new DbContextOptionsBuilder<ConsentContext>().UseSqlServer(connection));
-
-        private static ConsentContext CreateContext(ITestOutputHelper output, DbContextOptionsBuilder<ConsentContext> sqlOptions)
-        {
-            var options = sqlOptions
-                .UseLoggerFactory(new XunitLoggerProvider(output));
-            return new ConsentContext(options.Options);
-        }
-
-        private static ConsentContext CreateContext(ITestOutputHelper output) =>
-            CreateContext(
-                output,
-                new DbContextOptionsBuilder<ConsentContext>()
-                    .UseSqlServer(
-                        $@"Server=(localdb)\MSSqlLocalDB;Integrated Security=true;Initial Catalog=ChCEntityFrameworkTest"));
-
-        private void EnsureInitialised(ITestOutputHelper output)
-        {
-            if (initialised) return;
-            lock (Sync)
-            {
-                if (initialised) return;
-                Initialise(output);
-                initialised = true;
-            }
-        }
-
-        public ConsentContext GetContext(ITestOutputHelper output)
-        {
-            EnsureInitialised(output);
-            return CreateContext(output);
-        }
-        
-        public ConsentContext GetContext(ITestOutputHelper output, DbConnection connection)
-        {
-            EnsureInitialised(output);
-            return CreateContext(output, connection);
-        }
-    }
-    
-    [CollectionDefinition(Name)]
-    public class DatabaseCollection : ICollectionFixture<DatabaseFixture>
-    {
-        public const string Name = "Database";
-    }
-
     [Collection(DatabaseCollection.Name)]
     public class PersonStoreTests : IDisposable
     {
@@ -215,7 +98,7 @@ namespace CHC.Consent.EFCore.Tests
             Context.SaveChanges();
 
             
-            var store = new PersonStore(CreateNewContextInSameTransaction().People);
+            var store = new PersonStore(CreateNewContextInSameTransaction().Set<PersonEntity>());
 
             var first = store.FirstOrDefault(_ => _.Id == person.Id);
 
