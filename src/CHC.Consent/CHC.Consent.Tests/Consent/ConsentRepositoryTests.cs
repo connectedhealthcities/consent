@@ -18,7 +18,7 @@ namespace CHC.Consent.Tests.Consent
         /// <inheritdoc />
         public ConsentRepositoryTests()
         {
-            study = Create.Study.WithId("32");
+            study = Create.Study.WithId(32);
             consentedStudySubject = Create.StudySubject.WithStudy(study).WithSubjectIdentifier("Id").WithSubjectPersonId(495);
             unconsentedStudySubect = Create.StudySubject.WithStudy(study)
                 .WithSubjectIdentifier("Unconsented").WithSubjectPersonId(1488);
@@ -45,7 +45,7 @@ namespace CHC.Consent.Tests.Consent
         [Fact]
         public void ReturnsNullStudyForNonExistantStudy()
         {
-            Assert.Null(repository.GetStudy("nope"));
+            Assert.Null(repository.GetStudy(-1));
         }
 
         [Fact]

@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using CHC.Consent.Common.Infrastructure.Data;
 
 namespace CHC.Consent.Common.Consent
 {
-    public class Consent
+    public class Consent : IEntity
     {
+        public long Id { get; set; }
+
         public StudySubject StudySubject { get; }
-        
+
         public DateTime DateGiven { get; }
+
         public Evidence GivenEvidence { get;  }
 
         /// <inheritdoc />
@@ -23,8 +27,9 @@ namespace CHC.Consent.Common.Consent
         }
 
         public string PregnancyNumber { get; set; }
-        
+
         public DateTime? Withdrawn { get; set; }
+
         public Evidence WithdrawnEvidence { get; set; }
     }
 }

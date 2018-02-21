@@ -1,12 +1,10 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using CHC.Consent.Common;
+using CHC.Consent.EFCore.Entities;
 using CHC.Consent.Testing.Utils;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions.Internal;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
@@ -16,28 +14,11 @@ using Xunit.Abstractions;
 namespace CHC.Consent.EFCore.Tests
 {
     [Collection(DatabaseCollection.Name)]
-    public class PersonStoreTests : IDisposable
+    public class PersonStoreTests : DbTests
     {
-        private readonly IDbContextTransaction transaction;
-        private readonly ITestOutputHelper outputHelper;
-        private readonly DatabaseFixture fixture;
-        private ConsentContext Context { get; }
-
-        private ConsentContext CreateNewContextInSameTransaction()
+        public PersonStoreTests(ITestOutputHelper outputHelper, DatabaseFixture fixture) 
+            : base(outputHelper, fixture)
         {
-            var newContext = fixture.GetContext(outputHelper, Context.Database.GetDbConnection());
-            newContext.Database.UseTransaction(transaction.GetDbTransaction());
-            return newContext;
-        }
-
-
-        /// <inheritdoc />
-        public PersonStoreTests(ITestOutputHelper outputHelper, DatabaseFixture fixture)
-        {
-            this.outputHelper = outputHelper;
-            this.fixture = fixture;
-            Context = fixture.GetContext(outputHelper);
-            transaction = Context.Database.BeginTransaction();
         }
 
         [Fact]
@@ -83,7 +64,7 @@ namespace CHC.Consent.EFCore.Tests
             var hospitalNumber =
                 CreateNewContextInSameTransaction()
                     .Set<BradfordHospitalNumberEntity>()
-                    .SingleOrDefault(_ => _.PersonEntity.Id == saved.Id);
+                    .SingleOrDefault(_ => _.Person.Id == saved.Id);
             
             Assert.NotNull(hospitalNumber);
             Assert.Equal("HOSPITAL", hospitalNumber.HospitalNumber);
@@ -104,14 +85,6 @@ namespace CHC.Consent.EFCore.Tests
 
             Assert.NotNull(first);
             Assert.Equal("LOADED", Assert.Single(first.BradfordHospitalNumbers));
-            
-        }
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            transaction?.Dispose();
-            Context?.Dispose();
             
         }
     }

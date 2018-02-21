@@ -18,8 +18,7 @@ namespace CHC.Consent.Common.Consent
             Consents = consents;
         }
 
-        public Study GetStudy(string studyId) => 
-            Studies.SingleOrDefault(_ => _.Id == studyId);
+        public Study GetStudy(long studyId) => Studies.Get(studyId);
 
         public StudySubject FindStudySubject(Study study, string subjectIdentifier) =>
             SubjectsForStudy(study).SingleOrDefault(_ =>  _.SubjectIdentifier == subjectIdentifier);

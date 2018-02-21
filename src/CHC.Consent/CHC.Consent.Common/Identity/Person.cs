@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CHC.Consent.Common.Infrastructure.Data;
 
 namespace CHC.Consent.Common
 {
-    public class Person
+    public class Person : IEntity
     {
         public virtual long Id { get; set; }
         public virtual string NhsNumber { get; set; }

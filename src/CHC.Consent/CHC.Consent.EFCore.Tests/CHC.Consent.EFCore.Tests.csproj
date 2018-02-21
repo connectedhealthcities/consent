@@ -19,4 +19,7 @@
       <Name>CHC.Consent.Testing.Utils</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="BrafordHospitalNumberIdentifierAdapterTests" />
+  </ItemGroup>
 </Project>

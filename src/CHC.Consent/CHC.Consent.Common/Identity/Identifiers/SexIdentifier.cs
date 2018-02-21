@@ -8,7 +8,13 @@ namespace CHC.Consent.Common.Identity.Identifiers
     {
         private static readonly SingleValueIdentifierHelper<Sex?> Helper =
             new SingleValueIdentifierHelper<Sex?>(_ => _.Sex);
-        
+
+        /// <inheritdoc />
+        public SexIdentifier(Sex? sex=null)
+        {
+            Sex = sex;
+        }
+
         public Sex? Sex { get; set; }
 
         /// <inheritdoc />

@@ -8,7 +8,7 @@ using CHC.Consent.Common.Infrastructure.Data;
 
 namespace CHC.Consent.Api
 {
-    public class InMemoryStore<T> : IStore<T>
+    public class InMemoryStore<T> : IStore<T> where T : IEntity
     {
         public List<T> Contents { get; }
         private readonly IQueryable<T> contentsQueryable;
@@ -28,6 +28,12 @@ namespace CHC.Consent.Api
             Contents.Add(item);
             OnItemAdded?.Invoke(this, item);
             return item;
+        }
+
+        /// <inheritdoc />
+        public T Get(long id)
+        {
+            return Contents.SingleOrDefault(_ => _.Id == id);
         }
 
         public IEnumerator<T> GetEnumerator() => Contents.GetEnumerator();

@@ -7,7 +7,7 @@ namespace CHC.Consent.Api.Features.Consent
     public class ConsentSpecification
     {
         [Required]
-        public string StudyId { get; set; }
+        public long StudyId { get; set; }
         [Required]
         public string SubjectIdentifier { get; set; }
         [Required]

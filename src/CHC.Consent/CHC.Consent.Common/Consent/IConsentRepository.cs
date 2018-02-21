@@ -5,7 +5,7 @@ namespace CHC.Consent.Common.Consent
 {
     public interface IConsentRepository
     {
-        Study GetStudy(string studyId);
+        Study GetStudy(long studyId);
 
         StudySubject FindStudySubject(Study study, string subjectIdentifier);
         StudySubject FindStudySubject(Study study, long personId);

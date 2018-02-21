@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using AutoMapper.QueryableExtensions;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Infrastructure.Data;
+using CHC.Consent.EFCore.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Query;
@@ -15,7 +16,7 @@ namespace CHC.Consent.EFCore
     public class PersonStore : IStore<Person>
     {
         private readonly DbSet<PersonEntity> people;
-        private IQueryable<PersonEntity> queryable;
+        private readonly IQueryable<PersonEntity> queryable;
 
         /// <inheritdoc />
         public PersonStore(DbSet<PersonEntity> people)
@@ -56,6 +57,12 @@ namespace CHC.Consent.EFCore
                 }
                 return people.Add(newEntity).Entity;
             }
+        }
+
+        /// <inheritdoc />
+        public Person Get(long id)
+        {
+            return people.Find(id);
         }
 
         /// <inheritdoc />

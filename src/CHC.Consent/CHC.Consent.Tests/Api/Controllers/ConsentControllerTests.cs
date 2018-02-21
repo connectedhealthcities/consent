@@ -31,7 +31,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             /// <inheritdoc />
             public ConsentControllerTestBase()
             {
-                Study = new Study("AStudy");
+                Study = Create.Study;
                 StudySubject = new StudySubject(Study, "AA100023", 500L);
                 ConsentRepository = CreateConsentRepository(Study, StudySubject);
             }
@@ -53,7 +53,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 Evidence evidence,
                 DateTime dateGiven,
                 IConsentRepository consentRepository = null,
-                string studyId = null,
+                long? studyId = null,
                 string subjectIdentifier = null,
                 long? personId = null,
                 params Identifier[] identifiers
@@ -113,7 +113,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             /// <inheritdoc />
             public WhenRecordingConsent_ForANonExistantStudy()
             {
-                var nonExistentStudyId = Study.Id + "NotExists";
+                var nonExistentStudyId = - Study.Id;
 
                 A.CallTo(() => ConsentRepository.GetStudy(nonExistentStudyId)).Returns(null);
                 
@@ -288,7 +288,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             Output = output;
             Client = fixture.Client;
             ((IStore<Study>) fixture.Server.Host.Services.GetService(typeof(IStore<Study>))).Add(
-                new Study(id: "4444333"));
+                new Study(id: 4444333L));
         }
 
         [Fact]
@@ -297,7 +297,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             var result = await Client.PutAsync(
                 "/consent",
                 new StringContent(
-                    "{ studyId: \"4444333\", subjectIdentifier: \"887766\", identifiers: [{ \"$type\": \"pregnancy-number.consent.bib4all.bradfordhospitals.nhs.uk\", value: \"Rachel\" }], evidence: { \"$type\": \"medway.evidence.bib4all.bradfordhospitals.nhs.uk\", consentGivenBy: \"Rachel\"} }",
+                    "{ studyId: 4444333, subjectIdentifier: \"887766\", identifiers: [{ \"$type\": \"pregnancy-number.consent.bib4all.bradfordhospitals.nhs.uk\", value: \"Rachel\" }], evidence: { \"$type\": \"medway.evidence.bib4all.bradfordhospitals.nhs.uk\", consentGivenBy: \"Rachel\"} }",
                     Encoding.UTF8,
                     "application/json"
                 )

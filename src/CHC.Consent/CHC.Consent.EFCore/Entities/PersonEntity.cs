@@ -5,7 +5,7 @@ using CHC.Consent.Common;
 
 [assembly:InternalsVisibleTo("CHC.Consent.EFCore.Tests")]
 
-namespace CHC.Consent.EFCore
+namespace CHC.Consent.EFCore.Entities
 {
     public class PersonEntity : Person
     {
@@ -29,7 +29,7 @@ namespace CHC.Consent.EFCore
                 return false;
             else
             {
-                BradfordHospitalNumberEntities.Add(new BradfordHospitalNumberEntity{ HospitalNumber = hospitalNumber, PersonEntity = this });
+                BradfordHospitalNumberEntities.Add(new BradfordHospitalNumberEntity{ HospitalNumber = hospitalNumber, Person = this });
                 return true;
             }
         }

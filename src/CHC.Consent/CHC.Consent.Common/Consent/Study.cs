@@ -1,12 +1,14 @@
-﻿namespace CHC.Consent.Common.Consent
+﻿using CHC.Consent.Common.Infrastructure.Data;
+
+namespace CHC.Consent.Common.Consent
 {
-    public class Study
+    public class Study : IEntity
     {
-        public string Id { get; }
+        public long Id { get; }
         public string Name { get; protected set; }
 
         /// <inheritdoc />
-        public Study(string id, string name=null)
+        public Study(long id, string name=null)
         {
             Id = id;
             Name = name;

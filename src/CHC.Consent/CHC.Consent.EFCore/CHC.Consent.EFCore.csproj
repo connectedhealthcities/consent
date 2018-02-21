@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFrameworks>netcoreapp2.0;net462</TargetFrameworks>
     <RuntimeFrameworkVersion>2.0.5</RuntimeFrameworkVersion>
     <LangVersion>7.2</LangVersion>
   </PropertyGroup>
@@ -17,5 +17,8 @@
       <Project>{5CF2CE95-0242-4068-B31A-116171037E8B}</Project>
       <Name>CHC.Consent.Common</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Migrations" />
   </ItemGroup>
 </Project>

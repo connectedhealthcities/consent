@@ -10,11 +10,12 @@ namespace CHC.Consent.Common.Identity.Identifiers
             = new SingleValueIdentifierHelper<DateTime?>(_ => _.DateOfBirth);
 
         /// <inheritdoc />
-        public DateOfBirthIdentifier()
+        public DateOfBirthIdentifier(DateTime? dateOfBirth=null)
         {
+            DateOfBirth = dateOfBirth?.Date;
         }
         
-        public DateTime DateOfBirth { get; set; }
+        public DateTime? DateOfBirth { get; set; }
 
         public Expression<Func<Person, bool>> GetMatchExpression()
         {

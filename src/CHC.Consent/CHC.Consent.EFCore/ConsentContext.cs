@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CHC.Consent.EFCore.Configuration;
+using CHC.Consent.EFCore.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace CHC.Consent.EFCore
 {
@@ -9,17 +11,26 @@ namespace CHC.Consent.EFCore
         {
         }
 
+        /// <inheritdoc />
+        public ConsentContext(string connectionString) : base(CreateSqlServerOptions(connectionString))
+        {
+        }
+
+        private static DbContextOptions CreateSqlServerOptions(string connectionString)
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<ConsentContext>();
+            optionsBuilder.UseSqlServer(connectionString);
+            return optionsBuilder.Options;
+        }
+
         public virtual DbSet<PersonEntity> People { get; set; }
 
         /// <inheritdoc />
         protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<PersonEntity>().Ignore(_ => _.BirthOrder);
-            modelBuilder.Entity<PersonEntity>()
-                .Property(_ => _.BirthOrderValue)
-                .HasColumnName(nameof(PersonEntity.BirthOrder));
-
-            modelBuilder.Entity<PersonEntity>().HasMany(_ => _.BradfordHospitalNumberEntities).WithOne(_ => _.PersonEntity);
+        {    
+            modelBuilder.ApplyConfiguration(new PersonEntityConfiguration());
+            modelBuilder.ApplyConfiguration(new BradfordHospitalNumberEntityConfiguration());
+            modelBuilder.ApplyConfiguration(new NameEntityConfiguration());
         }
     }
 }
