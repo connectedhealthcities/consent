@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 namespace CHC.Consent.Common.Identity.Identifiers
 {
     [Identifier("date-of-birth")]
-    public class DateOfBirthIdentifier : IIdentifier
+    public class DateOfBirthIdentifier : IIdentifier, ISingleValueIdentifier<DateTime?>
     {
         private static readonly SingleValueIdentifierHelper<DateTime?> Helper
             = new SingleValueIdentifierHelper<DateTime?>(_ => _.DateOfBirth);
@@ -16,6 +16,7 @@ namespace CHC.Consent.Common.Identity.Identifiers
         }
         
         public DateTime? DateOfBirth { get; set; }
+        DateTime? ISingleValueIdentifier<DateTime?>.Value => DateOfBirth;
 
         public Expression<Func<Person, bool>> GetMatchExpression()
         {

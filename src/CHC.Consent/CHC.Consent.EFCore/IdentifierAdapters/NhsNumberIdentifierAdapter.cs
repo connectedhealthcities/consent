@@ -7,33 +7,22 @@ using CHC.Consent.EFCore.Entities;
 
 namespace CHC.Consent.EFCore.IdentifierAdapters
 {
-    public class NhsNumberIdentifierAdapter : IIdentifierFilter<NhsNumberIdentifier>, IIdentifierUpdater<NhsNumberIdentifier>
+    public class NhsNumberIdentifierAdapter : SingleValueIdentifierAdapter<NhsNumberIdentifier, string>
     {
         /// <inheritdoc />
-        public IQueryable<TPerson> Filter<TPerson>(
-            IQueryable<TPerson> people, NhsNumberIdentifier value, IStoreProvider stores)
-            where TPerson : Person => 
+        public override IQueryable<TPerson> Filter<TPerson>(
+            IQueryable<TPerson> people,
+            NhsNumberIdentifier value,
+            IStoreProvider stores) =>
             people.Where(_ => _.NhsNumber == value.Value);
 
         /// <inheritdoc />
-        public bool Update(Person person, NhsNumberIdentifier value, IStoreProvider stores)
-        {
-            
-            var entity = person as PersonEntity ?? stores.Get<PersonEntity>().Get(person.Id);
-            if (entity == null)
-            {
-                throw new InvalidOperationException($"Cannot find person#{person.Id}");
-            }
+        protected override string IdentifierName => "NHS Number";
 
-            if (entity.NhsNumber == default)
-            {
-                entity.NhsNumber = value.Value;
-            }
-            else if (entity.NhsNumber != value.Value)
-            {
-                throw new InvalidOperationException($"Cannot change NhsNumber for person#{person.Id}");
-            }
-            return true;
-        }
+        /// <inheritdoc />
+        public override void SetValue(PersonEntity entity, string newValue) => entity.NhsNumber = newValue;
+
+        /// <inheritdoc />
+        public override string ExistingValue(PersonEntity entity) => entity.NhsNumber;
     }
 }

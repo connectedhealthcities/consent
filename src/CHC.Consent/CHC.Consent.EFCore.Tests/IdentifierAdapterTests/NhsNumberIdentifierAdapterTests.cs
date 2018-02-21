@@ -49,7 +49,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
         [Fact]
         public void CanSetPersonNhsNumber()
         {
-            var person = saveContext.Add(new PersonEntity {NhsNumber = default(string)}).Entity;
+            var person = saveContext.Add(new PersonEntity {NhsNumber = default}).Entity;
             saveContext.SaveChanges();
 
             new NhsNumberIdentifierAdapter().Update(

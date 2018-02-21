@@ -9,5 +9,9 @@ namespace CHC.Consent.Common.Identity
         Expression<Func<Person, bool>> GetMatchExpression();
         [Obsolete]
         void Update(Person person);
+        
+        
     }
+    
+    public interface ISingleValueIdentifier<out T> { T Value { get; }}
 }

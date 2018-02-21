@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 namespace CHC.Consent.Common.Identity.Identifiers
 {
     [Identifier("sex")]
-    public class SexIdentifier : IIdentifier
+    public class SexIdentifier : IIdentifier, ISingleValueIdentifier<Sex?>
     {
         private static readonly SingleValueIdentifierHelper<Sex?> Helper =
             new SingleValueIdentifierHelper<Sex?>(_ => _.Sex);
@@ -16,6 +16,9 @@ namespace CHC.Consent.Common.Identity.Identifiers
         }
 
         public Sex? Sex { get; set; }
+
+        /// <inheritdoc />
+        Sex? ISingleValueIdentifier<Sex?>.Value => this.Sex;
 
         /// <inheritdoc />
         public Expression<Func<Person, bool>> GetMatchExpression() => Helper.GetMatchExpression(Sex);

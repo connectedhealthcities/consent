@@ -7,7 +7,7 @@ namespace CHC.Consent.Common.Identity.Identifiers
     [Identifier(TypeName, AllowMultipleValues = true)]
     public class BradfordHospitalNumberIdentifier : IIdentifier
     {
-        public string Value { get; set; }
+        public string Value { get; private set; }
         
         public BradfordHospitalNumberIdentifier(string value=null)
         {

@@ -48,7 +48,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
         [Fact]
         public void CanSetPersonSex()
         {
-            var person = saveContext.Add(new PersonEntity {Sex = default(Sex?)}).Entity;
+            var person = saveContext.Add(new PersonEntity {Sex = default}).Entity;
             saveContext.SaveChanges();
 
             new SexIdentifierAdapter().Update(

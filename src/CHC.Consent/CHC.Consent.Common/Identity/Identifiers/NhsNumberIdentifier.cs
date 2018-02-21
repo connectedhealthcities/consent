@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 namespace CHC.Consent.Common.Identity.Identifiers
 {
     [Identifier(TypeName)]
-    public class NhsNumberIdentifier : IIdentifier
+    public class NhsNumberIdentifier : IIdentifier, ISingleValueIdentifier<string>
     {
         public const string TypeName = "uk.nhs.nhs-number";
 

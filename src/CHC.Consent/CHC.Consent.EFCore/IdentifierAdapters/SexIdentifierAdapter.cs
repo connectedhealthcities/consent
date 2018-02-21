@@ -7,33 +7,22 @@ using CHC.Consent.EFCore.Entities;
 
 namespace CHC.Consent.EFCore.IdentifierAdapters
 {
-    public class SexIdentifierAdapter : IIdentifierFilter<SexIdentifier>, IIdentifierUpdater<SexIdentifier>
+    public class SexIdentifierAdapter : SingleValueIdentifierAdapter<SexIdentifier, Sex?>
     {
         /// <inheritdoc />
-        public IQueryable<TPerson> Filter<TPerson>(
+        public override IQueryable<TPerson> Filter<TPerson>(
             IQueryable<TPerson> people,
             SexIdentifier value,
-            IStoreProvider stores) where TPerson : Person =>
+            IStoreProvider stores)  =>
             people.Where(_ => _.Sex == value.Sex);
 
         /// <inheritdoc />
-        public bool Update(Person person, SexIdentifier value, IStoreProvider stores)
-        {
-            var entity = person as PersonEntity ?? stores.Get<PersonEntity>().Get(person.Id);
-            if (entity == null)
-            {
-                throw new InvalidOperationException($"Cannot find person#{person.Id}");
-            }
+        protected override string IdentifierName => "Sex";
 
-            if (entity.Sex == default)
-            {
-                entity.Sex = value.Sex;
-            }
-            else if (entity.Sex != value.Sex)
-            {
-                throw new InvalidOperationException($"Cannot change Sex to {value.Sex} for person#{person.Id} {{Sex={person.Sex}}}");
-            }
-            return true;
-        }
+        /// <inheritdoc />
+        public override void SetValue(PersonEntity entity, Sex? newValue) => entity.Sex = newValue;
+
+        /// <inheritdoc />
+        public override Sex? ExistingValue(PersonEntity entity) => entity.Sex;
     }
 }
