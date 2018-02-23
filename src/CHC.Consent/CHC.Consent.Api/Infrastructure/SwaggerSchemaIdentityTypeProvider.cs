@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 using CHC.Consent.Common.Infrastructure;
 using Swashbuckle.AspNetCore.Swagger;
@@ -25,11 +27,13 @@ namespace CHC.Consent.Api.Infrastructure
             if(!typeof(TIdentifier).IsAssignableFrom(context.SystemType)) return;
             if (context.SystemType == typeof(TIdentifier))
             {
+                
                 model.Discriminator = "$type";
                 model.Properties.Add(
                     "$type",
-                    new Schema {Enum = registry.Select(_ => $"#/definitions/{_.Name}").Cast<object>().ToArray(), Type = "string"});
-                model.Required = new[] {"$type"};
+                    new Schema {Enum = registry.Select(_ => /*$"#/definitions/{_.Name}"*/_.Name).Cast<object>().ToArray(), Type = "string"});
+                if(model.Required == null) model.Required = new List<string>();
+                model.Required.Add("$type");
 
                 foreach (var identifierRegistration in registry)
                 {
@@ -38,11 +42,8 @@ namespace CHC.Consent.Api.Infrastructure
             }
             else
             {
-                model.AllOf = new[]
-                {
-                    context.SchemaRegistry.GetOrRegister(typeof(TIdentifier)),
-                    new Schema{ Properties = model.Properties, Type = model.Type, Required = model.Required}, 
-                };
+                var schema = new Schema {Properties = model.Properties, Type = model.Type, Required = model.Required};
+                model.AllOf = new[] { context.SchemaRegistry.GetOrRegister(typeof(TIdentifier)), schema };
                 model.Properties = null;
                 model.Required = null;
                 model.Type = null;

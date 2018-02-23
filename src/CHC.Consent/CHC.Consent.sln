@@ -12,6 +12,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHC.Consent.EFCore.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHC.Consent.Testing.Utils", "CHC.Consent.Testing.Utils\CHC.Consent.Testing.Utils.csproj", "{7D1EFE71-9C0B-4F6A-8D17-DF15D18F5AA3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHC.Consent.DataImporter", "CHC.Consent.DataImporter\CHC.Consent.DataImporter.csproj", "{2268F6BE-3E26-4F53-AFE4-931C52AF6AE5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHC.Consent.Api.Client", "CHC.Consent.Api.Client\CHC.Consent.Api.Client.csproj", "{02A0FC9D-494A-412F-AFCA-83589832619C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +46,13 @@ Global
 		{7D1EFE71-9C0B-4F6A-8D17-DF15D18F5AA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7D1EFE71-9C0B-4F6A-8D17-DF15D18F5AA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7D1EFE71-9C0B-4F6A-8D17-DF15D18F5AA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2268F6BE-3E26-4F53-AFE4-931C52AF6AE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2268F6BE-3E26-4F53-AFE4-931C52AF6AE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2268F6BE-3E26-4F53-AFE4-931C52AF6AE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2268F6BE-3E26-4F53-AFE4-931C52AF6AE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02A0FC9D-494A-412F-AFCA-83589832619C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02A0FC9D-494A-412F-AFCA-83589832619C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02A0FC9D-494A-412F-AFCA-83589832619C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02A0FC9D-494A-412F-AFCA-83589832619C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
