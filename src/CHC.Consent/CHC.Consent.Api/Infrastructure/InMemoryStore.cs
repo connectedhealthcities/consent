@@ -3,10 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Runtime.InteropServices.ComTypes;
 using CHC.Consent.Common.Infrastructure.Data;
 
-namespace CHC.Consent.Api
+namespace CHC.Consent.Api.Infrastructure
 {
     public class InMemoryStore<T> : IStore<T> where T : IEntity
     {
