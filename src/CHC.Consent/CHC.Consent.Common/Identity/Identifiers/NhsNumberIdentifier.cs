@@ -17,7 +17,7 @@ namespace CHC.Consent.Common.Identity.Identifiers
             Value = value;
         }
 
-        public string Value { get; }
+        public string Value { get; set; }
 
 
         /// <inheritdoc />
