@@ -3,6 +3,7 @@ using System.Linq;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.IdentifierAdapters;
+using CHC.Consent.Testing.Utils;
 using Xunit;
 using Xunit.Abstractions;
 using Random = CHC.Consent.Testing.Utils.Random;
@@ -26,10 +27,8 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
         [Fact]
         public void CorrectlyFiltersAList()
         {
-            for (var i = 0; i < 5; ++i)
-            {
-                AddPersonWithAHospitalNumber();
-            }
+            5.Times(AddPersonWithAHospitalNumber);
+            
             var personWithCorrectHosptialNumber = AddPersonWithAHospitalNumber("HOSPITAL NUMBER");
             
             var foundPeople = adapter.Filter(
@@ -54,10 +53,12 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             var hospitalNumbers = otherContext.Set<BradfordHospitalNumberEntity>().Where(_ => _.Person.Id == person.Id)
                 .ToArray();
 
+            Assert.Equal(2, hospitalNumbers.Length);
             Assert.Single(hospitalNumbers, _ => _.HospitalNumber == "86");
         }
 
-        private PersonEntity AddPersonWithAHospitalNumber(string hospitalNumber=null)
+        private PersonEntity AddPersonWithAHospitalNumber() => AddPersonWithAHospitalNumber(Random.String());
+        private PersonEntity AddPersonWithAHospitalNumber(string hospitalNumber)
         {
             var person = otherContext.Add(new PersonEntity()).Entity;
             otherContext.Add(

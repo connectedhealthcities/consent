@@ -26,18 +26,16 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             readContext = CreateNewContextInSameTransaction();
         }
 
-        private DateTime GenerateValue() => Random.Date().Date;
+        private DateTime CreateDateOfBirth() => Random.Date().Date;
         private DateOfBirthIdentifier MakeIdentifier(DateTime? value) => new DateOfBirthIdentifier(value);
 
-        
+
         [Fact]
         public void CorrectlyFindsPersonByDateOfBirth()
         {
-            for (var i = 0; i < 5; i++)
-            {
-                saveContext.Add(MakeEntity());
-            }
-            var findValue = GenerateValue();
+            saveContext.AddRange(5.Of(MakeEntity));
+            
+            var findValue = CreateDateOfBirth();
             saveContext.Add(MakeEntity(findValue));
 
             saveContext.SaveChanges();
@@ -49,21 +47,18 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
 
             var found = Assert.Single(foundPeople);
             Assert.NotNull(found);
-            Assert.Equal(findValue, GetValue(found));
+            Assert.Equal(findValue, found.DateOfBirth);
         }
 
-        private PersonEntity MakeEntity() => MakeEntity(GenerateValue());
+        private PersonEntity MakeEntity() => MakeEntity(CreateDateOfBirth());
+
         private PersonEntity MakeEntity(DateTime? identifierValue)
         {
             var entity = new PersonEntity();
-            SetValue(entity, identifierValue);
+            entity.DateOfBirth = identifierValue;
             return entity;
         }
 
-        private void SetValue(PersonEntity entity, DateTime? value) => entity.DateOfBirth = value;
-
-        private DateTime? GetValue(PersonEntity entity) => entity.DateOfBirth;
-        
 
         [Fact]
         public void CanSetPersonDateOfBirth()
@@ -71,7 +66,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             var person = saveContext.Add(MakeEntity(default)).Entity;
             saveContext.SaveChanges();
 
-            var newDateOfBirth = GenerateValue();
+            var newDateOfBirth = CreateDateOfBirth();
             
             new DateOfBirthIdentifierAdapter().Update(
                 Context.Find<PersonEntity>(person.Id),
@@ -101,19 +96,19 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             Context.SaveChanges();
 
             var saved = readContext.Find<PersonEntity>(person.Id);
-            Assert.Equal(newDateOfBirth, GetValue(saved));
+            Assert.Equal(newDateOfBirth, saved.DateOfBirth);
         }
 
         [Fact]
         public void CannotChangeDateOfBirth()
         {
-            var person = saveContext.Add(MakeEntity(GenerateValue())).Entity;
+            var person = saveContext.Add(MakeEntity(CreateDateOfBirth())).Entity;
             saveContext.SaveChanges();
             
 
             Assert.Throws<InvalidOperationException>(() => new DateOfBirthIdentifierAdapter().Update(
                 Context.Find<PersonEntity>(person.Id),
-                MakeIdentifier(GenerateValue()), 
+                MakeIdentifier(CreateDateOfBirth()), 
                 new ContextWrapper(Context)
             ));
         }

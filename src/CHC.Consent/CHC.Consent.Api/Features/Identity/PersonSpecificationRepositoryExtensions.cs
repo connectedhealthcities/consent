@@ -9,9 +9,14 @@ namespace CHC.Consent.Api.Features.Identity
     {
         public static Person FindPerson(this IdentityRepository repository, IEnumerable<IEnumerable<IIdentifier>> matchSpecification)
         {
-            return matchSpecification
-                .Select(repository.FindPersonBy)
-                .FirstOrDefault(person => person != null);
+            foreach (var specification in matchSpecification)
+            {
+                var person = repository.FindPersonBy(specification);
+                if (person != null) 
+                    return person;
+            }
+
+            return null;
         }
 
         public static Person CreatePerson(this IdentityRepository repository, IEnumerable<IIdentifier> identifiers)

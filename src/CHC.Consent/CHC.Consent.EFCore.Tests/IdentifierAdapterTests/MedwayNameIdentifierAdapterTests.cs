@@ -23,11 +23,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
         [Fact]
         public void DoesNotFindPersonWithDifferentName()
         {
-            var person = saveContext.People.Add(new PersonEntity()).Entity;
-            var firstName = Random.String();
-            var lastName = Random.String();
-            saveContext.Set<MedwayNameEntity>().Add(
-                new MedwayNameEntity {Person = person, FirstName = firstName, LastName = lastName});
+            5.Times(AddPersonWithMedwayName);
             saveContext.SaveChanges();
             
             var identifier = new MedwayNameIdentifier { FirstName = Random.String(), LastName = Random.String()};
@@ -45,11 +41,11 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
         [Fact]
         public void CanFindPersonWithMatchingName()
         {
-            var person = saveContext.People.Add(new PersonEntity()).Entity;
+            5.Times(AddPersonWithMedwayName);
+            
             var firstName = Random.String();
             var lastName = Random.String();
-            saveContext.Set<MedwayNameEntity>().Add(
-                new MedwayNameEntity {Person = person, FirstName = firstName, LastName = lastName});
+            var person = AddPersonWithMedwayName(firstName, lastName);
             saveContext.SaveChanges();
             
 
@@ -64,6 +60,19 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             var found = Assert.Single(foundPeople);
             Assert.NotNull(found);
             Assert.Equal(person.Id, found.Id);
+        }
+
+        private PersonEntity AddPersonWithMedwayName() => AddPersonWithMedwayName(Random.String(), Random.String());
+        
+        
+        private PersonEntity AddPersonWithMedwayName(string firstName, string lastName)
+        {
+            var person = saveContext.People.Add(new PersonEntity()).Entity;
+
+            saveContext.Set<MedwayNameEntity>().Add(
+                new MedwayNameEntity {Person = person, FirstName = firstName, LastName = lastName});
+
+            return person;
         }
 
         [Fact]

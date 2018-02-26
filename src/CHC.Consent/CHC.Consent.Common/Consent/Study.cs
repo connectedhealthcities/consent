@@ -31,7 +31,7 @@ namespace CHC.Consent.Common.Consent
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return (Id != null ? Id.GetHashCode() : 0);
+            return Id.GetHashCode();
         }
     }
 }

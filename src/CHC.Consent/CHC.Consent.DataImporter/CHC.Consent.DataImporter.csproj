@@ -3,8 +3,7 @@
     <TargetFrameworks>netcoreapp2.0;net462</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <LangVersion>7.2</LangVersion>
+    <RuntimeFrameworkVersion>2.0.5</RuntimeFrameworkVersion>
   </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
-    <PackageReference Include="Microsoft.NETCore.App" Version="2.0.5" />
-  </ItemGroup>
+  
 </Project>

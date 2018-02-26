@@ -50,11 +50,9 @@ namespace CHC.Consent.EFCore.IdentifierAdapters
             MatchesExpression.Compile();
 
         [InjectLambda]
-        public static bool ForPerson(this MedwayNameEntity name, Person person) =>
-            ForPersonCompiled(name, person);
+        public static bool ForPerson(this MedwayNameEntity name, Person person) => ForPersonCompiled(name, person);
 
-        public static Expression<Func<MedwayNameEntity, Person, bool>> ForPerson() =>
-            ForPersonExpression;
+        public static Expression<Func<MedwayNameEntity, Person, bool>> ForPerson() => ForPersonExpression;
 
         [InjectLambda]
         public static IQueryable<MedwayNameEntity>
