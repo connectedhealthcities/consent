@@ -3,7 +3,6 @@
     <TargetFrameworks>netcoreapp2.0;net462</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <LangVersion>7.2</LangVersion>
-    <RuntimeFrameworkVersion>2.0.5</RuntimeFrameworkVersion>
   </PropertyGroup>
   
 </Project>
