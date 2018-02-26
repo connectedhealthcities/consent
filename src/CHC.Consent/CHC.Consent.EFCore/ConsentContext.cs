@@ -28,9 +28,11 @@ namespace CHC.Consent.EFCore
         /// <inheritdoc />
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {    
+            //TODO: Get these from somewhere else configurable
             modelBuilder.ApplyConfiguration(new PersonEntityConfiguration());
             modelBuilder.ApplyConfiguration(new BradfordHospitalNumberEntityConfiguration());
             modelBuilder.ApplyConfiguration(new NameEntityConfiguration());
+            modelBuilder.ApplyConfiguration(new MedwayNameEntityConfiguration());
         }
     }
 }

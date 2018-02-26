@@ -17,7 +17,7 @@ namespace CHC.Consent.Testing.Utils
         }
         public static string String()
         {
-            return Convert.ToBase64String(RandomBytes(32)).TrimEnd();
+            return Convert.ToBase64String(RandomBytes(32)).TrimEnd('=');
         }
 
         public static DateTime Date()
