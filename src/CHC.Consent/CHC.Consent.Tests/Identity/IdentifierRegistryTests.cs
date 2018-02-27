@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Linq.Expressions;
-using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.EFCore;
+using FakeItEasy;
 using Xunit;
 
 namespace CHC.Consent.Tests.Identity
@@ -14,14 +14,12 @@ namespace CHC.Consent.Tests.Identity
         // ReSharper disable once ClassNeverInstantiated.Local
         private class NoIdentifierAttribute : IIdentifier
         {
-            public Expression<Func<Person, bool>> GetMatchExpression() => throw new NotImplementedException();
-            public void Update(Person person) => throw new NotImplementedException();
         }
 
         [Fact]
         public void WhenRegisteringAnIdentifierItPicksOutTheNameFromTheIdentifierAttribute()
         {
-            registry.Add<NhsNumberIdentifier>();
+            registry.Add<NhsNumberIdentifier, DummyAttributeAdapter<NhsNumberIdentifier>>();
             
             Assert.Equal(typeof(NhsNumberIdentifier), registry[NhsNumberIdentifier.TypeName]);
         }
@@ -29,7 +27,7 @@ namespace CHC.Consent.Tests.Identity
         [Fact]
         public void ThrowsAnExceptionWhenRegisteringATypeWithNoAttribute()
         {
-            Assert.Throws<ArgumentException>(() => registry.Add<NoIdentifierAttribute>());
+            Assert.Throws<ArgumentException>(() => registry.Add<NoIdentifierAttribute, DummyAttributeAdapter<NoIdentifierAttribute>>());
         }
     }
 }

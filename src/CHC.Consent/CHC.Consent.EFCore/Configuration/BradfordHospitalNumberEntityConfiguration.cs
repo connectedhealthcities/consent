@@ -13,7 +13,7 @@ namespace CHC.Consent.EFCore.Configuration
 
             builder
                 .HasOne(_ => _.Person)
-                .WithMany(_ => _.BradfordHospitalNumberEntities).IsRequired()
+                .WithMany().IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

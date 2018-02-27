@@ -1,16 +1,7 @@
-﻿using System;
-using System.Linq.Expressions;
-
-namespace CHC.Consent.Common.Identity
+﻿namespace CHC.Consent.Common.Identity
 {
     public interface IIdentifier
     {
-        [Obsolete]
-        Expression<Func<Person, bool>> GetMatchExpression();
-        [Obsolete]
-        void Update(Person person);
-        
-        
     }
     
     public interface ISingleValueIdentifier<out T> { T Value { get; }}

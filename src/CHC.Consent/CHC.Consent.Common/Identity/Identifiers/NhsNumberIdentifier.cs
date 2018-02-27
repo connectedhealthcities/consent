@@ -1,15 +1,9 @@
-﻿using System;
-using System.Linq.Expressions;
-
-namespace CHC.Consent.Common.Identity.Identifiers
+﻿namespace CHC.Consent.Common.Identity.Identifiers
 {
     [Identifier(TypeName)]
     public class NhsNumberIdentifier : IIdentifier, ISingleValueIdentifier<string>
     {
         public const string TypeName = "uk.nhs.nhs-number";
-
-        private readonly SingleValueIdentifierHelper<string> helper
-            = new SingleValueIdentifierHelper<string>(_ => _.NhsNumber);
 
         /// <inheritdoc />
         public NhsNumberIdentifier(string value = null) 
@@ -18,14 +12,6 @@ namespace CHC.Consent.Common.Identity.Identifiers
         }
 
         public string Value { get; set; }
-
-
-        /// <inheritdoc />
-        public Expression<Func<Person, bool>> GetMatchExpression()
-            => helper.GetMatchExpression(Value);
-
-        /// <inheritdoc />
-        public void Update(Person person) => helper.Update(person, Value);
 
 
         protected bool Equals(NhsNumberIdentifier other)

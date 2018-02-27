@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using System.Runtime.Serialization;
-using CHC.Consent.Api.Features.Consent;
+﻿using CHC.Consent.Api.Features.Consent;
 using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Api.Infrastructure.Web;
@@ -10,13 +8,14 @@ using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Consent.Identifiers;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
-using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.Common.Infrastructure.Data;
+using CHC.Consent.EFCore;
+using CHC.Consent.EFCore.Entities;
+using CHC.Consent.EFCore.IdentifierAdapters;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.Server.Kestrel.Transport.Libuv.Internal.Networking;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -40,11 +39,12 @@ namespace CHC.Consent.Api
         public void ConfigureServices(IServiceCollection services)
         {
             var personIdentifierRegistry = new PersonIdentifierRegistry();
-            personIdentifierRegistry.Add<NhsNumberIdentifier>();
-            personIdentifierRegistry.Add<BradfordHospitalNumberIdentifier>();
-            personIdentifierRegistry.Add<SexIdentifier>();
-            personIdentifierRegistry.Add<DateOfBirthIdentifier>();
+            personIdentifierRegistry.Add<NhsNumberIdentifier, NhsNumberIdentifierAdapter>();
+            personIdentifierRegistry.Add<BradfordHospitalNumberIdentifier, BradfordHospitalNumberIdentifierAdapter>();
+            personIdentifierRegistry.Add<SexIdentifier, SexIdentifierAdapter>();
+            personIdentifierRegistry.Add<DateOfBirthIdentifier, DateOfBirthIdentifierAdapter>();
             services.AddSingleton(personIdentifierRegistry);
+            services.AddSingleton<IPersonIdentifierListChecker>(personIdentifierRegistry);
             
             var consentIdentifierRegistry = new ConsentIdentifierRegistry();
             consentIdentifierRegistry.Add<PregnancyNumberIdentifier>();
@@ -83,18 +83,15 @@ namespace CHC.Consent.Api
             });
             
             
-            services.AddSingleton(typeof(IStore<>), typeof(InMemoryStore<>));
-            services.AddSingleton(MakePersonStore());
-            services.AddScoped<IdentityRepository>();
+            services.AddScoped<IIdentityRepository, IdentityRepository>();
             services.AddScoped<IConsentRepository,ConsentRepository>();
+
+            services.AddDbContext<ConsentContext>((provider, options) => { options.UseInMemoryDatabase("CHC.Consent"); });
+            services.AddScoped<IStoreProvider>(provider => new ContextStoreProvider(provider.GetService<ConsentContext>()));
+            services.AddScoped(typeof(IStore<>), typeof(Store<>));
         }
 
-        private static IStore<Person> MakePersonStore()
-        {
-            var peopleStore = new InMemoryStore<Person>();
-            peopleStore.OnItemAdded += (store, person) => person.Id = store.Contents.Count;
-            return peopleStore;
-        }
+        
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)

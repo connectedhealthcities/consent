@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq;
 
 namespace CHC.Consent.Common.Identity.Identifiers
 {
@@ -14,17 +12,6 @@ namespace CHC.Consent.Common.Identity.Identifiers
             Value = value;
         }
 
-        public Expression<Func<Person, bool>> GetMatchExpression()
-        {
-            var hospitalNumber = Value;
-            return p => p.BradfordHospitalNumbers.Any(h => h == hospitalNumber);
-        }
-
-        public void Update(Person person)
-        {
-            person.AddHospitalNumber(Value);
-        }
-
-        public const string TypeName = "uk.nhs.bradfordhospitals.hosptial-id";
+        private const string TypeName = "uk.nhs.bradfordhospitals.hosptial-id";
     }
 }

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
-
-namespace CHC.Consent.Common.Identity.Identifiers.Medway
+﻿namespace CHC.Consent.Common.Identity.Identifiers.Medway
 {
     [Identifier("uk.nhs.bradfordhospitals.bib4all.medway", AllowMultipleValues = false)]
     public class MedwayNameIdentifier : IIdentifier
@@ -38,18 +35,6 @@ namespace CHC.Consent.Common.Identity.Identifiers.Medway
             {
                 return ((FirstName != null ? FirstName.GetHashCode() : 0) * 397) ^ (LastName != null ? LastName.GetHashCode() : 0);
             }
-        }
-
-        /// <inheritdoc />
-        public Expression<Func<Person, bool>> GetMatchExpression()
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc />
-        public void Update(Person person)
-        {
-            throw new NotImplementedException();
         }
     }
 }

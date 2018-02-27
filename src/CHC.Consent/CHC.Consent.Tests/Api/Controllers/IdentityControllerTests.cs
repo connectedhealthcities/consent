@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -12,6 +13,11 @@ using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Infrastructure.Data;
+using CHC.Consent.EFCore;
+using CHC.Consent.EFCore.IdentifierAdapters;
+using CHC.Consent.Testing.Utils;
+using FakeItEasy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Rest;
 using Newtonsoft.Json;
@@ -37,6 +43,8 @@ namespace CHC.Consent.Tests.Api.Controllers
 
         private readonly PersonIdentifierRegistry personIdentifierRegistry =
             Create.IdentifierRegistry.WithIdentifiers<NhsNumberIdentifier, BradfordHospitalNumberIdentifier>();
+
+        
 
 
         /// <inheritdoc />
@@ -75,23 +83,29 @@ namespace CHC.Consent.Tests.Api.Controllers
         [Fact]
         public void UpdatesAnExistingPerson()
         {
-            const string hospitalNumber = "444333111";
-            const string nhsNumber = "444-333-111";
-            var personWithNhsNumberAndHospitalNumber = new Person {NhsNumber = nhsNumber }.WithBradfordHosptialNumbers(hospitalNumber);
+            var existingPerson = new PersonIdentity(Random.Long());
 
+            var nhsNumberIdentifier = new NhsNumberIdentifier("444-333-111");
+            var bradfordHospitalNumberIdentifier = new BradfordHospitalNumberIdentifier("Added HospitalNumber");
+            
+            var identityRepository = A.Fake<IIdentityRepository>();
+            A.CallTo(() => identityRepository.FindPersonBy(A<IEnumerable<IIdentifier>>.That.IsSameSequenceAs(nhsNumberIdentifier))).Returns(existingPerson);
+            
+            
+                
             var controller = new IdentityController(
-                Create.AnIdentityRepository.WithPeople(personWithNhsNumberAndHospitalNumber),
-                personIdentifierRegistry);
+                identityRepository,
+                A.Fake<IPersonIdentifierListChecker>());
 
 
-            var nhsNumberIdentifier = new NhsNumberIdentifier(nhsNumber);
+            
             var result = controller.PutPerson(
                 new PersonSpecification
                 {
                     Identifiers =
                     {
                         nhsNumberIdentifier,
-                        new BradfordHospitalNumberIdentifier("Added HospitalNumber"),
+                        bradfordHospitalNumberIdentifier,
                     },
                     MatchSpecifications =
                     {
@@ -104,41 +118,49 @@ namespace CHC.Consent.Tests.Api.Controllers
 
             );
 
-            Assert.Contains("Added HospitalNumber", personWithNhsNumberAndHospitalNumber.BradfordHospitalNumbers);
-
+            A.CallTo(
+                    () => identityRepository.UpdatePerson(existingPerson,
+                        A<IEnumerable<IIdentifier>>.That.IsSameSequenceAs(nhsNumberIdentifier, bradfordHospitalNumberIdentifier)))
+                .MustHaveHappenedOnceExactly();
             Assert.IsType<SeeOtherActionResult>(result);
         }
         
         [Fact]
         public void CreatesAPerson()
         {
-            const string hospitalNumber = "444333111";
-            const string nhsNumber = "444-333-111";
-            var personWithNhsNumberAndHospitalNumber = 
-                new Person {NhsNumber = nhsNumber }.WithBradfordHosptialNumbers(hospitalNumber);
-
-            MockStore<Person> peopleStore =
-                Create.AMockStore<Person>().WithContents(personWithNhsNumberAndHospitalNumber);
+            var nhsNumberIdentifier = new NhsNumberIdentifier("New NHS Number");
+            var bradfordHospitalNumberIdentifier = new BradfordHospitalNumberIdentifier("New HospitalNumber");
+            
+            var identityRepository = A.Fake<IIdentityRepository>();
+            A.CallTo(
+                    () => identityRepository.FindPersonBy(
+                        A<IEnumerable<IIdentifier>>.That.IsSameSequenceAs(nhsNumberIdentifier)))
+                .Returns(null);
+            
+            
+            var registry = new PersonIdentifierRegistry();
+            registry.Add<NhsNumberIdentifier, NhsNumberIdentifierAdapter>();
+            
             var controller = new IdentityController(
-                Create.AnIdentityRepository.WithPeopleStore(peopleStore),
-                personIdentifierRegistry);
+                identityRepository,
+                A.Fake<IPersonIdentifierListChecker>());
 
 
-            var newNhsNumberIdentifier = new NhsNumberIdentifier("New NHS Number"); 
+            
             var result = controller.PutPerson(
                 new PersonSpecification
                 {
                     Identifiers =
                     {
                         
-                        newNhsNumberIdentifier,
-                        new BradfordHospitalNumberIdentifier("New HospitalNumber")
+                        nhsNumberIdentifier,
+                        bradfordHospitalNumberIdentifier
                     },
                     MatchSpecifications =
                     {
                         new MatchSpecification
                         {
-                            Identifiers = new IIdentifier[]{newNhsNumberIdentifier}
+                            Identifiers = new IIdentifier[]{nhsNumberIdentifier}
                         }
                     }
                 }
@@ -147,11 +169,12 @@ namespace CHC.Consent.Tests.Api.Controllers
 
             Assert.IsAssignableFrom<CreatedAtActionResult>(result);
 
-            Assert.Single(peopleStore.Additions);
-            var addedPerson = peopleStore.Additions.First();
-            Assert.Equal("New NHS Number", addedPerson.NhsNumber);
-            Assert.Single(addedPerson.BradfordHospitalNumbers);
-            Assert.Equal("New HospitalNumber", addedPerson.BradfordHospitalNumbers.First());
+            A.CallTo(
+                    () => identityRepository.CreatePerson(
+                        A<IEnumerable<IIdentifier>>.That.IsSameSequenceAs(
+                            nhsNumberIdentifier,
+                            bradfordHospitalNumberIdentifier)))
+                .MustHaveHappenedOnceExactly();
         }
 
 

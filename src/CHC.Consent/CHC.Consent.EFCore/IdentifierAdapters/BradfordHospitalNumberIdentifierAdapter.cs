@@ -1,16 +1,21 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore.Entities;
 
 namespace CHC.Consent.EFCore.IdentifierAdapters
 {
-    public class BradfordHospitalNumberIdentifierAdapter : IIdentifierFilter<BradfordHospitalNumberIdentifier>, IIdentifierUpdater<BradfordHospitalNumberIdentifier>
+    public class BradfordHospitalNumberIdentifierAdapter : 
+        IIdentifierFilter<BradfordHospitalNumberIdentifier>,
+        IIdentifierUpdater<BradfordHospitalNumberIdentifier>,
+        IIdentifierRetriever<BradfordHospitalNumberIdentifier>
     {
         /// <inheritdoc />
-        public IQueryable<TPerson> Filter<TPerson>(
-            IQueryable<TPerson> people, BradfordHospitalNumberIdentifier value, IStoreProvider stores) where TPerson:Person
+        public IQueryable<PersonEntity> Filter(
+            IQueryable<PersonEntity> people, BradfordHospitalNumberIdentifier value, IStoreProvider stores)
         {
             return
                 people.Where(
@@ -20,7 +25,7 @@ namespace CHC.Consent.EFCore.IdentifierAdapters
         }
 
         /// <inheritdoc />
-        public bool Update(Person person, BradfordHospitalNumberIdentifier value, IStoreProvider stores)
+        public bool Update(PersonEntity person, BradfordHospitalNumberIdentifier value, IStoreProvider stores)
         {
             var hospitalNumbers = stores.Get<BradfordHospitalNumberEntity>();
             
@@ -32,6 +37,15 @@ namespace CHC.Consent.EFCore.IdentifierAdapters
                 new BradfordHospitalNumberEntity {HospitalNumber = value.Value, Person = personEntity});
             return true;
 
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<BradfordHospitalNumberIdentifier> Get(PersonEntity person, IStoreProvider stores)
+        {
+            return stores.Get<BradfordHospitalNumberEntity>()
+                .Where(n => n.Person.Id == person.Id)
+                .Select(n => new BradfordHospitalNumberIdentifier(n.HospitalNumber))
+                .ToArray();
         }
     }
 }

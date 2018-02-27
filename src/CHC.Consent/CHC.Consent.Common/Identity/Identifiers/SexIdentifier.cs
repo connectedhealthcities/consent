@@ -1,14 +1,8 @@
-﻿using System;
-using System.Linq.Expressions;
-
-namespace CHC.Consent.Common.Identity.Identifiers
+﻿namespace CHC.Consent.Common.Identity.Identifiers
 {
     [Identifier("sex")]
     public class SexIdentifier : IIdentifier, ISingleValueIdentifier<Sex?>
     {
-        private static readonly SingleValueIdentifierHelper<Sex?> Helper =
-            new SingleValueIdentifierHelper<Sex?>(_ => _.Sex);
-
         /// <inheritdoc />
         public SexIdentifier(Sex? sex=null)
         {
@@ -20,10 +14,24 @@ namespace CHC.Consent.Common.Identity.Identifiers
         /// <inheritdoc />
         Sex? ISingleValueIdentifier<Sex?>.Value => this.Sex;
 
-        /// <inheritdoc />
-        public Expression<Func<Person, bool>> GetMatchExpression() => Helper.GetMatchExpression(Sex);
+        protected bool Equals(SexIdentifier other)
+        {
+            return Sex == other.Sex;
+        }
 
         /// <inheritdoc />
-        public void Update(Person person) => Helper.Update(person, Sex);
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((SexIdentifier) obj);
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return Sex.GetHashCode();
+        }
     }
 }

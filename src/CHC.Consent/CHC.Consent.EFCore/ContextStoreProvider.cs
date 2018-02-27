@@ -9,11 +9,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CHC.Consent.EFCore
 {
-    public class ContextWrapper : IStoreProvider, IQueryableProvider
+    public class ContextStoreProvider : IStoreProvider
     {
         private readonly ConsentContext context;
 
-        public ContextWrapper(ConsentContext context)
+        public ContextStoreProvider(ConsentContext context)
         {
             this.context = context;
         }
@@ -54,8 +54,7 @@ namespace CHC.Consent.EFCore
                 return set.Find(id);
             }
         }
-
-        IQueryable<T> IQueryableProvider.Get<T>() => context.Set<T>();
+        
         /// <inheritdoc />
         IStore<T> IStoreProvider.Get<T>() => new ContextStore<T>(context.Set<T>());
     }

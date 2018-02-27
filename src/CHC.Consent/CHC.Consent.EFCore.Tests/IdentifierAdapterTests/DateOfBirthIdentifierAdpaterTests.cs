@@ -43,7 +43,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             var foundPeople = new DateOfBirthIdentifierAdapter().Filter(
                 readContext.People,
                 MakeIdentifier(findValue),
-                new ContextWrapper(readContext));
+                new ContextStoreProvider(readContext));
 
             var found = Assert.Single(foundPeople);
             Assert.NotNull(found);
@@ -71,7 +71,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             new DateOfBirthIdentifierAdapter().Update(
                 Context.Find<PersonEntity>(person.Id),
                 MakeIdentifier(newDateOfBirth), 
-                new ContextWrapper(Context)
+                new ContextStoreProvider(Context)
             );
             Context.SaveChanges();
 
@@ -89,7 +89,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             new DateOfBirthIdentifierAdapter().Update(
                 person,
                 MakeIdentifier(newDateOfBirth),
-                new ContextWrapper(Context)
+                new ContextStoreProvider(Context)
             );
 
             Context.Add(person);
@@ -109,7 +109,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             Assert.Throws<InvalidOperationException>(() => new DateOfBirthIdentifierAdapter().Update(
                 Context.Find<PersonEntity>(person.Id),
                 MakeIdentifier(CreateDateOfBirth()), 
-                new ContextWrapper(Context)
+                new ContextStoreProvider(Context)
             ));
         }
 

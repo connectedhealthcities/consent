@@ -1,8 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="LinqKit.Core" Version="1.1.13" />
+    <PackageReference Include="NeinLinq" Version="2.2.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=1.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
+      <HintPath>..\..\..\..\..\..\Users\David Kemp\.nuget\packages\microsoft.extensions.dependencyinjection.abstractions\1.0.0\lib\netstandard1.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

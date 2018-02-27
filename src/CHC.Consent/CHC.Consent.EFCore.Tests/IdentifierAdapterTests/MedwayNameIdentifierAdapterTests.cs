@@ -32,7 +32,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             var foundPeople = adapter.Filter(
                     readContext.People,
                     identifier,
-                    new ContextWrapper(readContext))
+                    new ContextStoreProvider(readContext))
                 .ToArray();
             
             Assert.Empty(foundPeople);
@@ -54,7 +54,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             var foundPeople = adapter.Filter(
                 readContext.People,
                 new MedwayNameIdentifier {FirstName = firstName, LastName = lastName},
-                new ContextWrapper(readContext))
+                new ContextStoreProvider(readContext))
                 .ToArray();
 
             var found = Assert.Single(foundPeople);
@@ -84,7 +84,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             var adapter = new MedwayNameIdentifierAdapter();
 
             var identifier = new MedwayNameIdentifier { FirstName = Random.String(), LastName = Random.String()};
-            adapter.Update(person, identifier, new ContextWrapper(Context));
+            adapter.Update(person, identifier, new ContextStoreProvider(Context));
             Context.SaveChanges();
 
             var foundNames = readContext.Set<MedwayNameEntity>().WherePersonIs(person).ToArray();
@@ -109,7 +109,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             var adapter = new MedwayNameIdentifierAdapter();
 
             var newNameIdentifier = new MedwayNameIdentifier { FirstName = Random.String(), LastName = Random.String()};
-            adapter.Update(person, newNameIdentifier, new ContextWrapper(Context));
+            adapter.Update(person, newNameIdentifier, new ContextStoreProvider(Context));
             Context.SaveChanges();
 
             var foundNames = readContext.Set<MedwayNameEntity>().WherePersonIs(person).ToArray();

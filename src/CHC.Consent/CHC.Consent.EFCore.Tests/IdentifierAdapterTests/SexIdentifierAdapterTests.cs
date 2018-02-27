@@ -38,7 +38,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             var foundpeople = new SexIdentifierAdapter().Filter(
                 readContext.People,
                 new SexIdentifier(Sex.Male), 
-                new ContextWrapper(readContext)).ToArray();
+                new ContextStoreProvider(readContext)).ToArray();
 
             var found = Assert.Single(foundpeople, _ => _.NhsNumber == "FIND ME");
             Assert.NotNull(found);
@@ -54,7 +54,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             new SexIdentifierAdapter().Update(
                 Context.Find<PersonEntity>(person.Id),
                 new SexIdentifier(Sex.Female), 
-                new ContextWrapper(Context)
+                new ContextStoreProvider(Context)
             );
             Context.SaveChanges();
 
@@ -70,7 +70,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             new SexIdentifierAdapter().Update(
                 person,
                 new SexIdentifier(Sex.Female),
-                new ContextWrapper(Context)
+                new ContextStoreProvider(Context)
             );
 
             Context.Add(person);
@@ -90,7 +90,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             Assert.Throws<InvalidOperationException>(() => new SexIdentifierAdapter().Update(
                 Context.Find<PersonEntity>(person.Id),
                 new SexIdentifier(Sex.Female), 
-                new ContextWrapper(Context)
+                new ContextStoreProvider(Context)
             ));
         }
 

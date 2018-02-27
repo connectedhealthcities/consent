@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.EFCore;
 
 namespace CHC.Consent.Tests
 {
@@ -15,7 +16,9 @@ namespace CHC.Consent.Tests
                 return Copy(change: @new => @new.identifierTypes = @new.identifierTypes.Append(typeof(T)).ToArray());
             }
 
-            public IdentifierRegistryBuilder WithIdentifiers<T1, T2>() where T1 : IIdentifier where T2 : IIdentifier
+            public IdentifierRegistryBuilder WithIdentifiers<T1, T2>() 
+                where T1 : IIdentifier 
+                where T2 : IIdentifier
                 => WithIdentifier<T1>().WithIdentifier<T2>();
 
             /// <inheritdoc />
@@ -24,7 +27,8 @@ namespace CHC.Consent.Tests
                 var registry = new PersonIdentifierRegistry();
                 foreach (var identifierType in identifierTypes)
                 {
-                    registry.Add(identifierType);
+                    var handlerType = typeof(DummyAttributeAdapter<>).MakeGenericType(identifierType);
+                    registry.Add(identifierType, handlerType, handlerType, handlerType);
                 }
 
                 return registry;

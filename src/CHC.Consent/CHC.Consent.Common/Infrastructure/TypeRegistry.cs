@@ -13,17 +13,8 @@ namespace CHC.Consent.Common.Infrastructure
 
         private readonly IDictionary<Type, string> typesToNames = new Dictionary<Type, string>();
 
-        public void Add<T>() where T : TIdentifierBase
-        {
-            Add(typeof(T));
-        }
 
-        public void Add(Type identifierType)
-        {
-            Add(identifierType, GetIdentifierAttribute(identifierType));
-        }
-
-        private static TAttribute GetIdentifierAttribute(Type identifierType)
+        protected static TAttribute GetIdentifierAttribute(Type identifierType)
         {
             var identifierAttribute = identifierType.GetCustomAttribute<TAttribute>();
             if (identifierAttribute == null)

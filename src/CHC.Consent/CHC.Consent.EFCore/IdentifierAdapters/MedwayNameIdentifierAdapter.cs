@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers.Medway;
+using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore.Entities;
 using NeinLinq;
 using NeinLinq.EntityFrameworkCore;
@@ -12,16 +14,17 @@ namespace CHC.Consent.EFCore.IdentifierAdapters
 {
     public class MedwayNameIdentifierAdapter : 
         IIdentifierFilter<MedwayNameIdentifier>,
-        IIdentifierUpdater<MedwayNameIdentifier>
+        IIdentifierUpdater<MedwayNameIdentifier>,
+        IIdentifierRetriever<MedwayNameIdentifier>
     {
         /// <inheritdoc />
-        public IQueryable<TPerson> Filter<TPerson>(
-            IQueryable<TPerson> people, MedwayNameIdentifier value, IStoreProvider stores) where TPerson : Person =>
+        public IQueryable<PersonEntity> Filter(
+            IQueryable<PersonEntity> people, MedwayNameIdentifier value, IStoreProvider stores) =>
             people.ToInjectable().Where(
                 p => stores.Get<MedwayNameEntity>().WherePersonIs(p).Any(name => name.Matches(value)));
 
         /// <inheritdoc />
-        public bool Update(Person person, MedwayNameIdentifier value, IStoreProvider stores)
+        public bool Update(PersonEntity person, MedwayNameIdentifier value, IStoreProvider stores)
         {
             var names = stores.Get<MedwayNameEntity>();
             var name = names.WherePersonIs(person).SingleOrDefault() ??
@@ -34,14 +37,23 @@ namespace CHC.Consent.EFCore.IdentifierAdapters
 
             return true;
         }
+
+        /// <inheritdoc />
+        public IEnumerable<MedwayNameIdentifier> Get(PersonEntity person, IStoreProvider stores)
+        {
+            var name = stores.Get<MedwayNameEntity>().WherePersonIs(person).SingleOrDefault();
+            return name == null
+                ? Enumerable.Empty<MedwayNameIdentifier>()
+                : new[] {new MedwayNameIdentifier(name.FirstName, name.LastName)};
+        }
     }
 
     public static class MedwayNameEntityQueries
     {
-        private static readonly Expression<Func<MedwayNameEntity, Person, bool>> ForPersonExpression =
+        private static readonly Expression<Func<MedwayNameEntity, PersonIdentity, bool>> ForPersonExpression =
             (name, person) => name.Person.Id == person.Id;
 
-        private static readonly Func<MedwayNameEntity, Person, bool> ForPersonCompiled = ForPersonExpression.Compile();
+        private static readonly Func<MedwayNameEntity, PersonIdentity, bool> ForPersonCompiled = ForPersonExpression.Compile();
 
         private static readonly Expression<Func<MedwayNameEntity, MedwayNameIdentifier, bool>> MatchesExpression =
             (name, identifier) => name.FirstName == identifier.FirstName && name.LastName == identifier.LastName;
@@ -50,16 +62,16 @@ namespace CHC.Consent.EFCore.IdentifierAdapters
             MatchesExpression.Compile();
 
         [InjectLambda]
-        public static bool ForPerson(this MedwayNameEntity name, Person person) => ForPersonCompiled(name, person);
+        public static bool ForPerson(this MedwayNameEntity name, PersonIdentity personIdentity) => ForPersonCompiled(name, personIdentity);
 
-        public static Expression<Func<MedwayNameEntity, Person, bool>> ForPerson() => ForPersonExpression;
+        public static Expression<Func<MedwayNameEntity, PersonIdentity, bool>> ForPerson() => ForPersonExpression;
 
         [InjectLambda]
         public static IQueryable<MedwayNameEntity>
-            WherePersonIs(this IQueryable<MedwayNameEntity> names, Person person) =>
-            names.ToInjectable().Where(name => name.ForPerson(person));
+            WherePersonIs(this IQueryable<MedwayNameEntity> names, PersonIdentity personIdentity) =>
+            names.ToInjectable().Where(name => name.ForPerson(personIdentity));
 
-        public static Expression<Func<IQueryable<MedwayNameEntity>, Person, IQueryable<MedwayNameEntity>>>
+        public static Expression<Func<IQueryable<MedwayNameEntity>, PersonIdentity, IQueryable<MedwayNameEntity>>>
             WherePersonIs() =>
             (names, person) => names.Where(name => name.ForPerson(person));
 

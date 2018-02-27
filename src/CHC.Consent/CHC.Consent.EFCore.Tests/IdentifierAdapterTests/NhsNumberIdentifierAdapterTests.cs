@@ -39,7 +39,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             var foundpeople = new NhsNumberIdentifierAdapter().Filter(
                 readContext.People,
                 new NhsNumberIdentifier("FIND ME"),
-                new ContextWrapper(readContext)).ToArray();
+                new ContextStoreProvider(readContext)).ToArray();
 
             var found = Assert.Single(foundpeople);
             Assert.NotNull(found);
@@ -55,7 +55,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             new NhsNumberIdentifierAdapter().Update(
                 Context.Find<PersonEntity>(person.Id),
                 new NhsNumberIdentifier("NEW NHS NUMBER"),
-                new ContextWrapper(Context)
+                new ContextStoreProvider(Context)
             );
             Context.SaveChanges();
 
@@ -71,7 +71,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             new NhsNumberIdentifierAdapter().Update(
                 person,
                 new NhsNumberIdentifier("NEW NHS NUMBER"),
-                new ContextWrapper(Context)
+                new ContextStoreProvider(Context)
             );
 
             Context.Add(person);
@@ -91,7 +91,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             Assert.Throws<InvalidOperationException>(() => new NhsNumberIdentifierAdapter().Update(
                 Context.Find<PersonEntity>(person.Id),
                 new NhsNumberIdentifier("NEW NHS NUMBER"),
-                new ContextWrapper(Context)
+                new ContextStoreProvider(Context)
             ));
         }
 

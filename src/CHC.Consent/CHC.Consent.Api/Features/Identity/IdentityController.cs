@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
@@ -13,11 +13,10 @@ namespace CHC.Consent.Api.Features.Identity
     [Route("/identities")]
     public class IdentityController : Controller
     {
-        private readonly PersonIdentifierRegistry registry;
+        private readonly IPersonIdentifierListChecker registry;
+        private IIdentityRepository IdentityRepository { get; }
 
-        private IdentityRepository IdentityRepository { get; }
-
-        public IdentityController(IdentityRepository identityRepository, PersonIdentifierRegistry registry)
+        public IdentityController(IIdentityRepository identityRepository, IPersonIdentifierListChecker registry)
         {
             this.registry = registry;
             IdentityRepository = identityRepository;
@@ -25,12 +24,17 @@ namespace CHC.Consent.Api.Features.Identity
 
         [Route("/{id:int}")]
         [HttpGet]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type=typeof(IEnumerable<IIdentifier>))]
+        [AutoCommit]
         public IActionResult GetPerson(int id)
         {
-            return new NotImplementedResult();
+            return Ok(IdentityRepository.GetPersonIdentities(id));
         }
 
-        [HttpPut,ProducesResponseType((int)HttpStatusCode.Created),ProducesResponseType((int)HttpStatusCode.Found)]
+        [HttpPut]
+        [ProducesResponseType((int) HttpStatusCode.Created, Type=typeof(long))]
+        [ProducesResponseType((int) HttpStatusCode.Found)]
+        [AutoCommit]
         public IActionResult PutPerson([FromBody, Required]PersonSpecification specification)
         {
             if(!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
@@ -42,11 +46,11 @@ namespace CHC.Consent.Api.Features.Identity
             if (person == null)
             {
                 person = IdentityRepository.CreatePerson(specification.Identifiers);
-                return CreatedAtAction("GetPerson", new {id = person.Id}, null);
+                return CreatedAtAction("GetPerson", new {id = person.Id}, person.Id);
             }
             else
             {
-                person.UpdatePerson(specification.Identifiers);
+                IdentityRepository.UpdatePerson(person, specification.Identifiers);
                 return new SeeOtherActionResult("GetPerson", new {id = person.Id});
             }
         }

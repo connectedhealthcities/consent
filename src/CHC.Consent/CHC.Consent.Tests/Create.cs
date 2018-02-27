@@ -2,40 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure.Data;
+using FakeItEasy;
 
 namespace CHC.Consent.Tests
 {
     public static partial class Create
     {
-        public static IndentityRepositoryBuilder AnIdentityRepository => new IndentityRepositoryBuilder();
-        public static PersonBuilder Person => new PersonBuilder();
-
-        public class PersonBuilder : Builder<Person, PersonBuilder>
-        {
-            private string[] hospitalNumbers = Array.Empty<string>();
-
-            /// <inheritdoc />
-            public override Person Build()
-            {
-                var person = new Person();
-                foreach (var hospitalNumber in hospitalNumbers)
-                {
-                    person.AddHospitalNumber(hospitalNumber);
-                }
-
-                return person;
-            }
-
-            public PersonBuilder WithHospitalNumbers(params string[] newHospitalNumbers)
-            {
-                return Copy(change: @new => @new.hospitalNumbers = Clone(newHospitalNumbers));
-            }
-        }
-
         public abstract class Builder<T>
         {
             public abstract T Build();
@@ -122,28 +97,7 @@ namespace CHC.Consent.Tests
             }
         }
         
-        public class IndentityRepositoryBuilder : Builder<IdentityRepository, IndentityRepositoryBuilder>
-        {
-            private Person[] people = Array.Empty<Person>();
-            private IStore<Person> peopleStore = null;
-
-            public IndentityRepositoryBuilder WithPeople(params Person[] newPeople)
-            {
-                return Copy(change: @new => @new.people = Clone(newPeople));
-            }
-
-            public override IdentityRepository Build()
-            {
-                return new IdentityRepository(
-                    peopleStore ?? new MockStore<Person>(people)
-                );
-            }
-
-            public IndentityRepositoryBuilder WithPeopleStore(IStore<Person> newPeopleStore)
-            {
-                return Copy(change: @new => @new.peopleStore = newPeopleStore);
-            }
-        }
+        
 
         public static IIdentifier DateOfBirth(int year, int month, int day)
         {

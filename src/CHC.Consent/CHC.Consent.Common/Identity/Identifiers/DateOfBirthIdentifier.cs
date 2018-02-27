@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Linq.Expressions;
 
 namespace CHC.Consent.Common.Identity.Identifiers
 {
     [Identifier("date-of-birth")]
     public class DateOfBirthIdentifier : IIdentifier, ISingleValueIdentifier<DateTime?>
     {
-        private static readonly SingleValueIdentifierHelper<DateTime?> Helper
-            = new SingleValueIdentifierHelper<DateTime?>(_ => _.DateOfBirth);
-
         /// <inheritdoc />
         public DateOfBirthIdentifier(DateTime? dateOfBirth=null)
         {
@@ -18,14 +14,24 @@ namespace CHC.Consent.Common.Identity.Identifiers
         public DateTime? DateOfBirth { get; set; }
         DateTime? ISingleValueIdentifier<DateTime?>.Value => DateOfBirth;
 
-        public Expression<Func<Person, bool>> GetMatchExpression()
+        protected bool Equals(DateOfBirthIdentifier other)
         {
-            return Helper.GetMatchExpression(DateOfBirth);
+            return DateOfBirth.Equals(other.DateOfBirth);
         }
 
-        public void Update(Person person)
+        /// <inheritdoc />
+        public override bool Equals(object obj)
         {
-            Helper.Update(person, DateOfBirth);
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((DateOfBirthIdentifier) obj);
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return DateOfBirth.GetHashCode();
         }
     }
 }

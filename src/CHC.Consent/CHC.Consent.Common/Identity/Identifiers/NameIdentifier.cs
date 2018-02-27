@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq.Expressions;
 
 namespace CHC.Consent.Common.Identity.Identifiers
 {
@@ -12,17 +11,5 @@ namespace CHC.Consent.Common.Identity.Identifiers
         
         public DateTime EffectiveFrom { get; set; }
         public DateTime? EffectiveTo { get; set; }
-
-        /// <inheritdoc />
-        public Expression<Func<Person, bool>> GetMatchExpression()
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc />
-        public void Update(Person person)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -19,5 +19,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CHC.Consent.Common\CHC.Consent.Common.csproj" />
+    <ProjectReference Include="..\CHC.Consent.EFCore\CHC.Consent.EFCore.csproj" />
   </ItemGroup>
 </Project>

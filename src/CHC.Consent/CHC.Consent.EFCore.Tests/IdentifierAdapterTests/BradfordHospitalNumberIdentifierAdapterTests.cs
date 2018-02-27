@@ -34,7 +34,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             var foundPeople = adapter.Filter(
                 Context.People,
                 new BradfordHospitalNumberIdentifier("HOSPITAL NUMBER"),
-                new ContextWrapper(Context))
+                new ContextStoreProvider(Context))
                 .ToArray();
 
             var found = Assert.Single(foundPeople);
@@ -47,7 +47,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
         {
             var person = AddPersonWithAHospitalNumber();
 
-            adapter.Update(person, new BradfordHospitalNumberIdentifier("86"), new ContextWrapper(Context));
+            adapter.Update(person, new BradfordHospitalNumberIdentifier("86"), new ContextStoreProvider(Context));
             Context.SaveChanges();
 
             var hospitalNumbers = otherContext.Set<BradfordHospitalNumberEntity>().Where(_ => _.Person.Id == person.Id)

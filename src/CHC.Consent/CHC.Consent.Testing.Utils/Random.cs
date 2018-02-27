@@ -36,9 +36,9 @@ namespace CHC.Consent.Testing.Utils
             }
         }
 
-        private static long Long()
+        public static long Long()
         {
-            return BitConverter.ToInt64(sizeof(long).RandomBytes(), 0);
+            return BitConverter.ToInt64(RandomBytes(sizeof(long)), 0);
         }
         
         public static T Enum<T>() where T:struct

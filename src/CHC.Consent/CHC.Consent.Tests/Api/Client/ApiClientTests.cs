@@ -8,8 +8,12 @@ using CHC.Consent.Api.Client;
 using CHC.Consent.Api.Client.Models;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Infrastructure.Data;
+using CHC.Consent.EFCore;
+using CHC.Consent.EFCore.Entities;
+using CHC.Consent.Testing.Utils;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal;
+using Microsoft.EntityFrameworkCore.Storage.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Rest;
 using Newtonsoft.Json;
@@ -39,13 +43,13 @@ namespace CHC.Consent.Tests.Api.Client
         }
 
         [Theory, MemberData(nameof(IdentityTestData))]
-        public void CanSendIdentitiesToServer(IIdentifier identifier, Predicate<Person> check)
+        public async void CanSendIdentitiesToServer(IIdentifier identifier, Predicate<PersonEntity> check)
         {
             var client = new Api(Fixture.Client, disposeHttpClient:false);
             var api = (IApi) client;
 
             
-            api.IdentitiesPut(
+            var response = await api.IdentitiesPutWithHttpMessagesAsync(
                 new PersonSpecification(
                     new List<IIdentifier> {identifier},
                     new List<MatchSpecification>
@@ -53,7 +57,8 @@ namespace CHC.Consent.Tests.Api.Client
                         new MatchSpecification {Identifiers = new List<IIdentifier> {identifier}}
                     }));
 
-            var peopleStore = Fixture.Server.Host.Services.GetService<IStore<Person>>();
+            var peopleStore = Fixture.Server.Host.Services.GetService<ConsentContext>().People;
+
             Assert.Single(peopleStore, check);
         }
 
@@ -66,7 +71,7 @@ namespace CHC.Consent.Tests.Api.Client
             );
     
 
-        private static IEnumerable<object[]> MakeTestData(params (IIdentifier, Predicate<Person>)[] tests)
+        private static IEnumerable<object[]> MakeTestData(params (IIdentifier, Predicate<PersonEntity>)[] tests)
         {
             IEnumerable<object> ToEnumerable(ITuple tuple)
             {
@@ -79,25 +84,25 @@ namespace CHC.Consent.Tests.Api.Client
             return tests.Cast<ITuple>().Select(ToEnumerable).Select(Enumerable.ToArray);
         }
         
-        private static (IIdentifier, Predicate<Person>) NhsNumberTestData()
+        private static (IIdentifier, Predicate<PersonEntity>) NhsNumberTestData()
         {
             var nhsNumber = Random.String();
             return (new UknhsnhsNumber(nhsNumber), person => person.NhsNumber == nhsNumber);
         }
 
-        private static (IIdentifier, Predicate<Person>) DateOfBirthTestData()
+        private static (IIdentifier, Predicate<PersonEntity>) DateOfBirthTestData()
         {
-            DateTime? date = Random.Date().Date;
+            DateTime? date = 24.April(1865);
             return (new DateOfBirth(date), _ => _.DateOfBirth == date);
         }
 
-        private static (IIdentifier, Predicate<Person>) SexMale()
+        private static (IIdentifier, Predicate<PersonEntity>) SexMale()
         {
             var sex = new Sex("Male");
             return (sex, p => p.Sex == Common.Sex.Male);
         }
         
-        private static (IIdentifier, Predicate<Person>) SexFemale()
+        private static (IIdentifier, Predicate<PersonEntity>) SexFemale()
         {
             var sex = new Sex(Common.Sex.Female.ToString());
             return (sex, p => p.Sex == Common.Sex.Female);

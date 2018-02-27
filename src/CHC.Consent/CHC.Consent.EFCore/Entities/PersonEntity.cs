@@ -1,37 +1,31 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Runtime.CompilerServices;
 using CHC.Consent.Common;
+using CHC.Consent.Common.Infrastructure.Data;
 
 [assembly:InternalsVisibleTo("CHC.Consent.EFCore.Tests")]
 
 namespace CHC.Consent.EFCore.Entities
 {
-    public class PersonEntity : Person
+    public class PersonEntity : IEntity
     {
-        public override ushort? BirthOrder
+        public virtual long Id { get; set; }
+        public virtual string NhsNumber { get; set; }
+        public virtual DateTime? DateOfBirth { get; set; }
+        public virtual Sex? Sex { get; set; }
+        
+        public virtual ushort? BirthOrder
         {
             get => (ushort?) BirthOrderValue;
             set => BirthOrderValue = value;
         }
 
         internal int? BirthOrderValue { get; set; }
-        
-        internal virtual ICollection<BradfordHospitalNumberEntity> BradfordHospitalNumberEntities { get; set; } = new List<BradfordHospitalNumberEntity>();
 
-        /// <inheritdoc />
-        public override IEnumerable<string> BradfordHospitalNumbers => BradfordHospitalNumberEntities.Select(_ => _.HospitalNumber);
 
-        /// <inheritdoc />
-        public override bool AddHospitalNumber(string hospitalNumber)
+        public static implicit operator PersonIdentity(PersonEntity entity)
         {
-            if (BradfordHospitalNumberEntities.Any(_ => _.HospitalNumber == hospitalNumber))
-                return false;
-            else
-            {
-                BradfordHospitalNumberEntities.Add(new BradfordHospitalNumberEntity{ HospitalNumber = hospitalNumber, Person = this });
-                return true;
-            }
+            return entity == null ? null : new PersonIdentity( entity.Id );
         }
     }
 }
