@@ -43,13 +43,13 @@ namespace CHC.Consent.Tests.Api.Client
         }
 
         [Theory, MemberData(nameof(IdentityTestData))]
-        public async void CanSendIdentitiesToServer(IIdentifier identifier, Predicate<PersonEntity> check)
+        public void CanSendIdentitiesToServer(IIdentifier identifier, Action<IIdentifier> checkResult)
         {
             var client = new Api(Fixture.Client, disposeHttpClient:false);
             var api = (IApi) client;
 
             
-            var response = await api.IdentitiesPutWithHttpMessagesAsync(
+            var response = api.IdentitiesPut(
                 new PersonSpecification(
                     new List<IIdentifier> {identifier},
                     new List<MatchSpecification>
@@ -57,9 +57,13 @@ namespace CHC.Consent.Tests.Api.Client
                         new MatchSpecification {Identifiers = new List<IIdentifier> {identifier}}
                     }));
 
-            var peopleStore = Fixture.Server.Host.Services.GetService<ConsentContext>().People;
+            Assert.NotNull(response);
+            
+            var identities = api.IdentitiesByIdGet(response.Value);
 
-            Assert.Single(peopleStore, check);
+            Output.WriteLine(string.Join("\n", identities.Select(_ => _.ToString())));
+
+            checkResult(Assert.Single(identities));
         }
 
         public static IEnumerable<object[]> IdentityTestData =>
@@ -67,11 +71,29 @@ namespace CHC.Consent.Tests.Api.Client
                 NhsNumberTestData(),
                 DateOfBirthTestData(),
                 SexMale(),
-                SexFemale()
+                SexFemale(),
+                MedwayName()
             );
-    
 
-        private static IEnumerable<object[]> MakeTestData(params (IIdentifier, Predicate<PersonEntity>)[] tests)
+        private static (IIdentifier, Action<IIdentifier>) MedwayName()
+        {
+            var firstName = Random.String();
+            var lastName = Random.String();
+            return (
+                new Uknhsbradfordhospitalsbib4allmedwayname(firstName, lastName), 
+                i =>
+                {
+                    var otherName = Assert.IsType<Uknhsbradfordhospitalsbib4allmedwayname>(i);
+                    Assert.Equal(firstName, otherName.FirstName);
+                    Assert.Equal(lastName, otherName.LastName);
+                }
+            );
+        }
+
+
+        private static IEnumerable<object[]> MakeTestData(params (
+            IIdentifier, 
+            Action<IIdentifier>)[] tests)
         {
             IEnumerable<object> ToEnumerable(ITuple tuple)
             {
@@ -84,28 +106,39 @@ namespace CHC.Consent.Tests.Api.Client
             return tests.Cast<ITuple>().Select(ToEnumerable).Select(Enumerable.ToArray);
         }
         
-        private static (IIdentifier, Predicate<PersonEntity>) NhsNumberTestData()
+        private static (IIdentifier, Action<IIdentifier>) NhsNumberTestData()
         {
             var nhsNumber = Random.String();
-            return (new UknhsnhsNumber(nhsNumber), person => person.NhsNumber == nhsNumber);
+            return (
+                new UknhsnhsNumber(nhsNumber), 
+                i => Assert.Equal(nhsNumber, Assert.IsType<UknhsnhsNumber>(i).Value));
         }
 
-        private static (IIdentifier, Predicate<PersonEntity>) DateOfBirthTestData()
+        private static (IIdentifier, Action<IIdentifier>) DateOfBirthTestData()
         {
             DateTime? date = 24.April(1865);
-            return (new DateOfBirth(date), _ => _.DateOfBirth == date);
+            return (
+                new DateOfBirth(date),
+                i => Assert.Equal(
+                    date.Value.ToLocalTime(),
+                    Assert.IsType<DateOfBirth>(i).DateOfBirthProperty?.ToLocalTime())
+            );
         }
 
-        private static (IIdentifier, Predicate<PersonEntity>) SexMale()
+        private static (IIdentifier, Action<IIdentifier>) SexMale()
         {
             var sex = new Sex("Male");
-            return (sex, p => p.Sex == Common.Sex.Male);
+            return (
+                sex, 
+                i => Assert.Equal("Male", Assert.IsType<Sex>(i).SexProperty));
         }
         
-        private static (IIdentifier, Predicate<PersonEntity>) SexFemale()
+        private static (IIdentifier, Action<IIdentifier>) SexFemale()
         {
             var sex = new Sex(Common.Sex.Female.ToString());
-            return (sex, p => p.Sex == Common.Sex.Female);
+            return (
+                sex, 
+                i => Assert.Equal("Female", Assert.IsType<Sex>(i).SexProperty));
         }
 
         

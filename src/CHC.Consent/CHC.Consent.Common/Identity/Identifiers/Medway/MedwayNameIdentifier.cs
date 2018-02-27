@@ -1,6 +1,6 @@
 ﻿namespace CHC.Consent.Common.Identity.Identifiers.Medway
 {
-    [Identifier("uk.nhs.bradfordhospitals.bib4all.medway", AllowMultipleValues = false)]
+    [Identifier("uk.nhs.bradfordhospitals.bib4all.medway.name", AllowMultipleValues = false)]
     public class MedwayNameIdentifier : IIdentifier
     {
         /// <inheritdoc />

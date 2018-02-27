@@ -13,13 +13,19 @@ using Newtonsoft.Json.Serialization;
 
 namespace CHC.Consent.Api.Infrastructure.Web
 {
+    /// <summary>
+    /// Adds <see cref="IdentityModelBinderProvider{TModel}"/> to the <see cref="MvcOptions.ModelBinderProviders"/>
+    /// before the <see cref="BodyModelBinderProvider"/> so that they take precedence over the details
+    /// </summary>
+    /// <typeparam name="TRegistry">The <see cref="ITypeRegistry"/> type (resolved via constructor injection)</typeparam>
+    /// <typeparam name="TModel">The `class` for which to bind</typeparam>
     public class IdentityModelBinderProviderConfiguration<TRegistry, TModel> : IConfigureOptions<MvcOptions>
         where TRegistry:ITypeRegistry
     {
         private readonly ILoggerFactory loggerFactory;
         private readonly ArrayPool<char> charPool;
         private readonly ObjectPoolProvider objectPoolProvider;
-        private readonly TRegistry registry;
+        private readonly ITypeRegistry registry;
         private readonly IHttpRequestStreamReaderFactory readerFactory;
 
         /// <inheritdoc />

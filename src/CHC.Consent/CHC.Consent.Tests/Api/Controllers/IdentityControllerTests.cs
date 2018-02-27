@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Buffers;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -95,7 +96,9 @@ namespace CHC.Consent.Tests.Api.Controllers
                 
             var controller = new IdentityController(
                 identityRepository,
-                A.Fake<IPersonIdentifierListChecker>());
+                A.Fake<IPersonIdentifierListChecker>(),
+                personIdentifierRegistry,
+                ArrayPool<char>.Create());
 
 
             
@@ -140,10 +143,12 @@ namespace CHC.Consent.Tests.Api.Controllers
             
             var registry = new PersonIdentifierRegistry();
             registry.Add<NhsNumberIdentifier, NhsNumberIdentifierAdapter>();
-            
+
             var controller = new IdentityController(
                 identityRepository,
-                A.Fake<IPersonIdentifierListChecker>());
+                A.Fake<IPersonIdentifierListChecker>(),
+                registry,
+                ArrayPool<char>.Create());
 
 
             

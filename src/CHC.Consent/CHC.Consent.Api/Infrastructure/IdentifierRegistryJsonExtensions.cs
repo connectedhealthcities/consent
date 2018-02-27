@@ -1,5 +1,6 @@
 ﻿using CHC.Consent.Common.Infrastructure;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
 namespace CHC.Consent.Api.Infrastructure
@@ -12,7 +13,8 @@ namespace CHC.Consent.Api.Infrastructure
             {
                 TypeNameHandling = TypeNameHandling.Auto,
                 SerializationBinder = new IdentifierRegistrySerializationBinder(identifierRegistry),
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                Converters = { new StringEnumConverter() }
             };
         }
     }

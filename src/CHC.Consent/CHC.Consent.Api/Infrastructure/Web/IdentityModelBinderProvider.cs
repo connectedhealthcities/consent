@@ -15,6 +15,11 @@ using Newtonsoft.Json.Serialization;
 
 namespace CHC.Consent.Api.Infrastructure.Web
 {
+    /// <summary>
+    /// Overrides the <see cref="JsonSerializerSettings"/> when binding to <typeparamref name="TModel" /> with <see cref="FromBodyAttribute"/>
+    /// </summary>
+    /// <typeparam name="TModel">The <c>class</c> to match against when performing binding</typeparam>
+    /// <remarks>only handles <c>JSON</c> data</remarks>
     public class IdentityModelBinderProvider<TModel> : IModelBinderProvider
     {
         private static readonly Type ModelType = typeof(TModel);

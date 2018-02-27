@@ -1,32 +1,55 @@
-﻿using System.Collections.Generic;
+﻿using System.Buffers;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using CHC.Consent.Api.Features.Identity.Dto;
+using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.EFCore;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using Newtonsoft.Json;
 
 namespace CHC.Consent.Api.Features.Identity
 {
     [Route("/identities")]
     public class IdentityController : Controller
     {
-        private readonly IPersonIdentifierListChecker registry;
+        private readonly IPersonIdentifierListChecker identifierChecker;
+        private readonly PersonIdentifierRegistry registry;
+        private readonly ArrayPool<char> arrayPool;
         private IIdentityRepository IdentityRepository { get; }
 
-        public IdentityController(IIdentityRepository identityRepository, IPersonIdentifierListChecker registry)
+        public IdentityController(
+            IIdentityRepository identityRepository, 
+            IPersonIdentifierListChecker identifierChecker,
+            PersonIdentifierRegistry registry, ArrayPool<char> arrayPool)
         {
+            this.identifierChecker = identifierChecker;
             this.registry = registry;
+            this.arrayPool = arrayPool;
             IdentityRepository = identityRepository;
         }
 
-        [Route("/{id:int}")]
+        /// <inheritdoc />
+        public override void OnActionExecuted(ActionExecutedContext context)
+        {
+            if (context.Result is ObjectResult objectResult)
+            {
+                objectResult.Formatters.Add(new JsonOutputFormatter(registry.CreateSerializerSettings(), arrayPool));
+            }
+            base.OnActionExecuted(context);
+        }
+
+        [Route("{id:int}")]
         [HttpGet]
         [ProducesResponseType((int)HttpStatusCode.OK, Type=typeof(IEnumerable<IIdentifier>))]
         [AutoCommit]
-        public IActionResult GetPerson(int id)
+        public IActionResult GetPerson(long id)
         {
             return Ok(IdentityRepository.GetPersonIdentities(id));
         }
@@ -39,7 +62,7 @@ namespace CHC.Consent.Api.Features.Identity
         {
             if(!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
             
-            registry.EnsureHasNoInvalidDuplicates(specification.Identifiers);
+            identifierChecker.EnsureHasNoInvalidDuplicates(specification.Identifiers);
             
             var person = IdentityRepository.FindPerson(specification.MatchSpecifications.Select(_ => _.Identifiers));
 

@@ -7,6 +7,8 @@
 namespace CHC.Consent.Api.Client
 {
     using Models;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -66,9 +68,9 @@ namespace CHC.Consent.Api.Client
             /// </param>
             /// <param name='id'>
             /// </param>
-            public static void ByIdGet(this IApi operations, int id)
+            public static IList<IIdentifier> IdentitiesByIdGet(this IApi operations, long id)
             {
-                operations.ByIdGetAsync(id).GetAwaiter().GetResult();
+                return operations.IdentitiesByIdGetAsync(id).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -79,9 +81,12 @@ namespace CHC.Consent.Api.Client
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task ByIdGetAsync(this IApi operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<IList<IIdentifier>> IdentitiesByIdGetAsync(this IApi operations, long id, CancellationToken cancellationToken = default(CancellationToken))
             {
-                (await operations.ByIdGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false)).Dispose();
+                using (var _result = await operations.IdentitiesByIdGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
             }
 
             /// <param name='operations'>
@@ -89,9 +94,9 @@ namespace CHC.Consent.Api.Client
             /// </param>
             /// <param name='specification'>
             /// </param>
-            public static void IdentitiesPut(this IApi operations, PersonSpecification specification = default(PersonSpecification))
+            public static long? IdentitiesPut(this IApi operations, PersonSpecification specification = default(PersonSpecification))
             {
-                operations.IdentitiesPutAsync(specification).GetAwaiter().GetResult();
+                return operations.IdentitiesPutAsync(specification).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -102,9 +107,12 @@ namespace CHC.Consent.Api.Client
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task IdentitiesPutAsync(this IApi operations, PersonSpecification specification = default(PersonSpecification), CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<long?> IdentitiesPutAsync(this IApi operations, PersonSpecification specification = default(PersonSpecification), CancellationToken cancellationToken = default(CancellationToken))
             {
-                (await operations.IdentitiesPutWithHttpMessagesAsync(specification, null, cancellationToken).ConfigureAwait(false)).Dispose();
+                using (var _result = await operations.IdentitiesPutWithHttpMessagesAsync(specification, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
             }
 
     }

@@ -8,6 +8,7 @@ using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Consent.Identifiers;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Identity.Identifiers.Medway;
 using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.Entities;
@@ -43,6 +44,7 @@ namespace CHC.Consent.Api
             personIdentifierRegistry.Add<BradfordHospitalNumberIdentifier, BradfordHospitalNumberIdentifierAdapter>();
             personIdentifierRegistry.Add<SexIdentifier, SexIdentifierAdapter>();
             personIdentifierRegistry.Add<DateOfBirthIdentifier, DateOfBirthIdentifierAdapter>();
+            personIdentifierRegistry.Add<MedwayNameIdentifier, MedwayNameIdentifierAdapter>();
             services.AddSingleton(personIdentifierRegistry);
             services.AddSingleton<IPersonIdentifierListChecker>(personIdentifierRegistry);
             
