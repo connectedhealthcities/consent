@@ -10,9 +10,9 @@ namespace CHC.Consent.EFCore.Entities
     public class PersonEntity : IEntity
     {
         public virtual long Id { get; set; }
-        public virtual string NhsNumber { get; set; }
+        
         public virtual DateTime? DateOfBirth { get; set; }
-        public virtual Sex? Sex { get; set; }
+        
         
         public virtual ushort? BirthOrder
         {

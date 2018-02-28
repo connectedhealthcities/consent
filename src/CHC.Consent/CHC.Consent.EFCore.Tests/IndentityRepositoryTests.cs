@@ -13,10 +13,25 @@ namespace CHC.Consent.EFCore.Tests
         [Fact]
         public void ThisTestIsInTheWrongPlace()
         {
-            var personOne = new PersonEntity {NhsNumber = "4333443"};
-            var personTwo = new PersonEntity {NhsNumber = "6655666"};
+            var personOne = new PersonEntity();
+            var personOneNhsNumber = new IdentifierEntity
+            {
+                Person = personOne,
+                TypeName = NhsNumberIdentifier.TypeName,
+                Value = "5555555",
+                ValueType = "string"
+            };
+            var personTwo = new PersonEntity();
+            var personTwoNhsNumber = new IdentifierEntity
+            {
+                Person = personTwo,
+                TypeName = NhsNumberIdentifier.TypeName,
+                Value = "666666",
+                ValueType = "string"
+            }; 
 
             Context.AddRange(personOne, personTwo);
+            Context.AddRange(personOneNhsNumber, personTwoNhsNumber);
             Context.SaveChanges();
             
             var registry = new PersonIdentifierRegistry();
@@ -29,8 +44,8 @@ namespace CHC.Consent.EFCore.Tests
                 registry,
                 storeProvider);
 
-            Assert.Equal(repository.FindPersonBy(new NhsNumberIdentifier(personOne.NhsNumber)), personOne);
-            Assert.Equal(repository.FindPersonBy(new NhsNumberIdentifier(personTwo.NhsNumber)), personTwo);
+            Assert.Equal(repository.FindPersonBy(new NhsNumberIdentifier(personOneNhsNumber.Value)), personOne);
+            Assert.Equal(repository.FindPersonBy(new NhsNumberIdentifier(personTwoNhsNumber.Value)), personTwo);
             Assert.Null(repository.FindPersonBy(new NhsNumberIdentifier("7787773")));
         }
 
