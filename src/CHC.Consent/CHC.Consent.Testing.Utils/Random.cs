@@ -50,5 +50,11 @@ namespace CHC.Consent.Testing.Utils
         {
             return values.ElementAt(random.Next(0, values.Count));
         }
+
+        public static T Item<T>(params T[] items)
+        {
+            return items[random.Next(0, items.Length)];
+        }
+        
     }
 }

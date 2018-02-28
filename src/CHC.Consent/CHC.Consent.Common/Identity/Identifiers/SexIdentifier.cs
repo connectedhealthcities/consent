@@ -1,8 +1,10 @@
 ﻿namespace CHC.Consent.Common.Identity.Identifiers
 {
-    [Identifier("sex")]
+    [Identifier(TypeName)]
     public class SexIdentifier : IIdentifier, ISingleValueIdentifier<Sex?>
     {
+        public const string TypeName = "sex";
+
         /// <inheritdoc />
         public SexIdentifier(Sex? sex=null)
         {

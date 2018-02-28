@@ -1,10 +1,13 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.IdentifierAdapters;
+using CHC.Consent.Testing.Utils;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 using Xunit.Abstractions;
 using Random = CHC.Consent.Testing.Utils.Random;
@@ -26,13 +29,8 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
         [Fact]
         public void CorrectlyFindsPersonBySex()
         {
-            for (var i = 0; i < 5; i++)
-            {
-                saveContext.Add(new PersonEntity {Sex = Random.Enum<Sex>()});
-            }
-
-            var person = saveContext.Add(new PersonEntity {Sex = Sex.Male, NhsNumber = "FIND ME"});
-
+            5.Times(() => AddAPersonWithSex(Random.Item(Sex.Female, Sex.Unknown, (Sex?)null)));
+            var person = AddAPersonWithSex(Sex.Male);
             saveContext.SaveChanges();
 
             var foundpeople = new SexIdentifierAdapter().Filter(
@@ -40,15 +38,29 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
                 new SexIdentifier(Sex.Male), 
                 new ContextStoreProvider(readContext)).ToArray();
 
-            var found = Assert.Single(foundpeople, _ => _.NhsNumber == "FIND ME");
+            var found = Assert.Single(foundpeople);
             Assert.NotNull(found);
-            Assert.Equal(Sex.Male, found.Sex);
+            Assert.Equal(person.Id, found.Id);
+        }
+
+        private PersonEntity AddAPersonWithSex(Sex? sex)
+        {
+            var personEntity = saveContext.Add(new PersonEntity {}).Entity;
+            saveContext.Add(
+                new IdentifierEntity
+                {
+                    Person = personEntity,
+                    TypeName = SexIdentifier.TypeName,
+                    Value = sex?.ToString(),
+                    ValueType = typeof(Sex?).AssemblyQualifiedName
+                });
+            return personEntity;
         }
 
         [Fact]
         public void CanSetPersonSex()
         {
-            var person = saveContext.Add(new PersonEntity {Sex = default}).Entity;
+            var person = AddAPersonWithSex(Sex.Male);
             saveContext.SaveChanges();
 
             new SexIdentifierAdapter().Update(
@@ -58,14 +70,13 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             );
             Context.SaveChanges();
 
-            var saved = readContext.Find<PersonEntity>(person.Id);
-            Assert.Equal(Sex.Female, saved.Sex);
+            AssertHasActiveSex(person, Sex.Female);
         }
 
         [Fact()]
         public void CanSetSexForNewPerson()
         {
-            var person = new PersonEntity();
+            var person = Context.Add(new PersonEntity()).Entity;
 
             new SexIdentifierAdapter().Update(
                 person,
@@ -76,22 +87,40 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             Context.Add(person);
             Context.SaveChanges();
 
-            var saved = readContext.Find<PersonEntity>(person.Id);
-            Assert.Equal(Sex.Female, saved.Sex);
+            AssertHasActiveSex(person, Sex.Female);
         }
 
         [Fact]
-        public void CannotUpdateSex()
+        public void StoresPreviousSexWhenUpdating()
         {
-            var person = saveContext.Add(new PersonEntity {Sex = Sex.Male}).Entity;
+            var person = AddAPersonWithSex(Sex.Male);
             saveContext.SaveChanges();
             
 
-            Assert.Throws<InvalidOperationException>(() => new SexIdentifierAdapter().Update(
+            var updateResult = new SexIdentifierAdapter().Update(
                 Context.Find<PersonEntity>(person.Id),
                 new SexIdentifier(Sex.Female), 
                 new ContextStoreProvider(Context)
-            ));
+            );
+            
+            Context.SaveChanges();
+
+            Assert.True(updateResult);
+            var saved = GetStoreIdentifiersFor(person, readContext).ToArray();
+
+            Assert.Collection(
+                saved,
+                _ =>
+                {
+                    Assert.Equal(Sex.Male.ToString(), _.Value);
+                    Assert.NotNull(_.Deleted);
+                },
+                _ =>
+                {
+                    Assert.Equal(Sex.Female.ToString(), _.Value);
+                    Assert.Null(_.Deleted);
+                });
+            
         }
 
         /// <inheritdoc />
@@ -100,6 +129,21 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             saveContext.Dispose();
             readContext.Dispose();
             base.Dispose();
+        }
+        
+        public IEnumerable<IdentifierEntity> GetStoreIdentifiersFor(PersonEntity person, ConsentContext context) => 
+            context
+                .Set<IdentifierEntity>()
+                .Include(_ => _.Person)
+                .Where(_ => _.Person.Id == person.Id && _.TypeName == SexIdentifier.TypeName)
+                .OrderBy(_ => _.Created);
+
+        private void AssertHasActiveSex(PersonEntity person, Sex sex)
+        {
+            var saved = GetStoreIdentifiersFor(person, readContext).SingleOrDefault(_ => _.Deleted == null);
+            Assert.NotNull(saved);
+            Assert.Equal(sex.ToString(), saved.Value);
+            Assert.Null(saved.Deleted);
         }
     }
 }

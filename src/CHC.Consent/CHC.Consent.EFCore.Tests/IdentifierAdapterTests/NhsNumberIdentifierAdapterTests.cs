@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Schema;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.EFCore.Entities;
@@ -49,7 +50,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
         [Fact]
         public void CanSetPersonNhsNumber()
         {
-            var person = saveContext.Add(new PersonEntity {NhsNumber = default}).Entity;
+            var person = AddPersonWithNhsNumber("OLD NHS NUMBER");
             saveContext.SaveChanges();
 
             new NhsNumberIdentifierAdapter().Update(
@@ -121,7 +122,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
 
         private void AssertHasActiveNhsNumber(PersonEntity person, string nhsNumber)
         {
-            var saved = GetStoreIdentifiersFor(person, readContext).SingleOrDefault();
+            var saved = GetStoreIdentifiersFor(person, readContext).SingleOrDefault(_ => _.Deleted == null);
             Assert.Equal(nhsNumber, saved.Value);
             Assert.Null(saved.Deleted);
         }
