@@ -9,30 +9,52 @@ using CHC.Consent.EFCore.Entities;
 
 namespace CHC.Consent.EFCore.IdentifierAdapters
 {
-    public class NhsNumberIdentifierAdapter : SingleValueIdentifierAdapter<NhsNumberIdentifier, string>
+    public class NhsNumberIdentifierAdapter : 
+        IIdentifierFilter<NhsNumberIdentifier>,
+        IIdentifierRetriever<NhsNumberIdentifier>,
+        IIdentifierUpdater<NhsNumberIdentifier>
     {
         /// <inheritdoc />
-        public override IQueryable<PersonEntity> Filter(
+        public IQueryable<PersonEntity> Filter(
             IQueryable<PersonEntity> people,
             NhsNumberIdentifier value,
             IStoreProvider stores) =>
-            people.Where(_ => _.NhsNumber == value.Value);
+            people.Where(
+                p => stores.Get<IdentifierEntity>().Any(
+                    _ => _.Person == p && _.TypeName == NhsNumberIdentifier.TypeName && _.Deleted == null &&
+                         _.Value == value.Value));
 
         /// <inheritdoc />
-        protected override string IdentifierName => "NHS Number";
-
-        /// <inheritdoc />
-        public override void SetValue(PersonEntity entity, string newValue) => entity.NhsNumber = newValue;
-
-        /// <inheritdoc />
-        public override string ExistingValue(PersonEntity entity) => entity.NhsNumber;
-
-        /// <inheritdoc />
-        public override IEnumerable<NhsNumberIdentifier> Get(PersonEntity person, IStoreProvider stores)
+        public IEnumerable<NhsNumberIdentifier> Get(PersonEntity person, IStoreProvider stores)
         {
-            return person.NhsNumber == null
-                ? Enumerable.Empty<NhsNumberIdentifier>()
-                : new[] {new NhsNumberIdentifier(person.NhsNumber)};
+            return  ExistingIdentifierEntities(person, stores)
+                .Select(_ => new NhsNumberIdentifier(_.Value));
+        }
+
+        private static IQueryable<IdentifierEntity> ExistingIdentifierEntities(PersonEntity person, IStoreProvider stores)
+        {
+            return stores.Get<IdentifierEntity>().Where(_ => _.Person == person && _.TypeName == NhsNumberIdentifier.TypeName && _.Deleted == null);
+        }
+
+        /// <inheritdoc />
+        public bool Update(PersonEntity person, NhsNumberIdentifier value, IStoreProvider stores)
+        {
+            var existing = ExistingIdentifierEntities(person, stores).SingleOrDefault();
+            if (existing != null && existing.Value != value.Value)
+            {
+                existing.Deleted = DateTime.UtcNow;
+            }
+
+            stores.Get<IdentifierEntity>().Add(
+                new IdentifierEntity
+                {
+                    Person = person,
+                    TypeName = NhsNumberIdentifier.TypeName,
+                    Value = value.Value,
+                    ValueType = "string"
+                });
+
+            return true;
         }
     }
 }
