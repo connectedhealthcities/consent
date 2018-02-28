@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Net.Http;
 using System.Runtime.CompilerServices;
 using CHC.Consent.Api.Client;
 using CHC.Consent.Api.Client.Models;
@@ -140,6 +139,35 @@ namespace CHC.Consent.Tests.Api.Client
                 sex, 
                 i => Assert.Equal("Female", Assert.IsType<Sex>(i).SexProperty));
         }
+        
+        [Fact]
+        public void CanSendMultipleIdentitiesToServer()
+        {
+            var client = new Api(Fixture.Client, disposeHttpClient:false);
+            var api = (IApi) client;
+
+            var nhsNumber = new UknhsnhsNumber("4334443434");
+            var medwayName = new Uknhsbradfordhospitalsbib4allmedwayname("Rachel", "Thompson");
+            
+            
+            var response = api.IdentitiesPut(
+                new PersonSpecification(
+                    new List<IIdentifier> {nhsNumber, medwayName},
+                    new List<MatchSpecification>
+                    {
+                        new MatchSpecification {Identifiers = new List<IIdentifier> {nhsNumber}}
+                    }));
+
+            Assert.NotNull(response);
+            
+            var identities = api.IdentitiesByIdGet(response.Value);
+
+            Assert.Equal(nhsNumber.Value, Assert.Single(identities.OfType<UknhsnhsNumber>()).Value);
+            var storedMedwayName = Assert.Single(identities.OfType<Uknhsbradfordhospitalsbib4allmedwayname>());
+            Assert.NotNull(storedMedwayName);
+            Assert.Equal(medwayName.FirstName, storedMedwayName.FirstName);
+            Assert.Equal(medwayName.LastName, storedMedwayName.LastName);
+        }
 
         
         
@@ -147,60 +175,6 @@ namespace CHC.Consent.Tests.Api.Client
         public void Dispose()
         {
             ServiceClientTracing.RemoveTracingInterceptor(tracingInterceptor);
-        }
-    }
-
-    internal class XUnitServiceClientTracingInterceptor : IServiceClientTracingInterceptor
-    {
-        public ITestOutputHelper Output { get; }
-
-        /// <inheritdoc />
-        public XUnitServiceClientTracingInterceptor(ITestOutputHelper output)
-        {
-            Output = output;
-        }
-
-        /// <inheritdoc />
-        public void Configuration(string source, string name, string value)
-        {
-            Output.WriteLine("Configuration: source:{0} name:{1} value:{2}", source, name, value);
-        }
-
-        /// <inheritdoc />
-        public void EnterMethod(string invocationId, object instance, string method, IDictionary<string, object> parameters)
-        {
-            
-        }
-
-        /// <inheritdoc />
-        public void ExitMethod(string invocationId, object returnValue)
-        {
-            
-        }
-
-        /// <inheritdoc />
-        public void Information(string message)
-        {
-            Output.WriteLine("Information: {0}", message);
-        }
-
-        /// <inheritdoc />
-        public void ReceiveResponse(string invocationId, HttpResponseMessage response)
-        {
-            Output.WriteLine("Response: InvocationId:{0} {1}",invocationId, response.AsFormattedString());
-        }
-
-        /// <inheritdoc />
-        public void SendRequest(string invocationId, HttpRequestMessage request)
-        {
-            
-            Output.WriteLine("Response: InvocationId:{0} {1}", invocationId, request.AsFormattedString());
-        }
-
-        /// <inheritdoc />
-        public void TraceError(string invocationId, Exception exception)
-        {
-            Output.WriteLine("Error: InvocationId:{0} {1}", invocationId, exception);
         }
     }
 }
