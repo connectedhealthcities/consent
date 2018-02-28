@@ -32,7 +32,6 @@ namespace CHC.Consent.EFCore
             modelBuilder.ApplyConfiguration(new PersonEntityConfiguration());
             modelBuilder.ApplyConfiguration(new BradfordHospitalNumberEntityConfiguration());
             modelBuilder.ApplyConfiguration(new NameEntityConfiguration());
-            modelBuilder.ApplyConfiguration(new MedwayNameEntityConfiguration());
             modelBuilder.ApplyConfiguration(new IdentifierEntityConfiguration());
         }
     }

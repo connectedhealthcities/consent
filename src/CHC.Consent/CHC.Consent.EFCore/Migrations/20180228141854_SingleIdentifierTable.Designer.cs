@@ -11,9 +11,10 @@ using System;
 namespace CHC.Consent.EFCore.Migrations
 {
     [DbContext(typeof(ConsentContext))]
-    partial class ConsentContextModelSnapshot : ModelSnapshot
+    [Migration("20180228141854_SingleIdentifierTable")]
+    partial class SingleIdentifierTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -63,6 +64,25 @@ namespace CHC.Consent.EFCore.Migrations
                     b.HasIndex("PersonId");
 
                     b.ToTable("IdentifierEntity");
+                });
+
+            modelBuilder.Entity("CHC.Consent.EFCore.Entities.MedwayNameEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("FirstName");
+
+                    b.Property<string>("LastName");
+
+                    b.Property<long?>("PersonId")
+                        .IsRequired();
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.ToTable("MedwayNameEntity");
                 });
 
             modelBuilder.Entity("CHC.Consent.EFCore.Entities.NameEntity", b =>
@@ -116,6 +136,14 @@ namespace CHC.Consent.EFCore.Migrations
                 });
 
             modelBuilder.Entity("CHC.Consent.EFCore.Entities.IdentifierEntity", b =>
+                {
+                    b.HasOne("CHC.Consent.EFCore.Entities.PersonEntity", "Person")
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("CHC.Consent.EFCore.Entities.MedwayNameEntity", b =>
                 {
                     b.HasOne("CHC.Consent.EFCore.Entities.PersonEntity", "Person")
                         .WithMany()
