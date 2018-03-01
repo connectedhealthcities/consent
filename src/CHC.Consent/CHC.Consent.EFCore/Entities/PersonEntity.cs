@@ -7,22 +7,13 @@ using CHC.Consent.Common.Infrastructure.Data;
 
 namespace CHC.Consent.EFCore.Entities
 {
+    /// <summary>
+    /// Stored (and allocates) Ids for people
+    /// </summary>
     public class PersonEntity : IEntity
     {
         public virtual long Id { get; set; }
         
-        public virtual DateTime? DateOfBirth { get; set; }
-        
-        
-        public virtual ushort? BirthOrder
-        {
-            get => (ushort?) BirthOrderValue;
-            set => BirthOrderValue = value;
-        }
-
-        internal int? BirthOrderValue { get; set; }
-
-
         public static implicit operator PersonIdentity(PersonEntity entity)
         {
             return entity == null ? null : new PersonIdentity( entity.Id );

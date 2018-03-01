@@ -74,8 +74,8 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
         {
             var person = saveContext.People.Add(new PersonEntity()).Entity;
 
-            saveContext.Set<IdentifierEntity>().Add(
-                new IdentifierEntity
+            saveContext.Set<PersonIdentifierEntity>().Add(
+                new PersonIdentifierEntity
                 {
                     Person = person,
                     TypeName = MedwayNameIdentifier.TypeName,
@@ -105,9 +105,9 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             Assert.Equal(marshaller.MarshalledValue(identifier), newName.Value);
         }
 
-        private IQueryable<IdentifierEntity> GetNamesFor(PersonEntity person)
+        private IQueryable<PersonIdentifierEntity> GetNamesFor(PersonEntity person)
         {
-            return readContext.Set<IdentifierEntity>().Where(_ => _.Person.Id == person.Id && _.TypeName == MedwayNameIdentifier.TypeName).OrderBy(_ => _.Created);
+            return readContext.Set<PersonIdentifierEntity>().Where(_ => _.Person.Id == person.Id && _.TypeName == MedwayNameIdentifier.TypeName).OrderBy(_ => _.Created);
         }
 
 

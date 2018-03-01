@@ -3,7 +3,7 @@ using CHC.Consent.Common.Infrastructure.Data;
 
 namespace CHC.Consent.EFCore.Entities
 {
-    public class IdentifierEntity : IEntity
+    public class PersonIdentifierEntity : IEntity
     {
         public long Id { get; protected set; }
         public PersonEntity Person { get; set; }

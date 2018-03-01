@@ -14,7 +14,7 @@ namespace CHC.Consent.EFCore.Tests
         public void ThisTestIsInTheWrongPlace()
         {
             var personOne = new PersonEntity();
-            var personOneNhsNumber = new IdentifierEntity
+            var personOneNhsNumber = new PersonIdentifierEntity
             {
                 Person = personOne,
                 TypeName = NhsNumberIdentifier.TypeName,
@@ -22,7 +22,7 @@ namespace CHC.Consent.EFCore.Tests
                 ValueType = "string"
             };
             var personTwo = new PersonEntity();
-            var personTwoNhsNumber = new IdentifierEntity
+            var personTwoNhsNumber = new PersonIdentifierEntity
             {
                 Person = personTwo,
                 TypeName = NhsNumberIdentifier.TypeName,

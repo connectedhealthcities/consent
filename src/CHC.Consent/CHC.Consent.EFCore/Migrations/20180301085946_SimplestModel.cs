@@ -5,20 +5,24 @@ using System.Collections.Generic;
 
 namespace CHC.Consent.EFCore.Migrations
 {
-    public partial class SingleIdentifierTable : Migration
+    public partial class SimplestModel : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "NhsNumber",
-                table: "People");
-
-            migrationBuilder.DropColumn(
-                name: "Sex",
-                table: "People");
+            migrationBuilder.CreateTable(
+                name: "Person",
+                columns: table => new
+                {
+                    Id = table.Column<long>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Person", x => x.Id);
+                });
 
             migrationBuilder.CreateTable(
-                name: "IdentifierEntity",
+                name: "PersonIdentifier",
                 columns: table => new
                 {
                     Id = table.Column<long>(nullable: false)
@@ -32,35 +36,28 @@ namespace CHC.Consent.EFCore.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_IdentifierEntity", x => x.Id);
+                    table.PrimaryKey("PK_PersonIdentifier", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_IdentifierEntity_People_PersonId",
+                        name: "FK_PersonIdentifier_Person_PersonId",
                         column: x => x.PersonId,
-                        principalTable: "People",
+                        principalTable: "Person",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_IdentifierEntity_PersonId",
-                table: "IdentifierEntity",
+                name: "IX_PersonIdentifier_PersonId",
+                table: "PersonIdentifier",
                 column: "PersonId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "IdentifierEntity");
+                name: "PersonIdentifier");
 
-            migrationBuilder.AddColumn<string>(
-                name: "NhsNumber",
-                table: "People",
-                nullable: true);
-
-            migrationBuilder.AddColumn<int>(
-                name: "Sex",
-                table: "People",
-                nullable: true);
+            migrationBuilder.DropTable(
+                name: "Person");
         }
     }
 }

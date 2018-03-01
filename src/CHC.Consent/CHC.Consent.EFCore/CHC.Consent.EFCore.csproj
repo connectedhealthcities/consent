@@ -20,7 +20,4 @@
       <Name>CHC.Consent.Common</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Migrations" />
-  </ItemGroup>
 </Project>

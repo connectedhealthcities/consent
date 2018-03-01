@@ -12,6 +12,6 @@ namespace CHC.Consent.Common.Identity.Identifiers
             Value = value;
         }
 
-        private const string TypeName = "uk.nhs.bradfordhospitals.hosptial-id";
+        public const string TypeName = "uk.nhs.bradfordhospitals.hosptial-id";
     }
 }

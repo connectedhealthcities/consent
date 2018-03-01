@@ -113,9 +113,9 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
 
         }
 
-        public IEnumerable<IdentifierEntity> GetStoreIdentifiersFor(PersonEntity person, ConsentContext context) => 
+        public IEnumerable<PersonIdentifierEntity> GetStoreIdentifiersFor(PersonEntity person, ConsentContext context) => 
             context
-                .Set<IdentifierEntity>()
+                .Set<PersonIdentifierEntity>()
                 .Include(_ => _.Person)
                 .Where(_ => _.Person.Id == person.Id && _.TypeName == NhsNumberIdentifier.TypeName)
                 .OrderBy(_ => _.Created);
@@ -131,7 +131,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
         {
             var person = saveContext.Add(new PersonEntity()).Entity;
             saveContext.Add(
-                new IdentifierEntity
+                new PersonIdentifierEntity
                 {
                     Person = person,
                     TypeName = NhsNumberIdentifier.TypeName,

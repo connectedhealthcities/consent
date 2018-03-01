@@ -30,9 +30,7 @@ namespace CHC.Consent.EFCore
         {    
             //TODO: Get these from somewhere else configurable
             modelBuilder.ApplyConfiguration(new PersonEntityConfiguration());
-            modelBuilder.ApplyConfiguration(new BradfordHospitalNumberEntityConfiguration());
-            modelBuilder.ApplyConfiguration(new NameEntityConfiguration());
-            modelBuilder.ApplyConfiguration(new IdentifierEntityConfiguration());
+            modelBuilder.ApplyConfiguration(new PersonIdentifierEntityConfiguration());
         }
     }
 }

@@ -47,7 +47,7 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
         {
             var personEntity = saveContext.Add(new PersonEntity {}).Entity;
             saveContext.Add(
-                new IdentifierEntity
+                new PersonIdentifierEntity
                 {
                     Person = personEntity,
                     TypeName = SexIdentifier.TypeName,
@@ -131,9 +131,9 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
             base.Dispose();
         }
         
-        public IEnumerable<IdentifierEntity> GetStoreIdentifiersFor(PersonEntity person, ConsentContext context) => 
+        public IEnumerable<PersonIdentifierEntity> GetStoreIdentifiersFor(PersonEntity person, ConsentContext context) => 
             context
-                .Set<IdentifierEntity>()
+                .Set<PersonIdentifierEntity>()
                 .Include(_ => _.Person)
                 .Where(_ => _.Person.Id == person.Id && _.TypeName == SexIdentifier.TypeName)
                 .OrderBy(_ => _.Created);

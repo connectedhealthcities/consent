@@ -9,52 +9,29 @@ using CHC.Consent.EFCore.Entities;
 
 namespace CHC.Consent.EFCore.IdentifierAdapters
 {
-    public class NhsNumberIdentifierAdapter : 
-        IIdentifierFilter<NhsNumberIdentifier>,
-        IIdentifierRetriever<NhsNumberIdentifier>,
-        IIdentifierUpdater<NhsNumberIdentifier>
+    public class NhsNumberIdentifierMarshaller : IIdentifierMarshaller<NhsNumberIdentifier>
     {
         /// <inheritdoc />
-        public IQueryable<PersonEntity> Filter(
-            IQueryable<PersonEntity> people,
-            NhsNumberIdentifier value,
-            IStoreProvider stores) =>
-            people.Where(
-                p => stores.Get<IdentifierEntity>().Any(
-                    _ => _.Person == p && _.TypeName == NhsNumberIdentifier.TypeName && _.Deleted == null &&
-                         _.Value == value.Value));
+        public string ValueType => "string";
 
         /// <inheritdoc />
-        public IEnumerable<NhsNumberIdentifier> Get(PersonEntity person, IStoreProvider stores)
+        public string MarshalledValue(NhsNumberIdentifier value)
         {
-            return  ExistingIdentifierEntities(person, stores)
-                .Select(_ => new NhsNumberIdentifier(_.Value));
-        }
-
-        private static IQueryable<IdentifierEntity> ExistingIdentifierEntities(PersonEntity person, IStoreProvider stores)
-        {
-            return stores.Get<IdentifierEntity>().Where(_ => _.Person == person && _.TypeName == NhsNumberIdentifier.TypeName && _.Deleted == null);
+            return value.Value;
         }
 
         /// <inheritdoc />
-        public bool Update(PersonEntity person, NhsNumberIdentifier value, IStoreProvider stores)
+        public NhsNumberIdentifier Unmarshall(string valueType, string value)
         {
-            var existing = ExistingIdentifierEntities(person, stores).SingleOrDefault();
-            if (existing != null && existing.Value != value.Value)
-            {
-                existing.Deleted = DateTime.UtcNow;
-            }
-
-            stores.Get<IdentifierEntity>().Add(
-                new IdentifierEntity
-                {
-                    Person = person,
-                    TypeName = NhsNumberIdentifier.TypeName,
-                    Value = value.Value,
-                    ValueType = "string"
-                });
-
-            return true;
+            return valueType == ValueType && value != null ? new NhsNumberIdentifier(value) : null;
+        }
+    }
+    
+    public class NhsNumberIdentifierAdapter : IdentifierAdapterBase<NhsNumberIdentifier>
+    {
+        /// <inheritdoc />
+        public NhsNumberIdentifierAdapter() : base(new NhsNumberIdentifierMarshaller(), NhsNumberIdentifier.TypeName)
+        {
         }
     }
 }

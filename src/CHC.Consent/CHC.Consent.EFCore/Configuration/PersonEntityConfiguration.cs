@@ -9,10 +9,7 @@ namespace CHC.Consent.EFCore.Configuration
         /// <inheritdoc />
         public void Configure(EntityTypeBuilder<PersonEntity> modelBuilder)
         {
-            modelBuilder.Ignore(_ => _.BirthOrder);
-            modelBuilder
-                .Property(_ => _.BirthOrderValue)
-                .HasColumnName(nameof(PersonEntity.BirthOrder));
+            modelBuilder.ToTable("Person");
         }
     }
 }

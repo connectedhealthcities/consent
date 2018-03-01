@@ -13,28 +13,31 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
     [Collection(DatabaseCollection.Name)]
     public class BradfordHospitalNumberIdentifierAdapterTests : DbTests
     {
-        private readonly ConsentContext otherContext;
+        private readonly ConsentContext saveContext;
+        private ConsentContext readContext;
+
+        private readonly BradfordHospitalNumberIdentifierAdapter adapter 
+            = new BradfordHospitalNumberIdentifierAdapter();
 
         /// <inheritdoc />
         public BradfordHospitalNumberIdentifierAdapterTests(ITestOutputHelper outputHelper, DatabaseFixture fixture) : base(outputHelper, fixture)
         {
-            otherContext = CreateNewContextInSameTransaction();
+            saveContext = CreateNewContextInSameTransaction();
+            readContext = CreateNewContextInSameTransaction();
         }
-
-        private readonly BradfordHospitalNumberIdentifierAdapter adapter 
-            = new BradfordHospitalNumberIdentifierAdapter();
 
         [Fact]
         public void CorrectlyFiltersAList()
         {
             5.Times(AddPersonWithAHospitalNumber);
+            saveContext.SaveChanges();
             
             var personWithCorrectHosptialNumber = AddPersonWithAHospitalNumber("HOSPITAL NUMBER");
             
             var foundPeople = adapter.Filter(
-                Context.People,
+                readContext.People,
                 new BradfordHospitalNumberIdentifier("HOSPITAL NUMBER"),
-                new ContextStoreProvider(Context))
+                new ContextStoreProvider(readContext))
                 .ToArray();
 
             var found = Assert.Single(foundPeople);
@@ -45,29 +48,40 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
         [Fact]
         public void CorrectlyAddsAHosptialNumber()
         {
-            var person = AddPersonWithAHospitalNumber();
+            var oldHospitalNumber = Random.String();
+            var person = AddPersonWithAHospitalNumber(oldHospitalNumber);
+            saveContext.SaveChanges();
 
-            adapter.Update(person, new BradfordHospitalNumberIdentifier("86"), new ContextStoreProvider(Context));
+            var newHospitalNumber = Random.String();
+            adapter.Update(
+                Context.Find<PersonEntity>(person.Id),
+                new BradfordHospitalNumberIdentifier(newHospitalNumber),
+                new ContextStoreProvider(Context));
             Context.SaveChanges();
 
-            var hospitalNumbers = otherContext.Set<BradfordHospitalNumberEntity>().Where(_ => _.Person.Id == person.Id)
+            var hospitalNumbers = readContext.Set<PersonIdentifierEntity>()
+                .Where(_ => _.Person.Id == person.Id && _.TypeName == BradfordHospitalNumberIdentifier.TypeName)
+                .OrderBy(_ => _.Created)
                 .ToArray();
 
-            Assert.Equal(2, hospitalNumbers.Length);
-            Assert.Single(hospitalNumbers, _ => _.HospitalNumber == "86");
+            Assert.Collection(hospitalNumbers,
+                _ => { Assert.NotNull(_.Deleted); Assert.Equal(oldHospitalNumber, _.Value); },
+                _ => { Assert.Null(_.Deleted); Assert.Equal(newHospitalNumber, _.Value);});
         }
 
         private PersonEntity AddPersonWithAHospitalNumber() => AddPersonWithAHospitalNumber(Random.String());
         private PersonEntity AddPersonWithAHospitalNumber(string hospitalNumber)
         {
-            var person = otherContext.Add(new PersonEntity()).Entity;
-            otherContext.Add(
-                new BradfordHospitalNumberEntity
+            var person = saveContext.Add(new PersonEntity()).Entity;
+            saveContext.Add(
+                new PersonIdentifierEntity
                 {
                     Person = person,
-                    HospitalNumber = hospitalNumber ?? Random.String()
+                    TypeName = BradfordHospitalNumberIdentifier.TypeName,
+                    Value = hospitalNumber,
+                    ValueType = "string"
                 });
-            otherContext.SaveChanges();
+            
             return person;
         }
     }

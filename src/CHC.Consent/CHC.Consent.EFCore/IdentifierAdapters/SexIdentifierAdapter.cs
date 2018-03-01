@@ -49,7 +49,7 @@ namespace CHC.Consent.EFCore.IdentifierAdapters
         {
             var marshalledValue = marshaller.MarshalledValue(value);
             return people.Where(
-                p => stores.Get<IdentifierEntity>().Any(
+                p => stores.Get<PersonIdentifierEntity>().Any(
                     _ =>
                         _.Person == p &&
                         _.TypeName == typeName
@@ -65,9 +65,9 @@ namespace CHC.Consent.EFCore.IdentifierAdapters
                 .Select(_ => marshaller.Unmarshall(_.ValueType, _.Value) );
         }
 
-        private IQueryable<IdentifierEntity> ExistingIdentifierEntities(PersonEntity person, IStoreProvider stores)
+        private IQueryable<PersonIdentifierEntity> ExistingIdentifierEntities(PersonEntity person, IStoreProvider stores)
         {
-            return stores.Get<IdentifierEntity>().Where(_ => _.Person == person && _.TypeName == typeName && _.Deleted == null);
+            return stores.Get<PersonIdentifierEntity>().Where(_ => _.Person == person && _.TypeName == typeName && _.Deleted == null);
         }
 
         /// <inheritdoc />
@@ -79,8 +79,8 @@ namespace CHC.Consent.EFCore.IdentifierAdapters
                 existing.Deleted = DateTime.UtcNow;
             }
 
-            stores.Get<IdentifierEntity>().Add(
-                new IdentifierEntity
+            stores.Get<PersonIdentifierEntity>().Add(
+                new PersonIdentifierEntity
                 {
                     Person = person,
                     TypeName = typeName,

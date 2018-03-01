@@ -2,9 +2,14 @@
 
 namespace CHC.Consent.Common.Identity.Identifiers
 {
-    [Identifier("date-of-birth")]
+    [Identifier(TypeName)]
     public class DateOfBirthIdentifier : IIdentifier, ISingleValueIdentifier<DateTime?>
     {
+        public const string TypeName = "date-of-birth";
+
+        /// <remarks>For XML serialization</remarks>
+        protected DateOfBirthIdentifier() {}
+        
         /// <inheritdoc />
         public DateOfBirthIdentifier(DateTime? dateOfBirth=null)
         {
