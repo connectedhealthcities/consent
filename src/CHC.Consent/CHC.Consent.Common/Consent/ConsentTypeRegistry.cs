@@ -33,18 +33,40 @@ namespace CHC.Consent.Common.Consent
         public IEnumerator<ClassMapping> GetEnumerator() => Registries.SelectMany(_ => _).GetEnumerator();
 
         /// <inheritdoc />
-        public string GetName(Type type) => Registries.Select(_ => _.GetName(type)).FirstOrDefault(_ => _ != null);
+        public bool TryGetName(Type type, out string name)
+        {
+            foreach (var registry in Registries)
+            {
+                if (registry.TryGetName(type, out name)) return true;
+            }
+
+            name = null;
+            return false;
+        }
 
         /// <inheritdoc />
-        public Type GetType(string name) => Registries.Select(_ => _.GetType(name)).FirstOrDefault(_ => _ != null);
-        
+        public bool TryGetType(string name, out Type type)
+        {
+            foreach (var registry in Registries)
+            {
+                if (registry.TryGetType(name, out type)) return true;
+            }
+
+            type = null;
+            return false;
+        }
+
 
         /// <inheritdoc />
         public Type this[string name] =>
-            GetType(name) ?? throw new KeyNotFoundException($"Cannot find type named '{name}'");
+            TryGetType(name, out var type)
+                ? type
+                : throw new KeyNotFoundException($"Cannot find type named '{name}'");
 
         /// <inheritdoc />
         public string this[Type type] =>
-            GetName(type) ?? throw new KeyNotFoundException($"Cannot find name for type '{type}'");
+            TryGetName(type, out var name)
+                ? name
+                : throw new KeyNotFoundException($"Cannot find name for type '{type}'");
     }
 }

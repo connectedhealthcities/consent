@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore.Entities;
 
@@ -12,15 +13,19 @@ namespace CHC.Consent.EFCore
     {
         private readonly IStoreProvider stores;
         private readonly IStore<PersonEntity> people;
-        private readonly IdentifierHandlerProvider handlerProvider;
-        private readonly PersonIdentifierRegistry identifierRegistry;
+        private readonly IIdentifierHandlerProvider handlerProvider;
+        private readonly ITypeRegistry identifierRegistry;
 
-        public IdentityRepository(IStore<PersonEntity> people, PersonIdentifierRegistry registry, IStoreProvider stores)
+        public IdentityRepository(
+            IStore<PersonEntity> people, 
+            ITypeRegistry<IIdentifier> identifierRegistry, 
+            IIdentifierHandlerProvider identifierHandlerProvider, 
+            IStoreProvider stores)
         {
             this.stores = stores;
             this.people = people;
-            identifierRegistry = registry;
-            handlerProvider = new IdentifierHandlerProvider(identifierRegistry);
+            this.identifierRegistry = identifierRegistry;
+            handlerProvider = identifierHandlerProvider;
         }
 
         public PersonIdentity FindPersonBy(params IIdentifier[] identifiers) => FindPersonBy(identifiers.AsEnumerable());

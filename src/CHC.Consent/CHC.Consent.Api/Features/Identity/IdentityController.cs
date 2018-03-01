@@ -8,6 +8,7 @@ using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -20,14 +21,15 @@ namespace CHC.Consent.Api.Features.Identity
     public class IdentityController : Controller
     {
         private readonly IPersonIdentifierListChecker identifierChecker;
-        private readonly PersonIdentifierRegistry registry;
+        private readonly ITypeRegistry<IIdentifier> registry;
         private readonly ArrayPool<char> arrayPool;
         private IIdentityRepository IdentityRepository { get; }
 
         public IdentityController(
             IIdentityRepository identityRepository, 
             IPersonIdentifierListChecker identifierChecker,
-            PersonIdentifierRegistry registry, ArrayPool<char> arrayPool)
+            ITypeRegistry<IIdentifier> registry, 
+            ArrayPool<char> arrayPool)
         {
             this.identifierChecker = identifierChecker;
             this.registry = registry;

@@ -8,17 +8,20 @@
     <Folder Include="wwwroot\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FakeItEasy" Version="4.4.0" />
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.5" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="1.1.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="2.1.0" />
   </ItemGroup>
   <ItemGroup>
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CHC.Consent.Common\CHC.Consent.Common.csproj" />
+    <ProjectReference Include="..\CHC.Consent.DependencyInjection\CHC.Consent.DependencyInjection.csproj">
+      <Project>{4B512A33-8B34-4BB8-A810-0F9FE4E8EBDC}</Project>
+      <Name>CHC.Consent.DependencyInjection</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CHC.Consent.EFCore\CHC.Consent.EFCore.csproj" />
   </ItemGroup>
 </Project>

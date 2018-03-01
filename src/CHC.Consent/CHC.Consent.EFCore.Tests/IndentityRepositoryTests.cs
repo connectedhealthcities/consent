@@ -1,8 +1,11 @@
+using System;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.IdentifierAdapters;
+using FakeItEasy;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -33,15 +36,20 @@ namespace CHC.Consent.EFCore.Tests
             Context.AddRange(personOne, personTwo);
             Context.AddRange(personOneNhsNumber, personTwoNhsNumber);
             Context.SaveChanges();
-            
-            var registry = new PersonIdentifierRegistry();
-            registry.Add<NhsNumberIdentifier, NhsNumberIdentifierAdapter>();
 
+
+            var identityHandler = new IdentifierAdapterBase<NhsNumberIdentifier>(new NhsNumberIdentifierMarshaller(), NhsNumberIdentifier.TypeName);
+            var handlerProvider = A.Fake<IIdentifierHandlerProvider>();
+            A.CallTo(() => handlerProvider.GetFilter(A<NhsNumberIdentifier>._)).Returns(new IdentifierFilterWrapper<NhsNumberIdentifier>(identityHandler));
+            A.CallTo(() => handlerProvider.GetRetriever(typeof(NhsNumberIdentifier))).Returns(new IdentifierRetrieverWrapper<NhsNumberIdentifier>(identityHandler));
+            A.CallTo(() => handlerProvider.GetUpdater(typeof(NhsNumberIdentifier))).Returns(new IdentifierUpdaterWrapper<NhsNumberIdentifier>(identityHandler));
+            
             var storeProvider = (IStoreProvider)new ContextStoreProvider (CreateNewContextInSameTransaction());
 
             var repository = new IdentityRepository(
                 storeProvider.Get<PersonEntity>(), 
-                registry,
+                A.Dummy<ITypeRegistry<IIdentifier>>(),
+                handlerProvider,
                 storeProvider);
 
             Assert.Equal(repository.FindPersonBy(new NhsNumberIdentifier(personOneNhsNumber.Value)), personOne);

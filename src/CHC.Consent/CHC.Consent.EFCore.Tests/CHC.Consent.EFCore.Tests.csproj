@@ -5,7 +5,8 @@
     <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" />
+    <PackageReference Include="FakeItEasy" Version="4.5.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.6.0" />
     <PackageReference Include="xunit" Version="2.3.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
@@ -19,5 +20,10 @@
       <Project>{7D1EFE71-9C0B-4F6A-8D17-DF15D18F5AA3}</Project>
       <Name>CHC.Consent.Testing.Utils</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="FakeItEasy, Version=4.0.0.0, Culture=neutral, PublicKeyToken=eff28e2146d5fd2c">
+      <HintPath>..\..\..\..\..\..\Users\David Kemp\.nuget\packages\fakeiteasy\4.4.0\lib\netstandard1.6\FakeItEasy.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

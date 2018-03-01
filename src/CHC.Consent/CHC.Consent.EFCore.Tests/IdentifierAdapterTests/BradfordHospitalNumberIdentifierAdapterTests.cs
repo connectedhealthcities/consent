@@ -29,10 +29,9 @@ namespace CHC.Consent.EFCore.Tests.IdentifierAdapterTests
         [Fact]
         public void CorrectlyFiltersAList()
         {
+            var personWithCorrectHosptialNumber = AddPersonWithAHospitalNumber("HOSPITAL NUMBER");
             5.Times(AddPersonWithAHospitalNumber);
             saveContext.SaveChanges();
-            
-            var personWithCorrectHosptialNumber = AddPersonWithAHospitalNumber("HOSPITAL NUMBER");
             
             var foundPeople = adapter.Filter(
                 readContext.People,

@@ -5,121 +5,120 @@ using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore.Entities;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CHC.Consent.EFCore
 {
-    public class IdentifierHandlerProvider 
+    public interface IIdentifierHandlerProvider
     {
-        private readonly PersonIdentifierRegistry registry;
+        IFilterWrapper GetFilter(IIdentifier identifier);
+        IRetrieverWrapper GetRetriever(Type identifierType);
+        IUpdaterWrapper GetUpdater(Type identifierType);
+    }
 
-        public IdentifierHandlerProvider(PersonIdentifierRegistry registry)
+    public class IdentifierHandlerProvider : IIdentifierHandlerProvider
+    {
+        public IServiceProvider Services { get; }
+        
+        public IdentifierHandlerProvider(IServiceProvider services)
         {
-            this.registry = registry;
+            Services = services;
         }
 
-        private static readonly Dictionary<Type, Type> FilterWrapperTypeCache = new Dictionary<Type, Type>();
-
-        private static Type GetFilterWrapperType(Type identifierType)
+        private class WrapperTypeCache
         {
-            if(!FilterWrapperTypeCache.ContainsKey(identifierType))
-                FilterWrapperTypeCache.Add(identifierType, typeof(FilterWrapper<>).MakeGenericType(identifierType));
-            return FilterWrapperTypeCache[identifierType];
+            private readonly Type genericWrapperType;
+            private Dictionary<Type, Type> wrapperTypeCache = new Dictionary<Type, Type>();
+
+            public WrapperTypeCache(Type genericWrapperType)
+            {
+                if(!genericWrapperType.IsGenericTypeDefinition) throw new ArgumentException("Must be an open generic type", nameof(genericWrapperType));
+                if(genericWrapperType.GetGenericArguments().Length != 1) throw new ArgumentException("Must have one type argument (Type`1[])", nameof(genericWrapperType));
+                this.genericWrapperType = genericWrapperType;
+            }
+
+            public Type GetWrapperType(Type identifierType)
+            {
+                if(!wrapperTypeCache.ContainsKey(identifierType))
+                    wrapperTypeCache.Add(identifierType, genericWrapperType.MakeGenericType(identifierType));
+                return wrapperTypeCache[identifierType];
+            }
         }
 
+        private readonly WrapperTypeCache filterWrapperTypeCache = new WrapperTypeCache(typeof(IdentifierFilterWrapper<>)); 
         public IFilterWrapper GetFilter(IIdentifier identifier)
         {
-            var filterType = registry.GetFilterType(identifier.GetType());
-            var filter = Activator.CreateInstance(filterType);
-            var wrapper = (IFilterWrapper) Activator.CreateInstance(GetFilterWrapperType(identifier.GetType()), filter);
-            return wrapper;
+            var wrapperType = filterWrapperTypeCache.GetWrapperType(identifier.GetType());
+            return (IFilterWrapper)Services.GetRequiredService(wrapperType);
         }
 
-        private class FilterWrapper<T> : IFilterWrapper where T : IIdentifier
-        {
-            private readonly IIdentifierFilter<T> filter;
-
-            /// <inheritdoc />
-            public FilterWrapper(IIdentifierFilter<T> filter)
-            {
-                this.filter = filter;
-            }
-
-
-            /// <inheritdoc />
-            public IQueryable<PersonEntity> Filter(
-                IQueryable<PersonEntity> people, IIdentifier identifier, IStoreProvider storeProvider)
-            {
-                return filter.Filter(people, (T) identifier, storeProvider);
-            }
-        }
-        
-        private class RetrieverWrapper<T> : IRetrieverWrapper where T : IIdentifier
-        {
-            private readonly IIdentifierRetriever<T> retriever;
-
-            /// <inheritdoc />
-            public RetrieverWrapper(IIdentifierRetriever<T> retriever)
-            {
-                this.retriever = retriever;
-            }
-
-
-            /// <param name="person"></param>
-            /// <param name="stores"></param>
-            /// <inheritdoc />
-            public IEnumerable<IIdentifier> Get(PersonEntity person, IStoreProvider stores)
-            {
-                return retriever.Get(person, stores).Cast<IIdentifier>();
-            }
-        }
-
-        private class UpdaterWrapper<T> : IUpdaterWrapper where T : IIdentifier
-        {
-            private readonly IIdentifierUpdater<T> updater;
-
-            public UpdaterWrapper(IIdentifierUpdater<T> updater)
-            {
-                this.updater = updater;
-            }
-
-            public bool Update(PersonEntity person, IIdentifier value, IStoreProvider stores)
-            {
-                return updater.Update(person, (T)value, stores);
-            }
-        }
-        
-        private static readonly Dictionary<Type, Type> RetrieverWrapperTypeCache = new Dictionary<Type, Type>();
-
-        private static Type GetRetrieverWapperType(Type identifierType)
-        {
-            if(!RetrieverWrapperTypeCache.ContainsKey(identifierType))
-                RetrieverWrapperTypeCache.Add(identifierType, typeof(RetrieverWrapper<>).MakeGenericType(identifierType));
-            return RetrieverWrapperTypeCache[identifierType];
-        }
+        private readonly WrapperTypeCache retrieverWrapperTypeCache = new WrapperTypeCache(typeof(IdentifierRetrieverWrapper<>));
 
         public IRetrieverWrapper GetRetriever(Type identifierType)
         {
-            var retrieverType = registry.GetRetrieverType(identifierType);
-            var filter = Activator.CreateInstance(retrieverType);
-            var wrapper = (IRetrieverWrapper) Activator.CreateInstance(GetRetrieverWapperType(identifierType), filter);
-            return wrapper;
+            var wrapperType = retrieverWrapperTypeCache.GetWrapperType(identifierType);
+            return (IRetrieverWrapper) Services.GetRequiredService(wrapperType);
         }
         
-        private static readonly Dictionary<Type, Type> UpdaterWrapperTypeCache = new Dictionary<Type, Type>();
-        
-        private static Type GetUpdaterWapperType(Type identifierType)
-        {
-            if(!UpdaterWrapperTypeCache.ContainsKey(identifierType))
-                UpdaterWrapperTypeCache.Add(identifierType, typeof(UpdaterWrapper<>).MakeGenericType(identifierType));
-            return UpdaterWrapperTypeCache[identifierType];
-        }
-
+        private readonly WrapperTypeCache updaterWrapperTypeCache = new WrapperTypeCache(typeof(IdentifierUpdaterWrapper<>));
         public IUpdaterWrapper GetUpdater(Type identifierType)
         {
-            var updaterType = registry.GetUpdaterType(identifierType);
-            var filter = Activator.CreateInstance(updaterType);
-            var wrapper = (IUpdaterWrapper) Activator.CreateInstance(GetUpdaterWapperType(identifierType), filter);
-            return wrapper;
+            var wrapperType = updaterWrapperTypeCache.GetWrapperType(identifierType);
+            return (IUpdaterWrapper) Services.GetRequiredService(wrapperType);
+        }
+    }
+
+    public class IdentifierUpdaterWrapper<T> : IUpdaterWrapper where T : IIdentifier
+    {
+        private readonly IIdentifierUpdater<T> updater;
+
+        public IdentifierUpdaterWrapper(IIdentifierUpdater<T> updater)
+        {
+            this.updater = updater;
+        }
+
+        public bool Update(PersonEntity person, IIdentifier value, IStoreProvider stores)
+        {
+            return updater.Update(person, (T)value, stores);
+        }
+    }
+
+    public class IdentifierRetrieverWrapper<T> : IRetrieverWrapper where T : IIdentifier
+    {
+        private readonly IIdentifierRetriever<T> retriever;
+
+        /// <inheritdoc />
+        public IdentifierRetrieverWrapper(IIdentifierRetriever<T> retriever)
+        {
+            this.retriever = retriever;
+        }
+
+
+        /// <param name="person"></param>
+        /// <param name="stores"></param>
+        /// <inheritdoc />
+        public IEnumerable<IIdentifier> Get(PersonEntity person, IStoreProvider stores)
+        {
+            return retriever.Get(person, stores).Cast<IIdentifier>();
+        }
+    }
+
+    public class IdentifierFilterWrapper<T> : IFilterWrapper where T : IIdentifier
+    {
+        private readonly IIdentifierFilter<T> filter;
+
+        /// <inheritdoc />
+        public IdentifierFilterWrapper(IIdentifierFilter<T> filter)
+        {
+            this.filter = filter;
+        }
+
+
+        /// <inheritdoc />
+        public IQueryable<PersonEntity> Filter(
+            IQueryable<PersonEntity> people, IIdentifier identifier, IStoreProvider storeProvider)
+        {
+            return filter.Filter(people, (T) identifier, storeProvider);
         }
     }
 }

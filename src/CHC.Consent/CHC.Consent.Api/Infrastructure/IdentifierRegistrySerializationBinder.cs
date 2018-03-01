@@ -24,7 +24,7 @@ namespace CHC.Consent.Api.Infrastructure
         public void BindToName(Type serializedType, out string assemblyName, out string typeName)
         {
             assemblyName = null;
-            typeName = registry.GetName(serializedType);
+            registry.TryGetName(serializedType, out typeName);
         }
     }
 }

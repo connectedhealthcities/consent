@@ -14,6 +14,7 @@ using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.IdentifierAdapters;
@@ -40,10 +41,10 @@ namespace CHC.Consent.Tests.Api.Controllers
                         "PersonSpecification.json"),
                     Encoding.UTF8)
                 .ReadToEnd();
-            
 
-        private readonly PersonIdentifierRegistry personIdentifierRegistry =
-            Create.IdentifierRegistry.WithIdentifiers<NhsNumberIdentifier, BradfordHospitalNumberIdentifier>();
+
+        private readonly ITypeRegistry<IIdentifier> personIdentifierRegistry =
+            Create.IdentifierRegistry.WithIdentifiers<NhsNumberIdentifier, BradfordHospitalNumberIdentifier>().Build();
 
         
 
@@ -141,13 +142,11 @@ namespace CHC.Consent.Tests.Api.Controllers
                 .Returns(null);
             
             
-            var registry = new PersonIdentifierRegistry();
-            registry.Add<NhsNumberIdentifier, NhsNumberIdentifierAdapter>();
-
+            
             var controller = new IdentityController(
                 identityRepository,
                 A.Fake<IPersonIdentifierListChecker>(),
-                registry,
+                personIdentifierRegistry,
                 ArrayPool<char>.Create());
 
 

@@ -1,13 +1,14 @@
 using System;
 using System.Linq;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore;
 
 namespace CHC.Consent.Tests
 {
     public static partial class Create 
     {
-        public class IdentifierRegistryBuilder : Builder<PersonIdentifierRegistry, IdentifierRegistryBuilder>
+        public class IdentifierRegistryBuilder : Builder<ITypeRegistry<IIdentifier>, IdentifierRegistryBuilder>
         {
             private Type[] identifierTypes = Array.Empty<Type>();
 
@@ -22,13 +23,12 @@ namespace CHC.Consent.Tests
                 => WithIdentifier<T1>().WithIdentifier<T2>();
 
             /// <inheritdoc />
-            public override PersonIdentifierRegistry Build()
+            public override ITypeRegistry<IIdentifier> Build()
             {
-                var registry = new PersonIdentifierRegistry();
+                var registry = new TypeRegistry<IIdentifier,IdentifierAttribute>();
                 foreach (var identifierType in identifierTypes)
                 {
-                    var handlerType = typeof(DummyAttributeAdapter<>).MakeGenericType(identifierType);
-                    registry.Add(identifierType, handlerType, handlerType, handlerType);
+                    registry.Add(identifierType, IdentifierAttribute.GetAttribute(identifierType));
                 }
 
                 return registry;

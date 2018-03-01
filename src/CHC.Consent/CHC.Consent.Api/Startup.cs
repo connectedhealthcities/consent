@@ -2,16 +2,16 @@
 using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Api.Infrastructure.Web;
-using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Consent.Identifiers;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Identity.Identifiers.Medway;
+using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.Common.Infrastructure.Data;
+using CHC.Consent.DependencyInjection;
 using CHC.Consent.EFCore;
-using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.IdentifierAdapters;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -22,7 +22,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace CHC.Consent.Api
@@ -39,27 +38,32 @@ namespace CHC.Consent.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var personIdentifierRegistry = new PersonIdentifierRegistry();
-            personIdentifierRegistry.Add<NhsNumberIdentifier, NhsNumberIdentifierAdapter>();
-            personIdentifierRegistry.Add<BradfordHospitalNumberIdentifier, BradfordHospitalNumberIdentifierAdapter>();
-            personIdentifierRegistry.Add<SexIdentifier, SexIdentifierAdapter>();
-            personIdentifierRegistry.Add<DateOfBirthIdentifier, DateOfBirthIdentifierAdapter>();
-            personIdentifierRegistry.Add<MedwayNameIdentifier, MedwayNameIdentifierAdapter>();
-            services.AddSingleton(personIdentifierRegistry);
-            services.AddSingleton<IPersonIdentifierListChecker>(personIdentifierRegistry);
+            services.AddPersonIdentifiers(
+                registry =>
+                {
+                    registry.Add<NhsNumberIdentifier>(o => o.WithMarshaller<NhsNumberIdentifierMarshaller>());
+                    registry.Add<BradfordHospitalNumberIdentifier>(o => o.WithMarshaller<BradfordHospitalNumberIdentifierMarshaller>());
+                    registry.Add<SexIdentifier>(o => o.WithMarshaller<SexIdentifierMarshaller>());
+                    registry.Add<DateOfBirthIdentifier>(o => o.WithXmlMarshaller(valueType: "dateOfBirth"));
+                    registry.Add<MedwayNameIdentifier>(o => o.WithXmlMarshaller(valueType: "BIB4All.MedwayName"));
+                }
+            );
+            
             
             var consentIdentifierRegistry = new ConsentIdentifierRegistry();
             consentIdentifierRegistry.Add<PregnancyNumberIdentifier>();
             services.AddSingleton(consentIdentifierRegistry);
+            services.AddSingleton<ITypeRegistry<Identifier>>(consentIdentifierRegistry);
             
             var evidenceRegistry = new EvidenceRegistry();
             evidenceRegistry.Add<MedwayEvidence>();
             services.AddSingleton(evidenceRegistry);
+            services.AddSingleton<ITypeRegistry<Evidence>>(evidenceRegistry);
 
             services.AddSingleton<ConsentTypeRegistry>();
 
-            services.AddTransient<IConfigureOptions<MvcOptions>, IdentityModelBinderProviderConfiguration<PersonIdentifierRegistry, PersonSpecification>>();
-            services.AddTransient<IConfigureOptions<MvcOptions>, IdentityModelBinderProviderConfiguration<ConsentTypeRegistry, ConsentSpecification>>();
+            services.AddTransient<IPostConfigureOptions<MvcOptions>, IdentityModelBinderProviderConfiguration<ITypeRegistry<IIdentifier>, PersonSpecification>>();
+            services.AddTransient<IPostConfigureOptions<MvcOptions>, IdentityModelBinderProviderConfiguration<ConsentTypeRegistry, ConsentSpecification>>();
             
             services
                 .AddMvc(
@@ -74,16 +78,9 @@ namespace CHC.Consent.Api
                     {
                         SerializerSettings(config.SerializerSettings);
                     });
-            
-            services.AddSwaggerGen(gen =>
-            {
-                gen.SwaggerDoc("v1", new Info {Title = "Api", Version = "1"});
-                gen.DescribeAllEnumsAsStrings();
-                gen.SchemaFilter<SwaggerSchemaIdentityTypeProvider<IIdentifier, PersonIdentifierRegistry>>();
-                gen.SchemaFilter<SwaggerSchemaIdentityTypeProvider<Identifier, ConsentIdentifierRegistry>>();
-                gen.CustomSchemaIds(t => personIdentifierRegistry.GetName(t) ?? consentIdentifierRegistry.GetName(t) ?? t.FriendlyId(fullyQualified:false));
-            });
-            
+
+            services.AddTransient<IConfigureOptions<SwaggerGenOptions>, SwaggerGenOptionsProvider>();
+            services.AddSwaggerGen(_ => {});
             
             services.AddScoped<IIdentityRepository, IdentityRepository>();
             services.AddScoped<IConsentRepository,ConsentRepository>();
@@ -93,6 +90,8 @@ namespace CHC.Consent.Api
             services.AddScoped(typeof(IStore<>), typeof(Store<>));
         }
 
+
+        
         
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

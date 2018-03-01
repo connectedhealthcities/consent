@@ -19,7 +19,7 @@ namespace CHC.Consent.Api.Infrastructure.Web
     /// </summary>
     /// <typeparam name="TRegistry">The <see cref="ITypeRegistry"/> type (resolved via constructor injection)</typeparam>
     /// <typeparam name="TModel">The `class` for which to bind</typeparam>
-    public class IdentityModelBinderProviderConfiguration<TRegistry, TModel> : IConfigureOptions<MvcOptions>
+    public class IdentityModelBinderProviderConfiguration<TRegistry, TModel> : IPostConfigureOptions<MvcOptions>
         where TRegistry:ITypeRegistry
     {
         private readonly ILoggerFactory loggerFactory;
@@ -44,7 +44,7 @@ namespace CHC.Consent.Api.Infrastructure.Web
         }
 
         /// <inheritdoc />
-        public void Configure(MvcOptions options)
+        public void PostConfigure(string name, MvcOptions options)
         {
             var identityModelBinderProvider = new IdentityModelBinderProvider<TModel>(
                 charPool,
@@ -68,8 +68,5 @@ namespace CHC.Consent.Api.Infrastructure.Web
                 options.ModelBinderProviders.Add(identityModelBinderProvider);
             }
         }
-
-
-        
     }
 }

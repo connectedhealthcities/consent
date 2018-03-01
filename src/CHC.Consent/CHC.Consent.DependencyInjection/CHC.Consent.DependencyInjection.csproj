@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CHC.Consent.Common\CHC.Consent.Common.csproj">
+      <Project>{5CF2CE95-0242-4068-B31A-116171037E8B}</Project>
+      <Name>CHC.Consent.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CHC.Consent.EFCore\CHC.Consent.EFCore.csproj">
+      <Project>{CDDE7330-870E-4EEF-A98E-F9C8B8923F25}</Project>
+      <Name>CHC.Consent.EFCore</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=2.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
+      <HintPath>..\..\..\..\..\..\Users\David Kemp\.nuget\packages\microsoft.extensions.dependencyinjection.abstractions\2.0.0\lib\netstandard2.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

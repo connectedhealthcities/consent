@@ -1,4 +1,5 @@
 ﻿using System;
+using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Infrastructure;
 
 namespace CHC.Consent.Common.Identity
@@ -14,5 +15,8 @@ namespace CHC.Consent.Common.Identity
         {
             Name = name;
         }
+
+        public static IdentifierAttribute GetAttribute(Type identifierType)
+            => IdentifierAttributeHelpers.GetIdentiferAttribute<IdentifierAttribute>(identifierType);
     }
 }
