@@ -38,11 +38,9 @@ namespace CHC.Consent.EFCore.Tests
             Context.SaveChanges();
 
 
-            var identityHandler = new PersonIdentifierAdapter<NhsNumberIdentifier>(new NhsNumberIdentifierMarshaller(), NhsNumberIdentifier.TypeName);
+            var identityHandler = new PersonIdentifierHandler<NhsNumberIdentifier>(new NhsNumberIdentifierMarshaller(), NhsNumberIdentifier.TypeName);
             var handlerProvider = A.Fake<IIdentifierHandlerProvider>();
-            A.CallTo(() => handlerProvider.GetFilter(A<NhsNumberIdentifier>._)).Returns(new IdentifierFilterWrapper<NhsNumberIdentifier>(identityHandler));
-            A.CallTo(() => handlerProvider.GetRetriever(typeof(NhsNumberIdentifier))).Returns(new IdentifierRetrieverWrapper<NhsNumberIdentifier>(identityHandler));
-            A.CallTo(() => handlerProvider.GetUpdater(typeof(NhsNumberIdentifier))).Returns(new IdentifierUpdaterWrapper<NhsNumberIdentifier>(identityHandler));
+            A.CallTo(() => handlerProvider.GetHandler(typeof(NhsNumberIdentifier))).Returns(new PersonIdentifierHandlerWrapper<NhsNumberIdentifier>(identityHandler));
             
             var storeProvider = (IStoreProvider)new ContextStoreProvider (CreateNewContextInSameTransaction());
 

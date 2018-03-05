@@ -15,7 +15,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
     {
         private const string IdentifierTypeName = "Testing";
         public const string ValueTypeName = "chc.testing";
-        private readonly PersonIdentifierAdapter<Identifier> adapter;
+        private readonly PersonIdentifierHandler<Identifier> handler;
         private ConsentContext creatingContext;
         private ConsentContext updatingContext;
         private ConsentContext readingContext;
@@ -27,7 +27,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
         public IdentifierAdapterTests(ITestOutputHelper outputHelper, DatabaseFixture fixture) : base(outputHelper, fixture)
         {
             marshaller = new IdentifierMarshaller();
-            adapter = new PersonIdentifierAdapter<Identifier>(marshaller, IdentifierTypeName);
+            handler = new PersonIdentifierHandler<Identifier>(marshaller, IdentifierTypeName);
             creatingContext = CreateNewContextInSameTransaction();
             updatingContext = CreateNewContextInSameTransaction();
             readingContext = CreateNewContextInSameTransaction();
@@ -111,7 +111,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
             creatingContext.SaveChanges();
 
 
-            var foundPeople = adapter.Filter(
+            var foundPeople = handler.Filter(
                 readingContext.People,
                 new Identifier {Value = "find me"},
                 new ContextStoreProvider(readingContext))
@@ -131,7 +131,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
             creatingContext.SaveChanges();
 
 
-            var retrievedIdentifiers = adapter.Get(personEntity, new ContextStoreProvider(readingContext)).ToArray();
+            var retrievedIdentifiers = handler.Get(personEntity, new ContextStoreProvider(readingContext)).ToArray();
 
 
             var identifier = Assert.Single(retrievedIdentifiers);
@@ -184,7 +184,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
         {
             context = context ?? updatingContext;
             person = person ?? personEntity;
-            var updated = adapter.Update(
+            var updated = handler.Update(
                 context.Find<PersonEntity>(person.Id),
                 identifier,
                 new ContextStoreProvider(context));

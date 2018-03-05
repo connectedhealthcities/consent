@@ -34,17 +34,24 @@ namespace CHC.Consent.EFCore
         {
             return identifiers.Aggregate(
                     (IQueryable<PersonEntity>) people,
-                    (filteredPeople, identifier) =>
-                        handlerProvider.GetFilter(identifier).Filter(filteredPeople, identifier, stores))
+                    FilterPeopleByIdentifier)
                 .SingleOrDefault();
+        }
+
+        private IQueryable<PersonEntity> FilterPeopleByIdentifier(
+            IQueryable<PersonEntity> peopleEntities, IPersonIdentifier identifier)
+        {
+            return GetHandler(identifier).Filter(peopleEntities, identifier, stores);
         }
 
         public IEnumerable<IPersonIdentifier> GetPersonIdentities(long personId)
         {
             var person = people.Get(personId);
 
-            return identifierRegistry.Select(_ => _.Type)
-                .SelectMany(identifierType => handlerProvider.GetRetriever(identifierType).Get(person, stores));
+            return identifierRegistry
+                .Select(_ => _.Type)
+                .Select(GetHandler)
+                .SelectMany(handler => handler.Get(person, stores));
 
         }
 
@@ -69,8 +76,13 @@ namespace CHC.Consent.EFCore
         {
             foreach (var identifier in identifiers)
             {
-                handlerProvider.GetUpdater(identifier.GetType()).Update(person, identifier, stores);
+                GetHandler(identifier).Update(person, identifier, stores);
             }
         }
+
+        private IPersonIdentifierHandler GetHandler(IPersonIdentifier identifier) =>
+            GetHandler(identifier.GetType());
+        private IPersonIdentifierHandler GetHandler(Type identifierType) =>
+            handlerProvider.GetHandler(identifierType);
     }
 }

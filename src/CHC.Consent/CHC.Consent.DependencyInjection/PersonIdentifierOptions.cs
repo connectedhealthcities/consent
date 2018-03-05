@@ -17,25 +17,17 @@ namespace CHC.Consent.DependencyInjection
 
         public Type IdentifierType { get; }
         public string TypeName { get; }
-        public Func<IServiceProvider, object> FilterProvider { get; set; }
-        public Func<IServiceProvider, object> UpdaterProvider { get; set; }
-        public Func<IServiceProvider, object> RetrieverProvider { get; set; }
+        public Func<IServiceProvider, object> HandlerProvider { get; private set; }
         public bool CanHaveDuplicates { get; set; }
         
         public void Validate()
         {
-            if(FilterProvider == null) throw new InvalidOperationException();
-            if(UpdaterProvider == null) throw new InvalidOperationException();
-            if(RetrieverProvider == null) throw new InvalidOperationException();
+            if(HandlerProvider == null) throw new InvalidOperationException();
         }
 
-        public void SetHandlerFromMarshaller<TIdentifer>(IIdentifierMarshaller<TIdentifer> identifierMarshaller) where TIdentifer : IPersonIdentifier
+        public void SetHandlerFromMarshaller<TIdentifer>(IIdentifierMarshaller<TIdentifer> marshaller) where TIdentifer : IPersonIdentifier
         {
-            var handler = new PersonIdentifierAdapter<TIdentifer>(identifierMarshaller, TypeName);
-
-            FilterProvider = _ => handler;
-            RetrieverProvider = _ => handler;
-            UpdaterProvider = _ => handler;
+            HandlerProvider = _ => new PersonIdentifierHandler<TIdentifer>(marshaller, TypeName);
         }
     }
 }

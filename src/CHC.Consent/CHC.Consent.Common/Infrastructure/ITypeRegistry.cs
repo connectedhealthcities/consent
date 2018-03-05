@@ -18,8 +18,8 @@ namespace CHC.Consent.Common.Infrastructure
     }
 
     /// <summary>
-    /// A Marker interface for mappings between types inheritifed from a base type/interfce
-    /// Mostly useful for DI/IOC use
+    /// <para>A Marker interface for mappings between types inheritifed from a base type/interface</para>
+    /// <para>Mostly useful for DI/IOC use</para>
     /// </summary>
     /// <typeparam name="TBaseType">The base type from which all types must inherit, or interface they must all implement</typeparam>
     public interface ITypeRegistry<TBaseType> : ITypeRegistry

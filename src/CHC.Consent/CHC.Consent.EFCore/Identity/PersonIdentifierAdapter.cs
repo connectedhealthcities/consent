@@ -10,16 +10,12 @@ namespace CHC.Consent.EFCore.Identity
     /// <summary>
     /// Deals with storing, finding, and retrieving <see cref="IPersonIdentifier"/>
     /// </summary>
-    public class PersonIdentifierAdapter<TIdentifier> : 
-        IIdentifierFilter<TIdentifier>, 
-        IIdentifierRetriever<TIdentifier>, 
-        IIdentifierUpdater<TIdentifier> 
-        where TIdentifier : IPersonIdentifier
+    public class PersonIdentifierHandler<TIdentifier> : IPersonIdentifierHandler<TIdentifier> where TIdentifier : IPersonIdentifier
     {
         private readonly IIdentifierMarshaller<TIdentifier> marshaller;
         private readonly string typeName;
 
-        public PersonIdentifierAdapter(IIdentifierMarshaller<TIdentifier> marshaller, string typeName)
+        public PersonIdentifierHandler(IIdentifierMarshaller<TIdentifier> marshaller, string typeName)
         {
             this.marshaller = marshaller;
             this.typeName = typeName;

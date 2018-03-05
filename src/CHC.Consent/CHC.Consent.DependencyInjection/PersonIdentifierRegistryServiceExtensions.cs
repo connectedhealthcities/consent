@@ -53,19 +53,11 @@ namespace CHC.Consent.DependencyInjection
         {
             foreach (var description in options.IdentifierDescriptions)
             {
-                var filterType = typeof(IIdentifierFilter<>).MakeGenericType(description.IdentifierType);
-                services.AddScoped(filterType, description.FilterProvider);
-
-                var updaterType = typeof(IIdentifierUpdater<>).MakeGenericType(description.IdentifierType);
-                services.AddScoped(updaterType, description.UpdaterProvider);
-
-                var retrieverType = typeof(IIdentifierRetriever<>).MakeGenericType(description.IdentifierType);
-                services.AddScoped(retrieverType, description.RetrieverProvider);
+                var handlerType = typeof(IPersonIdentifierHandler<>).MakeGenericType(description.IdentifierType);
+                services.AddScoped(handlerType, description.HandlerProvider);
             }
 
-            services.AddScoped(typeof(IdentifierFilterWrapper<>));
-            services.AddScoped(typeof(IdentifierRetrieverWrapper<>));
-            services.AddScoped(typeof(IdentifierUpdaterWrapper<>));
+            services.AddScoped(typeof(PersonIdentifierHandlerWrapper<>));
 
             services.AddScoped<IIdentifierHandlerProvider, IdentifierHandlerProvider>();
         }
