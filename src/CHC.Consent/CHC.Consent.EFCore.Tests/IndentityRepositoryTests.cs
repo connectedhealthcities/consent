@@ -4,7 +4,7 @@ using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore.Entities;
-using CHC.Consent.EFCore.IdentifierAdapters;
+using CHC.Consent.EFCore.Identity;
 using FakeItEasy;
 using Xunit;
 using Xunit.Abstractions;
@@ -38,7 +38,7 @@ namespace CHC.Consent.EFCore.Tests
             Context.SaveChanges();
 
 
-            var identityHandler = new IdentifierAdapterBase<NhsNumberIdentifier>(new NhsNumberIdentifierMarshaller(), NhsNumberIdentifier.TypeName);
+            var identityHandler = new PersonIdentifierAdapter<NhsNumberIdentifier>(new NhsNumberIdentifierMarshaller(), NhsNumberIdentifier.TypeName);
             var handlerProvider = A.Fake<IIdentifierHandlerProvider>();
             A.CallTo(() => handlerProvider.GetFilter(A<NhsNumberIdentifier>._)).Returns(new IdentifierFilterWrapper<NhsNumberIdentifier>(identityHandler));
             A.CallTo(() => handlerProvider.GetRetriever(typeof(NhsNumberIdentifier))).Returns(new IdentifierRetrieverWrapper<NhsNumberIdentifier>(identityHandler));
@@ -48,7 +48,7 @@ namespace CHC.Consent.EFCore.Tests
 
             var repository = new IdentityRepository(
                 storeProvider.Get<PersonEntity>(), 
-                A.Dummy<ITypeRegistry<IIdentifier>>(),
+                A.Dummy<ITypeRegistry<IPersonIdentifier>>(),
                 handlerProvider,
                 storeProvider);
 

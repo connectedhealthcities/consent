@@ -11,14 +11,14 @@ namespace CHC.Consent.DependencyInjection
 
         public void Add(Type identiferType, bool canHaveDuplicates)
         {
-            if(!typeof(IIdentifier).IsAssignableFrom(identiferType)) 
+            if(!typeof(IPersonIdentifier).IsAssignableFrom(identiferType)) 
                 throw new ArgumentException("Must be an IIdentifier", nameof(identiferType));
 
             identifierMeta.Add(identiferType, canHaveDuplicates);
         }
         
         /// <inheritdoc />
-        public void EnsureHasNoInvalidDuplicates(IEnumerable<IIdentifier> identifiers)
+        public void EnsureHasNoInvalidDuplicates(IEnumerable<IPersonIdentifier> identifiers)
         {
             foreach (var identifierGroup in identifiers.GroupBy(_ => _.GetType()))
             {

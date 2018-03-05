@@ -5,7 +5,7 @@ using CHC.Consent.EFCore.Entities;
 
 namespace CHC.Consent.EFCore
 {
-    public interface IIdentifierFilter<in TIdentifier> where TIdentifier:IIdentifier
+    public interface IIdentifierFilter<in TIdentifier> where TIdentifier:IPersonIdentifier
     {
         IQueryable<PersonEntity> Filter(
             IQueryable<PersonEntity> people, TIdentifier value, IStoreProvider stores);

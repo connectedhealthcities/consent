@@ -2,54 +2,42 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using CHC.Consent.Common.Identity;
 
 namespace CHC.Consent.Common.Infrastructure
 {
-    public static class IdentifierAttributeHelpers
-    {
-        public static TAttribute GetIdentiferAttribute<TAttribute>(Type identifierType)  where TAttribute: Attribute, ITypeName
-        {
-            var identifierAttribute = identifierType.GetCustomAttribute<TAttribute>();
-            if (identifierAttribute == null)
-            {
-                throw new ArgumentException(
-                    $"Cannot get attributes for {identifierType} as it has no {typeof(TAttribute).Name}");
-            }
-
-            return identifierAttribute;
-        }
-        
-    }
-
-    public interface ITypeRegistry<TIdentifier> : ITypeRegistry
-    {
-        
-    }
-    
-    public class TypeRegistry<TIdentifier, TAttribute> : ITypeRegistry<TIdentifier> where TAttribute: Attribute, ITypeName
+    /// <summary>
+    /// <para>
+    /// An implmentation of a <see cref="ITypeRegistry{TIdentifier}"/>
+    /// which uses <typeparamref name="TAttribute"/> to provide names
+    /// </para>
+    /// </summary>
+    /// <typeparam name="TBaseType">The base type/interface which types inherit/implement</typeparam>
+    /// <typeparam name="TAttribute">The type of the attribute - must implement <see cref="ITypeName"/></typeparam>
+    public class TypeRegistry<TBaseType, TAttribute> : ITypeRegistry<TBaseType> 
+        where TAttribute: Attribute, ITypeName
     {
         private readonly IDictionary<string, Type> namesToTypes = new Dictionary<string, Type>();
-
         private readonly IDictionary<Type, string> typesToNames = new Dictionary<Type, string>();
 
+        protected static TAttribute GetIdentifierAttribute(Type identifierType) =>
+            TypeNameHelpers.GetIdentiferAttribute<TAttribute>(identifierType);
 
-        public static TAttribute GetIdentifierAttribute(Type identifierType) =>
-            IdentifierAttributeHelpers.GetIdentiferAttribute<TAttribute>(identifierType);
+        public virtual void Add<T>() where T:TBaseType
+            => Add(typeof(T), GetIdentifierAttribute(typeof(T)));
+        
 
-
-        public virtual void Add(Type identifierType, TAttribute attribute)
+        public virtual void Add(Type type, TAttribute attribute)
         {
-            if(!typeof(TIdentifier).IsAssignableFrom(identifierType))
+            if(type.IsSubtypeOf<TBaseType>()) 
                 throw new ArgumentException();
-            Add(identifierType, attribute.Name);
+            Add(type, attribute.Name);
         }
 
-        public void Add(Type identifierType, string name)
+        public void Add(Type type, string name)
         {
-            namesToTypes.Add(name, identifierType);
-            typesToNames.Add(identifierType, name);
+            namesToTypes.Add(name, type);
+            typesToNames.Add(type, name);
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

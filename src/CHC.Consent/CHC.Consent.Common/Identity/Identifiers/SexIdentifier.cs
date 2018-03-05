@@ -1,7 +1,7 @@
 ﻿namespace CHC.Consent.Common.Identity.Identifiers
 {
     [Identifier(TypeName)]
-    public class SexIdentifier : IIdentifier, ISingleValueIdentifier<Sex?>
+    public class SexIdentifier : IPersonIdentifier
     {
         public const string TypeName = "sex";
 
@@ -12,9 +12,6 @@
         }
 
         public Sex? Sex { get; set; }
-
-        /// <inheritdoc />
-        Sex? ISingleValueIdentifier<Sex?>.Value => this.Sex;
 
         protected bool Equals(SexIdentifier other)
         {

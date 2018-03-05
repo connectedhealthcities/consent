@@ -3,7 +3,7 @@
 namespace CHC.Consent.Common.Identity.Identifiers
 {
     [Identifier(TypeName, AllowMultipleValues = true)]
-    public class BradfordHospitalNumberIdentifier : IIdentifier
+    public class BradfordHospitalNumberIdentifier : IPersonIdentifier
     {
         public string Value { get; private set; }
         

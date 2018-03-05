@@ -17,7 +17,7 @@ using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore;
-using CHC.Consent.EFCore.IdentifierAdapters;
+using CHC.Consent.EFCore.Identity;
 using CHC.Consent.Testing.Utils;
 using FakeItEasy;
 using Microsoft.AspNetCore.Mvc;
@@ -43,7 +43,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 .ReadToEnd();
 
 
-        private readonly ITypeRegistry<IIdentifier> personIdentifierRegistry =
+        private readonly ITypeRegistry<IPersonIdentifier> personIdentifierRegistry =
             Create.IdentifierRegistry.WithIdentifiers<NhsNumberIdentifier, BradfordHospitalNumberIdentifier>().Build();
 
         
@@ -72,7 +72,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                         },
                         MatchSpecifications =
                         {
-                            new MatchSpecification {Identifiers = new IIdentifier[] {nhsNumber}}
+                            new MatchSpecification {Identifiers = new IPersonIdentifier[] {nhsNumber}}
                         }
                     },
                     Formatting.Indented,
@@ -91,7 +91,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             var bradfordHospitalNumberIdentifier = new BradfordHospitalNumberIdentifier("Added HospitalNumber");
             
             var identityRepository = A.Fake<IIdentityRepository>();
-            A.CallTo(() => identityRepository.FindPersonBy(A<IEnumerable<IIdentifier>>.That.IsSameSequenceAs(nhsNumberIdentifier))).Returns(existingPerson);
+            A.CallTo(() => identityRepository.FindPersonBy(A<IEnumerable<IPersonIdentifier>>.That.IsSameSequenceAs(nhsNumberIdentifier))).Returns(existingPerson);
             
             
                 
@@ -115,7 +115,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                     {
                         new MatchSpecification
                         {
-                            Identifiers = new IIdentifier[] {nhsNumberIdentifier}
+                            Identifiers = new IPersonIdentifier[] {nhsNumberIdentifier}
                         }
                     }
                 }
@@ -124,7 +124,7 @@ namespace CHC.Consent.Tests.Api.Controllers
 
             A.CallTo(
                     () => identityRepository.UpdatePerson(existingPerson,
-                        A<IEnumerable<IIdentifier>>.That.IsSameSequenceAs(nhsNumberIdentifier, bradfordHospitalNumberIdentifier)))
+                        A<IEnumerable<IPersonIdentifier>>.That.IsSameSequenceAs(nhsNumberIdentifier, bradfordHospitalNumberIdentifier)))
                 .MustHaveHappenedOnceExactly();
             Assert.IsType<SeeOtherActionResult>(result);
         }
@@ -138,7 +138,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             var identityRepository = A.Fake<IIdentityRepository>();
             A.CallTo(
                     () => identityRepository.FindPersonBy(
-                        A<IEnumerable<IIdentifier>>.That.IsSameSequenceAs(nhsNumberIdentifier)))
+                        A<IEnumerable<IPersonIdentifier>>.That.IsSameSequenceAs(nhsNumberIdentifier)))
                 .Returns(null);
             
             
@@ -164,7 +164,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                     {
                         new MatchSpecification
                         {
-                            Identifiers = new IIdentifier[]{nhsNumberIdentifier}
+                            Identifiers = new IPersonIdentifier[]{nhsNumberIdentifier}
                         }
                     }
                 }
@@ -175,7 +175,7 @@ namespace CHC.Consent.Tests.Api.Controllers
 
             A.CallTo(
                     () => identityRepository.CreatePerson(
-                        A<IEnumerable<IIdentifier>>.That.IsSameSequenceAs(
+                        A<IEnumerable<IPersonIdentifier>>.That.IsSameSequenceAs(
                             nhsNumberIdentifier,
                             bradfordHospitalNumberIdentifier)))
                 .MustHaveHappenedOnceExactly();

@@ -8,24 +8,24 @@ namespace CHC.Consent.Tests
 {
     public static partial class Create 
     {
-        public class IdentifierRegistryBuilder : Builder<ITypeRegistry<IIdentifier>, IdentifierRegistryBuilder>
+        public class IdentifierRegistryBuilder : Builder<ITypeRegistry<IPersonIdentifier>, IdentifierRegistryBuilder>
         {
             private Type[] identifierTypes = Array.Empty<Type>();
 
-            public IdentifierRegistryBuilder WithIdentifier<T>() where T : IIdentifier
+            public IdentifierRegistryBuilder WithIdentifier<T>() where T : IPersonIdentifier
             {
                 return Copy(change: @new => @new.identifierTypes = @new.identifierTypes.Append(typeof(T)).ToArray());
             }
 
             public IdentifierRegistryBuilder WithIdentifiers<T1, T2>() 
-                where T1 : IIdentifier 
-                where T2 : IIdentifier
+                where T1 : IPersonIdentifier 
+                where T2 : IPersonIdentifier
                 => WithIdentifier<T1>().WithIdentifier<T2>();
 
             /// <inheritdoc />
-            public override ITypeRegistry<IIdentifier> Build()
+            public override ITypeRegistry<IPersonIdentifier> Build()
             {
-                var registry = new TypeRegistry<IIdentifier,IdentifierAttribute>();
+                var registry = new TypeRegistry<IPersonIdentifier,IdentifierAttribute>();
                 foreach (var identifierType in identifierTypes)
                 {
                     registry.Add(identifierType, IdentifierAttribute.GetAttribute(identifierType));

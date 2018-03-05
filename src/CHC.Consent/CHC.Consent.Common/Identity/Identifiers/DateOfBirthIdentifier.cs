@@ -3,7 +3,7 @@
 namespace CHC.Consent.Common.Identity.Identifiers
 {
     [Identifier(TypeName)]
-    public class DateOfBirthIdentifier : IIdentifier, ISingleValueIdentifier<DateTime?>
+    public class DateOfBirthIdentifier : IPersonIdentifier
     {
         public const string TypeName = "date-of-birth";
 
@@ -17,7 +17,6 @@ namespace CHC.Consent.Common.Identity.Identifiers
         }
         
         public DateTime? DateOfBirth { get; set; }
-        DateTime? ISingleValueIdentifier<DateTime?>.Value => DateOfBirth;
 
         protected bool Equals(DateOfBirthIdentifier other)
         {

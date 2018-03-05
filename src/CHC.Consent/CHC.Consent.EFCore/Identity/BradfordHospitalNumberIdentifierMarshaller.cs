@@ -6,21 +6,14 @@ using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore.Entities;
 
-namespace CHC.Consent.EFCore.IdentifierAdapters
+namespace CHC.Consent.EFCore.Identity
 {
-    public class BradfordHospitalNumberIdentifierAdapter : IdentifierAdapterBase<BradfordHospitalNumberIdentifier>
-    {
-        /// <inheritdoc />
-        public BradfordHospitalNumberIdentifierAdapter() : 
-            base(new BradfordHospitalNumberIdentifierMarshaller(), BradfordHospitalNumberIdentifier.TypeName)
-        {
-        }
-    }
-
     public class BradfordHospitalNumberIdentifierMarshaller : IIdentifierMarshaller<BradfordHospitalNumberIdentifier>
     {
+        public const string ValueTypeName = "string";
+
         /// <inheritdoc />
-        public string ValueType => "string";
+        public string ValueType => ValueTypeName;
 
         /// <inheritdoc />
         public string MarshalledValue(BradfordHospitalNumberIdentifier value)
@@ -31,7 +24,7 @@ namespace CHC.Consent.EFCore.IdentifierAdapters
         /// <inheritdoc />
         public BradfordHospitalNumberIdentifier Unmarshall(string valueType, string value)
         {
-            return valueType == ValueType && value != null ? new BradfordHospitalNumberIdentifier(value) : null;
+            return valueType == ValueTypeName && value != null ? new BradfordHospitalNumberIdentifier(value) : null;
         }
     }
 }

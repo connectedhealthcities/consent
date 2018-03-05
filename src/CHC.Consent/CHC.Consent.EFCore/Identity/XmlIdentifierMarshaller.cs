@@ -5,16 +5,15 @@ using System.Xml;
 using System.Xml.Serialization;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers.Medway;
-using CHC.Consent.EFCore.IdentifierAdapters;
 
-namespace CHC.Consent.EFCore
+namespace CHC.Consent.EFCore.Identity
 {
     /// <summary>
     /// Naive use of XML serialzier that tries to exclude any namespace declarations, newlines, and xml declarations 
     /// </summary>
     /// <typeparam name="TIdentifier"></typeparam>
     public class XmlIdentifierMarshaller<TIdentifier> : IIdentifierMarshaller<TIdentifier> 
-        where TIdentifier : IIdentifier
+        where TIdentifier : IPersonIdentifier
     {
         private static readonly XmlSerializer Serializer = new XmlSerializer(typeof(TIdentifier));
 

@@ -7,7 +7,7 @@ namespace CHC.Consent.Api.Features.Identity
 {
     public static class PersonSpecificationRepositoryExtensions
     {
-        public static PersonIdentity FindPerson(this IIdentityRepository repository, IEnumerable<IEnumerable<IIdentifier>> matchSpecification)
+        public static PersonIdentity FindPerson(this IIdentityRepository repository, IEnumerable<IEnumerable<IPersonIdentifier>> matchSpecification)
         {
             foreach (var specification in matchSpecification)
             {

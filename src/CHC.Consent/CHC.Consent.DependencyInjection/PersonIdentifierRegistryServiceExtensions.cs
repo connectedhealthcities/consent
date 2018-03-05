@@ -39,14 +39,14 @@ namespace CHC.Consent.DependencyInjection
 
         private static void AddTypeRegistry(IServiceCollection services, PersonIdentifierRegistryOptions options)
         {
-            var registry = new TypeRegistry<IIdentifier, IdentifierAttribute>();
+            var registry = new TypeRegistry<IPersonIdentifier, IdentifierAttribute>();
             foreach (var description in options.IdentifierDescriptions)
             {
                 registry.Add(description.IdentifierType, description.TypeName);
             }
 
             services.AddSingleton(registry);
-            services.AddSingleton<ITypeRegistry<IIdentifier>>(registry);
+            services.AddSingleton<ITypeRegistry<IPersonIdentifier>>(registry);
         }
 
         private static void AddHandlers(IServiceCollection services, PersonIdentifierRegistryOptions options)

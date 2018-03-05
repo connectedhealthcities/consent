@@ -21,14 +21,14 @@ namespace CHC.Consent.Api.Features.Identity
     public class IdentityController : Controller
     {
         private readonly IPersonIdentifierListChecker identifierChecker;
-        private readonly ITypeRegistry<IIdentifier> registry;
+        private readonly ITypeRegistry<IPersonIdentifier> registry;
         private readonly ArrayPool<char> arrayPool;
         private IIdentityRepository IdentityRepository { get; }
 
         public IdentityController(
             IIdentityRepository identityRepository, 
             IPersonIdentifierListChecker identifierChecker,
-            ITypeRegistry<IIdentifier> registry, 
+            ITypeRegistry<IPersonIdentifier> registry, 
             ArrayPool<char> arrayPool)
         {
             this.identifierChecker = identifierChecker;
@@ -49,7 +49,7 @@ namespace CHC.Consent.Api.Features.Identity
 
         [Route("{id:int}")]
         [HttpGet]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type=typeof(IEnumerable<IIdentifier>))]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type=typeof(IEnumerable<IPersonIdentifier>))]
         [AutoCommit]
         public IActionResult GetPerson(long id)
         {

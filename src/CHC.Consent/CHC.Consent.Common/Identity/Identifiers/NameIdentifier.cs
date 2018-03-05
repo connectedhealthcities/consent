@@ -2,7 +2,7 @@
 
 namespace CHC.Consent.Common.Identity.Identifiers
 {
-    public class NameIdentifier : IIdentifier
+    public class NameIdentifier : IPersonIdentifier
     {
         public string Given { get; set; }
         public string Family { get; set; }

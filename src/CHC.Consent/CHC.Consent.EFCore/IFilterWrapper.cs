@@ -9,6 +9,6 @@ namespace CHC.Consent.EFCore
     public interface IFilterWrapper
     {
         IQueryable<PersonEntity> Filter(
-            IQueryable<PersonEntity> people, IIdentifier identifier, IStoreProvider storeProvider);
+            IQueryable<PersonEntity> people, IPersonIdentifier identifier, IStoreProvider storeProvider);
     }
 }

@@ -6,7 +6,7 @@ using CHC.Consent.EFCore.Entities;
 
 namespace CHC.Consent.EFCore
 {
-    public interface IIdentifierRetriever<out TIdentifier> where TIdentifier : IIdentifier
+    public interface IIdentifierRetriever<out TIdentifier> where TIdentifier : IPersonIdentifier
     {
         IEnumerable<TIdentifier> Get(PersonEntity person, IStoreProvider stores);
     }

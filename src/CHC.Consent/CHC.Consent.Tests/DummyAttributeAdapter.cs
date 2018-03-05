@@ -9,7 +9,7 @@ using CHC.Consent.EFCore.Entities;
 
 namespace CHC.Consent.Tests
 {
-    internal class DummyAttributeAdapter<TIdentifier> : IIdentifierFilter<TIdentifier>, IIdentifierUpdater<TIdentifier>, IIdentifierRetriever<TIdentifier> where TIdentifier : IIdentifier
+    internal class DummyAttributeAdapter<TIdentifier> : IIdentifierFilter<TIdentifier>, IIdentifierUpdater<TIdentifier>, IIdentifierRetriever<TIdentifier> where TIdentifier : IPersonIdentifier
     {
         /// <inheritdoc />
         public IQueryable<PersonEntity> Filter(

@@ -1,6 +1,6 @@
 ﻿using System;
 using CHC.Consent.Common.Identity;
-using CHC.Consent.EFCore.IdentifierAdapters;
+using CHC.Consent.EFCore.Identity;
 
 namespace CHC.Consent.DependencyInjection
 {
@@ -8,8 +8,8 @@ namespace CHC.Consent.DependencyInjection
     {
         public PersonIdentifierOptions(Type type)
         {
-            if (!typeof(IIdentifier).IsAssignableFrom(type))
-                throw new Exception($"{type} is not {typeof(IIdentifier)}");
+            if (!typeof(IPersonIdentifier).IsAssignableFrom(type))
+                throw new Exception($"{type} is not {typeof(IPersonIdentifier)}");
             
             IdentifierType = type;
             TypeName = IdentifierAttribute.GetAttribute(type).Name;
@@ -29,9 +29,9 @@ namespace CHC.Consent.DependencyInjection
             if(RetrieverProvider == null) throw new InvalidOperationException();
         }
 
-        public void SetHandlerFromMarshaller<TIdentifer>(IIdentifierMarshaller<TIdentifer> identifierMarshaller) where TIdentifer : IIdentifier
+        public void SetHandlerFromMarshaller<TIdentifer>(IIdentifierMarshaller<TIdentifer> identifierMarshaller) where TIdentifer : IPersonIdentifier
         {
-            var handler = new IdentifierAdapterBase<TIdentifer>(identifierMarshaller, TypeName);
+            var handler = new PersonIdentifierAdapter<TIdentifer>(identifierMarshaller, TypeName);
 
             FilterProvider = _ => handler;
             RetrieverProvider = _ => handler;

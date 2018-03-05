@@ -12,7 +12,7 @@ using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.DependencyInjection;
 using CHC.Consent.EFCore;
-using CHC.Consent.EFCore.IdentifierAdapters;
+using CHC.Consent.EFCore.Identity;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -62,7 +62,7 @@ namespace CHC.Consent.Api
 
             services.AddSingleton<ConsentTypeRegistry>();
 
-            services.AddTransient<IPostConfigureOptions<MvcOptions>, IdentityModelBinderProviderConfiguration<ITypeRegistry<IIdentifier>, PersonSpecification>>();
+            services.AddTransient<IPostConfigureOptions<MvcOptions>, IdentityModelBinderProviderConfiguration<ITypeRegistry<IPersonIdentifier>, PersonSpecification>>();
             services.AddTransient<IPostConfigureOptions<MvcOptions>, IdentityModelBinderProviderConfiguration<ConsentTypeRegistry, ConsentSpecification>>();
             
             services

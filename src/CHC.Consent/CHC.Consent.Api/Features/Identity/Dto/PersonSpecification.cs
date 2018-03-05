@@ -5,7 +5,7 @@ namespace CHC.Consent.Api.Features.Identity.Dto
 {
     public class PersonSpecification
     {
-        public List<IIdentifier> Identifiers { get; set; } = new List<IIdentifier>();
+        public List<IPersonIdentifier> Identifiers { get; set; } = new List<IPersonIdentifier>();
 
         public List<MatchSpecification> MatchSpecifications { get; set; } = new List<MatchSpecification>();
     }

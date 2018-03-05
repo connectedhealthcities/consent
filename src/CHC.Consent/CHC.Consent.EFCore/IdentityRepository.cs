@@ -18,7 +18,7 @@ namespace CHC.Consent.EFCore
 
         public IdentityRepository(
             IStore<PersonEntity> people, 
-            ITypeRegistry<IIdentifier> identifierRegistry, 
+            ITypeRegistry<IPersonIdentifier> identifierRegistry, 
             IIdentifierHandlerProvider identifierHandlerProvider, 
             IStoreProvider stores)
         {
@@ -28,9 +28,9 @@ namespace CHC.Consent.EFCore
             handlerProvider = identifierHandlerProvider;
         }
 
-        public PersonIdentity FindPersonBy(params IIdentifier[] identifiers) => FindPersonBy(identifiers.AsEnumerable());
+        public PersonIdentity FindPersonBy(params IPersonIdentifier[] identifiers) => FindPersonBy(identifiers.AsEnumerable());
         
-        public PersonIdentity FindPersonBy(IEnumerable<IIdentifier> identifiers)
+        public PersonIdentity FindPersonBy(IEnumerable<IPersonIdentifier> identifiers)
         {
             return identifiers.Aggregate(
                     (IQueryable<PersonEntity>) people,
@@ -39,7 +39,7 @@ namespace CHC.Consent.EFCore
                 .SingleOrDefault();
         }
 
-        public IEnumerable<IIdentifier> GetPersonIdentities(long personId)
+        public IEnumerable<IPersonIdentifier> GetPersonIdentities(long personId)
         {
             var person = people.Get(personId);
 
@@ -49,7 +49,7 @@ namespace CHC.Consent.EFCore
         }
 
         /// <inheritdoc />
-        public PersonIdentity CreatePerson(IEnumerable<IIdentifier> identifiers)
+        public PersonIdentity CreatePerson(IEnumerable<IPersonIdentifier> identifiers)
         {
             var person = people.Add(new PersonEntity());
 
@@ -60,12 +60,12 @@ namespace CHC.Consent.EFCore
         }
 
         /// <inheritdoc />
-        public void UpdatePerson(PersonIdentity personIdentity, IEnumerable<IIdentifier> identifiers)
+        public void UpdatePerson(PersonIdentity personIdentity, IEnumerable<IPersonIdentifier> identifiers)
         {
             Update(people.Get(personIdentity.Id), identifiers);
         }
 
-        private void Update(PersonEntity person, IEnumerable<IIdentifier> identifiers)
+        private void Update(PersonEntity person, IEnumerable<IPersonIdentifier> identifiers)
         {
             foreach (var identifier in identifiers)
             {

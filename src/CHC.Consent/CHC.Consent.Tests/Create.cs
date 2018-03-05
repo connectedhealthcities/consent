@@ -99,18 +99,18 @@ namespace CHC.Consent.Tests
         
         
 
-        public static IIdentifier DateOfBirth(int year, int month, int day)
+        public static IPersonIdentifier DateOfBirth(int year, int month, int day)
         {
             return DateOfBirth(new DateTime(year, month, day));
         }
 
-        public static IIdentifier DateOfBirth(DateTime value)
+        public static IPersonIdentifier DateOfBirth(DateTime value)
         {
             return new DateOfBirthIdentifier {DateOfBirth = value};
         }
 
-        public static IIdentifier NhsNumber(string nhsNumber) => new NhsNumberIdentifier(nhsNumber);
+        public static IPersonIdentifier NhsNumber(string nhsNumber) => new NhsNumberIdentifier(nhsNumber);
 
-        public static IIdentifier BradfordHospitalNumber(string hosptialNumber) => new BradfordHospitalNumberIdentifier(hosptialNumber);
+        public static IPersonIdentifier BradfordHospitalNumber(string hosptialNumber) => new BradfordHospitalNumberIdentifier(hosptialNumber);
     }
 }

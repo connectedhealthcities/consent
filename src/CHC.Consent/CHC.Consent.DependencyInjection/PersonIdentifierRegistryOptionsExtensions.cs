@@ -8,7 +8,7 @@ namespace CHC.Consent.DependencyInjection
         public static PersonIdentifierRegistryOptions Add<TIdentifier>(
             this PersonIdentifierRegistryOptions options,
             Action<PersonIdentifierOptionsBuilder<TIdentifier>> setup) 
-            where TIdentifier : IIdentifier
+            where TIdentifier : IPersonIdentifier
         {
             var identifierOptions = new PersonIdentifierOptions(typeof(TIdentifier));
             setup(new PersonIdentifierOptionsBuilder<TIdentifier>(identifierOptions));

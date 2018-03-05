@@ -10,10 +10,10 @@ namespace CHC.Consent.Tests.Identity
 {
     public class IdentifierRegistryTests
     {
-        private readonly TypeRegistry<IIdentifier, IdentifierAttribute> registry = new TypeRegistry<IIdentifier, IdentifierAttribute>();
+        private readonly TypeRegistry<IPersonIdentifier, IdentifierAttribute> registry = new TypeRegistry<IPersonIdentifier, IdentifierAttribute>();
 
         // ReSharper disable once ClassNeverInstantiated.Local
-        private class NoIdentifierAttribute : IIdentifier
+        private class NoIdentifierAttribute : IPersonIdentifier
         {
         }
 

@@ -1,49 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
-using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore.Entities;
 
-namespace CHC.Consent.EFCore.IdentifierAdapters
+namespace CHC.Consent.EFCore.Identity
 {
-    public interface IIdentifierMarshaller<T> where T:IIdentifier
-    {
-        string ValueType { get; }
-        string MarshalledValue(T value);
-        T Unmarshall(string valueType, string value);
-    }
-
-    public class SexIdentifierMarshaller : IIdentifierMarshaller<SexIdentifier>
-    {
-        public string ValueType => "sex";
-
-        public string MarshalledValue(SexIdentifier value)
-        {
-            return value.Sex?.ToString();
-        }
-
-        public SexIdentifier Unmarshall(string valueType, string value)
-        {
-            return valueType == ValueType && Enum.TryParse<Sex>(value, out var sex)  ? new SexIdentifier(sex) : null;
-        }
-    }
-
-    public class IdentifierAdapterBase<TIdentifier> : 
-        IIdentifierFilter<TIdentifier>, IIdentifierRetriever<TIdentifier>, IIdentifierUpdater<TIdentifier> where TIdentifier : IIdentifier
+    /// <summary>
+    /// Deals with storing, finding, and retrieving <see cref="IPersonIdentifier"/>
+    /// </summary>
+    public class PersonIdentifierAdapter<TIdentifier> : 
+        IIdentifierFilter<TIdentifier>, 
+        IIdentifierRetriever<TIdentifier>, 
+        IIdentifierUpdater<TIdentifier> 
+        where TIdentifier : IPersonIdentifier
     {
         private readonly IIdentifierMarshaller<TIdentifier> marshaller;
         private readonly string typeName;
 
-        public IdentifierAdapterBase(IIdentifierMarshaller<TIdentifier> marshaller, string typeName)
+        public PersonIdentifierAdapter(IIdentifierMarshaller<TIdentifier> marshaller, string typeName)
         {
             this.marshaller = marshaller;
             this.typeName = typeName;
         }
-
-        
 
         public IQueryable<PersonEntity> Filter(IQueryable<PersonEntity> people,TIdentifier value,IStoreProvider stores)
         {
@@ -74,8 +54,12 @@ namespace CHC.Consent.EFCore.IdentifierAdapters
         public bool Update(PersonEntity person, TIdentifier value, IStoreProvider stores)
         {
             var existing = ExistingIdentifierEntities(person, stores).SingleOrDefault();
-            if (existing != null && existing.Value != marshaller.MarshalledValue(value))
+            var marshalledValue = marshaller.MarshalledValue(value);
+            
+            if (existing != null)
             {
+                if (existing.Value == marshalledValue) return false;
+                
                 existing.Deleted = DateTime.UtcNow;
             }
 
@@ -84,19 +68,11 @@ namespace CHC.Consent.EFCore.IdentifierAdapters
                 {
                     Person = person,
                     TypeName = typeName,
-                    Value = marshaller.MarshalledValue(value),
+                    Value = marshalledValue,
                     ValueType = marshaller.ValueType
                 });
 
             return true;
-        }
-    }
-
-    public class SexIdentifierAdapter : IdentifierAdapterBase<SexIdentifier>
-    {
-        /// <inheritdoc />
-        public SexIdentifierAdapter() : base(new SexIdentifierMarshaller(), SexIdentifier.TypeName)
-        {
         }
     }
 }

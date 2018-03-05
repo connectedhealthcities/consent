@@ -1,9 +1,10 @@
 ﻿using System.Text;
 using CHC.Consent.Common.Identity.Identifiers.Medway;
+using CHC.Consent.EFCore.Identity;
 using CHC.Consent.Testing.Utils;
 using Xunit;
 
-namespace CHC.Consent.EFCore.Tests
+namespace CHC.Consent.EFCore.Tests.Identity
 {
     public class XmlMarshallerTests
     {

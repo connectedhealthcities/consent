@@ -17,6 +17,6 @@ namespace CHC.Consent.Common.Identity
         }
 
         public static IdentifierAttribute GetAttribute(Type identifierType)
-            => IdentifierAttributeHelpers.GetIdentiferAttribute<IdentifierAttribute>(identifierType);
+            => TypeNameHelpers.GetIdentiferAttribute<IdentifierAttribute>(identifierType);
     }
 }

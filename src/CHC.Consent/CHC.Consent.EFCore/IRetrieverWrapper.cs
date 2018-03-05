@@ -7,6 +7,6 @@ namespace CHC.Consent.EFCore
 {
     public interface IRetrieverWrapper
     {
-        IEnumerable<IIdentifier> Get(PersonEntity person, IStoreProvider stores);
+        IEnumerable<IPersonIdentifier> Get(PersonEntity person, IStoreProvider stores);
     }
 }

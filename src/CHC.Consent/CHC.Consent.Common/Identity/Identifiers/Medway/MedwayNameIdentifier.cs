@@ -1,7 +1,7 @@
 ﻿namespace CHC.Consent.Common.Identity.Identifiers.Medway
 {
     [Identifier(TypeName, AllowMultipleValues = false)]
-    public class MedwayNameIdentifier : IIdentifier
+    public class MedwayNameIdentifier : IPersonIdentifier
     {
         public const string TypeName = "uk.nhs.bradfordhospitals.bib4all.medway.name";
 

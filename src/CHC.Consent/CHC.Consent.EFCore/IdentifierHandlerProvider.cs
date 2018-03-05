@@ -9,13 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CHC.Consent.EFCore
 {
-    public interface IIdentifierHandlerProvider
-    {
-        IFilterWrapper GetFilter(IIdentifier identifier);
-        IRetrieverWrapper GetRetriever(Type identifierType);
-        IUpdaterWrapper GetUpdater(Type identifierType);
-    }
-
     public class IdentifierHandlerProvider : IIdentifierHandlerProvider
     {
         public IServiceProvider Services { get; }
@@ -46,7 +39,7 @@ namespace CHC.Consent.EFCore
         }
 
         private readonly WrapperTypeCache filterWrapperTypeCache = new WrapperTypeCache(typeof(IdentifierFilterWrapper<>)); 
-        public IFilterWrapper GetFilter(IIdentifier identifier)
+        public IFilterWrapper GetFilter(IPersonIdentifier identifier)
         {
             var wrapperType = filterWrapperTypeCache.GetWrapperType(identifier.GetType());
             return (IFilterWrapper)Services.GetRequiredService(wrapperType);
@@ -68,7 +61,7 @@ namespace CHC.Consent.EFCore
         }
     }
 
-    public class IdentifierUpdaterWrapper<T> : IUpdaterWrapper where T : IIdentifier
+    public class IdentifierUpdaterWrapper<T> : IUpdaterWrapper where T : IPersonIdentifier
     {
         private readonly IIdentifierUpdater<T> updater;
 
@@ -77,13 +70,13 @@ namespace CHC.Consent.EFCore
             this.updater = updater;
         }
 
-        public bool Update(PersonEntity person, IIdentifier value, IStoreProvider stores)
+        public bool Update(PersonEntity person, IPersonIdentifier value, IStoreProvider stores)
         {
             return updater.Update(person, (T)value, stores);
         }
     }
 
-    public class IdentifierRetrieverWrapper<T> : IRetrieverWrapper where T : IIdentifier
+    public class IdentifierRetrieverWrapper<T> : IRetrieverWrapper where T : IPersonIdentifier
     {
         private readonly IIdentifierRetriever<T> retriever;
 
@@ -97,13 +90,13 @@ namespace CHC.Consent.EFCore
         /// <param name="person"></param>
         /// <param name="stores"></param>
         /// <inheritdoc />
-        public IEnumerable<IIdentifier> Get(PersonEntity person, IStoreProvider stores)
+        public IEnumerable<IPersonIdentifier> Get(PersonEntity person, IStoreProvider stores)
         {
-            return retriever.Get(person, stores).Cast<IIdentifier>();
+            return retriever.Get(person, stores).Cast<IPersonIdentifier>();
         }
     }
 
-    public class IdentifierFilterWrapper<T> : IFilterWrapper where T : IIdentifier
+    public class IdentifierFilterWrapper<T> : IFilterWrapper where T : IPersonIdentifier
     {
         private readonly IIdentifierFilter<T> filter;
 
@@ -116,7 +109,7 @@ namespace CHC.Consent.EFCore
 
         /// <inheritdoc />
         public IQueryable<PersonEntity> Filter(
-            IQueryable<PersonEntity> people, IIdentifier identifier, IStoreProvider storeProvider)
+            IQueryable<PersonEntity> people, IPersonIdentifier identifier, IStoreProvider storeProvider)
         {
             return filter.Filter(people, (T) identifier, storeProvider);
         }

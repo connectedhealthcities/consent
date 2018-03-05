@@ -4,6 +4,6 @@ namespace CHC.Consent.Common.Identity
 {
     public interface IPersonIdentifierListChecker
     {
-        void EnsureHasNoInvalidDuplicates(IEnumerable<IIdentifier> identifiers);
+        void EnsureHasNoInvalidDuplicates(IEnumerable<IPersonIdentifier> identifiers);
     }
 }

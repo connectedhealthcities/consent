@@ -7,6 +7,6 @@ namespace CHC.Consent.EFCore
 {
     public interface IUpdaterWrapper
     {
-        bool Update(PersonEntity person, IIdentifier value, IStoreProvider stores);
+        bool Update(PersonEntity person, IPersonIdentifier value, IStoreProvider stores);
     }
 }

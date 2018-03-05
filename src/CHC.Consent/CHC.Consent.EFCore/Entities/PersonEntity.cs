@@ -18,5 +18,25 @@ namespace CHC.Consent.EFCore.Entities
         {
             return entity == null ? null : new PersonIdentity( entity.Id );
         }
+
+        protected bool Equals(PersonEntity other)
+        {
+            return Id == other.Id;
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((PersonEntity) obj);
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
     }
 }

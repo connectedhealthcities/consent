@@ -1,10 +1,10 @@
 ﻿using CHC.Consent.Common.Identity;
 using CHC.Consent.EFCore;
-using CHC.Consent.EFCore.IdentifierAdapters;
+using CHC.Consent.EFCore.Identity;
 
 namespace CHC.Consent.DependencyInjection
 {
-    public class PersonIdentifierOptionsBuilder<TIdentifer> where TIdentifer : IIdentifier
+    public class PersonIdentifierOptionsBuilder<TIdentifer> where TIdentifer : IPersonIdentifier
     {
         public PersonIdentifierOptions Options { get; }
 

@@ -9,6 +9,6 @@ namespace CHC.Consent.Api.Features.Identity.Dto
 {
     public class MatchSpecification 
     {
-        public IIdentifier[] Identifiers { get; set; } = Array.Empty<IIdentifier>();        
+        public IPersonIdentifier[] Identifiers { get; set; } = Array.Empty<IPersonIdentifier>();        
     }
 }

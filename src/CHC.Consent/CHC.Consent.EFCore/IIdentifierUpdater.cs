@@ -4,7 +4,7 @@ using CHC.Consent.EFCore.Entities;
 
 namespace CHC.Consent.EFCore
 {
-    public interface IIdentifierUpdater<in TIdentifier> where TIdentifier:IIdentifier
+    public interface IIdentifierUpdater<in TIdentifier> where TIdentifier:IPersonIdentifier
     {
         bool Update(PersonEntity person, TIdentifier value, IStoreProvider stores);
     }

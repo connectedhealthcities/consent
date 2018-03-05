@@ -7,12 +7,14 @@ using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore.Entities;
 
-namespace CHC.Consent.EFCore.IdentifierAdapters
+namespace CHC.Consent.EFCore.Identity
 {
     public class NhsNumberIdentifierMarshaller : IIdentifierMarshaller<NhsNumberIdentifier>
     {
+        public const string ValueTypeName = "string";
+
         /// <inheritdoc />
-        public string ValueType => "string";
+        public string ValueType => ValueTypeName;
 
         /// <inheritdoc />
         public string MarshalledValue(NhsNumberIdentifier value)
@@ -24,14 +26,6 @@ namespace CHC.Consent.EFCore.IdentifierAdapters
         public NhsNumberIdentifier Unmarshall(string valueType, string value)
         {
             return valueType == ValueType && value != null ? new NhsNumberIdentifier(value) : null;
-        }
-    }
-    
-    public class NhsNumberIdentifierAdapter : IdentifierAdapterBase<NhsNumberIdentifier>
-    {
-        /// <inheritdoc />
-        public NhsNumberIdentifierAdapter() : base(new NhsNumberIdentifierMarshaller(), NhsNumberIdentifier.TypeName)
-        {
         }
     }
 }
