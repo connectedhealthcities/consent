@@ -2,6 +2,7 @@
 using System.Linq;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Identifiers;
+using CHC.Consent.Common.Infrastructure;
 using Xunit;
 
 namespace CHC.Consent.Tests.Consent
@@ -9,6 +10,12 @@ namespace CHC.Consent.Tests.Consent
     using Consent = Common.Consent.Consent;
     public class PregnancyNumberIdentifierTests
     {
+        [Fact]
+        public void IsSubclassOfConsentIdentifier()
+        {
+            Assert.True(typeof(PregnancyNumberIdentifier).IsSubtypeOf(typeof(ConsentIdentifier)));
+        }
+        
         [Fact]
         public void SetsPregancyNumberOnConsent()
         {

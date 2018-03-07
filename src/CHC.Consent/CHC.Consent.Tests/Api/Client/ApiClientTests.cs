@@ -42,7 +42,7 @@ namespace CHC.Consent.Tests.Api.Client
         }
 
         [Theory, MemberData(nameof(IdentityTestData))]
-        public void CanSendIdentitiesToServer(IIdentifier identifier, Action<IIdentifier> checkResult)
+        public void CanSendIdentitiesToServer(IPersonIdentifier identifier, Action<IPersonIdentifier> checkResult)
         {
             var client = new Api(Fixture.Client, disposeHttpClient:false);
             var api = (IApi) client;
@@ -50,10 +50,10 @@ namespace CHC.Consent.Tests.Api.Client
             
             var response = api.IdentitiesPut(
                 new PersonSpecification(
-                    new List<IIdentifier> {identifier},
+                    new List<IPersonIdentifier> {identifier},
                     new List<MatchSpecification>
                     {
-                        new MatchSpecification {Identifiers = new List<IIdentifier> {identifier}}
+                        new MatchSpecification {Identifiers = new List<IPersonIdentifier> {identifier}}
                     }));
 
             Assert.NotNull(response);
@@ -74,15 +74,15 @@ namespace CHC.Consent.Tests.Api.Client
                 MedwayName()
             );
 
-        private static (IIdentifier, Action<IIdentifier>) MedwayName()
+        private static (IPersonIdentifier, Action<IPersonIdentifier>) MedwayName()
         {
             var firstName = Random.String();
             var lastName = Random.String();
             return (
-                new Uknhsbradfordhospitalsbib4allmedwayname(firstName, lastName), 
+                new UkNhsBradfordhospitalsBib4allMedwayName(firstName, lastName), 
                 i =>
                 {
-                    var otherName = Assert.IsType<Uknhsbradfordhospitalsbib4allmedwayname>(i);
+                    var otherName = Assert.IsType<UkNhsBradfordhospitalsBib4allMedwayName>(i);
                     Assert.Equal(firstName, otherName.FirstName);
                     Assert.Equal(lastName, otherName.LastName);
                 }
@@ -91,8 +91,8 @@ namespace CHC.Consent.Tests.Api.Client
 
 
         private static IEnumerable<object[]> MakeTestData(params (
-            IIdentifier, 
-            Action<IIdentifier>)[] tests)
+            IPersonIdentifier, 
+            Action<IPersonIdentifier>)[] tests)
         {
             IEnumerable<object> ToEnumerable(ITuple tuple)
             {
@@ -105,15 +105,15 @@ namespace CHC.Consent.Tests.Api.Client
             return tests.Cast<ITuple>().Select(ToEnumerable).Select(Enumerable.ToArray);
         }
         
-        private static (IIdentifier, Action<IIdentifier>) NhsNumberTestData()
+        private static (IPersonIdentifier, Action<IPersonIdentifier>) NhsNumberTestData()
         {
             var nhsNumber = Random.String();
             return (
-                new UknhsnhsNumber(nhsNumber), 
-                i => Assert.Equal(nhsNumber, Assert.IsType<UknhsnhsNumber>(i).Value));
+                new UkNhsNhsNumber(nhsNumber), 
+                i => Assert.Equal(nhsNumber, Assert.IsType<UkNhsNhsNumber>(i).Value));
         }
 
-        private static (IIdentifier, Action<IIdentifier>) DateOfBirthTestData()
+        private static (IPersonIdentifier, Action<IPersonIdentifier>) DateOfBirthTestData()
         {
             DateTime? date = 24.April(1865);
             return (
@@ -124,7 +124,7 @@ namespace CHC.Consent.Tests.Api.Client
             );
         }
 
-        private static (IIdentifier, Action<IIdentifier>) SexMale()
+        private static (IPersonIdentifier, Action<IPersonIdentifier>) SexMale()
         {
             var sex = new Sex("Male");
             return (
@@ -132,7 +132,7 @@ namespace CHC.Consent.Tests.Api.Client
                 i => Assert.Equal("Male", Assert.IsType<Sex>(i).SexProperty));
         }
         
-        private static (IIdentifier, Action<IIdentifier>) SexFemale()
+        private static (IPersonIdentifier, Action<IPersonIdentifier>) SexFemale()
         {
             var sex = new Sex(Common.Sex.Female.ToString());
             return (
@@ -146,24 +146,24 @@ namespace CHC.Consent.Tests.Api.Client
             var client = new Api(Fixture.Client, disposeHttpClient:false);
             var api = (IApi) client;
 
-            var nhsNumber = new UknhsnhsNumber("4334443434");
-            var medwayName = new Uknhsbradfordhospitalsbib4allmedwayname("Rachel", "Thompson");
+            var nhsNumber = new UkNhsNhsNumber("4334443434");
+            var medwayName = new UkNhsBradfordhospitalsBib4allMedwayName("Rachel", "Thompson");
             
             
             var response = api.IdentitiesPut(
                 new PersonSpecification(
-                    new List<IIdentifier> {nhsNumber, medwayName},
+                    new List<IPersonIdentifier> {nhsNumber, medwayName},
                     new List<MatchSpecification>
                     {
-                        new MatchSpecification {Identifiers = new List<IIdentifier> {nhsNumber}}
+                        new MatchSpecification {Identifiers = new List<IPersonIdentifier> {nhsNumber}}
                     }));
 
             Assert.NotNull(response);
             
             var identities = api.IdentitiesByIdGet(response.Value);
 
-            Assert.Equal(nhsNumber.Value, Assert.Single(identities.OfType<UknhsnhsNumber>()).Value);
-            var storedMedwayName = Assert.Single(identities.OfType<Uknhsbradfordhospitalsbib4allmedwayname>());
+            Assert.Equal(nhsNumber.Value, Assert.Single(identities.OfType<UkNhsNhsNumber>()).Value);
+            var storedMedwayName = Assert.Single(identities.OfType<UkNhsBradfordhospitalsBib4allMedwayName>());
             Assert.NotNull(storedMedwayName);
             Assert.Equal(medwayName.FirstName, storedMedwayName.FirstName);
             Assert.Equal(medwayName.LastName, storedMedwayName.LastName);

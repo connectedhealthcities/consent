@@ -1,0 +1,375 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1",
+    "title": "Api"
+  },
+  "paths": {
+    "/consent": {
+      "put": {
+        "tags": [
+          "Consent"
+        ],
+        "operationId": "ConsentPut",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json",
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [],
+        "parameters": [
+          {
+            "name": "specification",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/ConsentSpecification"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/consent/{id}": {
+      "get": {
+        "tags": [
+          "Consent"
+        ],
+        "operationId": "ConsentByIdGet",
+        "consumes": [
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/identities/{id}": {
+      "get": {
+        "tags": [
+          "Identity"
+        ],
+        "operationId": "IdentitiesByIdGet",
+        "consumes": [
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IPersonIdentifier"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/identities": {
+      "put": {
+        "tags": [
+          "Identity"
+        ],
+        "operationId": "IdentitiesPut",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json",
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "specification",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/PersonSpecification"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          "302": {
+            "description": "Redirect"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ConsentSpecification": {
+      "required": [
+        "studyId",
+        "subjectIdentifier",
+        "personId",
+        "dateGiven",
+        "evidence"
+      ],
+      "type": "object",
+      "properties": {
+        "studyId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "subjectIdentifier": {
+          "type": "string"
+        },
+        "personId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "dateGiven": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "evidence": {
+          "$ref": "#/definitions/Evidence"
+        },
+        "identifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ConsentIdentifier"
+          }
+        }
+      }
+    },
+    "Evidence": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int64",
+          "type": "integer",
+          "readOnly": true
+        }
+      }
+    },
+    "ConsentIdentifier": {
+      "required": [
+        "$type"
+      ],
+      "type": "object",
+      "properties": {
+        "$type": {
+          "enum": [
+            "pregnancy-number.consent.bib4all.bradfordhospitals.nhs.uk"
+          ],
+          "type": "string"
+        }
+      },
+      "discriminator": "$type"
+    },
+    "IPersonIdentifier": {
+      "required": [
+        "$type"
+      ],
+      "type": "object",
+      "properties": {
+        "$type": {
+          "enum": [
+            "uk.nhs.nhs-number",
+            "uk.nhs.bradfordhospitals.hosptial-number",
+            "sex",
+            "date-of-birth",
+            "uk.nhs.bradfordhospitals.bib4all.medway.name"
+          ],
+          "type": "string"
+        }
+      },
+      "discriminator": "$type"
+    },
+    "sex": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IPersonIdentifier"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "sex": {
+              "enum": [
+                "Unknown",
+                "Male",
+                "Female"
+              ],
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "SexIdentifier"
+    },
+    "PersonSpecification": {
+      "type": "object",
+      "properties": {
+        "identifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IPersonIdentifier"
+          }
+        },
+        "matchSpecifications": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MatchSpecification"
+          }
+        }
+      }
+    },
+    "MatchSpecification": {
+      "type": "object",
+      "properties": {
+        "identifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IPersonIdentifier"
+          }
+        }
+      }
+    },
+    "pregnancyNumberConsentBib4allBradfordhospitalsNhsUk": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConsentIdentifier"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string",
+              "readOnly": true
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "PregnancyNumberIdentifier",
+      "x-ms-discriminator-value": "pregnancy-number.consent.bib4all.bradfordhospitals.nhs.uk"
+    },
+    "ukNhsNhsNumber": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IPersonIdentifier"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "NhsNumberIdentifier",
+      "x-ms-discriminator-value": "uk.nhs.nhs-number"
+    },
+    "ukNhsBradfordhospitalsHosptialNumber": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IPersonIdentifier"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string",
+              "readOnly": true
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "BradfordHospitalNumberIdentifier",
+      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.hosptial-number"
+    },
+    "dateOfBirth": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IPersonIdentifier"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "dateOfBirth": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "DateOfBirthIdentifier",
+      "x-ms-discriminator-value": "date-of-birth"
+    },
+    "ukNhsBradfordhospitalsBib4allMedwayName": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IPersonIdentifier"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "firstName": {
+              "type": "string"
+            },
+            "lastName": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "MedwayNameIdentifier",
+      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.medway.name"
+    }
+  },
+  "securityDefinitions": {}
+}

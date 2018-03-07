@@ -50,10 +50,10 @@ namespace CHC.Consent.Api
             );
             
             
-            var consentIdentifierRegistry = new ConsentIdentifierRegistry();
+            var consentIdentifierRegistry = new TypeRegistry<ConsentIdentifier,ConsentIdentifierAttribute>();
             consentIdentifierRegistry.Add<PregnancyNumberIdentifier>();
             services.AddSingleton(consentIdentifierRegistry);
-            services.AddSingleton<ITypeRegistry<Identifier>>(consentIdentifierRegistry);
+            services.AddSingleton<ITypeRegistry<ConsentIdentifier>>(consentIdentifierRegistry);
             
             var evidenceRegistry = new EvidenceRegistry();
             evidenceRegistry.Add<MedwayEvidence>();

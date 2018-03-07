@@ -39,7 +39,7 @@ namespace CHC.Consent.Api.Features.Consent
             {
                 var existingConsent = consentRepository.FindActiveConsent(
                     studySubject,
-                    specification.Identifiers ?? Array.Empty<Identifier>());
+                    specification.Identifiers ?? Array.Empty<ConsentIdentifier>());
                 if (existingConsent != null)
                 {
                     //TODO: Decide what to do with evidence, etc, for existing consents, or if you can be consented twice

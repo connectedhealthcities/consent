@@ -58,7 +58,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 long? studyId = null,
                 string subjectIdentifier = null,
                 long? personId = null,
-                params Identifier[] identifiers
+                params ConsentIdentifier[] identifiers
             )
             {
                 
@@ -86,7 +86,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             /// <inheritdoc />
             public WhenRecordingNewConsent_ForAnExistingStudySubject_WithoutActiveConsent()
             {
-                A.CallTo(() => ConsentRepository.FindActiveConsent(StudySubject, A<IEnumerable<Identifier>>._))
+                A.CallTo(() => ConsentRepository.FindActiveConsent(StudySubject, A<IEnumerable<ConsentIdentifier>>._))
                     .Returns(null);
                 RecordConsent(new MedwayEvidence {ConsentTakenBy = "Peter Crowther"}, 2.January(1837));
             }
@@ -215,8 +215,8 @@ namespace CHC.Consent.Tests.Api.Controllers
             {
                 var givenEvidence = A.Dummy<Evidence>();
                 var dateGiven = 3.November(1472);
-                existingConsent = new Consent(StudySubject, dateGiven, givenEvidence, Enumerable.Empty<Identifier>());
-                A.CallTo(() => ConsentRepository.FindActiveConsent(StudySubject, A<IEnumerable<Identifier>>.That.IsEmpty()))
+                existingConsent = new Consent(StudySubject, dateGiven, givenEvidence, Enumerable.Empty<ConsentIdentifier>());
+                A.CallTo(() => ConsentRepository.FindActiveConsent(StudySubject, A<IEnumerable<ConsentIdentifier>>.That.IsEmpty()))
                     .Returns(existingConsent);
                 
                 RecordConsent(givenEvidence, dateGiven);
@@ -245,12 +245,12 @@ namespace CHC.Consent.Tests.Api.Controllers
                 var givenEvidence = A.Dummy<Evidence>();
                 var dateGiven = 3.November(1472);
                 var pregnancyIdIdentifier = new PregnancyNumberIdentifier(PregancyId);
-                existingConsent = new Consent(StudySubject, dateGiven, givenEvidence, Enumerable.Empty<Identifier>());
+                existingConsent = new Consent(StudySubject, dateGiven, givenEvidence, Enumerable.Empty<ConsentIdentifier>());
                 A.CallTo(
                         () =>
                             ConsentRepository.FindActiveConsent(
                                 StudySubject,
-                                A<IEnumerable<Identifier>>.That.Matches(
+                                A<IEnumerable<ConsentIdentifier>>.That.Matches(
                                     _ => (_.Single() as PregnancyNumberIdentifier).Value == PregancyId)))
                     .Returns(null);
                 

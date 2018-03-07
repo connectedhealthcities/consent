@@ -29,7 +29,7 @@ namespace CHC.Consent.Common.Consent
         public StudySubject FindStudySubject(Study study, long personId) => 
             SubjectsForStudy(study).SingleOrDefault(_ => _.PersonId == personId);
 
-        public Consent FindActiveConsent(StudySubject studySubject, IEnumerable<Identifier> identifiers) =>
+        public Consent FindActiveConsent(StudySubject studySubject, IEnumerable<ConsentIdentifier> identifiers) =>
             ConsentsForStudySubject(studySubject).SingleOrDefault(_ => _.Withdrawn == null);
 
         private IQueryable<Consent> ConsentsForStudySubject(StudySubject studySubject) =>

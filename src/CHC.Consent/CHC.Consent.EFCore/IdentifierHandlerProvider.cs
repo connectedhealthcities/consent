@@ -46,7 +46,7 @@ namespace CHC.Consent.EFCore
         }
 
         private readonly WrapperTypeCache handlerWrapperTypeCache =
-            new WrapperTypeCache(typeof(IPersonIdentifierHandler<>));
+            new WrapperTypeCache(typeof(PersonIdentifierHandlerWrapper<>));
 
         public IPersonIdentifierHandler GetHandler(Type identifierType)
         {

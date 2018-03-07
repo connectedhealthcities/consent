@@ -19,7 +19,7 @@ namespace CHC.Consent.Api.Features.Consent
         [Required]
         public Evidence Evidence { get; set; }
         
-        public Identifier[] Identifiers { get; set; }
+        public ConsentIdentifier[] Identifiers { get; set; }
         
     }
 }

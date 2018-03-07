@@ -39,7 +39,7 @@ namespace CHC.Consent.Tests
         {
             private Builder<StudySubject> studySubject = Create.StudySubject;
             
-            private Identifier[] identifiers = Array.Empty<Identifier>();
+            private ConsentIdentifier[] identifiers = Array.Empty<ConsentIdentifier>();
             private string pregnancyNumber = null;
 
             private DateTime dateGiven = 5.April(1914);

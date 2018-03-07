@@ -6,7 +6,7 @@ namespace CHC.Consent.Common.Infrastructure
     {
         public static bool IsSubtypeOf(this Type type, Type baseType)
         {
-            return baseType.IsAssignableFrom(type);
+            return type.IsSubclassOf(baseType) || baseType.IsAssignableFrom(type);
         }
 
         public static bool IsSubtypeOf<TBase>(this Type type)

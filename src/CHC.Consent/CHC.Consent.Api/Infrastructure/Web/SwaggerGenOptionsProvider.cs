@@ -25,7 +25,7 @@ namespace CHC.Consent.Api.Infrastructure.Web
             gen.SwaggerDoc("v1", new Info {Title = "Api", Version = "1"});
             gen.DescribeAllEnumsAsStrings();
             gen.SchemaFilter<SwaggerSchemaIdentityTypeProvider<IPersonIdentifier, ITypeRegistry<IPersonIdentifier>>>();
-            gen.SchemaFilter<SwaggerSchemaIdentityTypeProvider<Identifier, ConsentIdentifierRegistry>>();
+            gen.SchemaFilter<SwaggerSchemaIdentityTypeProvider<ConsentIdentifier, ITypeRegistry<ConsentIdentifier>>>();
             gen.CustomSchemaIds(t => GetSchemaId(t)?? t.FriendlyId(fullyQualified:false));
         }
 
@@ -34,7 +34,7 @@ namespace CHC.Consent.Api.Infrastructure.Web
             return TryGet<Type, string>(
                 type,
                 Services.GetRequiredService<ITypeRegistry<IPersonIdentifier>>().TryGetName,
-                Services.GetRequiredService<ITypeRegistry<Identifier>>().TryGetName,
+                Services.GetRequiredService<ITypeRegistry<ConsentIdentifier>>().TryGetName,
                 Services.GetRequiredService<ITypeRegistry<Evidence>>().TryGetName
             );
         }

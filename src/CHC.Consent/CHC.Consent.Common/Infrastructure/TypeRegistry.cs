@@ -29,13 +29,13 @@ namespace CHC.Consent.Common.Infrastructure
 
         public virtual void Add(Type type, TAttribute attribute)
         {
-            if(type.IsSubtypeOf<TBaseType>()) 
-                throw new ArgumentException();
             Add(type, attribute.Name);
         }
 
         public void Add(Type type, string name)
         {
+            if(!type.IsSubtypeOf<TBaseType>()) 
+                throw new ArgumentException($"{type} is not a {typeof(TBaseType)}", nameof(type));
             namesToTypes.Add(name, type);
             typesToNames.Add(type, name);
         }

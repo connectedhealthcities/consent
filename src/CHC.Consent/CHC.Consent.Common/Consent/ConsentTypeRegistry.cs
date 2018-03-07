@@ -8,12 +8,13 @@ namespace CHC.Consent.Common.Consent
 {
     public class ConsentTypeRegistry : ITypeRegistry
     {
-        private readonly ConsentIdentifierRegistry identifiers;
+        private readonly ITypeRegistry<ConsentIdentifier> consentIdentifierRegistry;
         private readonly EvidenceRegistry evidence;
 
-        public ConsentTypeRegistry(ConsentIdentifierRegistry identifiers, EvidenceRegistry evidence)
+        public ConsentTypeRegistry(
+            ITypeRegistry<ConsentIdentifier> consentIdentifierRegistry, EvidenceRegistry evidence)
         {
-            this.identifiers = identifiers;
+            this.consentIdentifierRegistry = consentIdentifierRegistry;
             this.evidence = evidence;
         }
 
@@ -21,7 +22,7 @@ namespace CHC.Consent.Common.Consent
         {
             get
             {
-                yield return identifiers;
+                yield return consentIdentifierRegistry;
                 yield return evidence;
             }
         }

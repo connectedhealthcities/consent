@@ -2,6 +2,7 @@
 using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Identifiers;
+using CHC.Consent.Common.Infrastructure;
 using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
@@ -11,14 +12,14 @@ namespace CHC.Consent.Tests.Consent
     public class JsonSerializationTests
     {
         private readonly ITestOutputHelper output;
-        private ConsentIdentifierRegistry registry;
+        private TypeRegistry<ConsentIdentifier, ConsentIdentifierAttribute> registry;
         private JsonSerializerSettings serializerSettings;
 
         /// <inheritdoc />
         public JsonSerializationTests(ITestOutputHelper output)
         {
             this.output = output;
-            registry = new ConsentIdentifierRegistry();
+            registry = new TypeRegistry<ConsentIdentifier, ConsentIdentifierAttribute>();
             registry.Add<PregnancyNumberIdentifier>();
             serializerSettings = registry.CreateSerializerSettings();
         }
@@ -31,7 +32,7 @@ namespace CHC.Consent.Tests.Consent
                 JsonConvert.SerializeObject(
                     new ConsentSpecification
                     {
-                        Identifiers = new Identifier[] {new PregnancyNumberIdentifier("testing, testing, 1..2..3")}
+                        Identifiers = new ConsentIdentifier[] {new PregnancyNumberIdentifier("testing, testing, 1..2..3")}
 
                     },
                     serializerSettings)
@@ -45,7 +46,7 @@ namespace CHC.Consent.Tests.Consent
                 JsonConvert.SerializeObject(
                     new ConsentSpecification
                     {
-                        Identifiers = new Identifier[] {new PregnancyNumberIdentifier("testing, testing, 1..2..3")}
+                        Identifiers = new ConsentIdentifier[] {new PregnancyNumberIdentifier("testing, testing, 1..2..3")}
 
                     },
                     serializerSettings),

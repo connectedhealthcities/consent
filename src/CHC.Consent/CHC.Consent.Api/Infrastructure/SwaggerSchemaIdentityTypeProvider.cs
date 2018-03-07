@@ -31,7 +31,7 @@ namespace CHC.Consent.Api.Infrastructure
                 model.Discriminator = "$type";
                 model.Properties.Add(
                     "$type",
-                    new Schema {Enum = registry.Select(_ => /*$"#/definitions/{_.Name}"*/_.Name).Cast<object>().ToArray(), Type = "string"});
+                    new Schema {Enum = registry.Select(_ => _.Name).Cast<object>().ToArray(), Type = "string"});
                 if(model.Required == null) model.Required = new List<string>();
                 model.Required.Add("$type");
 
@@ -44,6 +44,7 @@ namespace CHC.Consent.Api.Infrastructure
             {
                 var schema = new Schema {Properties = model.Properties, Type = model.Type, Required = model.Required};
                 model.AllOf = new[] { context.SchemaRegistry.GetOrRegister(typeof(TIdentifier)), schema };
+                model.Extensions["x-ms-client-name"] = context.SystemType.Name;
                 model.Properties = null;
                 model.Required = null;
                 model.Type = null;
