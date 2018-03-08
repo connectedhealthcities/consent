@@ -12,6 +12,11 @@ using Newtonsoft.Json;
 
 namespace CHC.Consent.DataImporter
 {
+    /// <summary>
+    /// <para>Simple XML parser that tries to match element names against constructor arguments.</para>
+    /// <para>This will always find the constructor with most arguments and try to apply that.</para>
+    /// <para>It honours default argument values. In the case of only one argument, the contents of the node is used</para>
+    /// </summary>
     public class XmlParser
     {
         public IEnumerable<PersonSpecification> GetPeople(StreamReader source)
@@ -27,7 +32,9 @@ namespace CHC.Consent.DataImporter
                 .Where(type => type.IsSubclassOf(typeof(IPersonIdentifier)))
                 .ToDictionary(type => type.GetCustomAttribute<JsonObjectAttribute>().Id);
 
-            xmlReader = XmlReader.Create(xmlReader, new XmlReaderSettings{ IgnoreWhitespace = true});
+            xmlReader = XmlReader.Create(
+                xmlReader,
+                new XmlReaderSettings {IgnoreWhitespace = true, IgnoreComments = true,});
 
             xmlReader.MoveToContent();
 
@@ -46,30 +53,27 @@ namespace CHC.Consent.DataImporter
                 }
 
 
-                var personNode = XDocument.Load(xmlReader.ReadSubtree(), LoadOptions.SetLineInfo);
+                var personNode = XDocument.Load(xmlReader.ReadSubtree(), LoadOptions.SetLineInfo&LoadOptions.SetBaseUri);
 
                 var person = new PersonSpecification
                 {
                     Identifiers = personNode.XPathSelectElements("/person/identity/identifier")
-                        .Select(_ =>
-                        {
-                            try
-                            {
-                                return ParseIdentifier(_, personIdentifierTypes);
-                            }
-                            catch (Exception e)
-                            {
-                             
-                                throw;
-                            }
-                        })
-                        .ToList()
+                        .Select(_ => ParseIdentifier(_, personIdentifierTypes))
+                        .ToList(),
+                    MatchSpecifications =
+                        personNode.XPathSelectElements("/person/lookup/match")
+                            .Select(
+                                m => new MatchSpecification(
+                                    m.Elements("identifier").Select(_ => ParseIdentifier(_, personIdentifierTypes))
+                                        .ToList()))
+                            .ToList()
                 };
 
                 yield return person;
             }
         }
 
+        
         public static IPersonIdentifier ParseIdentifier(XElement identifierNode, Dictionary<string, Type> typeNameLookup)
         {
             var typeName = identifierNode.Attribute("type")?.Value;
@@ -87,21 +91,11 @@ namespace CHC.Consent.DataImporter
 
             var identifierType = typeNameLookup[typeName];
 
-            XmlAttributeOverrides overrides = new XmlAttributeOverrides();
-
-
-            var onlyProperty = identifierType.GetProperties()
-                .Where(_ => _.GetCustomAttribute<JsonPropertyAttribute>() != null).ToArray();
             var constructor = identifierType.GetConstructors()
                 .Select(_ => new {Constructor = _, Parameters = _.GetParameters()})
                 .OrderByDescending(_ => _.Parameters.Length)
                 .First();
 
-
-            var nonTypeAttributes = identifierNode.Attributes().Where(_ => _.Name.LocalName != "type");
-            var attributeValues = nonTypeAttributes.Any()
-                ? nonTypeAttributes.Select(_ => new {Name = _.Name.LocalName, _.Value})
-                : Enumerable.Repeat(new {Name = (string) null, Value = (string) null}, 0);
 
             if (identifierNode.FirstNode.NodeType == XmlNodeType.Text)
             {

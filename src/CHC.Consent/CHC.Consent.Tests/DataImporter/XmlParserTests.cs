@@ -127,6 +127,11 @@ namespace CHC.Consent.Tests.DataImporter
                 ContactNumber("Home", "01234999999"),
                 ContactNumber("Mobile", "01234999999")
                 );
+            
+            Assert.Collection(person.MatchSpecifications,
+                m => Assert.Collection(m.Identifiers, NhsNumber("4099999999")),
+                m => Assert.Collection(m.Identifiers, HosptialNumber("RAE9999999"))
+            );
         }
 
         private static Action<IPersonIdentifier> NhsNumber(string expectedValue) => AssertIdentifier<UkNhsNhsNumber>(
