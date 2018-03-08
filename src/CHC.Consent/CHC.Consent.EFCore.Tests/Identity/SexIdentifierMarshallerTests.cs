@@ -1,5 +1,6 @@
 ﻿using CHC.Consent.Common;
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Identity.Identifiers.Medway;
 using CHC.Consent.EFCore.Identity;
 using Xunit;
 
@@ -14,7 +15,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
         [InlineData(Sex.Female, "Female")]
         public void MarshallsIdentifierToValueString(Sex sex, string expectedValue)
         {
-            var marshalledValue = marhsaller.MarshalledValue(new SexIdentifier(sex));
+            var marshalledValue = marhsaller.MarshalledValue(new MedwaySexIdentifier(sex));
             Assert.Equal(expectedValue, marshalledValue);
         }
 

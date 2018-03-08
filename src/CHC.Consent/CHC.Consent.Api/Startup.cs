@@ -43,9 +43,11 @@ namespace CHC.Consent.Api
                 {
                     registry.Add<NhsNumberIdentifier>(o => o.WithMarshaller<NhsNumberIdentifierMarshaller>());
                     registry.Add<BradfordHospitalNumberIdentifier>(o => o.WithMarshaller<BradfordHospitalNumberIdentifierMarshaller>());
-                    registry.Add<SexIdentifier>(o => o.WithMarshaller<SexIdentifierMarshaller>());
+                    registry.Add<MedwaySexIdentifier>(o => o.WithMarshaller<SexIdentifierMarshaller>());
                     registry.Add<DateOfBirthIdentifier>(o => o.WithXmlMarshaller(valueType: "dateOfBirth"));
                     registry.Add<MedwayNameIdentifier>(o => o.WithXmlMarshaller(valueType: "BIB4All.MedwayName"));
+                    registry.Add<MedwayAddressIdentifier>(o => o.WithXmlMarshaller(valueType: "BIB4All.MedwayAddress"));
+                    registry.Add<MedwayContactNumber>(o => o.WithXmlMarshaller(valueType: "BIB4All.MedwayContactNumber"));
                 }
             );
             

@@ -18,7 +18,7 @@ using Microsoft.Rest;
 using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
-using Sex = CHC.Consent.Api.Client.Models.Sex;
+using Sex = CHC.Consent.Api.Client.Models.UkNhsBradfordhospitalsBib4allMedwaySex;
 
 namespace CHC.Consent.Tests.Api.Client
 {
@@ -115,12 +115,12 @@ namespace CHC.Consent.Tests.Api.Client
 
         private static (IPersonIdentifier, Action<IPersonIdentifier>) DateOfBirthTestData()
         {
-            DateTime? date = 24.April(1865);
+            DateTime date = 24.April(1865);
             return (
-                new DateOfBirth(date),
+                new UkNhsBradfordhospitalsBib4allMedwayDateOfBirth(date), 
                 i => Assert.Equal(
-                    date.Value.ToLocalTime(),
-                    Assert.IsType<DateOfBirth>(i).DateOfBirthProperty?.ToLocalTime())
+                    date.ToLocalTime(),
+                    Assert.IsType<UkNhsBradfordhospitalsBib4allMedwayDateOfBirth>(i).DateOfBirth.ToLocalTime())
             );
         }
 
@@ -129,7 +129,7 @@ namespace CHC.Consent.Tests.Api.Client
             var sex = new Sex("Male");
             return (
                 sex, 
-                i => Assert.Equal("Male", Assert.IsType<Sex>(i).SexProperty));
+                i => Assert.Equal("Male", Assert.IsType<Sex>(i).Sex));
         }
         
         private static (IPersonIdentifier, Action<IPersonIdentifier>) SexFemale()
@@ -137,7 +137,7 @@ namespace CHC.Consent.Tests.Api.Client
             var sex = new Sex(Common.Sex.Female.ToString());
             return (
                 sex, 
-                i => Assert.Equal("Female", Assert.IsType<Sex>(i).SexProperty));
+                i => Assert.Equal("Female", Assert.IsType<Sex>(i).Sex));
         }
         
         [Fact]

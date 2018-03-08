@@ -83,7 +83,7 @@ namespace CHC.Consent.Tests
 
         public static IPersonIdentifier DateOfBirth(DateTime value)
         {
-            return new DateOfBirthIdentifier {DateOfBirth = value};
+            return new DateOfBirthIdentifier(value);
         }
 
         public static IPersonIdentifier NhsNumber(string nhsNumber) => new NhsNumberIdentifier(nhsNumber);

@@ -220,36 +220,17 @@
         "$type": {
           "enum": [
             "uk.nhs.nhs-number",
-            "uk.nhs.bradfordhospitals.hosptial-number",
-            "sex",
-            "date-of-birth",
-            "uk.nhs.bradfordhospitals.bib4all.medway.name"
+            "uk.nhs.bradfordhospitals.hospital-number",
+            "uk.nhs.bradfordhospitals.bib4all.medway.sex",
+            "uk.nhs.bradfordhospitals.bib4all.medway.date-of-birth",
+            "uk.nhs.bradfordhospitals.bib4all.medway.name",
+            "uk.nhs.bradfordhospitals.bib4all.medway.address",
+            "uk.nhs.bradfordhospitals.bib4all.medway.contact-number"
           ],
           "type": "string"
         }
       },
       "discriminator": "$type"
-    },
-    "sex": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/IPersonIdentifier"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "sex": {
-              "enum": [
-                "Unknown",
-                "Male",
-                "Female"
-              ],
-              "type": "string"
-            }
-          }
-        }
-      ],
-      "x-ms-client-name": "SexIdentifier"
     },
     "PersonSpecification": {
       "type": "object",
@@ -314,7 +295,7 @@
       "x-ms-client-name": "NhsNumberIdentifier",
       "x-ms-discriminator-value": "uk.nhs.nhs-number"
     },
-    "ukNhsBradfordhospitalsHosptialNumber": {
+    "ukNhsBradfordhospitalsHospitalNumber": {
       "allOf": [
         {
           "$ref": "#/definitions/IPersonIdentifier"
@@ -330,14 +311,39 @@
         }
       ],
       "x-ms-client-name": "BradfordHospitalNumberIdentifier",
-      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.hosptial-number"
+      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.hospital-number"
     },
-    "dateOfBirth": {
+    "ukNhsBradfordhospitalsBib4allMedwaySex": {
       "allOf": [
         {
           "$ref": "#/definitions/IPersonIdentifier"
         },
         {
+          "type": "object",
+          "properties": {
+            "sex": {
+              "enum": [
+                "Unknown",
+                "Male",
+                "Female"
+              ],
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "MedwaySexIdentifier",
+      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.medway.sex"
+    },
+    "ukNhsBradfordhospitalsBib4allMedwayDateOfBirth": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IPersonIdentifier"
+        },
+        {
+          "required": [
+            "dateOfBirth"
+          ],
           "type": "object",
           "properties": {
             "dateOfBirth": {
@@ -348,7 +354,7 @@
         }
       ],
       "x-ms-client-name": "DateOfBirthIdentifier",
-      "x-ms-discriminator-value": "date-of-birth"
+      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.medway.date-of-birth"
     },
     "ukNhsBradfordhospitalsBib4allMedwayName": {
       "allOf": [
@@ -369,6 +375,58 @@
       ],
       "x-ms-client-name": "MedwayNameIdentifier",
       "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.medway.name"
+    },
+    "ukNhsBradfordhospitalsBib4allMedwayAddress": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IPersonIdentifier"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "addressLine1": {
+              "type": "string"
+            },
+            "addressLine2": {
+              "type": "string"
+            },
+            "addressLine3": {
+              "type": "string"
+            },
+            "addressLine4": {
+              "type": "string"
+            },
+            "addressLine5": {
+              "type": "string"
+            },
+            "postcode": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "MedwayAddressIdentifier",
+      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.medway.address"
+    },
+    "ukNhsBradfordhospitalsBib4allMedwayContactNumber": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IPersonIdentifier"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "number": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "MedwayContactNumber",
+      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.medway.contact-number"
     }
   },
   "securityDefinitions": {}

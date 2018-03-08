@@ -12,6 +12,7 @@ autorest --input-file=???
 ``` yaml
 output-folder: .\generated
 message-format: json
+clear-output-folder: true
 license-header: >-
     (C) 2018 CHC 
     License: TBC

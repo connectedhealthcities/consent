@@ -7,25 +7,27 @@ namespace CHC.Consent.Api.Client.Models
     using Newtonsoft.Json;
     using System.Linq;
 
-    [Newtonsoft.Json.JsonObject("sex")]
-    public partial class Sex : IPersonIdentifier
+    [Newtonsoft.Json.JsonObject("uk.nhs.bradfordhospitals.bib4all.medway.sex")]
+    public partial class UkNhsBradfordhospitalsBib4allMedwaySex : IPersonIdentifier
     {
         /// <summary>
-        /// Initializes a new instance of the Sex class.
+        /// Initializes a new instance of the
+        /// UkNhsBradfordhospitalsBib4allMedwaySex class.
         /// </summary>
-        public Sex()
+        public UkNhsBradfordhospitalsBib4allMedwaySex()
         {
             CustomInit();
         }
 
         /// <summary>
-        /// Initializes a new instance of the Sex class.
+        /// Initializes a new instance of the
+        /// UkNhsBradfordhospitalsBib4allMedwaySex class.
         /// </summary>
-        /// <param name="sexProperty">Possible values include: 'Unknown',
-        /// 'Male', 'Female'</param>
-        public Sex(string sexProperty = default(string))
+        /// <param name="sex">Possible values include: 'Unknown', 'Male',
+        /// 'Female'</param>
+        public UkNhsBradfordhospitalsBib4allMedwaySex(string sex = default(string))
         {
-            SexProperty = sexProperty;
+            Sex = sex;
             CustomInit();
         }
 
@@ -38,7 +40,7 @@ namespace CHC.Consent.Api.Client.Models
         /// Gets or sets possible values include: 'Unknown', 'Male', 'Female'
         /// </summary>
         [JsonProperty(PropertyName = "sex")]
-        public string SexProperty { get; set; }
+        public string Sex { get; set; }
 
     }
 }

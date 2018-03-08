@@ -1,19 +1,19 @@
-﻿namespace CHC.Consent.Common.Identity.Identifiers
+﻿namespace CHC.Consent.Common.Identity.Identifiers.Medway
 {
     [Identifier(TypeName)]
-    public class SexIdentifier : IPersonIdentifier
+    public class MedwaySexIdentifier : IPersonIdentifier
     {
-        public const string TypeName = "sex";
+        public const string TypeName = "uk.nhs.bradfordhospitals.bib4all.medway.sex";
 
         /// <inheritdoc />
-        public SexIdentifier(Sex? sex=null)
+        public MedwaySexIdentifier(Sex? sex=null)
         {
             Sex = sex;
         }
 
         public Sex? Sex { get; set; }
 
-        protected bool Equals(SexIdentifier other)
+        protected bool Equals(MedwaySexIdentifier other)
         {
             return Sex == other.Sex;
         }
@@ -24,7 +24,7 @@
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((SexIdentifier) obj);
+            return Equals((MedwaySexIdentifier) obj);
         }
 
         /// <inheritdoc />

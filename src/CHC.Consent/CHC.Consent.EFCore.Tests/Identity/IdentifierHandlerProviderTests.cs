@@ -41,7 +41,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
             var wrapper =
                 new PersonIdentifierHandlerWrapper<Identifier>(new IdentifierHandler());
                 
-            A.CallTo(() => services.GetService(typeof(IPersonIdentifierHandler<Identifier>))).Returns(wrapper);
+            A.CallTo(() => services.GetService(typeof(PersonIdentifierHandlerWrapper<Identifier>))).Returns(wrapper);
 
             var handler = new IdentifierHandlerProvider(services).GetHandler(typeof(Identifier));
             

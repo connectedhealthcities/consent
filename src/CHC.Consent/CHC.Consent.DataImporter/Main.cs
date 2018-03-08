@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Xml;
-using System.Xml.Serialization;
+using System.IO;
 using Microsoft.Extensions.CommandLineUtils;
 
 namespace CHC.Consent.DataImporter
@@ -53,7 +52,10 @@ namespace CHC.Consent.DataImporter
 
         private static void Import(string fileValue)
         {
-            
+            using (var streamReader = new StreamReader(File.OpenRead(fileValue)))
+            {
+                new XmlImporter().Import(streamReader);
+            }
         }
 
         private static void ShowError(string message, CommandLineApplication command)
@@ -62,6 +64,14 @@ namespace CHC.Consent.DataImporter
             Console.WriteLine(message);
             Console.ResetColor();
             command.ShowHelp();
+        }
+    }
+
+    internal class XmlImporter
+    {
+        public void Import(StreamReader source)
+        {
+            
         }
     }
 }

@@ -10,5 +10,8 @@
     <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=1.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
       <HintPath>..\..\..\..\..\..\Users\David Kemp\.nuget\packages\microsoft.extensions.dependencyinjection.abstractions\1.0.0\lib\netstandard1.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+      <HintPath>..\..\..\..\..\..\Users\David Kemp\.nuget\packages\newtonsoft.json\11.0.1\lib\netstandard2.0\Newtonsoft.Json.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

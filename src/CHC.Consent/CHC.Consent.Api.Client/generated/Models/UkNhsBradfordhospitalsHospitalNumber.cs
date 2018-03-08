@@ -7,23 +7,23 @@ namespace CHC.Consent.Api.Client.Models
     using Newtonsoft.Json;
     using System.Linq;
 
-    [Newtonsoft.Json.JsonObject("uk.nhs.bradfordhospitals.hosptial-number")]
-    public partial class UkNhsBradfordhospitalsHosptialNumber : IPersonIdentifier
+    [Newtonsoft.Json.JsonObject("uk.nhs.bradfordhospitals.hospital-number")]
+    public partial class UkNhsBradfordhospitalsHospitalNumber : IPersonIdentifier
     {
         /// <summary>
         /// Initializes a new instance of the
-        /// UkNhsBradfordhospitalsHosptialNumber class.
+        /// UkNhsBradfordhospitalsHospitalNumber class.
         /// </summary>
-        public UkNhsBradfordhospitalsHosptialNumber()
+        public UkNhsBradfordhospitalsHospitalNumber()
         {
             CustomInit();
         }
 
         /// <summary>
         /// Initializes a new instance of the
-        /// UkNhsBradfordhospitalsHosptialNumber class.
+        /// UkNhsBradfordhospitalsHospitalNumber class.
         /// </summary>
-        public UkNhsBradfordhospitalsHosptialNumber(string value = default(string))
+        public UkNhsBradfordhospitalsHospitalNumber(string value = default(string))
         {
             Value = value;
             CustomInit();

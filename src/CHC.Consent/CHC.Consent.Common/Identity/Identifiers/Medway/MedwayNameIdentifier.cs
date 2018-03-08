@@ -1,4 +1,6 @@
-﻿namespace CHC.Consent.Common.Identity.Identifiers.Medway
+﻿using Newtonsoft.Json;
+
+namespace CHC.Consent.Common.Identity.Identifiers.Medway
 {
     [Identifier(TypeName, AllowMultipleValues = false)]
     public class MedwayNameIdentifier : IPersonIdentifier
