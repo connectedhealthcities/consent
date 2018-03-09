@@ -1,6 +1,8 @@
 ﻿using System;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.EFCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace CHC.Consent.DependencyInjection
 {
@@ -12,7 +14,9 @@ namespace CHC.Consent.DependencyInjection
                 throw new Exception($"{type} is not {typeof(IPersonIdentifier)}");
             
             IdentifierType = type;
-            TypeName = IdentifierAttribute.GetAttribute(type).Name;
+            var attribute = IdentifierAttribute.GetAttribute(type);
+            TypeName = attribute.Name;
+            CanHaveDuplicates = attribute.AllowMultipleValues;
         }
 
         public Type IdentifierType { get; }
@@ -27,7 +31,11 @@ namespace CHC.Consent.DependencyInjection
 
         public void SetHandlerFromMarshaller<TIdentifer>(IIdentifierMarshaller<TIdentifer> marshaller) where TIdentifer : IPersonIdentifier
         {
-            HandlerProvider = _ => new PersonIdentifierHandler<TIdentifer>(marshaller, TypeName);
+            HandlerProvider = _ => 
+                new PersonIdentifierHandler<TIdentifer>(
+                marshaller,
+                TypeName,
+                _.GetRequiredService<ILogger<PersonIdentifierHandler<TIdentifer>>>());
         }
     }
 }
