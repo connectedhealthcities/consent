@@ -1,6 +1,13 @@
 ﻿using System;
 using System.IO;
+using System.Net.Http;
+using CHC.Consent.Api.Client;
 using Microsoft.Extensions.CommandLineUtils;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Rest;
+using Serilog;
+using Serilog.Events;
 
 namespace CHC.Consent.DataImporter
 {
@@ -8,6 +15,20 @@ namespace CHC.Consent.DataImporter
     {
         public static void Main(string[] args)
         {
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .MinimumLevel.Is(LogEventLevel.Verbose)
+                .CreateLogger();
+            
+            var loggerFactory = new LoggerFactory().AddSerilog();
+            
+            ServiceClientTracing.IsEnabled = true;
+            ServiceClientTracing.AddTracingInterceptor(
+                new LoggerServiceClientTracingIntercepter(
+                    loggerFactory.CreateLogger<Api.Client.Api>(),
+                    LogLevel.Trace));
+            
+            
             var application = new CommandLineApplication();
 
             var import = application.Command(
@@ -71,7 +92,13 @@ namespace CHC.Consent.DataImporter
     {
         public void Import(StreamReader source)
         {
-            
+            foreach (var person in new XmlParser().GetPeople(source))
+            {
+                var api = new Api.Client.Api(new Uri("http://localhost:5000/"), new HttpClientHandler{AllowAutoRedirect = false});
+                
+                var response = api
+                    .IdentitiesPutWithHttpMessagesAsync(person).GetAwaiter().GetResult();
+            }
         }
     }
 }

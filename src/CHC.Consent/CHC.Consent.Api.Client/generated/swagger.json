@@ -142,7 +142,7 @@
               "type": "integer"
             }
           },
-          "302": {
+          "303": {
             "description": "Redirect"
           }
         }
@@ -426,7 +426,7 @@
           }
         }
       ],
-      "x-ms-client-name": "MedwayContactNumber",
+      "x-ms-client-name": "MedwayContactNumberIdentifier",
       "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.medway.contact-number"
     },
     "ukNhsBradfordhospitalsBib4allMedwayBirthOrder": {

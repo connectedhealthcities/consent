@@ -58,7 +58,7 @@ namespace CHC.Consent.Api.Features.Identity
 
         [HttpPut]
         [ProducesResponseType((int) HttpStatusCode.Created, Type=typeof(long))]
-        [ProducesResponseType((int) HttpStatusCode.Found)]
+        [ProducesResponseType((int) HttpStatusCode.SeeOther)]
         [AutoCommit]
         public IActionResult PutPerson([FromBody, Required]PersonSpecification specification)
         {
