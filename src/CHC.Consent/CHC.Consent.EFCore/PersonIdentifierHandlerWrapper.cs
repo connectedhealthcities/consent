@@ -24,8 +24,8 @@ namespace CHC.Consent.EFCore
         }
 
         /// <inheritdoc />
-        public bool Update(PersonEntity person, IPersonIdentifier value, IStoreProvider stores) =>
-            handler.Update(person, new [] { ConvertToCorrectType(value) }, stores);
+        public bool Update(PersonEntity person, IEnumerable<IPersonIdentifier> identifiers, IStoreProvider stores) =>
+            handler.Update(person, identifiers.Select(ConvertToCorrectType).ToArray(), stores);
 
         private static TIdentifier ConvertToCorrectType(IPersonIdentifier value)
         {

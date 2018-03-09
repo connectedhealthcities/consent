@@ -8,7 +8,7 @@ namespace CHC.Consent.EFCore
 {
     public interface IPersonIdentifierHandler
     {
-        bool Update(PersonEntity person, IPersonIdentifier value, IStoreProvider stores);
+        bool Update(PersonEntity person, IEnumerable<IPersonIdentifier> value, IStoreProvider stores);
         IEnumerable<IPersonIdentifier> Get(PersonEntity person, IStoreProvider stores);
 
         IQueryable<PersonEntity> Filter(

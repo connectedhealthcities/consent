@@ -12,6 +12,7 @@
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CHC.Consent.DependencyInjection\CHC.Consent.DependencyInjection.csproj" />
     <ProjectReference Include="..\CHC.Consent.EFCore\CHC.Consent.EFCore.csproj">
       <Project>{CDDE7330-870E-4EEF-A98E-F9C8B8923F25}</Project>
       <Name>CHC.Consent.EFCore</Name>

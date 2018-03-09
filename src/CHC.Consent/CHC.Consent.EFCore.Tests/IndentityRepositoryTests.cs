@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Identity.Identifiers.Medway;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.Common.Infrastructure.Data;
+using CHC.Consent.DependencyInjection;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.Identity;
 using FakeItEasy;
@@ -50,7 +53,6 @@ namespace CHC.Consent.EFCore.Tests
             var storeProvider = (IStoreProvider)new ContextStoreProvider (CreateNewContextInSameTransaction());
 
             var repository = new IdentityRepository(
-                storeProvider.Get<PersonEntity>(), 
                 A.Dummy<ITypeRegistry<IPersonIdentifier>>(),
                 handlerProvider,
                 storeProvider);
@@ -63,6 +65,61 @@ namespace CHC.Consent.EFCore.Tests
         /// <inheritdoc />
         public IndentityRepositoryTests(ITestOutputHelper outputHelper, DatabaseFixture fixture) : base(outputHelper, fixture)
         {
+        }
+    }
+
+    public class IndentityRepositoryFastTests
+    {
+        [Fact]
+        public void GroupsIdentityUpdatesByIdentityType()
+        {
+            var registryBuilder = new PersonIdentifierRegistryOptions();
+
+            registryBuilder.Add<NhsNumberIdentifier>(_ => _.WithMarshaller<NhsNumberIdentifierMarshaller>());
+            registryBuilder.Add<MedwayContactNumberIdentifier>(_ => _.WithXmlMarshaller("Bib4All.MedwayNumber"));
+
+            var storeProvider = A.Dummy<IStoreProvider>();
+
+            var handlerProvider = A.Fake<IIdentifierHandlerProvider>();
+
+            var handlerFake = A.Fake<IPersonIdentifierHandler>();
+            
+            
+            A.CallTo(() => handlerProvider.GetHandler(A<Type>._)).Returns(handlerFake);
+            
+            var repository = new IdentityRepository(
+                registryBuilder.CreateTypeRegistry(),
+                handlerProvider,
+                storeProvider);
+
+            var nhsNumberIdentifier = new NhsNumberIdentifier("1234");
+            var mobileNumberIdentifier = new MedwayContactNumberIdentifier {Type = "Mobile", Number = "1"};
+            var homeNumberIdentifier = new MedwayContactNumberIdentifier {Type = "Home", Number = "2"};
+            repository.CreatePerson(
+                new IPersonIdentifier[]
+                {
+                    nhsNumberIdentifier,
+                    mobileNumberIdentifier,
+                    homeNumberIdentifier,
+                }
+            );
+
+            A.CallTo(
+                    () => handlerFake.Update(
+                        A<PersonEntity>._,
+                        A<IEnumerable<IPersonIdentifier>>.That.IsSameSequenceAs(
+                            mobileNumberIdentifier,
+                            homeNumberIdentifier),
+                        storeProvider))
+                .MustHaveHappened();
+            
+            A.CallTo(
+                    () => handlerFake.Update(
+                        A<PersonEntity>._,
+                        A<IEnumerable<IPersonIdentifier>>.That.IsSameSequenceAs(nhsNumberIdentifier),
+                        storeProvider))
+                .MustHaveHappened();
+                
         }
     }
 }

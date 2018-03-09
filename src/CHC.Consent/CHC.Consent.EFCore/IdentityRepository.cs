@@ -12,18 +12,16 @@ namespace CHC.Consent.EFCore
     public class IdentityRepository : IIdentityRepository
     {
         private readonly IStoreProvider stores;
-        private readonly IStore<PersonEntity> people;
+        private IStore<PersonEntity> People => stores.Get<PersonEntity>();
         private readonly IIdentifierHandlerProvider handlerProvider;
         private readonly ITypeRegistry identifierRegistry;
 
         public IdentityRepository(
-            IStore<PersonEntity> people, 
             ITypeRegistry<IPersonIdentifier> identifierRegistry, 
             IIdentifierHandlerProvider identifierHandlerProvider, 
             IStoreProvider stores)
         {
             this.stores = stores;
-            this.people = people;
             this.identifierRegistry = identifierRegistry;
             handlerProvider = identifierHandlerProvider;
         }
@@ -32,21 +30,20 @@ namespace CHC.Consent.EFCore
         
         public PersonIdentity FindPersonBy(IEnumerable<IPersonIdentifier> identifiers)
         {
-            return identifiers.Aggregate(
-                    (IQueryable<PersonEntity>) people,
-                    FilterPeopleByIdentifier)
-                .SingleOrDefault();
+            var filteredPeople = identifiers.Aggregate(People.AsQueryable(), FilterPeopleByIdentifier);
+            return filteredPeople.SingleOrDefault();
         }
 
         private IQueryable<PersonEntity> FilterPeopleByIdentifier(
-            IQueryable<PersonEntity> peopleEntities, IPersonIdentifier identifier)
+            IQueryable<PersonEntity> peopleEntities, 
+            IPersonIdentifier identifier)
         {
             return GetHandler(identifier).Filter(peopleEntities, identifier, stores);
         }
 
         public IEnumerable<IPersonIdentifier> GetPersonIdentities(long personId)
         {
-            var person = people.Get(personId);
+            var person = People.Get(personId);
 
             return identifierRegistry
                 .Select(_ => _.Type)
@@ -58,7 +55,7 @@ namespace CHC.Consent.EFCore
         /// <inheritdoc />
         public PersonIdentity CreatePerson(IEnumerable<IPersonIdentifier> identifiers)
         {
-            var person = people.Add(new PersonEntity());
+            var person = People.Add(new PersonEntity());
 
             UpdatePerson(person, identifiers);
             
@@ -69,14 +66,14 @@ namespace CHC.Consent.EFCore
         /// <inheritdoc />
         public void UpdatePerson(PersonIdentity personIdentity, IEnumerable<IPersonIdentifier> identifiers)
         {
-            Update(people.Get(personIdentity.Id), identifiers);
+            Update(People.Get(personIdentity.Id), identifiers);
         }
 
         private void Update(PersonEntity person, IEnumerable<IPersonIdentifier> identifiers)
         {
-            foreach (var identifier in identifiers)
+            foreach (var identifierGroup in identifiers.GroupBy(_ => _.GetType()))
             {
-                GetHandler(identifier).Update(person, identifier, stores);
+                GetHandler(identifierGroup.Key).Update(person, identifierGroup.ToArray(), stores);
             }
         }
 
