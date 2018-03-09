@@ -15,25 +15,102 @@ namespace CHC.Consent.Tests.DataImporter
 {
     public class XmlParserTests
     {
+        private static readonly Dictionary<string, Type> EmptyTypeMap = new Dictionary<string, Type>();
+
         private static T ParseIdentifier<T>(string innerXml)
         {
-            var xml = XElement.Parse(
-                $"<identifier type=\"identifier\">{innerXml}</identifier>");
+            return ParseIdentifier<T>(innerXml, new Dictionary<string, Type> {["identifier"] = typeof(T)});
+        }
 
-            var identifier = XmlParser.ParseIdentifier(
-                xml,
-                new Dictionary<string, Type> {["identifier"] = typeof(T)});
-            
+        private static T ParseIdentifier<T>(string innerXml, Dictionary<string, Type> typeMap)
+        {
+            //This dance ensures we have line numbers (not that they mean a lot here)
+            var fullXml = $"<identifier>{innerXml}</identifier>";
+            return ParseIdentifierString<T>(fullXml, typeMap);
+        }
+
+        private static T ParseIdentifierString<T>(string fullXml, Dictionary<string, Type> typeMap)
+        {
+            var xDocument = XDocument.Load(
+                XmlReader.Create(new StringReader(fullXml)),
+                LoadOptions.SetLineInfo | LoadOptions.SetBaseUri);
+
+            var identifier = XmlParser.ParseIdentifier(xDocument.Root, typeMap);
+
             Assert.NotNull(identifier);
             return Assert.IsType<T>(identifier);
         }
-        
+
         [Fact]
         public void CanParseSexIdentifier()
         {
-            var sexIdentifier = ParseIdentifier<UkNhsBradfordhospitalsBib4allMedwaySex>("Male");
+            var xml = @"<mdwy:sex xmlns:mdwy=""uk.nhs.bradfordhosptials.bib4all.medway"">Male</mdwy:sex>";
+            
+            var sexIdentifier = ParseIdentifierString<UkNhsBradfordhospitalsBib4allMedwaySex>(
+                xml,
+                new Dictionary<string, Type>
+                {
+                    ["uk.nhs.bradfordhosptials.bib4all.medway.sex"] = typeof(UkNhsBradfordhospitalsBib4allMedwaySex) 
+                }
+                );
             
             Assert.Equal(Sex.Male.ToString(), sexIdentifier.Sex);
+        }
+
+        class DummyIdentifierWithOneArg<T> : IPersonIdentifier
+        {
+            public T Value { get; }
+
+            /// <inheritdoc />
+            public DummyIdentifierWithOneArg(T value)
+            {
+                Value = value;
+            }
+        }
+
+        [Fact]
+        public void Matches_CamelCasedElementName_WithKebabCasedTypeName()
+        {
+            const string xml = @"<tst:dummyIdentifier xmlns:tst=""test"">Male</tst:dummyIdentifier>";
+            
+            var identifier = ParseIdentifierString<DummyIdentifierWithOneArg<string>>(
+                xml,
+                new Dictionary<string, Type>
+                {
+                    ["test.dummy-identifier"] = typeof(DummyIdentifierWithOneArg<string>) 
+                }
+            );
+            
+            Assert.Equal("Male", identifier.Value);
+        }
+        
+        [Fact]
+        public void Matches_CamelCasedElementNameInGlobalNS_WithKebabCasedTypeName()
+        {
+            const string xml = @"<dummyIdentifier>Male</dummyIdentifier>";
+            
+            var identifier = ParseIdentifierString<DummyIdentifierWithOneArg<Sex>>(
+                xml,
+                new Dictionary<string, Type>
+                {
+                    ["dummy-identifier"] = typeof(DummyIdentifierWithOneArg<Sex>) 
+                }
+            );
+            
+            Assert.Equal(Sex.Male, identifier.Value);
+        }
+
+        [Fact]
+        public void ParsesNullableEnumCorrectly()
+        {
+            var identifier = ParseIdentifierString<DummyIdentifierWithOneArg<DayOfWeek?>>(
+                "<test />",
+                new Dictionary<string, Type>
+                {
+                    ["test"] = typeof(DummyIdentifierWithOneArg<DayOfWeek?>)
+                });
+            
+            Assert.Null(identifier.Value);
         }
 
         [Fact]
@@ -62,46 +139,62 @@ namespace CHC.Consent.Tests.DataImporter
         }
 
         [Fact]
+        public void ReportsErrorOnIncorrectType()
+        {
+            var parseException = Assert.ThrowsAny<XmlParseException>(() => ParseIdentifier<UkNhsNhsNumber>("", EmptyTypeMap));
+
+            Assert.Contains("identifier", parseException.Message);
+            Assert.True(parseException.HasLineInfo);
+            Assert.Equal(1, parseException.LineNumber);
+            Assert.Equal(2, parseException.LinePosition);
+            
+        }
+
+        [Fact]
         public void CanParseWholePerson()
         {
-            const string personXml = @"<people><person><!-- mother example -->
-                            <identity>
-                <identifier type=""uk.nhs.nhs-number"">4099999999</identifier>
-                <identifier type=""uk.nhs.bradfordhospitals.hospital-number"">RAE9999999</identifier>
-                <identifier type=""uk.nhs.bradfordhospitals.bib4all.medway.name""><firstName>Jo</firstName><lastName>Bloggs</lastName></identifier>
-                <identifier type=""uk.nhs.bradfordhospitals.bib4all.medway.date-of-birth"">1990-06-16</identifier>
-                <identifier type=""uk.nhs.bradfordhospitals.bib4all.medway.address"">
+            const string personXml = @"<?xml version=""1.0""?>
+<people xmlns:nhs=""uk.nhs"" xmlns:bfd=""uk.nhs.bradfordhospitals"" xmlns:mdw=""uk.nhs.bradfordhospitals.bib4all.medway"">
+    <person>
+        <identity>
+            <nhs:nhsNumber>4099999999</nhs:nhsNumber>
+            <bfd:hospitalNumber>RAE9999999</bfd:hospitalNumber>
+            <mdw:name><firstName>Jo</firstName><lastName>Bloggs</lastName></mdw:name>
+            <mdw:dateOfBirth>1990-06-16</mdw:dateOfBirth>
+            <mdw:address>
                 <addressLine1>22 Love Street</addressLine1>
                 <addressLine2>Holmestown</addressLine2>
                 <addressLine3>Bradtopia</addressLine3>
                 <addressLine4>West Yorkshire</addressLine4>
-                <addressLine5></addressLine5><!-- should this be empty or excluded? -->
                 <postcode>BD92 4FX</postcode>
-                </identifier>
-                <identifier type=""uk.nhs.bradfordhospitals.bib4all.medway.contact-number"">
+            </mdw:address>
+            <mdw:contactNumber>
                 <type>Home</type>
                 <number>01234999999</number>
-                </identifier>
-                <identifier type=""uk.nhs.bradfordhospitals.bib4all.medway.contact-number"">
+            </mdw:contactNumber>
+            <mdw:contactNumber>
                 <type>Mobile</type>
                 <number>01234999999</number>
-                </identifier>
-                </identity>
-                <lookup>
-                <match><identifier type=""uk.nhs.nhs-number"">4099999999</identifier></match>
-                <match><identifier type=""uk.nhs.bradfordhospitals.hospital-number"">RAE9999999</identifier></match>
-                </lookup>
-                <consent dateGiven=""2017-10-14"" studyId=""TBC"">
-                <givenFor>
-                <discriminator type=""uk.nhs.bradfordhospitals.bib4all.medway.pregnancyNumber"">2</discriminator>
-                </givenFor>
-                <evidence type=""uk.nhs.bradfordhospitals.bib4all.medway.evidence"">
-                <competentStatus></competentStatus>
-                <givenBy></givenBy>
-                <takenBy>Betsey Trotwood</takenBy>
-                </evidence>
-                </consent>
-                </person></people>";
+            </mdw:contactNumber>
+        </identity>
+        <lookup>
+            <match><nhs:nhsNumber>4099999999</nhs:nhsNumber></match>
+            <match><bfd:hospitalNumber>RAE9999999</bfd:hospitalNumber></match>
+        </lookup>
+        <consent dateGiven=""2017-10-14"" studyId=""TBC"">
+            <givenFor>
+                <mdw:pregnancyNumber>2</mdw:pregnancyNumber>
+            </givenFor>
+            <evidence>
+                <mdw:evidence>
+                    <competentStatus></competentStatus>
+                    <givenBy></givenBy>
+                    <takenBy>Betsey Trotwood</takenBy>
+                </mdw:evidence>
+            </evidence>
+        </consent>
+    </person>
+</people>";
 
             var xmlTextReader = XmlReader.Create(new StringReader(personXml), new XmlReaderSettings {IgnoreWhitespace = true});
             var person = new XmlParser().GetPeople(xmlTextReader).Single();

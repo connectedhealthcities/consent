@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
@@ -53,18 +54,19 @@ namespace CHC.Consent.DataImporter
                 }
 
 
-                var personNode = XDocument.Load(xmlReader.ReadSubtree(), LoadOptions.SetLineInfo&LoadOptions.SetBaseUri);
+                var personNode = XDocument.Load(xmlReader.ReadSubtree(), LoadOptions.SetLineInfo|LoadOptions.SetBaseUri);
 
                 var person = new PersonSpecification
                 {
-                    Identifiers = personNode.XPathSelectElements("/person/identity/identifier")
+                    Identifiers = personNode.XPathSelectElements("/person/identity/*")
                         .Select(_ => ParseIdentifier(_, personIdentifierTypes))
                         .ToList(),
                     MatchSpecifications =
                         personNode.XPathSelectElements("/person/lookup/match")
                             .Select(
                                 m => new MatchSpecification(
-                                    m.Elements("identifier").Select(_ => ParseIdentifier(_, personIdentifierTypes))
+                                    m.Elements()
+                                        .Select(_ => ParseIdentifier(_, personIdentifierTypes))
                                         .ToList()))
                             .ToList()
                 };
@@ -79,14 +81,15 @@ namespace CHC.Consent.DataImporter
             var typeName = identifierNode.Attribute("type")?.Value;
             if (string.IsNullOrEmpty(typeName))
             {
-                //TODO: Error recording
-                return null;
+                var nodeName = identifierNode.Name;
+                var prefix = string.IsNullOrEmpty(nodeName.NamespaceName) ? string.Empty : nodeName.NamespaceName + ".";
+                typeName = prefix + KebabCase(nodeName.LocalName);
+                //return null;
             }
 
             if (!typeNameLookup.ContainsKey(typeName))
             {
-                //TODO: error recording
-                return null;
+                throw new XmlParseException(identifierNode, $"Cannot find type '{typeName}'");
             }
 
             var identifierType = typeNameLookup[typeName];
@@ -97,11 +100,12 @@ namespace CHC.Consent.DataImporter
                 .First();
 
 
-            if (identifierNode.FirstNode.NodeType == XmlNodeType.Text)
+            
+            if (identifierNode.IsEmpty || identifierNode.FirstNode.NodeType == XmlNodeType.Text)
             {
                 var node = identifierNode.FirstNode;
+                var stringValue = ((XText) node)?.Value;
                 var type = constructor.Parameters[0].ParameterType;
-                var stringValue = ((XText) node).Value;
 
                 var typedValue = ConvertStringToCorrectType(stringValue, type);
                 return (IPersonIdentifier) constructor.Constructor.Invoke(new[] {typedValue});
@@ -137,14 +141,28 @@ namespace CHC.Consent.DataImporter
 
         private static object ConvertStringToCorrectType(string stringValue, Type type)
         {
-            if (Nullable.GetUnderlyingType(type) != null)
+            var underlyingType = Nullable.GetUnderlyingType(type);
+            if (underlyingType == null)
             {
-                type = Nullable.GetUnderlyingType(type);
-                if (string.IsNullOrEmpty(stringValue)) return null;
+                return ChangeType(stringValue, type);
             }
 
-            var typedValue = Convert.ChangeType(stringValue, type);
-            return typedValue;
+            if (string.IsNullOrEmpty(stringValue)) return null;
+
+            return ChangeType(stringValue, underlyingType);
+        }
+
+        private static object ChangeType(string stringValue, Type type) => 
+            type.IsEnum
+            ? Enum.Parse(type, stringValue)
+            : Convert.ChangeType(stringValue, type);
+
+        private static readonly Regex lowerCaseFollowedByUpperCase = new Regex(
+            @"(\p{Ll})(\p{Lu})",
+            RegexOptions.Compiled);
+        private static string KebabCase(string name)
+        {
+            return lowerCaseFollowedByUpperCase.Replace(name, match => match.Groups[1] + "-" + match.Groups[2].Value.ToLowerInvariant());
         }
     }
 }
