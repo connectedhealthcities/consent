@@ -28,22 +28,12 @@ namespace CHC.Consent.DependencyInjection
 
         private static void AddListChecker(IServiceCollection services, PersonIdentifierRegistryOptions options)
         {
-            var checker = new PersonIdentifierListChecker();
-            foreach (var description in options.IdentifierDescriptions)
-            {
-                checker.Add(description.IdentifierType, description.CanHaveDuplicates);
-            }
-
-            services.AddSingleton<IPersonIdentifierListChecker>(checker);
+            services.AddSingleton<IPersonIdentifierListChecker>(options.CreateListChecker());
         }
 
         private static void AddTypeRegistry(IServiceCollection services, PersonIdentifierRegistryOptions options)
         {
-            var registry = new TypeRegistry<IPersonIdentifier, IdentifierAttribute>();
-            foreach (var description in options.IdentifierDescriptions)
-            {
-                registry.Add(description.IdentifierType, description.TypeName);
-            }
+            var registry = options.CreateTypeRegistry();
 
             services.AddSingleton(registry);
             services.AddSingleton<ITypeRegistry<IPersonIdentifier>>(registry);
@@ -54,9 +44,9 @@ namespace CHC.Consent.DependencyInjection
             foreach (var description in options.IdentifierDescriptions)
             {
                 var handlerType = typeof(IPersonIdentifierHandler<>).MakeGenericType(description.IdentifierType);
-                services.AddScoped(handlerType, description.HandlerProvider);
+                services.AddScoped(handlerType, description.HandlerProvider);    
             }
-
+            
             services.AddScoped(typeof(PersonIdentifierHandlerWrapper<>));
 
             services.AddScoped<IIdentifierHandlerProvider, IdentifierHandlerProvider>();
