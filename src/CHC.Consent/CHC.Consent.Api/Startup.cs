@@ -42,12 +42,15 @@ namespace CHC.Consent.Api
                 registry =>
                 {
                     registry.Add<NhsNumberIdentifier>(o => o.WithMarshaller<NhsNumberIdentifierMarshaller>());
-                    registry.Add<BradfordHospitalNumberIdentifier>(o => o.WithMarshaller<BradfordHospitalNumberIdentifierMarshaller>());
+                    registry.Add<BradfordHospitalNumberIdentifier>(
+                        o => o.WithMarshaller<BradfordHospitalNumberIdentifierMarshaller>());
                     registry.Add<MedwaySexIdentifier>(o => o.WithMarshaller<SexIdentifierMarshaller>());
                     registry.Add<DateOfBirthIdentifier>(o => o.WithXmlMarshaller(valueType: "dateOfBirth"));
                     registry.Add<MedwayNameIdentifier>(o => o.WithXmlMarshaller(valueType: "BIB4All.MedwayName"));
                     registry.Add<MedwayAddressIdentifier>(o => o.WithXmlMarshaller(valueType: "BIB4All.MedwayAddress"));
-                    registry.Add<MedwayContactNumber>(o => o.WithXmlMarshaller(valueType: "BIB4All.MedwayContactNumber"));
+                    registry.Add<MedwayContactNumber>(
+                        o => o.WithXmlMarshaller(valueType: "BIB4All.MedwayContactNumber"));
+                    registry.Add<MedwayBirthOrder>(o => o.WithXmlMarshaller(valueType: "BIB4All.MedwayBirthOrder"));
                 }
             );
             

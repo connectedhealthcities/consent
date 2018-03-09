@@ -225,7 +225,8 @@
             "uk.nhs.bradfordhospitals.bib4all.medway.date-of-birth",
             "uk.nhs.bradfordhospitals.bib4all.medway.name",
             "uk.nhs.bradfordhospitals.bib4all.medway.address",
-            "uk.nhs.bradfordhospitals.bib4all.medway.contact-number"
+            "uk.nhs.bradfordhospitals.bib4all.medway.contact-number",
+            "uk.nhs.bradfordhospitals.bib4all.medway.birth-order"
           ],
           "type": "string"
         }
@@ -427,6 +428,28 @@
       ],
       "x-ms-client-name": "MedwayContactNumber",
       "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.medway.contact-number"
+    },
+    "ukNhsBradfordhospitalsBib4allMedwayBirthOrder": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IPersonIdentifier"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "pregnancyNumber": {
+              "format": "int32",
+              "type": "integer"
+            },
+            "birthOrder": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "MedwayBirthOrder",
+      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.medway.birth-order"
     }
   },
   "securityDefinitions": {}
