@@ -25,7 +25,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
                 throw new NotImplementedException();
 
             /// <inheritdoc />
-            public bool Update(PersonEntity person, Identifier value, IStoreProvider stores) =>
+            public bool Update(PersonEntity person, Identifier[] value, IStoreProvider stores) =>
                 throw new NotImplementedException();
         }
 

@@ -22,6 +22,6 @@ namespace CHC.Consent.EFCore
 
         IEnumerable<TIdentifier> Get(PersonEntity person, IStoreProvider stores);
         
-        bool Update(PersonEntity person, TIdentifier value, IStoreProvider stores);
+        bool Update(PersonEntity person, TIdentifier[] value, IStoreProvider stores);
     }
 }

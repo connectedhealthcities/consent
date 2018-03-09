@@ -25,9 +25,9 @@ namespace CHC.Consent.EFCore
 
         /// <inheritdoc />
         public bool Update(PersonEntity person, IPersonIdentifier value, IStoreProvider stores) =>
-            handler.Update(person, GetTypedIdentifier(value), stores);
+            handler.Update(person, new [] { ConvertToCorrectType(value) }, stores);
 
-        private static TIdentifier GetTypedIdentifier(IPersonIdentifier value)
+        private static TIdentifier ConvertToCorrectType(IPersonIdentifier value)
         {
             switch (value)
             {
@@ -45,6 +45,6 @@ namespace CHC.Consent.EFCore
 
         /// <inheritdoc />
         public IQueryable<PersonEntity> Filter(IQueryable<PersonEntity> people, IPersonIdentifier identifier, IStoreProvider storeProvider) 
-            => handler.Filter(people, GetTypedIdentifier(identifier), storeProvider);
+            => handler.Filter(people, ConvertToCorrectType(identifier), storeProvider);
     }
 }

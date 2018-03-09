@@ -32,4 +32,12 @@ namespace CHC.Consent.EFCore.Tests
             public void Dispose() { }
         }
     }
+    
+    public class XunitLogger<T> : XunitLogger, ILogger<T>
+    {
+        /// <inheritdoc />
+        public XunitLogger(ITestOutputHelper testOutputHelper, string categoryName) : base(testOutputHelper, categoryName)
+        {
+        }
+    }
 }

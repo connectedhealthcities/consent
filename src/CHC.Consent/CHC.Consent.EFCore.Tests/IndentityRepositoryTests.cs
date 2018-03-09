@@ -6,6 +6,7 @@ using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.Identity;
 using FakeItEasy;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -38,7 +39,11 @@ namespace CHC.Consent.EFCore.Tests
             Context.SaveChanges();
 
 
-            var identityHandler = new PersonIdentifierHandler<NhsNumberIdentifier>(new NhsNumberIdentifierMarshaller(), NhsNumberIdentifier.TypeName);
+            var identityHandler = new PersonIdentifierHandler<NhsNumberIdentifier>(
+                new NhsNumberIdentifierMarshaller(),
+                NhsNumberIdentifier.TypeName,
+                new XunitLogger<PersonIdentifierHandler<NhsNumberIdentifier>>(outputHelper, "test"));
+            
             var handlerProvider = A.Fake<IIdentifierHandlerProvider>();
             A.CallTo(() => handlerProvider.GetHandler(typeof(NhsNumberIdentifier))).Returns(new PersonIdentifierHandlerWrapper<NhsNumberIdentifier>(identityHandler));
             

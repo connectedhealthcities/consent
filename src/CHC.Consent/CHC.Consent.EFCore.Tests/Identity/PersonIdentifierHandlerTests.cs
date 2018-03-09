@@ -11,7 +11,7 @@ using Random = CHC.Consent.Testing.Utils.Random;
 
 namespace CHC.Consent.EFCore.Tests.Identity
 {
-    public class IdentifierAdapterTests : DbTests
+    public class PersonIdentifierHandlerTests : DbTests
     {
         private const string IdentifierTypeName = "Testing";
         public const string ValueTypeName = "chc.testing";
@@ -24,10 +24,13 @@ namespace CHC.Consent.EFCore.Tests.Identity
 
 
         /// <inheritdoc />
-        public IdentifierAdapterTests(ITestOutputHelper outputHelper, DatabaseFixture fixture) : base(outputHelper, fixture)
+        public PersonIdentifierHandlerTests(ITestOutputHelper outputHelper, DatabaseFixture fixture) : base(outputHelper, fixture)
         {
             marshaller = new IdentifierMarshaller();
-            handler = new PersonIdentifierHandler<Identifier>(marshaller, IdentifierTypeName);
+            handler = new PersonIdentifierHandler<Identifier>(
+                marshaller,
+                IdentifierTypeName,
+                new XunitLogger<PersonIdentifierHandler<Identifier>>(outputHelper, "test"));
             creatingContext = CreateNewContextInSameTransaction();
             updatingContext = CreateNewContextInSameTransaction();
             readingContext = CreateNewContextInSameTransaction();
@@ -103,6 +106,25 @@ namespace CHC.Consent.EFCore.Tests.Identity
         }
 
         [Fact]
+        public void CorrectlyMergesIdentifiers()
+        {
+            AddIdentifiers("Remove", "Keep");
+
+            var updated = Update(new Identifier {Value = "Add"}, new Identifier {Value = "Keep"});
+
+            var identifiers = GetIdentifierEntities();
+
+            Assert.True(updated);
+
+            Assert.Collection(
+                identifiers,
+                ElementIsDeletedIdentifier("Remove"),
+                ElementIsActiveIdentifier("Keep"),
+                ElementIsActiveIdentifier("Add")
+            );
+        }
+
+        [Fact]
         public void CanFindPersonByIdentifierValue()
         {
             5.Times(AddPersonWithRandomIdentifier);
@@ -120,8 +142,8 @@ namespace CHC.Consent.EFCore.Tests.Identity
             
             Assert.Equal(personEntity, Assert.Single(foundPeople));
         }
-        
-        
+
+
         [Fact]
         public void CanRetreveIdentifiersForPerson()
         {
@@ -182,14 +204,39 @@ namespace CHC.Consent.EFCore.Tests.Identity
 
         private bool Update(Identifier identifier, PersonEntity person=null, ConsentContext context = null)
         {
+            return Update(person, context, identifier);
+        }
+
+        private bool Update(params Identifier[] identifiers)
+            => Update(context: null, person:null, identifiers:identifiers);
+
+        private bool Update(PersonEntity person=null, ConsentContext context=null, params Identifier[] identifiers)
+        {
             context = context ?? updatingContext;
             person = person ?? personEntity;
             var updated = handler.Update(
                 context.Find<PersonEntity>(person.Id),
-                identifier,
+                identifiers,
                 new ContextStoreProvider(context));
             context.SaveChanges();
             return updated;
+        }
+
+        private void AddIdentifiers(params string[] values)
+        {
+            foreach (var value in values)
+            {
+                creatingContext.Add(
+                    new PersonIdentifierEntity
+                    {
+                        Value = value,
+                        Person = personEntity,
+                        TypeName = IdentifierTypeName,
+                        ValueType = ValueTypeName
+                    });
+            }
+
+            creatingContext.SaveChanges();
         }
     }
 
