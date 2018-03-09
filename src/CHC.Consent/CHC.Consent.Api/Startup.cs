@@ -1,4 +1,5 @@
-﻿using CHC.Consent.Api.Features.Consent;
+﻿using System;
+using CHC.Consent.Api.Features.Consent;
 using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Api.Infrastructure.Web;
@@ -67,8 +68,12 @@ namespace CHC.Consent.Api
 
             services.AddSingleton<ConsentTypeRegistry>();
 
-            services.AddTransient<IPostConfigureOptions<MvcOptions>, IdentityModelBinderProviderConfiguration<ITypeRegistry<IPersonIdentifier>, PersonSpecification>>();
-            services.AddTransient<IPostConfigureOptions<MvcOptions>, IdentityModelBinderProviderConfiguration<ConsentTypeRegistry, ConsentSpecification>>();
+            services
+                .AddTransient<IPostConfigureOptions<MvcOptions>, IdentityModelBinderProviderConfiguration<
+                    ITypeRegistry<IPersonIdentifier>, PersonSpecification>>();
+            services
+                .AddTransient<IPostConfigureOptions<MvcOptions>, IdentityModelBinderProviderConfiguration<
+                    ConsentTypeRegistry, ConsentSpecification>>();
             
             services
                 .AddMvc(
@@ -90,14 +95,18 @@ namespace CHC.Consent.Api
             services.AddScoped<IIdentityRepository, IdentityRepository>();
             services.AddScoped<IConsentRepository,ConsentRepository>();
 
-            services.AddDbContext<ConsentContext>((provider, options) => { options.UseInMemoryDatabase("CHC.Consent"); });
-            services.AddScoped<IStoreProvider>(provider => new ContextStoreProvider(provider.GetService<ConsentContext>()));
+            services.AddDbContext<ConsentContext>(
+                ConfigureDatabaseOptions);
+            services.AddScoped<IStoreProvider>(
+                provider => new ContextStoreProvider(provider.GetService<ConsentContext>()));
             services.AddScoped(typeof(IStore<>), typeof(Store<>));
         }
 
+        protected virtual void ConfigureDatabaseOptions(IServiceProvider provider, DbContextOptionsBuilder options)
+        {
+            options.UseSqlServer(Configuration.GetConnectionString("Consent"));
+        }
 
-        
-        
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
