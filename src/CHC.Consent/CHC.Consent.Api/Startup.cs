@@ -48,7 +48,7 @@ namespace CHC.Consent.Api
                     registry.Add<DateOfBirthIdentifier>(o => o.WithXmlMarshaller(valueType: "dateOfBirth"));
                     registry.Add<MedwayNameIdentifier>(o => o.WithXmlMarshaller(valueType: "BIB4All.MedwayName"));
                     registry.Add<MedwayAddressIdentifier>(o => o.WithXmlMarshaller(valueType: "BIB4All.MedwayAddress"));
-                    registry.Add<MedwayContactNumber>(
+                    registry.Add<MedwayContactNumberIdentifier>(
                         o => o.WithXmlMarshaller(valueType: "BIB4All.MedwayContactNumber"));
                     registry.Add<MedwayBirthOrder>(o => o.WithXmlMarshaller(valueType: "BIB4All.MedwayBirthOrder"));
                 }

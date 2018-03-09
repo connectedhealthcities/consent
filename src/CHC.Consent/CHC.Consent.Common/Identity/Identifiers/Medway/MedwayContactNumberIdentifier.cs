@@ -1,7 +1,7 @@
 ﻿namespace CHC.Consent.Common.Identity.Identifiers.Medway
 {
     [Identifier(TypeName, AllowMultipleValues = true)]
-    public class MedwayContactNumber : IPersonIdentifier
+    public class MedwayContactNumberIdentifier : IPersonIdentifier
     {
         public string Number { get; set; }
         public string Type { get; set; }
