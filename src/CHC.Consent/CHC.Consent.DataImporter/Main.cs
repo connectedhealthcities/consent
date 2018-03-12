@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net.Http;
 using CHC.Consent.Api.Client;
+using CHC.Consent.Api.Client.Models;
 using Microsoft.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -25,7 +26,7 @@ namespace CHC.Consent.DataImporter
             ServiceClientTracing.IsEnabled = true;
             ServiceClientTracing.AddTracingInterceptor(
                 new LoggerServiceClientTracingIntercepter(
-                    loggerFactory.CreateLogger<Api.Client.Api>(),
+                    loggerFactory.CreateLogger("Http"),
                     LogLevel.Trace));
             
             

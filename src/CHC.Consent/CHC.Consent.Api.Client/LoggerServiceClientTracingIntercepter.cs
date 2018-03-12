@@ -55,13 +55,13 @@ namespace CHC.Consent.Api.Client
         public void EnterMethod(
             string invocationId, object instance, string method, IDictionary<string, object> parameters)
         {
-
+            Log("Enter method: {invocationId} {details} {@parameters}", invocationId, new { instance, method, }, parameters);
         }
 
         /// <inheritdoc />
         public void ExitMethod(string invocationId, object returnValue)
         {
-
+            Log("Exit method: {invocationId} {returnValue}", invocationId, returnValue);
         }
 
         /// <inheritdoc />
