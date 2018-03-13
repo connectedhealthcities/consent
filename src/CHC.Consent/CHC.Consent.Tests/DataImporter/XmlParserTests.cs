@@ -6,39 +6,61 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using CHC.Consent.Api.Client.Models;
+using CHC.Consent.Common.Consent.Evidences;
+using CHC.Consent.Common.Consent.Identifiers;
+using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.DataImporter;
 using CHC.Consent.Testing.Utils;
+using Microsoft.Extensions.Logging.Abstractions;
+using Serilog.Core;
 using Xunit;
+using Xunit.Abstractions;
 using Sex = CHC.Consent.Common.Sex;
 
 namespace CHC.Consent.Tests.DataImporter
 {
     public class XmlParserTests
     {
-        private static readonly Dictionary<string, Type> EmptyTypeMap = new Dictionary<string, Type>();
+        /// <inheritdoc />
+        public XmlParserTests(ITestOutputHelper output)
+        {
+            Logger = new XunitLogger<XmlParser>(output, "Parse"); 
+        }
 
-        private static T ParseIdentifier<T>(string innerXml)
+        private static readonly Dictionary<string, Type> EmptyTypeMap = new Dictionary<string, Type>();
+        private XunitLogger<XmlParser> Logger { get; }
+
+        private T ParseIdentifier<T>(string innerXml)
         {
             return ParseIdentifier<T>(innerXml, new Dictionary<string, Type> {["identifier"] = typeof(T)});
         }
 
-        private static T ParseIdentifier<T>(string innerXml, Dictionary<string, Type> typeMap)
+        private T ParseIdentifier<T>(string innerXml, Dictionary<string, Type> typeMap)
         {
             //This dance ensures we have line numbers (not that they mean a lot here)
             var fullXml = $"<identifier>{innerXml}</identifier>";
             return ParseIdentifierString<T>(fullXml, typeMap);
         }
 
-        private static T ParseIdentifierString<T>(string fullXml, Dictionary<string, Type> typeMap)
+        private T ParseIdentifierString<T>(string fullXml, Dictionary<string, Type> typeMap)
         {
-            var xDocument = XDocument.Load(
-                XmlReader.Create(new StringReader(fullXml)),
-                LoadOptions.SetLineInfo | LoadOptions.SetBaseUri);
+            var xDocument = CreateXDocumentWithLineInfo(fullXml);
 
-            var identifier = XmlParser.ParseIdentifier(xDocument.Root, typeMap);
+            var identifier = new XmlParser(Logger).ParseIdentifier(xDocument.Root, typeMap);
 
             Assert.NotNull(identifier);
             return Assert.IsType<T>(identifier);
+        }
+
+        private static XDocument CreateXDocumentWithLineInfo(string fullXml) =>
+            XDocument.Load(
+                CreateXmlReader(fullXml),
+                LoadOptions.SetLineInfo | LoadOptions.SetBaseUri);
+
+        private static XmlReader CreateXmlReader(string fullXml)
+        {
+            return XmlReader.Create(new StringReader(fullXml), new XmlReaderSettings{IgnoreWhitespace = true, IgnoreComments = true});
         }
 
         [Fact]
@@ -196,8 +218,8 @@ namespace CHC.Consent.Tests.DataImporter
     </person>
 </people>";
 
-            var xmlTextReader = XmlReader.Create(new StringReader(personXml), new XmlReaderSettings {IgnoreWhitespace = true});
-            var person = new XmlParser().GetPeople(xmlTextReader).Single();
+            var xmlReader = CreateXmlReader(personXml);
+            var person = new XmlParser(Logger).GetPeople(xmlReader).Single();
 
             Action<IPersonIdentifier> Address(
                 string line1 = null,
@@ -213,7 +235,7 @@ namespace CHC.Consent.Tests.DataImporter
 //            Assert.DoesNotContain(person.Identifiers, _ => _ == null);
             Assert.Collection(person.Identifiers,
                 NhsNumber("4099999999"),
-                HosptialNumber("RAE9999999"),
+                HospitalNumber("RAE9999999"),
                 Name("Jo", "Bloggs"),
                 DateOfBirth(16.June(1990)),
                 Address("22 Love Street", "Holmestown", "Bradtopia", "West Yorkshire", postcode: "BD92 4FX"),
@@ -223,16 +245,149 @@ namespace CHC.Consent.Tests.DataImporter
             
             Assert.Collection(person.MatchSpecifications,
                 m => Assert.Collection(m.Identifiers, NhsNumber("4099999999")),
-                m => Assert.Collection(m.Identifiers, HosptialNumber("RAE9999999"))
+                m => Assert.Collection(m.Identifiers, HospitalNumber("RAE9999999"))
             );
         }
+
+        private ImportedConsentSpecification ParseConsent(
+            string xml,
+            Dictionary<string, Type> personIdentifierTypes = null,
+            Dictionary<string, Type> consentTypes = null,
+            Dictionary<string, Type> evidenceTypes = null)
+        {
+            return new XmlParser(Logger).ParseConsent(
+                CreateXDocumentWithLineInfo(xml).Root,
+                personIdentifierTypes ?? EmptyTypeMap,
+                consentTypes ?? EmptyTypeMap,
+                evidenceTypes ?? EmptyTypeMap);
+        }
+
+
+        [Fact]
+        public void CanParseSimpleConsent()
+        {
+            var consentSpec = ParseConsent(@"<consent dateGiven=""2017-03-12"" studyId=""42"" />");
+                
+            Assert.NotNull(consentSpec);
+            Assert.Equal(12.March(2017), consentSpec.DateGiven);
+            Assert.Equal(42L, consentSpec.StudyId);
+            Assert.Empty(consentSpec.GivenBy);
+            Assert.Empty(consentSpec.Evidence);
+            Assert.Empty(consentSpec.CaseId);
+        }
+        
+        [Fact]
+        public void ReportsErrorWithUnknownMatchIdentifier()
+        {
+            var exception = Assert.Throws<XmlParseException>(
+                () => ParseConsent(
+                    @"<consent dateGiven=""2017-03-12"" studyId=""42"" xmlns:err=""error"" >
+                        <givenBy><match><err:error>45</err:error></match></givenBy>
+                    </consent>",
+                    personIdentifierTypes: new Dictionary<string, Type>
+                    {
+                        ["uk.test"] = typeof(UkNhsNhsNumber)
+                    }));
+            
+            Assert.Contains("error.error", exception.Message);
+            Assert.NotEqual(0, exception.LineNumber);
+        }
+        
+        [Fact]
+        public void ReportsErrorWithUnknownCaseIdentifier()
+        {
+            var exception = Assert.Throws<XmlParseException>(
+                () => ParseConsent(
+
+                    @"<consent dateGiven=""2017-03-12"" studyId=""42"" xmlns:err=""error"" >
+                        <case>
+                            <err:error>45</err:error>
+                        </case>
+                    </consent>",
+                    consentTypes: new Dictionary<string, Type>
+                    {
+                        ["bib4all.pregnancyId"] = typeof(UkNhsBradfordhospitalsBib4allConsentPregnancyNumber)
+                    }
+                ));
+            
+            Assert.Contains("error.error", exception.Message);
+            Assert.NotEqual(0, exception.LineNumber);
+        }
+        
+        
+        [Fact]
+        public void ReportsErrorWithUnknownEvidence()
+        {
+            var exception = Assert.Throws<XmlParseException>(
+                () => ParseConsent(
+                    
+                        @"<consent dateGiven=""2017-03-12"" studyId=""42"" xmlns:err=""error"" >
+    <evidence>
+        <err:error>45</err:error>
+    </evidence>
+</consent>",
+                    evidenceTypes: new Dictionary<string, Type>
+                    {
+                        ["test"]= typeof(UkNhsBradfordhospitalsBib4allEvidenceMedway) 
+                    }
+                    ));
+            
+            Assert.Contains("error.error", exception.Message);
+            Assert.NotEqual(0, exception.LineNumber);
+        }
+
+        [Fact]
+        public void CorrectlyParsesFullConsent()
+        {
+
+            var consent = ParseConsent(
+                @"<consent dateGiven=""2017-03-12"" studyId=""42"" xmlns:nhs=""uk.nhs"" xmlns:bfd=""uk.nhs.bradfordhospitals"" xmlns:b4acase=""uk.nhs.bradfordhospitals.bib4all.consent"" xmlns:b4aevidence=""uk.nhs.bradfordhospitals.bib4all.evidence"">
+                    <givenBy>
+                        <match><nhs:nhsNumber>8877881</nhs:nhsNumber></match>
+                        <match><bfd:hospitalNumber>1122112</bfd:hospitalNumber></match>
+                    </givenBy>
+                    <case>
+                        <b4acase:pregnancyNumber>3</b4acase:pregnancyNumber>
+                    </case>
+                    <evidence>
+                        <b4aevidence:medway>
+                            <competentStatus>Delegated</competentStatus>
+                            <givenBy>Mother</givenBy>
+                            <takenBy>Betsey Trotwood</takenBy>
+                        </b4aevidence:medway>
+                    </evidence>
+                </consent>",
+                personIdentifierTypes: new Dictionary<string, Type>
+                {
+                    [BradfordHospitalNumberIdentifier.TypeName] = typeof(UkNhsBradfordhospitalsHospitalNumber),
+                    [NhsNumberIdentifier.TypeName] = typeof(UkNhsNhsNumber),
+                },
+                consentTypes: new Dictionary<string, Type>
+                {
+                    [PregnancyNumberIdentifier.TypeName] = typeof(UkNhsBradfordhospitalsBib4allConsentPregnancyNumber)
+                },
+                evidenceTypes: new Dictionary<string, Type>
+                {
+                    [MedwayEvidence.TypeName] = typeof(UkNhsBradfordhospitalsBib4allEvidenceMedway)
+                }
+            );
+            
+                Assert.Collection(
+                    consent.GivenBy, 
+                    m => Assert.Collection( m.Identifiers, NhsNumber("8877881")),
+                    m => Assert.Collection( m.Identifiers, HospitalNumber("1122112"))
+                    );
+            
+        }
+        
+        
 
         private static Action<IPersonIdentifier> NhsNumber(string expectedValue) => AssertIdentifier<UkNhsNhsNumber>(
             i => AssertNhsNumber(expectedValue, i));
 
         private static void AssertNhsNumber(string expectedValue, UkNhsNhsNumber identifier) => Assert.Equal(expectedValue, identifier.Value);
 
-        private static Action<IPersonIdentifier> HosptialNumber(string expectedValue) => AssertIdentifier<UkNhsBradfordhospitalsHospitalNumber>(
+        private static Action<IPersonIdentifier> HospitalNumber(string expectedValue) => AssertIdentifier<UkNhsBradfordhospitalsHospitalNumber>(
             i => AssertHosptialNumber(expectedValue, i));
 
         private static void AssertHosptialNumber(string expectedValue, UkNhsBradfordhospitalsHospitalNumber i) => Assert.Equal(expectedValue, i.Value);

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using CHC.Consent.Testing.Utils;
+using Microsoft.Extensions.Logging;
 using Xunit.Abstractions;
 
 namespace CHC.Consent.EFCore.Tests

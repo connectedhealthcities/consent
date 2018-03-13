@@ -26,6 +26,7 @@ namespace CHC.Consent.Api.Infrastructure.Web
             gen.DescribeAllEnumsAsStrings();
             gen.SchemaFilter<SwaggerSchemaIdentityTypeProvider<IPersonIdentifier, ITypeRegistry<IPersonIdentifier>>>();
             gen.SchemaFilter<SwaggerSchemaIdentityTypeProvider<ConsentIdentifier, ITypeRegistry<ConsentIdentifier>>>();
+            gen.SchemaFilter<SwaggerSchemaIdentityTypeProvider<Evidence, ITypeRegistry<Evidence>>>();
             gen.CustomSchemaIds(t => GetSchemaId(t)?? t.FriendlyId(fullyQualified:false));
         }
 

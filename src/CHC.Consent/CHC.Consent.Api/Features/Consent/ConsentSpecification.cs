@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using CHC.Consent.Common.Consent;
+using CHC.Consent.Common.Identity;
 
 namespace CHC.Consent.Api.Features.Consent
 {
@@ -19,7 +20,9 @@ namespace CHC.Consent.Api.Features.Consent
         [Required]
         public Evidence Evidence { get; set; }
         
-        public ConsentIdentifier[] Identifiers { get; set; }
+        public ConsentIdentifier[] CaseId { get; set; }
         
+        [Required]
+        public long GivenBy { get; set; } 
     }
 }

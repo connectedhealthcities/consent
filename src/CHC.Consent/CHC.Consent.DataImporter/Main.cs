@@ -76,7 +76,7 @@ namespace CHC.Consent.DataImporter
         {
             using (var streamReader = new StreamReader(File.OpenRead(fileValue)))
             {
-                new XmlImporter().Import(streamReader);
+                new XmlImporter(NullLoggerProvider.Instance).Import(streamReader);
             }
         }
 
@@ -91,9 +91,17 @@ namespace CHC.Consent.DataImporter
 
     internal class XmlImporter
     {
+        private readonly ILoggerProvider loggerProvider;
+
+        /// <inheritdoc />
+        public XmlImporter(ILoggerProvider loggerProvider)
+        {
+            this.loggerProvider = loggerProvider;
+        }
+
         public void Import(StreamReader source)
         {
-            foreach (var person in new XmlParser().GetPeople(source))
+            foreach (var person in new XmlParser(NullLogger<XmlParser>.Instance).GetPeople(source))
             {
                 var api = new Api.Client.Api(new Uri("http://localhost:5000/"), new HttpClientHandler{AllowAutoRedirect = false});
                 

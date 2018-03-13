@@ -32,7 +32,7 @@ namespace CHC.Consent.Tests.Consent
                 JsonConvert.SerializeObject(
                     new ConsentSpecification
                     {
-                        Identifiers = new ConsentIdentifier[] {new PregnancyNumberIdentifier("testing, testing, 1..2..3")}
+                        CaseId = new ConsentIdentifier[] {new PregnancyNumberIdentifier("testing, testing, 1..2..3")}
 
                     },
                     serializerSettings)
@@ -46,7 +46,7 @@ namespace CHC.Consent.Tests.Consent
                 JsonConvert.SerializeObject(
                     new ConsentSpecification
                     {
-                        Identifiers = new ConsentIdentifier[] {new PregnancyNumberIdentifier("testing, testing, 1..2..3")}
+                        CaseId = new ConsentIdentifier[] {new PregnancyNumberIdentifier("testing, testing, 1..2..3")}
 
                     },
                     serializerSettings),
@@ -54,7 +54,7 @@ namespace CHC.Consent.Tests.Consent
             );
             
             Assert.NotNull(roundTripped);
-            var identifier = Assert.Single(roundTripped.Identifiers);
+            var identifier = Assert.Single(roundTripped.CaseId);
             var prenancyNumber = Assert.IsType<PregnancyNumberIdentifier>(identifier);
             Assert.Equal("testing, testing, 1..2..3", prenancyNumber.Value);
         }

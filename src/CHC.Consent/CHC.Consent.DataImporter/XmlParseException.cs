@@ -16,6 +16,25 @@ namespace CHC.Consent.DataImporter
             HasLineInfo = lineInfo.HasLineInfo();
         }
 
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return
+                Message + GetLineInfo() + "\r\n" + base.StackTrace;
+        }
+
+        private string GetLineInfo()
+        {
+            if(!HasLineInfo) return string.Empty;
+            var lineInfo = "";
+            if (!string.IsNullOrEmpty(BaseUri))
+            {
+                lineInfo = $"{BaseUri} at ";
+            }
+
+            return lineInfo + $"{LineNumber}:{LinePosition}";
+        }
+
         public string BaseUri { get; }
 
         public int LineNumber { get; }

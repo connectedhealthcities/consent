@@ -1,8 +1,9 @@
 ﻿namespace CHC.Consent.Common.Consent.Evidences
 {
-    [Evidence("medway.evidence.bib4all.bradfordhospitals.nhs.uk")]
+    [Evidence(TypeName)]
     public class MedwayEvidence : Evidence
     {
+        public const string TypeName = "uk.nhs.bradfordhospitals.bib4all.evidence.medway";
         public string CompetentStatus { get; set; }
         public string ConsentGivenBy { get; set; }
         public string ConsentTakenBy { get; set; }

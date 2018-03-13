@@ -3,9 +3,10 @@ using System.Linq.Expressions;
 
 namespace CHC.Consent.Common.Consent.Identifiers
 {
-    [ConsentIdentifier("pregnancy-number.consent.bib4all.bradfordhospitals.nhs.uk")]
+    [ConsentIdentifier(TypeName)]
     public class PregnancyNumberIdentifier : ConsentIdentifier
     {
+        public const string TypeName = "uk.nhs.bradfordhospitals.bib4all.consent.pregnancy-number";
         public string Value { get; }
 
         /// <inheritdoc />

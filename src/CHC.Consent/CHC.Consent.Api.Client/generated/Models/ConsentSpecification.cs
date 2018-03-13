@@ -23,14 +23,15 @@ namespace CHC.Consent.Api.Client.Models
         /// <summary>
         /// Initializes a new instance of the ConsentSpecification class.
         /// </summary>
-        public ConsentSpecification(long studyId, string subjectIdentifier, long personId, System.DateTime dateGiven, Evidence evidence, IList<ConsentIdentifier> identifiers = default(IList<ConsentIdentifier>))
+        public ConsentSpecification(long studyId, string subjectIdentifier, long personId, System.DateTime dateGiven, Evidence evidence, long givenBy, IList<ConsentIdentifier> caseId = default(IList<ConsentIdentifier>))
         {
             StudyId = studyId;
             SubjectIdentifier = subjectIdentifier;
             PersonId = personId;
             DateGiven = dateGiven;
             Evidence = evidence;
-            Identifiers = identifiers;
+            CaseId = caseId;
+            GivenBy = givenBy;
             CustomInit();
         }
 
@@ -66,8 +67,13 @@ namespace CHC.Consent.Api.Client.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "identifiers")]
-        public IList<ConsentIdentifier> Identifiers { get; set; }
+        [JsonProperty(PropertyName = "caseId")]
+        public IList<ConsentIdentifier> CaseId { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "givenBy")]
+        public long GivenBy { get; set; }
 
         /// <summary>
         /// Validate the object.

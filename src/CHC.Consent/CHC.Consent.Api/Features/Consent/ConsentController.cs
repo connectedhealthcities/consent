@@ -20,6 +20,8 @@ namespace CHC.Consent.Api.Features.Consent
         public IActionResult PutConsent([FromBody]ConsentSpecification specification)
         {
             if (!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
+            
+            
 
             var study = consentRepository.GetStudy(specification.StudyId);
             if (study == null)
@@ -39,7 +41,7 @@ namespace CHC.Consent.Api.Features.Consent
             {
                 var existingConsent = consentRepository.FindActiveConsent(
                     studySubject,
-                    specification.Identifiers ?? Array.Empty<ConsentIdentifier>());
+                    specification.CaseId ?? Array.Empty<ConsentIdentifier>());
                 if (existingConsent != null)
                 {
                     //TODO: Decide what to do with evidence, etc, for existing consents, or if you can be consented twice
@@ -52,8 +54,9 @@ namespace CHC.Consent.Api.Features.Consent
                 new Consent(
                     studySubject,
                     specification.DateGiven,
+                    specification.GivenBy,
                     specification.Evidence,
-                    specification.Identifiers));
+                    specification.CaseId));
 
             return CreatedAtAction("Get", new {id = 0}, null);
         }

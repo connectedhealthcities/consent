@@ -2,6 +2,5 @@
 {
     public abstract class Evidence
     {
-        public long Id { get; protected set; }
     }
 }

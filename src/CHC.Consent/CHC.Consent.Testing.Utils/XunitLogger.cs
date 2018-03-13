@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Xunit.Abstractions;
 
-namespace CHC.Consent.EFCore.Tests
+namespace CHC.Consent.Testing.Utils
 {
     public class XunitLogger : ILogger
     {

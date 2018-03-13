@@ -156,7 +156,8 @@
         "subjectIdentifier",
         "personId",
         "dateGiven",
-        "evidence"
+        "evidence",
+        "givenBy"
       ],
       "type": "object",
       "properties": {
@@ -178,23 +179,32 @@
         "evidence": {
           "$ref": "#/definitions/Evidence"
         },
-        "identifiers": {
+        "caseId": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/ConsentIdentifier"
           }
+        },
+        "givenBy": {
+          "format": "int64",
+          "type": "integer"
         }
       }
     },
     "Evidence": {
+      "required": [
+        "$type"
+      ],
       "type": "object",
       "properties": {
-        "id": {
-          "format": "int64",
-          "type": "integer",
-          "readOnly": true
+        "$type": {
+          "enum": [
+            "uk.nhs.bradfordhospitals.bib4all.evidence.medway"
+          ],
+          "type": "string"
         }
-      }
+      },
+      "discriminator": "$type"
     },
     "ConsentIdentifier": {
       "required": [
@@ -204,7 +214,7 @@
       "properties": {
         "$type": {
           "enum": [
-            "pregnancy-number.consent.bib4all.bradfordhospitals.nhs.uk"
+            "uk.nhs.bradfordhospitals.bib4all.consent.pregnancy-number"
           ],
           "type": "string"
         }
@@ -261,7 +271,30 @@
         }
       }
     },
-    "pregnancyNumberConsentBib4allBradfordhospitalsNhsUk": {
+    "ukNhsBradfordhospitalsBib4allEvidenceMedway": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/Evidence"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "competentStatus": {
+              "type": "string"
+            },
+            "consentGivenBy": {
+              "type": "string"
+            },
+            "consentTakenBy": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "MedwayEvidence",
+      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.evidence.medway"
+    },
+    "ukNhsBradfordhospitalsBib4allConsentPregnancyNumber": {
       "allOf": [
         {
           "$ref": "#/definitions/ConsentIdentifier"
@@ -277,7 +310,7 @@
         }
       ],
       "x-ms-client-name": "PregnancyNumberIdentifier",
-      "x-ms-discriminator-value": "pregnancy-number.consent.bib4all.bradfordhospitals.nhs.uk"
+      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.consent.pregnancy-number"
     },
     "ukNhsNhsNumber": {
       "allOf": [

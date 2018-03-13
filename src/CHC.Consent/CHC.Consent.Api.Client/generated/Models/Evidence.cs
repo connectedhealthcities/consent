@@ -4,7 +4,6 @@
 
 namespace CHC.Consent.Api.Client.Models
 {
-    using Newtonsoft.Json;
     using System.Linq;
 
     public partial class Evidence
@@ -17,24 +16,11 @@ namespace CHC.Consent.Api.Client.Models
             CustomInit();
         }
 
-        /// <summary>
-        /// Initializes a new instance of the Evidence class.
-        /// </summary>
-        public Evidence(long? id = default(long?))
-        {
-            Id = id;
-            CustomInit();
-        }
 
         /// <summary>
         /// An initialization method that performs custom operations like setting defaults
         /// </summary>
         partial void CustomInit();
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "id")]
-        public long? Id { get; private set; }
 
     }
 }

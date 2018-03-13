@@ -16,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Rest;
 using Xunit;
 using Xunit.Abstractions;
+using Random = CHC.Consent.Testing.Utils.Random;
 
 namespace CHC.Consent.Tests.Api.Controllers
 {
@@ -26,6 +27,7 @@ namespace CHC.Consent.Tests.Api.Controllers
         {
             protected IActionResult Result;
             protected readonly Study Study;
+            protected readonly long GivenByPersonId;
             protected readonly StudySubject StudySubject;
             protected Consent CreatedConsent;
             protected readonly IConsentRepository ConsentRepository;
@@ -54,6 +56,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             protected void RecordConsent(
                 Evidence evidence,
                 DateTime dateGiven,
+                long? givenByPersonId = null,
                 IConsentRepository consentRepository = null,
                 long? studyId = null,
                 string subjectIdentifier = null,
@@ -68,10 +71,11 @@ namespace CHC.Consent.Tests.Api.Controllers
                         {
                             StudyId = studyId??Study.Id,
                             SubjectIdentifier = subjectIdentifier??StudySubject.SubjectIdentifier,
+                            GivenBy = givenByPersonId??StudySubject.PersonId,
                             PersonId = personId??StudySubject.PersonId,
                             Evidence = evidence,
                             DateGiven = dateGiven,
-                            Identifiers = identifiers
+                            CaseId = identifiers
                         });
             }
 
@@ -104,6 +108,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 
                 Assert.Equal(Study, CreatedConsent.StudySubject.Study);
                 Assert.Same(StudySubject, CreatedConsent.StudySubject);
+                Assert.Equal(StudySubject.PersonId, CreatedConsent.GivenByPersonId);
                 
                 Assert.Equal(2.January(1837), CreatedConsent.DateGiven);
                 Assert.Equal(new MedwayEvidence { ConsentTakenBy = "Peter Crowther"}, CreatedConsent.GivenEvidence);
@@ -215,7 +220,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             {
                 var givenEvidence = A.Dummy<Evidence>();
                 var dateGiven = 3.November(1472);
-                existingConsent = new Consent(StudySubject, dateGiven, givenEvidence, Enumerable.Empty<ConsentIdentifier>());
+                existingConsent = new Consent(StudySubject, dateGiven, Random.Long(), givenEvidence, Enumerable.Empty<ConsentIdentifier>());
                 A.CallTo(() => ConsentRepository.FindActiveConsent(StudySubject, A<IEnumerable<ConsentIdentifier>>.That.IsEmpty()))
                     .Returns(existingConsent);
                 
@@ -245,7 +250,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 var givenEvidence = A.Dummy<Evidence>();
                 var dateGiven = 3.November(1472);
                 var pregnancyIdIdentifier = new PregnancyNumberIdentifier(PregancyId);
-                existingConsent = new Consent(StudySubject, dateGiven, givenEvidence, Enumerable.Empty<ConsentIdentifier>());
+                existingConsent = new Consent(StudySubject, dateGiven, Random.Long(), givenEvidence, Enumerable.Empty<ConsentIdentifier>());
                 A.CallTo(
                         () =>
                             ConsentRepository.FindActiveConsent(

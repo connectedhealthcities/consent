@@ -9,15 +9,18 @@ namespace CHC.Consent.Common.Consent
         public long Id { get; set; }
 
         public StudySubject StudySubject { get; }
+        
+        public long GivenByPersonId { get; }
 
         public DateTime DateGiven { get; }
 
         public Evidence GivenEvidence { get;  }
 
         /// <inheritdoc />
-        public Consent(StudySubject studySubject, DateTime dateGiven, Evidence givenEvidence, IEnumerable<ConsentIdentifier> identifiers)
+        public Consent(StudySubject studySubject, DateTime dateGiven, long givenByPersonId, Evidence givenEvidence, IEnumerable<ConsentIdentifier> identifiers)
         {
             StudySubject = studySubject;
+            GivenByPersonId = givenByPersonId;
             DateGiven = dateGiven;
             GivenEvidence = givenEvidence;
             foreach (var identifier in identifiers ?? Array.Empty<ConsentIdentifier>())

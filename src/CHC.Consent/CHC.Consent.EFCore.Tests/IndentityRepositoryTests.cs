@@ -8,6 +8,7 @@ using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.DependencyInjection;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.Identity;
+using CHC.Consent.Testing.Utils;
 using FakeItEasy;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;

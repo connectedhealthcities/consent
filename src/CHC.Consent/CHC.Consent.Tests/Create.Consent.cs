@@ -5,6 +5,7 @@ using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Testing.Utils;
 using FakeItEasy;
+using Random = CHC.Consent.Testing.Utils.Random;
 
 namespace CHC.Consent.Tests
 {
@@ -44,6 +45,7 @@ namespace CHC.Consent.Tests
 
             private DateTime dateGiven = 5.April(1914);
             private Evidence evidence = new MedwayEvidence {ConsentTakenBy = "Gary Leeming"};
+            private long? givenBy; 
 
             private DateTime? withdrawnDate = null;
             private Evidence withdrawnEvidence = null;
@@ -64,10 +66,12 @@ namespace CHC.Consent.Tests
                     _.withdrawnEvidence = newWithdrawnEvidence ?? A.Dummy<Evidence>();
                 });
 
+            public ConsentBuilder GivenBy(long personId) => Copy(_ => _.givenBy = personId);
+            
             /// <inheritdoc />
             public override Common.Consent.Consent Build()
             {
-                return new Common.Consent.Consent(studySubject, dateGiven, evidence, identifiers)
+                return new Common.Consent.Consent(studySubject, dateGiven, givenBy??Random.Long(), evidence, identifiers)
                 {
                     PregnancyNumber = pregnancyNumber,
                     Withdrawn = withdrawnDate,

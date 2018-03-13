@@ -137,6 +137,8 @@ namespace CHC.Consent.Api.Client
                         new Iso8601TimeSpanConverter()
                     }
             };
+            SerializationSettings.Converters.Add(new PolymorphicSerializeJsonConverter<Evidence>("$type"));
+            DeserializationSettings.Converters.Add(new  PolymorphicDeserializeJsonConverter<Evidence>("$type"));
             SerializationSettings.Converters.Add(new PolymorphicSerializeJsonConverter<ConsentIdentifier>("$type"));
             DeserializationSettings.Converters.Add(new  PolymorphicDeserializeJsonConverter<ConsentIdentifier>("$type"));
             SerializationSettings.Converters.Add(new PolymorphicSerializeJsonConverter<IPersonIdentifier>("$type"));

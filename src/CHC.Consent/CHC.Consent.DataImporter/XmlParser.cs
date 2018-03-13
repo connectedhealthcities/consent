@@ -6,10 +6,12 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
-using System.Xml.Serialization;
 using System.Xml.XPath;
 using CHC.Consent.Api.Client.Models;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json;
+
 
 namespace CHC.Consent.DataImporter
 {
@@ -20,6 +22,13 @@ namespace CHC.Consent.DataImporter
     /// </summary>
     public class XmlParser
     {
+        ILogger Log { get; } = NullLogger.Instance;
+
+        public XmlParser(ILogger<XmlParser> logger)
+        {
+            Log = logger;
+        }
+
         public IEnumerable<PersonSpecification> GetPeople(StreamReader source)
         {
             var xmlReader = XmlReader.Create(source);
@@ -31,6 +40,14 @@ namespace CHC.Consent.DataImporter
         {
             var personIdentifierTypes = typeof(PersonSpecification).Assembly.GetExportedTypes()
                 .Where(type => type.IsSubclassOf(typeof(IPersonIdentifier)))
+                .ToDictionary(type => type.GetCustomAttribute<JsonObjectAttribute>().Id);
+
+            var consentIdentifierTypes = typeof(ConsentSpecification).Assembly.GetExportedTypes()
+                .Where(type => type.IsSubclassOf(typeof(ConsentIdentifier)))
+                .ToDictionary(type => type.GetCustomAttribute<JsonObjectAttribute>().Id);
+
+            var evidenceIdentityTypes = typeof(ConsentSpecification).Assembly.GetExportedTypes()
+                .Where(type => type.IsSubclassOf(typeof(Evidence)))
                 .ToDictionary(type => type.GetCustomAttribute<JsonObjectAttribute>().Id);
 
             xmlReader = XmlReader.Create(
@@ -64,19 +81,71 @@ namespace CHC.Consent.DataImporter
                     MatchSpecifications =
                         personNode.XPathSelectElements("/person/lookup/match")
                             .Select(
-                                m => new MatchSpecification(
-                                    m.Elements()
-                                        .Select(_ => ParseIdentifier(_, personIdentifierTypes))
-                                        .ToList()))
+                                m => ParseMatchSpecification(m, personIdentifierTypes))
                             .ToList()
                 };
+
+                personNode.XPathSelectElements("/person/consent");
+                var consent = new ConsentSpecification
+                {
+                    
+                }; 
+                    
+                    
 
                 yield return person;
             }
         }
 
-        
-        public static IPersonIdentifier ParseIdentifier(XElement identifierNode, Dictionary<string, Type> typeNameLookup)
+        public ImportedConsentSpecification ParseConsent(
+            XElement consentNode,
+            Dictionary<string, Type> personIdentifiers,
+            Dictionary<string, Type> consentIdentifiers,
+            Dictionary<string, Type> evidenceIdentifiers) 
+        {
+            var date = (DateTime)consentNode.Attribute("dateGiven");
+            var studyId = (long)consentNode.Attribute("studyId");
+
+
+            var identifiers = consentNode.XPathSelectElements("case/*").Select(
+                    givenForIdentifierNode =>
+                        (ConsentIdentifier) ParseObject(givenForIdentifierNode, consentIdentifiers))
+                .ToArray();
+
+
+            var evidence = consentNode.XPathSelectElements("evidence/*")
+                .Select(evidenceNode => (Evidence) ParseObject(evidenceNode, evidenceIdentifiers))
+                .ToArray();
+
+            var givenBy = consentNode.XPathSelectElements("givenBy/match")
+                .Select(_ => ParseMatchSpecification(_, personIdentifiers))
+                .ToArray();
+
+            return new ImportedConsentSpecification
+            {
+                DateGiven = date,
+                CaseId = identifiers,
+                StudyId = studyId,
+                Evidence = evidence,
+                GivenBy = givenBy
+            };
+        }
+
+        private MatchSpecification ParseMatchSpecification(XContainer node, Dictionary<string, Type> personIdentifierTypes)
+        {
+            return new MatchSpecification(
+                node.Elements()
+                    .Select(_ => ParseIdentifier(_, personIdentifierTypes))
+                    .ToList());
+        }
+
+
+        public IPersonIdentifier ParseIdentifier(XElement identifierNode, Dictionary<string, Type> typeNameLookup)
+        {
+            return (IPersonIdentifier)ParseObject(identifierNode, typeNameLookup);
+        }
+
+        private object ParseObject(XElement identifierNode, Dictionary<string, Type> typeNameLookup)
         {
             var typeName = identifierNode.Attribute("type")?.Value;
             if (string.IsNullOrEmpty(typeName))
@@ -100,7 +169,6 @@ namespace CHC.Consent.DataImporter
                 .First();
 
 
-            
             if (identifierNode.IsEmpty || identifierNode.FirstNode.NodeType == XmlNodeType.Text)
             {
                 var node = identifierNode.FirstNode;
@@ -108,7 +176,7 @@ namespace CHC.Consent.DataImporter
                 var type = constructor.Parameters[0].ParameterType;
 
                 var typedValue = ConvertStringToCorrectType(stringValue, type);
-                return (IPersonIdentifier) constructor.Constructor.Invoke(new[] {typedValue});
+                return constructor.Constructor.Invoke(new[] {typedValue});
             }
 
             var parameterValues = new List<object>();
@@ -118,7 +186,7 @@ namespace CHC.Consent.DataImporter
                 var parameterElement = identifierNode.Element(parameter.Name);
 
                 if (parameterElement == null)
-                {   
+                {
                     if (parameter.HasDefaultValue)
                     {
                         parameterValues.Add(parameter.DefaultValue);
@@ -136,7 +204,8 @@ namespace CHC.Consent.DataImporter
                 }
             }
 
-            return (IPersonIdentifier) constructor.Constructor.Invoke(parameterValues.ToArray());
+            Log.LogTrace("Constructing {type} with {@parametersValues}", identifierType, parameterValues);
+            return constructor.Constructor.Invoke(parameterValues.ToArray());
         }
 
         private static object ConvertStringToCorrectType(string stringValue, Type type)
