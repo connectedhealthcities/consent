@@ -5,6 +5,7 @@ using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore.Consent;
+using CHC.Consent.EFCore.Entities;
 
 namespace CHC.Consent.EFCore
 {
@@ -12,13 +13,18 @@ namespace CHC.Consent.EFCore
     {
         private IStore<StudyEntity> Studies { get; }
         private IStore<StudySubjectEntity> StudySubjects { get; }
+        private IStore<PersonEntity> People { get; }
         private IStore<Common.Consent.Consent> Consents { get; }
 
         public ConsentRepository(
-            IStore<StudyEntity> studies, IStore<StudySubjectEntity> studySubjects, IStore<Common.Consent.Consent> consents)
+            IStore<StudyEntity> studies, 
+            IStore<StudySubjectEntity> studySubjects,
+            IStore<PersonEntity> People, 
+            IStore<Common.Consent.Consent> consents)
         {
             Studies = studies;
             StudySubjects = studySubjects;
+            this.People = People;
             Consents = consents;
         }
 
@@ -57,7 +63,27 @@ namespace CHC.Consent.EFCore
         public Common.Consent.Consent AddConsent(StudySubject subject, Common.Consent.Consent consent) =>
             throw new NotImplementedException();
 
-        public StudySubject AddStudySubject(StudySubject studySubject) => 
-            throw new NotImplementedException();
+        public StudySubject AddStudySubject(StudySubject studySubject)
+        {
+            var study = Studies.Get(studySubject.StudyId.Id);
+            if(study == null) throw new NotImplementedException($"{studySubject.StudyId} not found");
+
+            var person = People.Get(studySubject.PersonId.Id);
+            if(person == null) throw new NotImplementedException($"{studySubject.PersonId} not found");
+
+            var saved = StudySubjects.Add(
+                new StudySubjectEntity
+                {
+                    Person = person,
+                    Study = study,
+                    SubjectIdentifier = studySubject.SubjectIdentifier
+                });
+
+            return new StudySubject(
+                saved.Id,
+                new StudyIdentity((long) saved.Study.Id),
+                saved.SubjectIdentifier,
+                new PersonIdentity((long) saved.Person.Id));
+        }
     }
 }

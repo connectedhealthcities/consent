@@ -1,4 +1,5 @@
-﻿using CHC.Consent.Common;
+﻿using System.Linq;
+using CHC.Consent.Common;
 using CHC.Consent.EFCore;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Infrastructure.Data;
@@ -46,11 +47,7 @@ namespace CHC.Consent.EFCore.Tests
             studyId = new StudyIdentity(study.Id);
             consentedPersonId = consentedPerson;
             
-            var storeProvider = (IStoreProvider)new ContextStoreProvider (readContext);
-            repository = new ConsentRepository(
-                storeProvider.Get<StudyEntity>(),
-                storeProvider.Get<StudySubjectEntity>(),
-                A.Dummy<IStore<Consent>>());
+            repository = CreateRepository(readContext);
 
             /*withdrawnConsent = Create.Consent.WithStudySubject(consentedStudySubject).GivenOn(1.December(1965)).Withdrawn(1.January(1966));
             activeConsent = Create.Consent.WithStudySubject(consentedStudySubject).GivenOn(1.February(1966));
@@ -70,6 +67,43 @@ namespace CHC.Consent.EFCore.Tests
                     activeConsent,
                     Create.Consent.WithStudySubject(unconsentedStudySubect).Withdrawn())
             );*/
+        }
+
+        private ConsentRepository CreateRepository(ConsentContext consentContext)
+        {
+            var storeProvider = (IStoreProvider) new ContextStoreProvider(consentContext);
+            return new ConsentRepository(
+                storeProvider.Get<StudyEntity>(),
+                storeProvider.Get<StudySubjectEntity>(),
+                storeProvider.Get<PersonEntity>(),
+                A.Dummy<IStore<Consent>>());
+        }
+
+        [Fact]
+        public void CanAddAStudySubject()
+        {
+            var person = createContext.Add(new PersonEntity()).Entity;
+            createContext.SaveChanges();
+            var personId = new PersonIdentity(person.Id);
+
+            var subjectIdentifier = Random.String();
+            var addedSubject = CreateRepository(updateContext).AddStudySubject(
+                new StudySubject(studyId, subjectIdentifier, personId));
+            updateContext.SaveChanges();
+            
+            
+            Assert.NotNull(addedSubject);
+            Assert.NotEqual(0, addedSubject.Id);
+            Assert.Equal(studyId, addedSubject.StudyId);
+            Assert.Equal(personId, addedSubject.PersonId);
+            Assert.Equal(subjectIdentifier, addedSubject.SubjectIdentifier);
+
+            var studySubjectEntity = readContext.Set<StudySubjectEntity>().Find(addedSubject.Id);
+            readContext.Entry(studySubjectEntity).Reference(_ => _.Study).Load();
+            readContext.Entry(studySubjectEntity).Reference(_ => _.Person).Load();
+            Assert.Equal(subjectIdentifier, studySubjectEntity.SubjectIdentifier);
+            Assert.Equal(studyId.Id, studySubjectEntity.Study.Id);
+            Assert.Equal(personId.Id, studySubjectEntity.Person.Id);
         }
 
 

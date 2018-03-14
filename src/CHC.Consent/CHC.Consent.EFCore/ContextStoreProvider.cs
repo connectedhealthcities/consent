@@ -21,11 +21,13 @@ namespace CHC.Consent.EFCore
         class ContextStore<T> : IStore<T> where T : class, IEntity
         {
             private readonly DbSet<T> set;
+            private readonly ConsentContext context;
 
             /// <inheritdoc />
-            public ContextStore(DbSet<T> set)
+            public ContextStore(ConsentContext context)
             {
-                this.set = set;
+                set = context.Set<T>();
+                this.context = context;
             }
 
             public IEnumerator<T> GetEnumerator() => ((IQueryable<T>) set).GetEnumerator();
@@ -45,7 +47,9 @@ namespace CHC.Consent.EFCore
             /// <inheritdoc />
             public T Add(T value)
             {
-                return set.Add(value).Entity;
+                var entity = set.Add(value).Entity;
+                context.SaveChanges();
+                return entity;
             }
 
             /// <inheritdoc />
@@ -56,6 +60,6 @@ namespace CHC.Consent.EFCore
         }
         
         /// <inheritdoc />
-        IStore<T> IStoreProvider.Get<T>() => new ContextStore<T>(context.Set<T>());
+        IStore<T> IStoreProvider.Get<T>() => new ContextStore<T>(context);
     }
 }
