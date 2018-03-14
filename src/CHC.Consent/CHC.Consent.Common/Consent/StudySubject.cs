@@ -4,23 +4,31 @@ using CHC.Consent.Common.Infrastructure.Data;
 
 namespace CHC.Consent.Common.Consent
 {
-    public class StudySubject : IEntity
+    public class StudySubject
     {
-        
-        public long Id { get; set; }
+        public long Id { get; protected set; }
 
-        public string SubjectIdentifier { get; }
-        public Study Study { get; }
-        public long PersonId { get; }
+        public string SubjectIdentifier { get; protected set; }
+        public StudyIdentity StudyId { get; protected set; }
+        public PersonIdentity PersonId { get; protected set; }
+
 
         /// <inheritdoc />
-        public StudySubject(Study study, string subjectIdentifier, long personId)
+        public StudySubject(long id, StudyIdentity studyId, string subjectIdentifier, PersonIdentity personId)
+            : this(studyId, subjectIdentifier, personId)
         {
+            Id = id;
             SubjectIdentifier = subjectIdentifier;
-            Study = study;
+            StudyId = studyId;
             PersonId = personId;
         }
 
-        public IEnumerable<Consent> Consents { get; } = Array.Empty<Consent>();
+        /// <inheritdoc />
+        public StudySubject(StudyIdentity studyId, string subjectIdentifier, PersonIdentity personId)
+        {
+            SubjectIdentifier = subjectIdentifier;
+            StudyId = studyId ?? throw new ArgumentNullException(nameof(studyId));
+            PersonId = personId ?? throw new ArgumentNullException(nameof(personId));
+        }
     }
 }

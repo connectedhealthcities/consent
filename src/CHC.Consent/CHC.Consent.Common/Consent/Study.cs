@@ -1,18 +1,23 @@
-﻿using CHC.Consent.Common.Infrastructure.Data;
-
-namespace CHC.Consent.Common.Consent
+﻿namespace CHC.Consent.Common.Consent
 {
-    public class Study : IEntity
+    public class Study 
     {
-        public long Id { get; }
+        public StudyIdentity Id { get; protected set; }
         public string Name { get; protected set; }
 
         /// <inheritdoc />
-        public Study(long id, string name=null)
+        public Study(long id, string name=null) : this(name)
         {
-            Id = id;
+            Id = new StudyIdentity(id);
+        }
+
+        /// <inheritdoc />
+        public Study(string name=null)
+        {
             Name = name;
         }
+
+        
 
         protected bool Equals(Study other)
         {

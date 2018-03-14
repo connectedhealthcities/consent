@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.IO;
+using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Testing.Utils;
@@ -32,7 +33,7 @@ namespace CHC.Consent.Tests
             /// <inheritdoc />
             public override StudySubject Build()
             {
-                return new StudySubject(study, subjectIdentifier, personId);
+                return new StudySubject(study.Build().Id,  subjectIdentifier, new PersonIdentity(personId));
             }
         }
 

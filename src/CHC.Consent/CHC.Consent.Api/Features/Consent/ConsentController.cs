@@ -1,4 +1,5 @@
 ﻿using System;
+using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -23,18 +24,20 @@ namespace CHC.Consent.Api.Features.Consent
             
             
 
-            var study = consentRepository.GetStudy(specification.StudyId);
-            if (study == null)
+            var studyId = consentRepository.GetStudy(specification.StudyId);
+            if (studyId == null)
             {
                 return NotFound();
             }
-            var studySubject = consentRepository.FindStudySubject(study, specification.SubjectIdentifier);
+            var studySubject = consentRepository.FindStudySubject(studyId, specification.SubjectIdentifier);
             if (studySubject == null)
             {
-                studySubject = consentRepository.FindStudySubject(study, specification.PersonId);
+                var personId = new PersonIdentity( specification.PersonId );
+                
+                studySubject = consentRepository.FindStudySubject(studyId, personId );
                 if (studySubject != null) return BadRequest();
 
-                studySubject = new StudySubject(study, specification.SubjectIdentifier, specification.PersonId);
+                studySubject = new StudySubject(studyId, specification.SubjectIdentifier, personId );
                 consentRepository.AddStudySubject(studySubject);
             }
             else
@@ -51,6 +54,7 @@ namespace CHC.Consent.Api.Features.Consent
             }
 
             consentRepository.AddConsent(
+                studySubject,
                 new Consent(
                     studySubject,
                     specification.DateGiven,

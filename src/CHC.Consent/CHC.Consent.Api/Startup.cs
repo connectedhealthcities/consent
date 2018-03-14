@@ -93,7 +93,7 @@ namespace CHC.Consent.Api
             services.AddSwaggerGen(_ => {});
             
             services.AddScoped<IIdentityRepository, IdentityRepository>();
-            services.AddScoped<IConsentRepository,ConsentRepository>();
+            services.AddScoped<IConsentRepository, ConsentRepository>();
 
             services.AddDbContext<ConsentContext>(
                 ConfigureDatabaseOptions);

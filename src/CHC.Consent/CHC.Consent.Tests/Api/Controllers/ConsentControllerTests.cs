@@ -3,11 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using CHC.Consent.Api.Client;
+using CHC.Consent.Api.Client.Models;
 using CHC.Consent.Api.Features.Consent;
+using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Consent.Identifiers;
 using CHC.Consent.EFCore;
+using CHC.Consent.EFCore.Consent;
 using CHC.Consent.Testing.Utils;
 using FakeItEasy;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +20,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Rest;
 using Xunit;
 using Xunit.Abstractions;
+using ConsentIdentifier = CHC.Consent.Common.Consent.ConsentIdentifier;
+using ConsentSpecification = CHC.Consent.Api.Features.Consent.ConsentSpecification;
+using Evidence = CHC.Consent.Common.Consent.Evidence;
 using Random = CHC.Consent.Testing.Utils.Random;
 
 namespace CHC.Consent.Tests.Api.Controllers
@@ -31,25 +38,26 @@ namespace CHC.Consent.Tests.Api.Controllers
             protected readonly StudySubject StudySubject;
             protected Consent CreatedConsent;
             protected readonly IConsentRepository ConsentRepository;
+            public StudyIdentity StudyId { get; }
 
             /// <inheritdoc />
             public ConsentControllerTestBase()
             {
                 Study = Create.Study;
-                StudySubject = new StudySubject(Study, "AA100023", 500L);
+                StudyId = new StudyIdentity(Study.Id);
+                StudySubject = new StudySubject(StudyId, "AA100023", new PersonIdentity(500L));
                 ConsentRepository = CreateConsentRepository(Study, StudySubject);
             }
 
-            
 
             private IConsentRepository CreateConsentRepository(Study study, StudySubject studySubject)
             {
                 var consentRepository = A.Fake<IConsentRepository>(x => x.Strict());
-                A.CallTo(() => consentRepository.GetStudy(study.Id)).Returns(study);
-                A.CallTo(() => consentRepository.FindStudySubject(study, studySubject.SubjectIdentifier)).Returns(studySubject);
-                A.CallTo(() => consentRepository.FindStudySubject(Study, StudySubject.PersonId)).Returns(studySubject);
-                A.CallTo(() => consentRepository.AddConsent(A<Consent>._))
-                    .Invokes((Consent c) => { CreatedConsent = c; });
+                A.CallTo(() => consentRepository.GetStudy(study.Id)).Returns(StudyId);
+                A.CallTo(() => consentRepository.FindStudySubject(StudyId, studySubject.SubjectIdentifier)).Returns(studySubject);
+                A.CallTo(() => consentRepository.FindStudySubject(StudyId, StudySubject.PersonId)).Returns(studySubject);
+                A.CallTo(() => consentRepository.AddConsent(A<StudySubject>._, A<Consent>._))
+                    .Invokes((StudySubject s, Consent c) => { CreatedConsent = c; });
                 return consentRepository;
             }
 
@@ -106,7 +114,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             {
                 Assert.NotNull(CreatedConsent);
                 
-                Assert.Equal(Study, CreatedConsent.StudySubject.Study);
+                Assert.Equal(StudyId, CreatedConsent.StudySubject.StudyId);
                 Assert.Same(StudySubject, CreatedConsent.StudySubject);
                 Assert.Equal(StudySubject.PersonId, CreatedConsent.GivenByPersonId);
                 
@@ -151,9 +159,9 @@ namespace CHC.Consent.Tests.Api.Controllers
             public WhenRecordingConsent_ForANewStudySubject()
             {
                 newSubjectIdentifier = StudySubject.SubjectIdentifier + "New";
-                newPersonId = StudySubject.PersonId + 1;
-                A.CallTo(() => ConsentRepository.FindStudySubject(Study, newSubjectIdentifier)).Returns(null);
-                A.CallTo(() => ConsentRepository.FindStudySubject(Study, newPersonId)).Returns(null);
+                newPersonId = StudySubject.PersonId.Id + 1;
+                A.CallTo(() => ConsentRepository.FindStudySubject(StudyId, newSubjectIdentifier)).Returns(null);
+                A.CallTo(() => ConsentRepository.FindStudySubject(StudyId, new PersonIdentity(newPersonId))).Returns(null);
 
                 A.CallTo(() => ConsentRepository.AddStudySubject(A<StudySubject>._))
                     .Invokes((StudySubject created) => createdStudySubject = created);
@@ -176,7 +184,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             [Fact]
             public void CreatedSubjectShouldHaveCorrectProperties()
             {
-                Assert.Equal(Study, createdStudySubject.Study);
+                Assert.Equal(StudyId, createdStudySubject.StudyId);
                 Assert.Equal(newPersonId, createdStudySubject.PersonId);
                 Assert.Equal(newSubjectIdentifier, createdStudySubject.SubjectIdentifier);
             }
@@ -193,7 +201,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             {
                 newSubjectIdentifier = StudySubject.SubjectIdentifier + "New";
                 
-                A.CallTo(() => ConsentRepository.FindStudySubject(Study, newSubjectIdentifier)).Returns(null);
+                A.CallTo(() => ConsentRepository.FindStudySubject(StudyId, newSubjectIdentifier)).Returns(null);
                 
                 
                 RecordConsent(A.Dummy<Evidence>(), A.Dummy<DateTime>(), subjectIdentifier: newSubjectIdentifier);
@@ -299,23 +307,36 @@ namespace CHC.Consent.Tests.Api.Controllers
             Server = fixture.Server;
         }
 
-        [Fact(Skip = "WIP - No studies in store year")]
+        [Fact()]
         public async void SavesConsent()
         {
             var consentContext = Server.Host.Services.GetService<ConsentContext>();
-            consentContext.Add(new Study(id: 4444333L));
+            var study = consentContext.Add(new StudyEntity{Name = Random.String()}).Entity;
+            consentContext.SaveChanges();
             
-            var result = await Client.PutAsync(
-                "/consent",
-                new StringContent(
-                    "{ studyId: 4444333, subjectIdentifier: \"887766\", identifiers: [{ \"$type\": \"pregnancy-number.consent.bib4all.bradfordhospitals.nhs.uk\", value: \"Rachel\" }], evidence: { \"$type\": \"medway.evidence.bib4all.bradfordhospitals.nhs.uk\", consentGivenBy: \"Rachel\"} }",
-                    Encoding.UTF8,
-                    "application/json"
-                )
-            );
+            var client = new CHC.Consent.Api.Client.Api(Client, disposeHttpClient:false);
+            var api = (IApi) client;
 
-            Output.WriteLine(result.AsFormattedString());
-            result.EnsureSuccessStatusCode();
+            api.ConsentPut(
+                new CHC.Consent.Api.Client.Models.ConsentSpecification
+                {
+                    StudyId = study.Id,
+                    CaseId = new CHC.Consent.Api.Client.Models.ConsentIdentifier[]
+                        {new UkNhsBradfordhospitalsBib4allConsentPregnancyNumber("1"),},
+                    DateGiven = Random.Date().Date,
+                    GivenBy = 5,
+                    PersonId = 5,
+                    SubjectIdentifier = Random.String(15),
+                    Evidence = new UkNhsBradfordhospitalsBib4allEvidenceMedway
+                    {
+                        CompetentStatus = "Competent"
+                    }
+                });
+            
+            
+            
+
+            
         }
     }
 }

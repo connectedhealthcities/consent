@@ -15,9 +15,9 @@ namespace CHC.Consent.Testing.Utils
             random.NextBytes(buffer);
             return buffer;
         }
-        public static string String()
+        public static string String(int lengthish=32)
         {
-            return Convert.ToBase64String(RandomBytes(32)).TrimEnd('=');
+            return Convert.ToBase64String(RandomBytes(lengthish)).TrimEnd('=');
         }
 
         public static DateTime Date()
