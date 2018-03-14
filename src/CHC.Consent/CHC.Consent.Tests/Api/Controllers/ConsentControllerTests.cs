@@ -12,6 +12,7 @@ using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Consent.Identifiers;
 using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.Consent;
+using CHC.Consent.EFCore.Entities;
 using CHC.Consent.Testing.Utils;
 using FakeItEasy;
 using Microsoft.AspNetCore.Mvc;
@@ -312,6 +313,7 @@ namespace CHC.Consent.Tests.Api.Controllers
         {
             var consentContext = Server.Host.Services.GetService<ConsentContext>();
             var study = consentContext.Add(new StudyEntity{Name = Random.String()}).Entity;
+            var person = consentContext.Add(new PersonEntity()).Entity;
             consentContext.SaveChanges();
             
             var client = new CHC.Consent.Api.Client.Api(Client, disposeHttpClient:false);
@@ -324,8 +326,8 @@ namespace CHC.Consent.Tests.Api.Controllers
                     CaseId = new CHC.Consent.Api.Client.Models.ConsentIdentifier[]
                         {new UkNhsBradfordhospitalsBib4allConsentPregnancyNumber("1"),},
                     DateGiven = Random.Date().Date,
-                    GivenBy = 5,
-                    PersonId = 5,
+                    GivenBy = person.Id,
+                    PersonId = person.Id,
                     SubjectIdentifier = Random.String(15),
                     Evidence = new UkNhsBradfordhospitalsBib4allEvidenceMedway
                     {
