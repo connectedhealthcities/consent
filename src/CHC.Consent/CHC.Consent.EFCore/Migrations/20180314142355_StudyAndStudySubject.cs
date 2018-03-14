@@ -30,7 +30,7 @@ namespace CHC.Consent.EFCore.Migrations
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     PersonId = table.Column<long>(nullable: false),
                     StudyId = table.Column<long>(nullable: false),
-                    SubjectIdentifier = table.Column<string>(nullable: true)
+                    SubjectIdentifier = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -55,9 +55,16 @@ namespace CHC.Consent.EFCore.Migrations
                 column: "PersonId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_StudySubject_StudyId",
+                name: "IX_StudySubject_StudyId_PersonId",
                 table: "StudySubject",
-                column: "StudyId");
+                columns: new[] { "StudyId", "PersonId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StudySubject_StudyId_SubjectIdentifier",
+                table: "StudySubject",
+                columns: new[] { "StudyId", "SubjectIdentifier" },
+                unique: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

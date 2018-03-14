@@ -11,7 +11,7 @@ using System;
 namespace CHC.Consent.EFCore.Migrations
 {
     [DbContext(typeof(ConsentContext))]
-    [Migration("20180314131303_StudyAndStudySubject")]
+    [Migration("20180314142355_StudyAndStudySubject")]
     partial class StudyAndStudySubject
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -39,19 +39,22 @@ namespace CHC.Consent.EFCore.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<long?>("PersonId")
-                        .IsRequired();
+                    b.Property<long>("PersonId");
 
-                    b.Property<long?>("StudyId")
-                        .IsRequired();
+                    b.Property<long>("StudyId");
 
-                    b.Property<string>("SubjectIdentifier");
+                    b.Property<string>("SubjectIdentifier")
+                        .IsRequired();
 
                     b.HasKey("Id");
 
                     b.HasIndex("PersonId");
 
-                    b.HasIndex("StudyId");
+                    b.HasIndex("StudyId", "PersonId")
+                        .IsUnique();
+
+                    b.HasIndex("StudyId", "SubjectIdentifier")
+                        .IsUnique();
 
                     b.ToTable("StudySubject");
                 });

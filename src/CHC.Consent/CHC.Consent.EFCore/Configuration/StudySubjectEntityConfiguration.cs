@@ -12,9 +12,17 @@ namespace CHC.Consent.EFCore.Configuration
         public void Configure(EntityTypeBuilder<StudySubjectEntity> builder)
         {
             builder.ToTable("StudySubject");
-            
-            builder.HasOne(_ => _.Person).WithMany().IsRequired();
-            builder.HasOne(_ => _.Study).WithMany().IsRequired();
+
+            builder.Property(_ => _.SubjectIdentifier).IsRequired();
+
+            builder.Property<long>("PersonId").IsRequired();
+            builder.HasOne(_ => _.Person).WithMany().HasForeignKey("PersonId").IsRequired();
+            builder.Property<long>("StudyId").IsRequired();
+            builder.HasOne(_ => _.Study).WithMany().HasForeignKey("StudyId").IsRequired();
+
+            builder.HasIndex("StudyId", "PersonId").IsUnique();
+            builder.HasIndex("StudyId", nameof(StudySubjectEntity.SubjectIdentifier)).IsUnique();
+
         }
     }
 }

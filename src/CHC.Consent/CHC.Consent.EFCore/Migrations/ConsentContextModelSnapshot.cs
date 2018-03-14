@@ -38,19 +38,22 @@ namespace CHC.Consent.EFCore.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<long?>("PersonId")
-                        .IsRequired();
+                    b.Property<long>("PersonId");
 
-                    b.Property<long?>("StudyId")
-                        .IsRequired();
+                    b.Property<long>("StudyId");
 
-                    b.Property<string>("SubjectIdentifier");
+                    b.Property<string>("SubjectIdentifier")
+                        .IsRequired();
 
                     b.HasKey("Id");
 
                     b.HasIndex("PersonId");
 
-                    b.HasIndex("StudyId");
+                    b.HasIndex("StudyId", "PersonId")
+                        .IsUnique();
+
+                    b.HasIndex("StudyId", "SubjectIdentifier")
+                        .IsUnique();
 
                     b.ToTable("StudySubject");
                 });
