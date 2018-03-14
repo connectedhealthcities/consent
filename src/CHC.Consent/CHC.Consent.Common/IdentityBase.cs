@@ -4,19 +4,19 @@ namespace CHC.Consent.Common
 {
     public abstract class IdentityBase
     {
-        private static string shortName;
+        private static string _shortName;
 
-        private static string GetShortName<T>(T instance)
+        private static string GetShortName<T>(T instance) where T:IdentityBase
         {
-            if (shortName != null) return shortName;
+            if (_shortName != null) return _shortName;
             
-            shortName = typeof(T).Name;
-            if (shortName.EndsWith("Identity"))
+            _shortName = instance.GetType().Name;
+            if (_shortName.EndsWith("Identity"))
             {
-                shortName = shortName.Substring(0, shortName.Length - "Identity".Length);
+                _shortName = _shortName.Substring(0, _shortName.Length - "Identity".Length);
             }
 
-            return shortName;
+            return _shortName;
         }
         
         public long Id { get; }
