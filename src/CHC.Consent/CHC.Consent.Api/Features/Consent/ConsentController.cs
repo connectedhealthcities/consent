@@ -54,7 +54,6 @@ namespace CHC.Consent.Api.Features.Consent
             }
 
             consentRepository.AddConsent(
-                studySubject,
                 new Consent(
                     studySubject,
                     specification.DateGiven,

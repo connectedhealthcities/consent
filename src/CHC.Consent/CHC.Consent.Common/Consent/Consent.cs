@@ -4,6 +4,14 @@ using CHC.Consent.Common.Infrastructure.Data;
 
 namespace CHC.Consent.Common.Consent
 {
+    public class ConsentIdentity : IdentityBase
+    {
+        /// <inheritdoc />
+        public ConsentIdentity(long id) : base(id)
+        {
+        }
+    } 
+    
     public class Consent : IEntity
     {
         public long Id { get; set; }

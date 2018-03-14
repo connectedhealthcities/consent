@@ -9,22 +9,23 @@ using CHC.Consent.EFCore.Entities;
 
 namespace CHC.Consent.EFCore
 {
+    
     public class ConsentRepository : IConsentRepository
     {
         private IStore<StudyEntity> Studies { get; }
         private IStore<StudySubjectEntity> StudySubjects { get; }
         private IStore<PersonEntity> People { get; }
-        private IStore<Common.Consent.Consent> Consents { get; }
+        private IStore<ConsentEntity> Consents { get; }
 
         public ConsentRepository(
             IStore<StudyEntity> studies, 
             IStore<StudySubjectEntity> studySubjects,
-            IStore<PersonEntity> People, 
-            IStore<Common.Consent.Consent> consents)
+            IStore<PersonEntity> people, 
+            IStore<ConsentEntity> consents)
         {
             Studies = studies;
             StudySubjects = studySubjects;
-            this.People = People;
+            People = people;
             Consents = consents;
         }
 
@@ -60,8 +61,19 @@ namespace CHC.Consent.EFCore
             throw new NotImplementedException();
 
         /// <inheritdoc />
-        public Common.Consent.Consent AddConsent(StudySubject subject, Common.Consent.Consent consent) =>
-            throw new NotImplementedException();
+        public ConsentIdentity AddConsent(Common.Consent.Consent consent)
+        {
+            var subject = StudySubjects.Get(consent.StudySubject.Id);
+            if(subject == null) throw new NotImplementedException($"StudySubject#{consent.StudySubject.Id} not found");
+
+            var givenBy = People.Get(consent.GivenByPersonId);
+            if(givenBy == null) throw new NotImplementedException();
+
+            var saved = Consents.Add(
+                new ConsentEntity {DateProvided = consent.DateGiven, GivenBy = givenBy, StudySubject = subject});
+
+            return new ConsentIdentity(saved.Id);
+        }
 
         public StudySubject AddStudySubject(StudySubject studySubject)
         {

@@ -8,6 +8,7 @@ using CHC.Consent.EFCore.Entities;
 using CHC.Consent.Testing.Utils;
 using FakeItEasy;
 using FakeItEasy.Sdk;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 using Xunit.Abstractions;
 using Z.EntityFramework.Plus;
@@ -76,7 +77,7 @@ namespace CHC.Consent.EFCore.Tests
                 storeProvider.Get<StudyEntity>(),
                 storeProvider.Get<StudySubjectEntity>(),
                 storeProvider.Get<PersonEntity>(),
-                A.Dummy<IStore<Consent>>());
+                storeProvider.Get<ConsentEntity>());
         }
 
         [Fact]
@@ -104,6 +105,46 @@ namespace CHC.Consent.EFCore.Tests
             Assert.Equal(subjectIdentifier, studySubjectEntity.SubjectIdentifier);
             Assert.Equal(studyId.Id, studySubjectEntity.Study.Id);
             Assert.Equal(personId.Id, studySubjectEntity.Person.Id);
+        }
+
+        [Fact]
+        public void StoresConsentHeaderWhenAddingConsent()
+        {
+            var subjectIdentifier = Random.String();
+            var person = createContext.Add(new PersonEntity()).Entity;
+            var studySubjectEntity = createContext.Add(
+                new StudySubjectEntity
+                {
+                    Person = person,
+                    Study = createContext.Find<StudyEntity>(study.Id),
+                    SubjectIdentifier = subjectIdentifier
+                }).Entity;
+            createContext.SaveChanges();
+            
+            var personId = new PersonIdentity(person.Id);
+            var studySubject = new StudySubject(studySubjectEntity.Id, studyId, subjectIdentifier, personId);
+
+            var dateGiven = Random.Date().Date;
+
+
+            var consent = CreateRepository(updateContext)
+                .AddConsent(
+                    new Consent(studySubject, dateGiven, personId, null, Enumerable.Empty<ConsentIdentifier>())
+                );
+            
+            updateContext.SaveChanges();
+            
+
+            var consentEntity = readContext.Set<ConsentEntity>()
+                .Include(_ => _.GivenBy)
+                .Include(_ => _.StudySubject)
+                    .ThenInclude(_ => _.Study)
+                .SingleOrDefault(_ => _.Id == consent.Id);
+            
+            Assert.Equal(studySubjectEntity.Id, consentEntity.StudySubject.Id);
+            Assert.Equal(personId.Id, consentEntity.GivenBy.Id);
+            Assert.Equal(dateGiven, consentEntity.DateProvided);
+            Assert.Equal(null, consentEntity.DateWithdrawn);
         }
 
 

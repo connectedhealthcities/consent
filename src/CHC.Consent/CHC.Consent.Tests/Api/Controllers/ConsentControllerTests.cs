@@ -57,8 +57,8 @@ namespace CHC.Consent.Tests.Api.Controllers
                 A.CallTo(() => consentRepository.GetStudy(study.Id)).Returns(StudyId);
                 A.CallTo(() => consentRepository.FindStudySubject(StudyId, studySubject.SubjectIdentifier)).Returns(studySubject);
                 A.CallTo(() => consentRepository.FindStudySubject(StudyId, StudySubject.PersonId)).Returns(studySubject);
-                A.CallTo(() => consentRepository.AddConsent(A<StudySubject>._, A<Consent>._))
-                    .Invokes((StudySubject s, Consent c) => { CreatedConsent = c; });
+                A.CallTo(() => consentRepository.AddConsent(A<Consent>._))
+                    .Invokes((Consent c) => CreatedConsent = c);
                 return consentRepository;
             }
 

@@ -33,6 +33,7 @@ namespace CHC.Consent.EFCore
         {
             modelBuilder.ApplyConfiguration(new StudyConfiguration());
             modelBuilder.ApplyConfiguration(new StudySubjectEntityConfiguration());
+            modelBuilder.ApplyConfiguration(new ConsentEntityConfiguration());
             //TODO: Get these from somewhere else configurable
             modelBuilder.ApplyConfiguration(new PersonEntityConfiguration());
             modelBuilder.ApplyConfiguration(new PersonIdentifierEntityConfiguration());
