@@ -72,13 +72,42 @@ namespace CHC.Consent.EFCore
             return GetStudySubject(SubjectsForStudy(study).Where(_ => _.Person.Id == personId.Id));
         }
 
-        public ConsentIdentity FindActiveConsent(StudySubject studySubject, IEnumerable<CaseIdentifier> identifiers) =>
-            throw new NotImplementedException();
+        public ConsentIdentity FindActiveConsent(StudySubject studySubject, IEnumerable<CaseIdentifier> caseIdentifiers)
+        {
+            var consents = studySubject.Id == null
+                ? Consents.Where(
+                    _ => _.StudySubject.Person.Id == studySubject.PersonId.Id &&
+                         _.StudySubject.Study.Id == studySubject.StudyId.Id &&
+                         _.StudySubject.SubjectIdentifier == studySubject.SubjectIdentifier)
+                : Consents.Where(
+                    _ => _.StudySubject.Id == studySubject.Id && _.DateProvided <= DateTime.Now &&
+                         _.DateWithdrawn == null);
+
+            if (!caseIdentifiers.Any())
+            {
+                consents = consents.Where(_ => CaseIdentifiers.All(c => c.Consent != _));
+            }
+            else
+            {
+                foreach (var caseIdentifier in caseIdentifiers)
+                {
+                    var xmlMarshaller = GetMarshaller(caseIdentifier);
+                    var value = xmlMarshaller.MarshalledValue(caseIdentifier);
+                    var type = xmlMarshaller.ValueType;
+                    consents = consents.Where(
+                        _ => CaseIdentifiers.Any(id => id.Consent == _ && id.Type == type && id.Value == value));
+                }
+            }
+
+            var consentId = consents.Select(_ => (long?)_.Id).SingleOrDefault();
+            return consentId == null ? null : new ConsentIdentity(consentId.Value);
+        }
 
         /// <inheritdoc />
         public ConsentIdentity AddConsent(Common.Consent.Consent consent)
         {
-            var subject = StudySubjects.Get(consent.StudySubject.Id);
+            var subject = consent.StudySubject.Id.HasValue ? StudySubjects.Get(consent.StudySubject.Id.Value) : null;
+            
             if(subject == null) throw new NotImplementedException($"StudySubject#{consent.StudySubject.Id} not found");
 
             var givenBy = People.Get(consent.GivenByPersonId);
@@ -89,14 +118,12 @@ namespace CHC.Consent.EFCore
 
             foreach (var caseIdentifier in consent.CaseIdentifiers)
             {
-                var typeName = CaseIdentifierRegistry[caseIdentifier.GetType()];
-
+                var xmlMarshaller = GetMarshaller(caseIdentifier);
                 CaseIdentifiers.Add(
                     new CaseIdentifierEntity
                     {
-                        Value = new XmlMarshaller(caseIdentifier.GetType(), typeName)
-                            .MarshalledValue(caseIdentifier),
-                        Type = typeName,
+                        Value = xmlMarshaller.MarshalledValue(caseIdentifier),
+                        Type = xmlMarshaller.ValueType,
                         Consent = saved
                     });
             }
@@ -116,6 +143,13 @@ namespace CHC.Consent.EFCore
             }
 
             return new ConsentIdentity(saved.Id);
+        }
+
+        private XmlMarshaller GetMarshaller(CaseIdentifier caseIdentifier)
+        {
+            var typeName = CaseIdentifierRegistry[caseIdentifier.GetType()];
+            var xmlMarshaller = new XmlMarshaller(caseIdentifier.GetType(), typeName);
+            return xmlMarshaller;
         }
 
         public StudySubject AddStudySubject(StudySubject studySubject)

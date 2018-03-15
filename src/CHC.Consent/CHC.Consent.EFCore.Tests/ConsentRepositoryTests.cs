@@ -23,14 +23,15 @@ namespace CHC.Consent.EFCore.Tests
         private readonly StudyEntity study;
         private readonly ConsentRepository repository;
         private readonly StudySubjectEntity consentedStudySubject;
-        private readonly ConsentEntity withdrawnConsent;
+        
         private readonly ConsentEntity activeConsent;
-        private readonly StudySubjectEntity unconsentedStudySubect;
+        
         private ConsentContext readContext;
         private ConsentContext updateContext;
         private ConsentContext createContext;
         private readonly StudyIdentity studyId;
         private readonly PersonIdentity consentedPersonId;
+        private readonly PersonIdentity unconsentedPersonId;
 
         /// <inheritdoc />
         public ConsentRepositoryTests(ITestOutputHelper outputHelper, DatabaseFixture fixture) : base(outputHelper, fixture)
@@ -44,14 +45,14 @@ namespace CHC.Consent.EFCore.Tests
             
             var consentedPerson = createContext.People.Add(new PersonEntity()).Entity;
             consentedStudySubject = createContext.Add(new StudySubjectEntity{ Study = study, Person = consentedPerson, SubjectIdentifier = "Consented"}).Entity;
-            withdrawnConsent = createContext.Add(
+            createContext.Add(
                 new ConsentEntity
                 {
                     StudySubject = consentedStudySubject,
                     DateProvided = 1.December(1965),
                     DateWithdrawn = 1.January(1966),
                     GivenBy = consentedPerson
-                }).Entity;
+                });
             
             activeConsent = createContext.Add(
                 new ConsentEntity
@@ -60,32 +61,22 @@ namespace CHC.Consent.EFCore.Tests
                     DateProvided = 1.February(1966),
                     GivenBy = consentedPerson
                 }).Entity;
+            
+            var unconsentedPerson = createContext.People.Add(new PersonEntity()).Entity;
+            createContext.Add(
+                new StudySubjectEntity {Study = study, Person = unconsentedPerson, SubjectIdentifier = "Unconsented"});
+            
             createContext.SaveChanges();
             
             studyId = new StudyIdentity(study.Id);
             consentedPersonId = consentedPerson;
+            unconsentedPersonId = unconsentedPerson;
             
             repository = CreateRepository(readContext);
 
-            /*
-            withdrawnConsent = Create.Consent.WithStudySubject(consentedStudySubject).GivenOn(1.December(1965)).Withdrawn(1.January(1966));
-            activeConsent = Create.Consent.WithStudySubject(consentedStudySubject).GivenOn(1.February(1966));
-            
-            var unconsentedPerson = createContext.People.Add(new PersonEntity()).Entity;
-            unconsentedStudySubect = createContext.Add(
-                    new StudySubjectEntity().SetStudy(study).SetPerson(consentedPerson)
-                        .SetSubjectIdentifier("UnConsented"))
-                .Entity;
             
             
-            repository = new ConsentRepository(
-                Create.AStore(study, Create.Study),
-                Create.AStore(consentedStudySubject, unconsentedStudySubect),
-                Create.AStore(
-                    withdrawnConsent,
-                    activeConsent,
-                    Create.Consent.WithStudySubject(unconsentedStudySubect).Withdrawn())
-            );*/
+           
         }
 
         private ConsentRepository CreateRepository(
@@ -308,7 +299,7 @@ namespace CHC.Consent.EFCore.Tests
             Assert.Null(repository.FindStudySubject(studyId, new PersonIdentity(-consentedStudySubject.Person.Id)));
         }
 
-        [Fact(Skip = "In Progress")]
+        [Fact]
         public void CanFindActiveConsentWithNoIdentifiers()
         {
             Assert.Equal(
@@ -322,16 +313,60 @@ namespace CHC.Consent.EFCore.Tests
                     Enumerable.Empty<CaseIdentifier>()).Id);
         }
         
-        [Fact(Skip = "In Progress")]
+        [Fact()]
         public void ReturnsNullConsentForAnStudySubjectWithOnlyWithdrawnConsent()
         {
-            //Assert.Null(repository.FindActiveConsent(unconsentedStudySubect));
+            Assert.Null(
+                repository.FindActiveConsent(
+                    new StudySubject(studyId, "Unconsented", unconsentedPersonId),
+                    Enumerable.Empty<CaseIdentifier>()));
         }
         
-        [Fact(Skip = "In Progress")]
+        [Fact()]
         public void ReturnsNullConsentForAnUnknownStudySubject()
         {
-            //Assert.Null(repository.FindActiveConsent());
+            Assert.Null(repository.FindActiveConsent(
+                new StudySubject(studyId, "Unknown", new PersonIdentity(67)),
+                Enumerable.Empty<CaseIdentifier>()));
+        }
+
+        [Fact]
+        public void FindsConsentByCaseId()
+        {
+            var pregnancyNumber = new PregnancyNumberIdentifier("87");
+            
+            var marshaller = new XmlMarshaller(typeof(PregnancyNumberIdentifier), PregnancyNumberIdentifier.TypeName);
+            createContext.Set<CaseIdentifierEntity>().Add(
+                new CaseIdentifierEntity
+                {
+                    Consent = activeConsent,
+                    Type = marshaller.ValueType,
+                    Value = marshaller.MarshalledValue(pregnancyNumber)
+                });
+            createContext.SaveChanges();
+
+
+            Assert.NotNull(
+                repository.FindActiveConsent(
+                    new StudySubject(
+                        consentedStudySubject.Id,
+                        studyId,
+                        consentedStudySubject.SubjectIdentifier,
+                        consentedPersonId),
+                    new[] {pregnancyNumber}
+                ));
+
+            Assert.Null(
+                repository.FindActiveConsent(
+                    new StudySubject(
+                        consentedStudySubject.Id,
+                        studyId,
+                        consentedStudySubject.SubjectIdentifier,
+                        consentedPersonId),
+                    Enumerable.Empty<CaseIdentifier>()
+                )
+            );
+
         }
     }
     

@@ -6,7 +6,7 @@ namespace CHC.Consent.Common.Consent
 {
     public class StudySubject
     {
-        public long Id { get; protected set; }
+        public long? Id { get; protected set; }
 
         public string SubjectIdentifier { get; protected set; }
         public StudyIdentity StudyId { get; protected set; }
