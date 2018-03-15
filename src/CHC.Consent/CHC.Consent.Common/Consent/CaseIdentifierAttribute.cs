@@ -4,9 +4,9 @@ using CHC.Consent.Common.Infrastructure;
 namespace CHC.Consent.Common.Consent
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited=false)]
-    public class ConsentIdentifierAttribute : Attribute, ITypeName
+    public class CaseIdentifierAttribute : Attribute, ITypeName
     {
-        public ConsentIdentifierAttribute(string name)
+        public CaseIdentifierAttribute(string name)
         {
             Name = name;
         }

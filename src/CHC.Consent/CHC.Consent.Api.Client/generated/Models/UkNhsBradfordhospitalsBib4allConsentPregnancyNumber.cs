@@ -8,7 +8,7 @@ namespace CHC.Consent.Api.Client.Models
     using System.Linq;
 
     [Newtonsoft.Json.JsonObject("uk.nhs.bradfordhospitals.bib4all.consent.pregnancy-number")]
-    public partial class UkNhsBradfordhospitalsBib4allConsentPregnancyNumber : ConsentIdentifier
+    public partial class UkNhsBradfordhospitalsBib4allConsentPregnancyNumber : CaseIdentifier
     {
         /// <summary>
         /// Initializes a new instance of the
@@ -37,7 +37,7 @@ namespace CHC.Consent.Api.Client.Models
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "value")]
-        public string Value { get; private set; }
+        public string Value { get; set; }
 
     }
 }

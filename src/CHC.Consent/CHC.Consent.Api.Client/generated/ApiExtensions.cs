@@ -20,9 +20,9 @@ namespace CHC.Consent.Api.Client
             /// </param>
             /// <param name='specification'>
             /// </param>
-            public static void ConsentPut(this IApi operations, ConsentSpecification specification = default(ConsentSpecification))
+            public static long? ConsentPut(this IApi operations, ConsentSpecification specification = default(ConsentSpecification))
             {
-                operations.ConsentPutAsync(specification).GetAwaiter().GetResult();
+                return operations.ConsentPutAsync(specification).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -33,9 +33,12 @@ namespace CHC.Consent.Api.Client
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task ConsentPutAsync(this IApi operations, ConsentSpecification specification = default(ConsentSpecification), CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<long?> ConsentPutAsync(this IApi operations, ConsentSpecification specification = default(ConsentSpecification), CancellationToken cancellationToken = default(CancellationToken))
             {
-                (await operations.ConsentPutWithHttpMessagesAsync(specification, null, cancellationToken).ConfigureAwait(false)).Dispose();
+                using (var _result = await operations.ConsentPutWithHttpMessagesAsync(specification, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
             }
 
             /// <param name='operations'>

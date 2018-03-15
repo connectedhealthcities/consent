@@ -42,8 +42,8 @@ namespace CHC.Consent.DataImporter
                 .Where(type => type.IsSubclassOf(typeof(IPersonIdentifier)))
                 .ToDictionary(type => type.GetCustomAttribute<JsonObjectAttribute>().Id);
 
-            var consentIdentifierTypes = typeof(ConsentSpecification).Assembly.GetExportedTypes()
-                .Where(type => type.IsSubclassOf(typeof(ConsentIdentifier)))
+            var caseIdentifierTypes = typeof(ConsentSpecification).Assembly.GetExportedTypes()
+                .Where(type => type.IsSubclassOf(typeof(CaseIdentifier)))
                 .ToDictionary(type => type.GetCustomAttribute<JsonObjectAttribute>().Id);
 
             var evidenceIdentityTypes = typeof(ConsentSpecification).Assembly.GetExportedTypes()
@@ -109,7 +109,7 @@ namespace CHC.Consent.DataImporter
 
             var identifiers = consentNode.XPathSelectElements("case/*").Select(
                     givenForIdentifierNode =>
-                        (ConsentIdentifier) ParseObject(givenForIdentifierNode, consentIdentifiers))
+                        (CaseIdentifier) ParseObject(givenForIdentifierNode, consentIdentifiers))
                 .ToArray();
 
 

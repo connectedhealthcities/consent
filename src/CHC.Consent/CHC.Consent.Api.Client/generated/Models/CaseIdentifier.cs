@@ -6,12 +6,12 @@ namespace CHC.Consent.Api.Client.Models
 {
     using System.Linq;
 
-    public partial class ConsentIdentifier
+    public partial class CaseIdentifier
     {
         /// <summary>
-        /// Initializes a new instance of the ConsentIdentifier class.
+        /// Initializes a new instance of the CaseIdentifier class.
         /// </summary>
-        public ConsentIdentifier()
+        public CaseIdentifier()
         {
             CustomInit();
         }

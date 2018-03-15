@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace CHC.Consent.EFCore.Migrations
 {
-    public partial class ConsentHeader : Migration
+    public partial class ConsentPartOne : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -34,8 +34,34 @@ namespace CHC.Consent.EFCore.Migrations
                         column: x => x.StudySubjectId,
                         principalTable: "StudySubject",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        onDelete: ReferentialAction.Restrict);
                 });
+
+            migrationBuilder.CreateTable(
+                name: "CaseIdentifier",
+                columns: table => new
+                {
+                    Id = table.Column<long>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    ConsentId = table.Column<long>(nullable: false),
+                    Type = table.Column<string>(nullable: false),
+                    Value = table.Column<string>(maxLength: 2147483647, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CaseIdentifier", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CaseIdentifier_Consent_ConsentId",
+                        column: x => x.ConsentId,
+                        principalTable: "Consent",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CaseIdentifier_ConsentId",
+                table: "CaseIdentifier",
+                column: "ConsentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Consent_GivenByPersonId",
@@ -52,6 +78,9 @@ namespace CHC.Consent.EFCore.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "CaseIdentifier");
+
             migrationBuilder.DropTable(
                 name: "Consent");
         }

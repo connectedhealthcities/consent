@@ -20,7 +20,11 @@
           "application/xml",
           "application/xml"
         ],
-        "produces": [],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
         "parameters": [
           {
             "name": "specification",
@@ -32,8 +36,18 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Success"
+          "201": {
+            "description": "Success",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          "303": {
+            "description": "Redirect"
+          },
+          "400": {
+            "description": "Bad Request"
           }
         }
       }
@@ -177,12 +191,15 @@
           "type": "string"
         },
         "evidence": {
-          "$ref": "#/definitions/Evidence"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Evidence"
+          }
         },
         "caseId": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ConsentIdentifier"
+            "$ref": "#/definitions/CaseIdentifier"
           }
         },
         "givenBy": {
@@ -206,7 +223,7 @@
       },
       "discriminator": "$type"
     },
-    "ConsentIdentifier": {
+    "CaseIdentifier": {
       "required": [
         "$type"
       ],
@@ -297,14 +314,13 @@
     "ukNhsBradfordhospitalsBib4allConsentPregnancyNumber": {
       "allOf": [
         {
-          "$ref": "#/definitions/ConsentIdentifier"
+          "$ref": "#/definitions/CaseIdentifier"
         },
         {
           "type": "object",
           "properties": {
             "value": {
-              "type": "string",
-              "readOnly": true
+              "type": "string"
             }
           }
         }

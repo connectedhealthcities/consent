@@ -12,6 +12,6 @@ namespace CHC.Consent.DataImporter
         public MatchSpecification[] GivenBy { get; set; } = Array.Empty<MatchSpecification>();
 
         public Evidence[] Evidence { get; set; } = Array.Empty<Evidence>();
-        public ConsentIdentifier[] CaseId { get; set; } = Array.Empty<ConsentIdentifier>();
+        public CaseIdentifier[] CaseId { get; set; } = Array.Empty<CaseIdentifier>();
     }
 }

@@ -6,13 +6,14 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Storage.Internal;
+using Microsoft.EntityFrameworkCore.ValueGeneration;
 using System;
 
 namespace CHC.Consent.EFCore.Migrations
 {
     [DbContext(typeof(ConsentContext))]
-    [Migration("20180314160843_ConsentHeader")]
-    partial class ConsentHeader
+    [Migration("20180315113512_ConsentPartTwo")]
+    partial class ConsentPartTwo
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -20,6 +21,27 @@ namespace CHC.Consent.EFCore.Migrations
             modelBuilder
                 .HasAnnotation("ProductVersion", "2.0.1-rtm-125")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+            modelBuilder.Entity("CHC.Consent.EFCore.Consent.CaseIdentifierEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<long>("ConsentId");
+
+                    b.Property<string>("Type")
+                        .IsRequired();
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(2147483647);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsentId");
+
+                    b.ToTable("CaseIdentifier");
+                });
 
             modelBuilder.Entity("CHC.Consent.EFCore.Consent.ConsentEntity", b =>
                 {
@@ -43,6 +65,32 @@ namespace CHC.Consent.EFCore.Migrations
                         .HasFilter("[DateWithdrawn] IS NOT NULL");
 
                     b.ToTable("Consent");
+                });
+
+            modelBuilder.Entity("CHC.Consent.EFCore.Consent.EvidenceEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<long?>("ConsentId");
+
+                    b.Property<string>("Discriminator")
+                        .IsRequired();
+
+                    b.Property<string>("Type")
+                        .IsRequired();
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(2147483647);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsentId");
+
+                    b.ToTable("Evidence");
+
+                    b.HasDiscriminator<string>("Discriminator").HasValue("EvidenceEntity");
                 });
 
             modelBuilder.Entity("CHC.Consent.EFCore.Consent.StudyEntity", b =>
@@ -121,6 +169,34 @@ namespace CHC.Consent.EFCore.Migrations
                     b.ToTable("PersonIdentifier");
                 });
 
+            modelBuilder.Entity("CHC.Consent.EFCore.Consent.GivenEvidenceEntity", b =>
+                {
+                    b.HasBaseType("CHC.Consent.EFCore.Consent.EvidenceEntity");
+
+
+                    b.ToTable("GivenEvidenceEntity");
+
+                    b.HasDiscriminator().HasValue("Given");
+                });
+
+            modelBuilder.Entity("CHC.Consent.EFCore.Consent.WithdrawnEvidenceEntity", b =>
+                {
+                    b.HasBaseType("CHC.Consent.EFCore.Consent.EvidenceEntity");
+
+
+                    b.ToTable("WithdrawnEvidenceEntity");
+
+                    b.HasDiscriminator().HasValue("Withdrawn");
+                });
+
+            modelBuilder.Entity("CHC.Consent.EFCore.Consent.CaseIdentifierEntity", b =>
+                {
+                    b.HasOne("CHC.Consent.EFCore.Consent.ConsentEntity", "Consent")
+                        .WithMany()
+                        .HasForeignKey("ConsentId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
             modelBuilder.Entity("CHC.Consent.EFCore.Consent.ConsentEntity", b =>
                 {
                     b.HasOne("CHC.Consent.EFCore.Entities.PersonEntity", "GivenBy")
@@ -131,7 +207,14 @@ namespace CHC.Consent.EFCore.Migrations
                     b.HasOne("CHC.Consent.EFCore.Consent.StudySubjectEntity", "StudySubject")
                         .WithMany()
                         .HasForeignKey("StudySubjectId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("CHC.Consent.EFCore.Consent.EvidenceEntity", b =>
+                {
+                    b.HasOne("CHC.Consent.EFCore.Consent.ConsentEntity", "Consent")
+                        .WithMany()
+                        .HasForeignKey("ConsentId");
                 });
 
             modelBuilder.Entity("CHC.Consent.EFCore.Consent.StudySubjectEntity", b =>

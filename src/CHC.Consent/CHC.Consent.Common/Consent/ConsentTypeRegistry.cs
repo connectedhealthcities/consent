@@ -3,16 +3,18 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using CHC.Consent.Common.Infrastructure;
+using JetBrains.Annotations;
 
 namespace CHC.Consent.Common.Consent
 {
+    [UsedImplicitly]
     public class ConsentTypeRegistry : ITypeRegistry
     {
-        private readonly ITypeRegistry<ConsentIdentifier> consentIdentifierRegistry;
+        private readonly ITypeRegistry<CaseIdentifier> consentIdentifierRegistry;
         private readonly EvidenceRegistry evidence;
 
         public ConsentTypeRegistry(
-            ITypeRegistry<ConsentIdentifier> consentIdentifierRegistry, EvidenceRegistry evidence)
+            ITypeRegistry<CaseIdentifier> consentIdentifierRegistry, EvidenceRegistry evidence)
         {
             this.consentIdentifierRegistry = consentIdentifierRegistry;
             this.evidence = evidence;

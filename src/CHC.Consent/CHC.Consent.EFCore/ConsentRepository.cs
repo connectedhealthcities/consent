@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
+using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
@@ -16,17 +17,29 @@ namespace CHC.Consent.EFCore
         private IStore<StudySubjectEntity> StudySubjects { get; }
         private IStore<PersonEntity> People { get; }
         private IStore<ConsentEntity> Consents { get; }
+        private IStore<CaseIdentifierEntity> CaseIdentifiers { get; }
+        private IStore<EvidenceEntity> Evidence { get; }
+        private ITypeRegistry<CaseIdentifier> CaseIdentifierRegistry { get; }
+        private ITypeRegistry<Evidence> EvidenceRegistry { get; }
 
         public ConsentRepository(
             IStore<StudyEntity> studies, 
             IStore<StudySubjectEntity> studySubjects,
             IStore<PersonEntity> people, 
-            IStore<ConsentEntity> consents)
+            IStore<ConsentEntity> consents,
+            IStore<CaseIdentifierEntity> caseIdentifiers,
+            IStore<EvidenceEntity> evidence,
+            ITypeRegistry<CaseIdentifier> caseIdentifierRegistry,
+            ITypeRegistry<Evidence> evidenceRegistry)
         {
             Studies = studies;
             StudySubjects = studySubjects;
             People = people;
             Consents = consents;
+            CaseIdentifiers = caseIdentifiers;
+            Evidence = evidence;
+            CaseIdentifierRegistry = caseIdentifierRegistry;
+            EvidenceRegistry = evidenceRegistry;
         }
 
         public StudyIdentity GetStudy(long studyId) =>
@@ -41,7 +54,8 @@ namespace CHC.Consent.EFCore
 
         private StudySubject GetStudySubject(IQueryable<StudySubjectEntity> entity)
         {
-            //explicit conversions required as EF thinks Study and Person might be null 
+            //explicit conversions required as EF thinks Study and Person might be null, and hence Ids could be nullable
+            // ReSharper disable RedundantCast
             return entity
                 .Select(
                     _ => new StudySubject(
@@ -50,6 +64,7 @@ namespace CHC.Consent.EFCore
                         _.SubjectIdentifier,
                         new PersonIdentity((long)_.Person.Id)))
                 .SingleOrDefault();
+            // ReSharper restore RedundantCast
         }
 
         public StudySubject FindStudySubject(StudyIdentity study, PersonIdentity personId)
@@ -57,7 +72,7 @@ namespace CHC.Consent.EFCore
             return GetStudySubject(SubjectsForStudy(study).Where(_ => _.Person.Id == personId.Id));
         }
 
-        public Common.Consent.Consent FindActiveConsent(StudySubject studySubject, IEnumerable<ConsentIdentifier> identifiers) =>
+        public ConsentIdentity FindActiveConsent(StudySubject studySubject, IEnumerable<CaseIdentifier> identifiers) =>
             throw new NotImplementedException();
 
         /// <inheritdoc />
@@ -67,10 +82,38 @@ namespace CHC.Consent.EFCore
             if(subject == null) throw new NotImplementedException($"StudySubject#{consent.StudySubject.Id} not found");
 
             var givenBy = People.Get(consent.GivenByPersonId);
-            if(givenBy == null) throw new NotImplementedException();
+            if(givenBy == null) throw new NotImplementedException($"Person#{consent.GivenByPersonId} not found");
 
             var saved = Consents.Add(
                 new ConsentEntity {DateProvided = consent.DateGiven, GivenBy = givenBy, StudySubject = subject});
+
+            foreach (var caseIdentifier in consent.CaseIdentifiers)
+            {
+                var typeName = CaseIdentifierRegistry[caseIdentifier.GetType()];
+
+                CaseIdentifiers.Add(
+                    new CaseIdentifierEntity
+                    {
+                        Value = new XmlMarshaller(caseIdentifier.GetType(), typeName)
+                            .MarshalledValue(caseIdentifier),
+                        Type = typeName,
+                        Consent = saved
+                    });
+            }
+
+            foreach (var evidence in consent.GivenEvidence)
+            {
+                var typeName = EvidenceRegistry[evidence.GetType()];
+
+                Evidence.Add(
+                    new GivenEvidenceEntity
+                    {
+                        Value = new XmlMarshaller(evidence.GetType(), typeName)
+                            .MarshalledValue(evidence),
+                        Type = typeName,
+                        Consent = saved
+                    });
+            }
 
             return new ConsentIdentity(saved.Id);
         }

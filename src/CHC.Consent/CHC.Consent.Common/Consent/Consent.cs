@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using CHC.Consent.Common.Infrastructure.Data;
 
 namespace CHC.Consent.Common.Consent
@@ -12,35 +13,25 @@ namespace CHC.Consent.Common.Consent
         }
     } 
     
-    public class Consent : IEntity
+    public class Consent  
     {
-        public long Id { get; set; }
-
         public StudySubject StudySubject { get; }
         
         public long GivenByPersonId { get; }
 
         public DateTime DateGiven { get; }
 
-        public Evidence GivenEvidence { get;  }
+        public IEnumerable<Evidence> GivenEvidence { get;  }
+        public IEnumerable<CaseIdentifier> CaseIdentifiers { get; }
 
         /// <inheritdoc />
-        public Consent(StudySubject studySubject, DateTime dateGiven, long givenByPersonId, Evidence givenEvidence, IEnumerable<ConsentIdentifier> identifiers)
+        public Consent(StudySubject studySubject, DateTime dateGiven, long givenByPersonId, IEnumerable<Evidence> givenEvidence, IEnumerable<CaseIdentifier> identifiers)
         {
             StudySubject = studySubject;
             GivenByPersonId = givenByPersonId;
             DateGiven = dateGiven;
-            GivenEvidence = givenEvidence;
-            foreach (var identifier in identifiers ?? Array.Empty<ConsentIdentifier>())
-            {
-                identifier.Update(this);
-            }
+            GivenEvidence = givenEvidence == null ? Array.Empty<Evidence>() : givenEvidence.ToArray();
+            CaseIdentifiers = identifiers == null ? Array.Empty<CaseIdentifier>() : identifiers.ToArray();
         }
-
-        public string PregnancyNumber { get; set; }
-
-        public DateTime? Withdrawn { get; set; }
-
-        public Evidence WithdrawnEvidence { get; set; }
     }
 }

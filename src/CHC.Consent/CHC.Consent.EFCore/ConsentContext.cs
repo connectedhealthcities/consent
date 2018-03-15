@@ -3,6 +3,7 @@ using CHC.Consent.EFCore.Configuration;
 using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace CHC.Consent.EFCore
 {
@@ -31,10 +32,17 @@ namespace CHC.Consent.EFCore
         /// <inheritdoc />
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            //TODO: Do we need to get (some of) these from somewhere else configurable
+            
             modelBuilder.ApplyConfiguration(new StudyConfiguration());
             modelBuilder.ApplyConfiguration(new StudySubjectEntityConfiguration());
             modelBuilder.ApplyConfiguration(new ConsentEntityConfiguration());
-            //TODO: Get these from somewhere else configurable
+            modelBuilder.ApplyConfiguration(new CaseIdentifierEntityConfiguration());
+            var evidenceEntityConfiguration = new EvidenceEntityConfiguration();
+            modelBuilder.ApplyConfiguration<EvidenceEntity>(evidenceEntityConfiguration);
+            modelBuilder.ApplyConfiguration<GivenEvidenceEntity>(evidenceEntityConfiguration);
+            modelBuilder.ApplyConfiguration<WithdrawnEvidenceEntity>(evidenceEntityConfiguration);
+            
             modelBuilder.ApplyConfiguration(new PersonEntityConfiguration());
             modelBuilder.ApplyConfiguration(new PersonIdentifierEntityConfiguration());
             

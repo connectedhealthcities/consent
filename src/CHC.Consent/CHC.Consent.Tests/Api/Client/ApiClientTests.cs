@@ -25,9 +25,8 @@ namespace CHC.Consent.Tests.Api.Client
     using Random = Testing.Utils.Random;
     using Api = CHC.Consent.Api.Client.Api;
     [Collection(WebServerCollection.Name)]
-    public class ApiClientTests : IDisposable
+    public class ApiClientTests
     {
-        private XUnitServiceClientTracingInterceptor tracingInterceptor;
         public ITestOutputHelper Output { get; }
         public WebServerFixture Fixture { get; }
 
@@ -36,9 +35,7 @@ namespace CHC.Consent.Tests.Api.Client
         {
             Output = output;
             Fixture = fixture;
-            ServiceClientTracing.IsEnabled = true;
-            tracingInterceptor = new XUnitServiceClientTracingInterceptor(Output);
-            ServiceClientTracing.AddTracingInterceptor(tracingInterceptor);
+            Fixture.Output = output;
         }
 
         [Theory, MemberData(nameof(IdentityTestData))]
@@ -167,14 +164,6 @@ namespace CHC.Consent.Tests.Api.Client
             Assert.NotNull(storedMedwayName);
             Assert.Equal(medwayName.FirstName, storedMedwayName.FirstName);
             Assert.Equal(medwayName.LastName, storedMedwayName.LastName);
-        }
-
-        
-        
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            ServiceClientTracing.RemoveTracingInterceptor(tracingInterceptor);
         }
     }
 }

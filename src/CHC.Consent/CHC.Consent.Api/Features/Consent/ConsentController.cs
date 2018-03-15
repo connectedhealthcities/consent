@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Net;
+using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
-using CHC.Consent.Common.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace CHC.Consent.Api.Features.Consent
 {
@@ -10,50 +13,67 @@ namespace CHC.Consent.Api.Features.Consent
     [Route("/consent")]
     public class ConsentController : Controller
     {
+        private ILogger Logger { get; }
         private readonly IConsentRepository consentRepository;
 
-        public ConsentController(IConsentRepository consentRepository)
+        
+        public ConsentController(IConsentRepository consentRepository, ILogger<ConsentController> logger=null)
         {
+            Logger = logger ?? NullLogger<ConsentController>.Instance;
             this.consentRepository = consentRepository;
         }
 
         [HttpPut]
+        [ProducesResponseType((int) HttpStatusCode.Created, Type=typeof(long))]
+        [ProducesResponseType((int) HttpStatusCode.SeeOther)]
+        [ProducesResponseType((int) HttpStatusCode.BadRequest)]
+        [AutoCommit]
         public IActionResult PutConsent([FromBody]ConsentSpecification specification)
         {
-            if (!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
-            
+            if (!ModelState.IsValid)
+            {
+                Logger.LogInformation("Invalid ModelState {@error}", new SerializableError(ModelState));
+                return new BadRequestObjectResult(ModelState);
+            }
             
 
             var studyId = consentRepository.GetStudy(specification.StudyId);
             if (studyId == null)
             {
+                Logger.LogWarning("Study#{studyId} not found", studyId);
                 return NotFound();
             }
             var studySubject = consentRepository.FindStudySubject(studyId, specification.SubjectIdentifier);
             if (studySubject == null)
             {
+                var subjectSpecification = new { specification.StudyId, specification.PersonId };
+                Logger.LogDebug("No existing studySubject - creating a new subject for {spec}", subjectSpecification);
                 var personId = new PersonIdentity( specification.PersonId );
                 
                 studySubject = consentRepository.FindStudySubject(studyId, personId );
-                if (studySubject != null) return BadRequest();
+                if (studySubject != null)
+                {
+                    Logger.LogError("There is already a study subject for {spec} - {identifier}", subjectSpecification, studySubject.SubjectIdentifier);
+                    return BadRequest();
+                }
 
                 studySubject = new StudySubject(studyId, specification.SubjectIdentifier, personId );
-                consentRepository.AddStudySubject(studySubject);
+                studySubject = consentRepository.AddStudySubject(studySubject);
             }
             else
             {
                 var existingConsent = consentRepository.FindActiveConsent(
                     studySubject,
-                    specification.CaseId ?? Array.Empty<ConsentIdentifier>());
+                    specification.CaseId ?? Array.Empty<CaseIdentifier>());
                 if (existingConsent != null)
                 {
                     //TODO: Decide what to do with evidence, etc, for existing consents, or if you can be consented twice
-                    return RedirectToAction("Get", new {id = 0});
+                    return RedirectToAction("Get", new {id = existingConsent.Id });
 
                 }
             }
 
-            consentRepository.AddConsent(
+            var newConsentId = consentRepository.AddConsent(
                 new Consent(
                     studySubject,
                     specification.DateGiven,
@@ -61,7 +81,7 @@ namespace CHC.Consent.Api.Features.Consent
                     specification.Evidence,
                     specification.CaseId));
 
-            return CreatedAtAction("Get", new {id = 0}, null);
+            return CreatedAtAction("Get", new {id = newConsentId.Id }, newConsentId.Id);
         }
 
         [HttpGet, Route("{id}")]

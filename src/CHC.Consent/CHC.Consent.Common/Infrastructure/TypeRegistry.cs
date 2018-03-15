@@ -24,8 +24,9 @@ namespace CHC.Consent.Common.Infrastructure
             TypeNameHelpers.GetIdentiferAttribute<TAttribute>(identifierType);
 
         public virtual void Add<T>() where T:TBaseType
-            => Add(typeof(T), GetIdentifierAttribute(typeof(T)));
-        
+            => Add(typeof(T));
+
+        public void Add(Type type) => Add(type, GetIdentifierAttribute(type));
 
         public virtual void Add(Type type, TAttribute attribute)
         {

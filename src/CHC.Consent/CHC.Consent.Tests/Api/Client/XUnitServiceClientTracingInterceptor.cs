@@ -8,7 +8,7 @@ namespace CHC.Consent.Tests.Api.Client
 {
     internal class XUnitServiceClientTracingInterceptor : IServiceClientTracingInterceptor
     {
-        public ITestOutputHelper Output { get; }
+        public ITestOutputHelper Output { get; set; }
 
         /// <inheritdoc />
         public XUnitServiceClientTracingInterceptor(ITestOutputHelper output)
@@ -16,10 +16,22 @@ namespace CHC.Consent.Tests.Api.Client
             Output = output;
         }
 
+        private void WriteLine(string message, params object[] args)
+        {
+            if(Output == null) return;
+            try
+            {
+                Output.WriteLine(message, args);
+            }
+            catch (InvalidOperationException)
+            {
+            }
+        }
+
         /// <inheritdoc />
         public void Configuration(string source, string name, string value)
         {
-            Output.WriteLine("Configuration: source:{0} name:{1} value:{2}", source, name, value);
+            WriteLine("Configuration: source:{0} name:{1} value:{2}", source, name, value);
         }
 
         /// <inheritdoc />
@@ -37,26 +49,26 @@ namespace CHC.Consent.Tests.Api.Client
         /// <inheritdoc />
         public void Information(string message)
         {
-            Output.WriteLine("Information: {0}", message);
+            WriteLine("Information: {0}", message);
         }
 
         /// <inheritdoc />
         public void ReceiveResponse(string invocationId, HttpResponseMessage response)
         {
-            Output.WriteLine("Response: InvocationId:{0} {1}",invocationId, response.AsFormattedString());
+            WriteLine("Response: InvocationId:{0} {1}",invocationId, response.AsFormattedString());
         }
 
         /// <inheritdoc />
         public void SendRequest(string invocationId, HttpRequestMessage request)
         {
             
-            Output.WriteLine("Response: InvocationId:{0} {1}", invocationId, request.AsFormattedString());
+            WriteLine("Response: InvocationId:{0} {1}", invocationId, request.AsFormattedString());
         }
 
         /// <inheritdoc />
         public void TraceError(string invocationId, Exception exception)
         {
-            Output.WriteLine("Error: InvocationId:{0} {1}", invocationId, exception);
+            WriteLine("Error: InvocationId:{0} {1}", invocationId, exception);
         }
     }
 }

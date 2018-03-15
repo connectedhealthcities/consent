@@ -11,7 +11,7 @@ namespace CHC.Consent.EFCore.Configuration
         {
             builder.ToTable("Consent");
             builder.Property<long>("StudySubjectId").IsRequired();
-            builder.HasOne(_ => _.StudySubject).WithMany().HasForeignKey("StudySubjectId").IsRequired();
+            builder.HasOne(_ => _.StudySubject).WithMany().HasForeignKey("StudySubjectId").IsRequired().OnDelete(DeleteBehavior.Restrict);
             builder.Property<long>("GivenByPersonId").IsRequired();
             builder.HasOne(_ => _.GivenBy).WithMany().HasForeignKey("GivenByPersonId").IsRequired();
 

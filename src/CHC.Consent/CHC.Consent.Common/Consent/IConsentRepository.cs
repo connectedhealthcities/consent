@@ -10,7 +10,7 @@ namespace CHC.Consent.Common.Consent
         StudySubject FindStudySubject(StudyIdentity study, PersonIdentity personId);
         StudySubject AddStudySubject(StudySubject studySubject);
         
-        Consent FindActiveConsent(StudySubject studySubject, IEnumerable<ConsentIdentifier> identifiers);
+        ConsentIdentity FindActiveConsent(StudySubject studySubject, IEnumerable<CaseIdentifier> identifiers);
         ConsentIdentity AddConsent(Consent consent);
     }
 }

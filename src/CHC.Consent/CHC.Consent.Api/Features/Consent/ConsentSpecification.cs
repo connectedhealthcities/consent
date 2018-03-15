@@ -18,9 +18,9 @@ namespace CHC.Consent.Api.Features.Consent
         public DateTime DateGiven { get; set; }
         
         [Required]
-        public Evidence Evidence { get; set; }
+        public Evidence[] Evidence { get; set; }
         
-        public ConsentIdentifier[] CaseId { get; set; }
+        public CaseIdentifier[] CaseId { get; set; }
         
         [Required]
         public long GivenBy { get; set; } 
