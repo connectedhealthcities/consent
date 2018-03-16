@@ -77,21 +77,18 @@ namespace CHC.Consent.DataImporter
                 {
                     Identifiers = personNode.XPathSelectElements("/person/identity/*")
                         .Select(_ => ParseIdentifier(_, personIdentifierTypes))
-                        .ToList(),
+                        .ToArray(),
                     MatchSpecifications =
                         personNode.XPathSelectElements("/person/lookup/match")
                             .Select(
                                 m => ParseMatchSpecification(m, personIdentifierTypes))
-                            .ToList()
+                            .ToArray()
                 };
 
-                personNode.XPathSelectElements("/person/consent");
-                var consent = new ConsentSpecification
-                {
-                    
-                }; 
-                    
-                    
+                var consentSpecifications = personNode.XPathSelectElements("/person/consent")
+                    .Select(_ => ParseConsent(_, personIdentifierTypes, caseIdentifierTypes, evidenceIdentityTypes))
+                    .ToArray();
+
 
                 yield return person;
             }
@@ -106,6 +103,7 @@ namespace CHC.Consent.DataImporter
             var date = (DateTime)consentNode.Attribute("dateGiven");
             var studyId = (long)consentNode.Attribute("studyId");
 
+            
 
             var identifiers = consentNode.XPathSelectElements("case/*").Select(
                     givenForIdentifierNode =>
@@ -115,6 +113,7 @@ namespace CHC.Consent.DataImporter
 
             var evidence = consentNode.XPathSelectElements("evidence/*")
                 .Select(evidenceNode => (Evidence) ParseObject(evidenceNode, evidenceIdentifiers))
+                .Concat(GetImportSourceEvidence(consentNode))
                 .ToArray();
 
             var givenBy = consentNode.XPathSelectElements("givenBy/match")
@@ -129,6 +128,20 @@ namespace CHC.Consent.DataImporter
                 Evidence = evidence,
                 GivenBy = givenBy
             };
+        }
+
+        private static IEnumerable<Evidence> GetImportSourceEvidence(XObject node)
+        {
+            if(string.IsNullOrEmpty(node.BaseUri)) yield break;
+            var evidence = new OrgConnectedhealthcitiesImportFileSource {BaseUri = node.BaseUri};
+            var xmlLineInfo = node as IXmlLineInfo;
+            if (xmlLineInfo?.HasLineInfo() ?? false)
+            {
+                evidence.LineNumber = xmlLineInfo.LineNumber;
+                evidence.LinePosition = xmlLineInfo.LinePosition;
+            }
+
+            yield return evidence;
         }
 
         private MatchSpecification ParseMatchSpecification(XContainer node, Dictionary<string, Type> personIdentifierTypes)

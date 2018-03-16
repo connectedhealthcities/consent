@@ -22,6 +22,8 @@ namespace CHC.Consent.Tests.DataImporter
 {
     public class XmlParserTests
     {
+        private const string XmlImportFileBaseUri = "test.xml";
+
         /// <inheritdoc />
         public XmlParserTests(ITestOutputHelper output)
         {
@@ -60,7 +62,8 @@ namespace CHC.Consent.Tests.DataImporter
 
         private static XmlReader CreateXmlReader(string fullXml)
         {
-            return XmlReader.Create(new StringReader(fullXml), new XmlReaderSettings{IgnoreWhitespace = true, IgnoreComments = true});
+            return XmlReader.Create(new StringReader(fullXml), new XmlReaderSettings{IgnoreWhitespace = true, IgnoreComments = true},
+                new XmlParserContext(null, null, null, null, null, null, baseURI:XmlImportFileBaseUri, null, XmlSpace.Default));
         }
 
         [Fact]
@@ -352,8 +355,8 @@ namespace CHC.Consent.Tests.DataImporter
                     <evidence>
                         <b4aevidence:medway>
                             <competentStatus>Delegated</competentStatus>
-                            <givenBy>Mother</givenBy>
-                            <takenBy>Betsey Trotwood</takenBy>
+                            <consentGivenBy>Mother</consentGivenBy>
+                            <consentTakenBy>Betsey Trotwood</consentTakenBy>
                         </b4aevidence:medway>
                     </evidence>
                 </consent>",
@@ -371,13 +374,36 @@ namespace CHC.Consent.Tests.DataImporter
                     [MedwayEvidence.TypeName] = typeof(UkNhsBradfordhospitalsBib4allEvidenceMedway)
                 }
             );
+
+            Assert.Collection(
+                consent.GivenBy,
+                m => Assert.Collection(m.Identifiers, NhsNumber("8877881")),
+                m => Assert.Collection(m.Identifiers, HospitalNumber("1122112"))
+            );
             
-                Assert.Collection(
-                    consent.GivenBy, 
-                    m => Assert.Collection( m.Identifiers, NhsNumber("8877881")),
-                    m => Assert.Collection( m.Identifiers, HospitalNumber("1122112"))
-                    );
-            
+            Assert.Collection(
+                consent.CaseId,
+                id => Assert.Equal("3", Assert.IsType<UkNhsBradfordhospitalsBib4allConsentPregnancyNumber>(id).Value)
+                );
+
+            Assert.Collection(
+                consent.Evidence,
+                e =>
+                {
+                    var medway = Assert.IsType<UkNhsBradfordhospitalsBib4allEvidenceMedway>(e);
+                    Assert.Equal("Delegated", medway.CompetentStatus);
+                    Assert.Equal("Mother", medway.ConsentGivenBy);
+                    Assert.Equal("Betsey Trotwood", medway.ConsentTakenBy);
+                },
+                e =>
+                {
+                    var fileInfo = Assert.IsType<OrgConnectedhealthcitiesImportFileSource>(e);
+                    Assert.Equal(XmlImportFileBaseUri, fileInfo.BaseUri);
+                    Assert.Equal(1, fileInfo.LineNumber);
+                    Assert.Equal(2, fileInfo.LinePosition);
+                }
+            );
+
         }
         
         

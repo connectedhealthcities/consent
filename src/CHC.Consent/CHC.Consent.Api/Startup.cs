@@ -63,6 +63,7 @@ namespace CHC.Consent.Api
             
             var evidenceRegistry = new EvidenceRegistry();
             evidenceRegistry.Add<MedwayEvidence>();
+            evidenceRegistry.Add<ImportFileEvidence>();
             services.AddSingleton(evidenceRegistry);
             services.AddSingleton<ITypeRegistry<Evidence>>(evidenceRegistry);
 

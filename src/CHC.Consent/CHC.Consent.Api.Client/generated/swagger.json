@@ -216,7 +216,8 @@
       "properties": {
         "$type": {
           "enum": [
-            "uk.nhs.bradfordhospitals.bib4all.evidence.medway"
+            "uk.nhs.bradfordhospitals.bib4all.evidence.medway",
+            "org.connectedhealthcities.import.file-source"
           ],
           "type": "string"
         }
@@ -310,6 +311,31 @@
       ],
       "x-ms-client-name": "MedwayEvidence",
       "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.evidence.medway"
+    },
+    "orgConnectedhealthcitiesImportFileSource": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/Evidence"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "baseUri": {
+              "type": "string"
+            },
+            "lineNumber": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "linePosition": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "ImportFileEvidence",
+      "x-ms-discriminator-value": "org.connectedhealthcities.import.file-source"
     },
     "ukNhsBradfordhospitalsBib4allConsentPregnancyNumber": {
       "allOf": [
@@ -500,6 +526,5 @@
       "x-ms-client-name": "MedwayBirthOrder",
       "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.medway.birth-order"
     }
-  },
-  "securityDefinitions": {}
+  }
 }
