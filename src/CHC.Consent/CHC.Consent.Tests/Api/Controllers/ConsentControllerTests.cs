@@ -1,42 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Text;
-using CHC.Consent.Api.Client;
-using CHC.Consent.Api.Client.Models;
 using CHC.Consent.Api.Features.Consent;
+using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Consent.Identifiers;
-using CHC.Consent.EFCore;
-using CHC.Consent.EFCore.Consent;
-using CHC.Consent.EFCore.Entities;
 using CHC.Consent.Testing.Utils;
 using FakeItEasy;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Rest;
 using Xunit;
-using Xunit.Abstractions;
-using ConsentSpecification = CHC.Consent.Api.Features.Consent.ConsentSpecification;
-using Evidence = CHC.Consent.Common.Consent.Evidence;
 using Random = CHC.Consent.Testing.Utils.Random;
 
 namespace CHC.Consent.Tests.Api.Controllers
 {
     using Consent = Common.Consent.Consent;
-    using CaseIdentifier = Common.Consent.CaseIdentifier;
+    
     public class ConsentControllerTests 
     {
         public class ConsentControllerTestBase
         {
             protected IActionResult Result;
             protected readonly Study Study;
-            protected readonly long GivenByPersonId;
             protected readonly StudySubject StudySubject;
             protected Consent CreatedConsent;
             protected readonly IConsentRepository ConsentRepository;
@@ -71,7 +57,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 long? studyId = null,
                 string subjectIdentifier = null,
                 long? personId = null,
-                params Common.Consent.CaseIdentifier[] identifiers
+                params CaseIdentifier[] identifiers
             )
             {
                 Result = CreateConsentController(consentRepository??ConsentRepository)
@@ -96,7 +82,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 long? studyId = null,
                 string subjectIdentifier = null,
                 long? personId = null,
-                params Common.Consent.CaseIdentifier[] identifiers
+                params CaseIdentifier[] identifiers
             ) =>
                 RecordConsent(
                     new[] {evidence},
@@ -261,7 +247,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             [Fact]
             public void ReturnsFoundResponse()
             {
-                Assert.IsType<RedirectToActionResult>(Result);
+                Assert.IsType<SeeOtherOjectActionResult>(Result);
             }
             
             [Fact]
@@ -304,72 +290,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             {
                 Assert.NotNull(CreatedConsent);
             }
-
-           
         }
 
-    }
-
-    [Collection(WebServerCollection.Name)]
-    public class ConsentControllerIntegrationTests
-    {
-        public ITestOutputHelper Output { get; }
-        private HttpClient Client { get; }
-        public TestServer Server { get; set; }
-
-
-        /// <inheritdoc />
-        public ConsentControllerIntegrationTests(WebServerFixture fixture, ITestOutputHelper output)
-        {
-            Output = output;
-            fixture.Output = output;
-            Client = fixture.Client;
-            Server = fixture.Server;
-        }
-
-        [Fact()]
-        public async void SavesConsent()
-        {
-            var consentContext = Server.Host.Services.GetService<ConsentContext>();
-            
-            var study = consentContext.Add(new StudyEntity{Name = Random.String()}).Entity;
-            var person = consentContext.Add(new PersonEntity()).Entity;
-            consentContext.SaveChanges();
-            
-            var client = new CHC.Consent.Api.Client.Api(Client, disposeHttpClient:false);
-            var api = (IApi) client;
-
-            var newConsentId = api.ConsentPut(
-                new CHC.Consent.Api.Client.Models.ConsentSpecification
-                {
-                    StudyId = study.Id,
-                    CaseId = new CHC.Consent.Api.Client.Models.CaseIdentifier[]
-                        {new UkNhsBradfordhospitalsBib4allConsentPregnancyNumber("1"),},
-                    DateGiven = Random.Date().Date,
-                    GivenBy = person.Id,
-                    PersonId = person.Id,
-                    SubjectIdentifier = Random.String(15),
-                    Evidence = new CHC.Consent.Api.Client.Models.Evidence[]
-                    {
-                        new UkNhsBradfordhospitalsBib4allEvidenceMedway
-                        {
-                            CompetentStatus = "Competent"
-                        }
-                    }
-                });
-            
-            Assert.NotNull(newConsentId);
-            var consentEntity = consentContext.Set<ConsentEntity>()
-                .Include(_ => _.StudySubject)
-                .ThenInclude(_ => _.Study)
-                .Include(_ => _.StudySubject)
-                .ThenInclude(_ => _.Person)
-                .Include(_ => _.GivenBy)
-                .Single(_ => _.Id == newConsentId);
-            Assert.NotNull(consentEntity);
-            Assert.Equal(1, consentContext.Set<GivenEvidenceEntity>().Count(_ => _.Consent.Id == newConsentId));
-            Assert.Equal(1, consentContext.Set<CaseIdentifierEntity>().Count(_ => _.Consent.Id == newConsentId));
-
-        }
     }
 }

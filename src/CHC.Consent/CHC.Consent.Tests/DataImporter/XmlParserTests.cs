@@ -179,7 +179,7 @@ namespace CHC.Consent.Tests.DataImporter
         public void CanParseWholePerson()
         {
             const string personXml = @"<?xml version=""1.0""?>
-<people xmlns:nhs=""uk.nhs"" xmlns:bfd=""uk.nhs.bradfordhospitals"" xmlns:mdw=""uk.nhs.bradfordhospitals.bib4all.medway"">
+<people xmlns:nhs=""uk.nhs"" xmlns:bfd=""uk.nhs.bradfordhospitals"" xmlns:mdw=""uk.nhs.bradfordhospitals.bib4all.medway"" xmlns:b4acase=""uk.nhs.bradfordhospitals.bib4all.consent"" xmlns:b4aevidence=""uk.nhs.bradfordhospitals.bib4all.evidence"">
     <person>
         <identity>
             <nhs:nhsNumber>4099999999</nhs:nhsNumber>
@@ -206,23 +206,28 @@ namespace CHC.Consent.Tests.DataImporter
             <match><nhs:nhsNumber>4099999999</nhs:nhsNumber></match>
             <match><bfd:hospitalNumber>RAE9999999</bfd:hospitalNumber></match>
         </lookup>
-        <consent dateGiven=""2017-10-14"" studyId=""TBC"">
-            <givenFor>
-                <mdw:pregnancyNumber>2</mdw:pregnancyNumber>
-            </givenFor>
+        <consent dateGiven=""2017-10-14"" studyId=""1"">
+			<givenBy>
+				<match><nhs:nhsNumber>4099999999</nhs:nhsNumber></match>
+				<match><bfd:hospitalNumber>RAE9999999</bfd:hospitalNumber></match>
+			</givenBy>
+            <case>
+                <b4acase:pregnancyNumber>2</b4acase:pregnancyNumber>
+            </case>
             <evidence>
-                <mdw:evidence>
+                <b4aevidence:medway>
                     <competentStatus></competentStatus>
-                    <givenBy></givenBy>
-                    <takenBy>Betsey Trotwood</takenBy>
-                </mdw:evidence>
+                    <consentGivenBy></consentGivenBy>
+                    <consentTakenBy>Betsey Trotwood</consentTakenBy>
+                </b4aevidence:medway>
             </evidence>
         </consent>
     </person>
 </people>";
 
             var xmlReader = CreateXmlReader(personXml);
-            var person = new XmlParser(Logger).GetPeople(xmlReader).Single();
+            var specification = new XmlParser(Logger).GetPeople(xmlReader).Single();
+            var person = specification.PersonSpecification;
 
             Action<IPersonIdentifier> Address(
                 string line1 = null,

@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Buffers;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Common.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -30,6 +33,7 @@ namespace CHC.Consent.Api.Infrastructure.Web
         private readonly ILoggerFactory loggerFactory;
         private readonly MvcOptions mvcOptions;
         private readonly JsonSerializerSettings serializerSettings;
+        private readonly ILogger<IModelBinderProvider> Logger;
 
         public IdentityModelBinderProvider(
             ArrayPool<char> charPool,
@@ -47,27 +51,53 @@ namespace CHC.Consent.Api.Infrastructure.Web
             this.loggerFactory = loggerFactory;
             this.mvcOptions = mvcOptions;
             this.serializerSettings = serializerSettings;
+            Logger = this.loggerFactory.CreateLogger<IModelBinderProvider>();
         }
 
         /// <inheritdoc />
         public IModelBinder GetBinder(ModelBinderProviderContext context)
         {
             if (context.BindingInfo.BindingSource != BindingSource.Body) return null;
-            if (context.Metadata.ModelType != ModelType) return null;
+            if (ShouldBindTo(context) 
+                
+                )
+            {
+                Logger.LogDebug(
+                    "Providing binder for Body of type {modelType}",
+                    ModelType);
 
-            return new BodyModelBinder(
-                new IInputFormatter[]
-                {
-                    new JsonInputFormatter(
-                        NullLogger.Instance,
-                        serializerSettings,
-                        charPool,
-                        objectPoolProvider,
-                        suppressInputFormatterBuffering)
-                },
-                readerFactory,
-                loggerFactory,
-                mvcOptions);
+                return new BodyModelBinder(
+                    new IInputFormatter[]
+                    {
+                        new JsonInputFormatter(
+                            NullLogger.Instance,
+                            serializerSettings,
+                            charPool,
+                            objectPoolProvider,
+                            suppressInputFormatterBuffering)
+                    },
+                    readerFactory,
+                    loggerFactory,
+                    mvcOptions);
+            }
+
+            return null;
+        }
+
+        private static bool ShouldBindTo(ModelBinderProviderContext context)
+        {
+            var targetType = context.Metadata.ModelType;
+            return targetType == ModelType 
+                   || (targetType.IsArray && targetType.GetElementType() == ModelType)
+                || IsEnumerableOfModelType(targetType);
+        }
+
+        private static bool IsEnumerableOfModelType(Type type)
+        {
+            if (!typeof(IEnumerable).IsAssignableFrom(type)) return false;
+            return type.GetInterfaces().Where(_ => _.IsGenericType && _.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                    .Select(_ => _.GetGenericArguments()[0]).FirstOrDefault()
+                == ModelType;
         }
     }
 }

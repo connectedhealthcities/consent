@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace CHC.Consent.EFCore
 {
-    public class ConsentContextDbContextFactory : IDesignTimeDbContextFactory<ConsentContext>
+    /*public class ConsentContextDbContextFactory : IDesignTimeDbContextFactory<ConsentContext>
     {
         /// <inheritdoc />
         public ConsentContext CreateDbContext(string[] args)
@@ -16,5 +16,5 @@ namespace CHC.Consent.EFCore
 
             return new ConsentContext(optionsBuilder.Options);
         }
-    }
+    }*/
 }

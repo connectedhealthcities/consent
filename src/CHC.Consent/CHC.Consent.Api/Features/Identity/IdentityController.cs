@@ -56,9 +56,23 @@ namespace CHC.Consent.Api.Features.Identity
             return Ok(IdentityRepository.GetPersonIdentities(id));
         }
 
+        [HttpPost("search")]
+        [Produces(typeof(SearchResult))]
+        public IActionResult FindPerson([FromBody, Required] MatchSpecification[] match)
+        {
+            if(!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
+            
+            var person = IdentityRepository.FindPerson(match.Select(_ => _.Identifiers));
+
+            return
+                person == null
+                    ? (IActionResult) NotFound()
+                    : Ok(new SearchResult {PersonId = person});
+        }
+
         [HttpPut]
-        [ProducesResponseType((int) HttpStatusCode.Created, Type=typeof(long))]
-        [ProducesResponseType((int) HttpStatusCode.SeeOther)]
+        [ProducesResponseType((int) HttpStatusCode.Created, Type=typeof(PersonCreatedResult))]
+        [ProducesResponseType((int) HttpStatusCode.SeeOther, Type=typeof(PersonCreatedResult))]
         [AutoCommit]
         public IActionResult PutPerson([FromBody, Required]PersonSpecification specification)
         {
@@ -71,12 +85,16 @@ namespace CHC.Consent.Api.Features.Identity
             if (person == null)
             {
                 person = IdentityRepository.CreatePerson(specification.Identifiers);
-                return CreatedAtAction("GetPerson", new {id = person.Id}, person.Id);
+                return CreatedAtAction("GetPerson", new {id = person.Id}, new PersonCreatedResult {PersonId = person});
             }
             else
             {
                 IdentityRepository.UpdatePerson(person, specification.Identifiers);
-                return new SeeOtherActionResult("GetPerson", new {id = person.Id});
+
+                return new SeeOtherOjectActionResult(
+                    "GetPerson",
+                    routeValues: new {id = person.Id},
+                    result: new PersonCreatedResult {PersonId = person});
             }
         }
     }

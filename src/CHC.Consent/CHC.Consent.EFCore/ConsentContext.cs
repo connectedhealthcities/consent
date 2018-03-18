@@ -28,6 +28,7 @@ namespace CHC.Consent.EFCore
 
         public virtual DbSet<PersonEntity> People { get; set; }
         public virtual DbSet<StudyEntity> Studies { get; set; }
+        public virtual DbSet<SubjectIdentifierEntity> SubjectIdentifiers { get; set; }
         
         /// <inheritdoc />
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -45,8 +46,8 @@ namespace CHC.Consent.EFCore
             
             modelBuilder.ApplyConfiguration(new PersonEntityConfiguration());
             modelBuilder.ApplyConfiguration(new PersonIdentifierEntityConfiguration());
-            
-            
+
+            modelBuilder.ApplyConfiguration(new SubjectIdentifierEntityConfiguration());
         }
     }
 }

@@ -3,6 +3,7 @@ using CHC.Consent.Api.Features.Consent;
 using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Api.Infrastructure.Web;
+using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Consent.Identifiers;
@@ -74,6 +75,9 @@ namespace CHC.Consent.Api
                     ITypeRegistry<IPersonIdentifier>, PersonSpecification>>();
             services
                 .AddTransient<IPostConfigureOptions<MvcOptions>, IdentityModelBinderProviderConfiguration<
+                    ITypeRegistry<IPersonIdentifier>, MatchSpecification>>();
+            services
+                .AddTransient<IPostConfigureOptions<MvcOptions>, IdentityModelBinderProviderConfiguration<
                     ConsentTypeRegistry, ConsentSpecification>>();
             
             services
@@ -95,6 +99,7 @@ namespace CHC.Consent.Api
             
             services.AddScoped<IIdentityRepository, IdentityRepository>();
             services.AddScoped<IConsentRepository, ConsentRepository>();
+            services.AddScoped<ISubjectIdentifierRepository, SubjectIdentifierRepository>();
 
             services.AddDbContext<ConsentContext>(
                 ConfigureDatabaseOptions);

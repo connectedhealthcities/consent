@@ -126,7 +126,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                     () => identityRepository.UpdatePerson(existingPerson,
                         A<IEnumerable<IPersonIdentifier>>.That.IsSameSequenceAs(nhsNumberIdentifier, bradfordHospitalNumberIdentifier)))
                 .MustHaveHappenedOnceExactly();
-            Assert.IsType<SeeOtherActionResult>(result);
+            Assert.IsType<SeeOtherOjectActionResult>(result);
         }
         
         [Fact]

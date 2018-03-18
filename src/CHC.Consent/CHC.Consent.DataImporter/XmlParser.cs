@@ -29,14 +29,14 @@ namespace CHC.Consent.DataImporter
             Log = logger;
         }
 
-        public IEnumerable<PersonSpecification> GetPeople(StreamReader source)
+        public IEnumerable<ImportedPersonSpecification> GetPeople(StreamReader source)
         {
             var xmlReader = XmlReader.Create(source);
 
             return GetPeople(xmlReader);
         }
 
-        public IEnumerable<PersonSpecification> GetPeople(XmlReader xmlReader)
+        public IEnumerable<ImportedPersonSpecification> GetPeople(XmlReader xmlReader)
         {
             var personIdentifierTypes = typeof(PersonSpecification).Assembly.GetExportedTypes()
                 .Where(type => type.IsSubclassOf(typeof(IPersonIdentifier)))
@@ -89,8 +89,13 @@ namespace CHC.Consent.DataImporter
                     .Select(_ => ParseConsent(_, personIdentifierTypes, caseIdentifierTypes, evidenceIdentityTypes))
                     .ToArray();
 
+                //TODO: Catch, record, log, and return details of exceptions 
 
-                yield return person;
+                yield return new ImportedPersonSpecification
+                {
+                    PersonSpecification = person,
+                    ConsentSpecifications = consentSpecifications
+                };
             }
         }
 
@@ -103,7 +108,7 @@ namespace CHC.Consent.DataImporter
             var date = (DateTime)consentNode.Attribute("dateGiven");
             var studyId = (long)consentNode.Attribute("studyId");
 
-            
+            //TODO: better error recording and typey stuff here
 
             var identifiers = consentNode.XPathSelectElements("case/*").Select(
                     givenForIdentifierNode =>
@@ -113,8 +118,11 @@ namespace CHC.Consent.DataImporter
 
             var evidence = consentNode.XPathSelectElements("evidence/*")
                 .Select(evidenceNode => (Evidence) ParseObject(evidenceNode, evidenceIdentifiers))
-                .Concat(GetImportSourceEvidence(consentNode))
                 .ToArray();
+            if (evidence.Any())
+            {
+                evidence = evidence.Concat(GetImportSourceEvidence(consentNode)).ToArray();
+            }
 
             var givenBy = consentNode.XPathSelectElements("givenBy/match")
                 .Select(_ => ParseMatchSpecification(_, personIdentifiers))
@@ -184,11 +192,14 @@ namespace CHC.Consent.DataImporter
 
             if (identifierNode.IsEmpty || identifierNode.FirstNode.NodeType == XmlNodeType.Text)
             {
+                //TODO: throw error if it's the wrong number of parameters for the constructor 
                 var node = identifierNode.FirstNode;
                 var stringValue = ((XText) node)?.Value;
-                var type = constructor.Parameters[0].ParameterType;
+                var parameterInfo = constructor.Parameters[0];
+                var type = parameterInfo.ParameterType;
 
-                var typedValue = ConvertStringToCorrectType(stringValue, type);
+                var typedValue = TypedValue(identifierNode, stringValue, parameterInfo);
+                Log.LogTrace("Constructing {type} with {@typedValue} for {parameter}", type, typedValue, parameterInfo);
                 return constructor.Constructor.Invoke(new[] {typedValue});
             }
 
@@ -213,12 +224,37 @@ namespace CHC.Consent.DataImporter
                 else
                 {
                     var value = (parameterElement.FirstNode as XText)?.Value;
-                    parameterValues.Add(ConvertStringToCorrectType(value, parameter.ParameterType));
+                    parameterValues.Add(TypedValue(identifierNode, value, parameter));
                 }
             }
 
             Log.LogTrace("Constructing {type} with {@parametersValues}", identifierType, parameterValues);
             return constructor.Constructor.Invoke(parameterValues.ToArray());
+        }
+
+        private object TypedValue(XElement identifierNode, string stringValue, ParameterInfo parameterInfo)
+        {
+            object typedValue;
+            var parameterType = parameterInfo.ParameterType;
+            try
+            {
+                typedValue = ConvertStringToCorrectType(stringValue, parameterType);
+                
+            }
+            catch (FormatException e)
+            {
+                Log.LogError(
+                    e,
+                    "Error converting {value} to {type} for parameter {parameter}",
+                    stringValue,
+                    parameterType,
+                    parameterInfo.Name);
+                throw new XmlParseException(
+                    identifierNode,
+                    $"Error converting value to {parameterType} for {parameterInfo.Name}");
+            }
+
+            return typedValue;
         }
 
         private static object ConvertStringToCorrectType(string stringValue, Type type)
@@ -239,12 +275,12 @@ namespace CHC.Consent.DataImporter
             ? Enum.Parse(type, stringValue)
             : Convert.ChangeType(stringValue, type);
 
-        private static readonly Regex lowerCaseFollowedByUpperCase = new Regex(
+        private static readonly Regex LowerCaseFollowedByUpperCase = new Regex(
             @"(\p{Ll})(\p{Lu})",
             RegexOptions.Compiled);
         private static string KebabCase(string name)
         {
-            return lowerCaseFollowedByUpperCase.Replace(name, match => match.Groups[1] + "-" + match.Groups[2].Value.ToLowerInvariant());
+            return LowerCaseFollowedByUpperCase.Replace(name, match => match.Groups[1] + "-" + match.Groups[2].Value.ToLowerInvariant());
         }
     }
 }

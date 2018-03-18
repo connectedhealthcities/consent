@@ -122,14 +122,15 @@ namespace CHC.Consent.EFCore.Tests
             
             
             Assert.NotNull(addedSubject);
-            Assert.NotEqual(0, addedSubject.Id);
             Assert.Equal(studyId, addedSubject.StudyId);
             Assert.Equal(personId, addedSubject.PersonId);
             Assert.Equal(subjectIdentifier, addedSubject.SubjectIdentifier);
 
-            var studySubjectEntity = readContext.Set<StudySubjectEntity>().Find(addedSubject.Id);
-            readContext.Entry(studySubjectEntity).Reference(_ => _.Study).Load();
-            readContext.Entry(studySubjectEntity).Reference(_ => _.Person).Load();
+            var studySubjectEntity = readContext.Set<StudySubjectEntity>()
+                .Include(_ => _.Study)
+                .Include(_ => _.Person)
+                .SingleOrDefault(
+                _ => _.Study.Id == addedSubject.StudyId && _.Person.Id == addedSubject.PersonId);
             Assert.Equal(subjectIdentifier, studySubjectEntity.SubjectIdentifier);
             Assert.Equal(studyId.Id, studySubjectEntity.Study.Id);
             Assert.Equal(personId.Id, studySubjectEntity.Person.Id);
@@ -150,7 +151,7 @@ namespace CHC.Consent.EFCore.Tests
             createContext.SaveChanges();
             
             var personId = new PersonIdentity(person.Id);
-            var studySubject = new StudySubject(studySubjectEntity.Id, studyId, subjectIdentifier, personId);
+            var studySubject = new StudySubject(studyId, subjectIdentifier, personId);
 
             var dateGiven = Random.Date().Date;
 
@@ -172,7 +173,7 @@ namespace CHC.Consent.EFCore.Tests
             Assert.Equal(studySubjectEntity.Id, consentEntity.StudySubject.Id);
             Assert.Equal(personId.Id, consentEntity.GivenBy.Id);
             Assert.Equal(dateGiven, consentEntity.DateProvided);
-            Assert.Equal(null, consentEntity.DateWithdrawn);
+            Assert.Null(consentEntity.DateWithdrawn);
         }
         
         
@@ -191,7 +192,7 @@ namespace CHC.Consent.EFCore.Tests
             createContext.SaveChanges();
             
             var personId = new PersonIdentity(person.Id);
-            var studySubject = new StudySubject(studySubjectEntity.Id, studyId, subjectIdentifier, personId);
+            var studySubject = new StudySubject(studyId, subjectIdentifier, personId);
 
             var dateGiven = Random.Date().Date;
 
@@ -233,7 +234,7 @@ namespace CHC.Consent.EFCore.Tests
             createContext.SaveChanges();
             
             var personId = new PersonIdentity(person.Id);
-            var studySubject = new StudySubject(studySubjectEntity.Id, studyId, subjectIdentifier, personId);
+            var studySubject = new StudySubject(studyId, subjectIdentifier, personId);
 
             var dateGiven = Random.Date().Date;
 
@@ -278,7 +279,7 @@ namespace CHC.Consent.EFCore.Tests
         [Fact]
         public void CanFindStudySubjectByStudyAndSubjectIdentifier()
         {
-            Assert.Equal(consentedStudySubject.Id, repository.FindStudySubject(studyId, consentedStudySubject.SubjectIdentifier).Id);
+            AssertStudySubject(consentedStudySubject, repository.FindStudySubject(studyId, consentedStudySubject.SubjectIdentifier));
         }
 
         [Fact]
@@ -290,9 +291,9 @@ namespace CHC.Consent.EFCore.Tests
         [Fact]
         public void CanFindStudySubjectByStudyAndPersonId()
         {
-            Assert.Equal(consentedStudySubject.Id, repository.FindStudySubject(studyId, consentedPersonId).Id);
+            AssertStudySubject(consentedStudySubject, repository.FindStudySubject(studyId, consentedPersonId));
         }
-        
+
         [Fact]
         public void ReturnsNullStudySubjectForNonexistantStudyAndPersonId()
         {
@@ -306,13 +307,12 @@ namespace CHC.Consent.EFCore.Tests
                 activeConsent.Id,
                 repository.FindActiveConsent(
                     new StudySubject(
-                        consentedStudySubject.Id,
                         studyId,
                         consentedStudySubject.SubjectIdentifier,
                         consentedPersonId),
                     Enumerable.Empty<CaseIdentifier>()).Id);
         }
-        
+
         [Fact()]
         public void ReturnsNullConsentForAnStudySubjectWithOnlyWithdrawnConsent()
         {
@@ -321,7 +321,7 @@ namespace CHC.Consent.EFCore.Tests
                     new StudySubject(studyId, "Unconsented", unconsentedPersonId),
                     Enumerable.Empty<CaseIdentifier>()));
         }
-        
+
         [Fact()]
         public void ReturnsNullConsentForAnUnknownStudySubject()
         {
@@ -349,7 +349,6 @@ namespace CHC.Consent.EFCore.Tests
             Assert.NotNull(
                 repository.FindActiveConsent(
                     new StudySubject(
-                        consentedStudySubject.Id,
                         studyId,
                         consentedStudySubject.SubjectIdentifier,
                         consentedPersonId),
@@ -359,7 +358,6 @@ namespace CHC.Consent.EFCore.Tests
             Assert.Null(
                 repository.FindActiveConsent(
                     new StudySubject(
-                        consentedStudySubject.Id,
                         studyId,
                         consentedStudySubject.SubjectIdentifier,
                         consentedPersonId),
@@ -367,6 +365,13 @@ namespace CHC.Consent.EFCore.Tests
                 )
             );
 
+        }
+
+        private void AssertStudySubject(StudySubjectEntity expected, StudySubject actual)
+        {
+            Assert.Equal(expected.Study.Id, actual.StudyId);
+            Assert.Equal(expected.Person.Id, actual.PersonId.Id);
+            Assert.Equal(expected.SubjectIdentifier, actual.SubjectIdentifier);
         }
     }
     

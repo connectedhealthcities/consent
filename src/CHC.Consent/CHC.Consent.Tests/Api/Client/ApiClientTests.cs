@@ -55,7 +55,7 @@ namespace CHC.Consent.Tests.Api.Client
 
             Assert.NotNull(response);
             
-            var identities = api.IdentitiesByIdGet(response.Value);
+            var identities = api.IdentitiesByIdGet(response.PersonId);
 
             Output.WriteLine(string.Join("\n", identities.Select(_ => _.ToString())));
 
@@ -157,7 +157,7 @@ namespace CHC.Consent.Tests.Api.Client
 
             Assert.NotNull(response);
             
-            var identities = api.IdentitiesByIdGet(response.Value);
+            var identities = api.IdentitiesByIdGet(response.PersonId);
 
             Assert.Equal(nhsNumber.Value, Assert.Single(identities.OfType<UkNhsNhsNumber>()).Value);
             var storedMedwayName = Assert.Single(identities.OfType<UkNhsBradfordhospitalsBib4allMedwayName>());

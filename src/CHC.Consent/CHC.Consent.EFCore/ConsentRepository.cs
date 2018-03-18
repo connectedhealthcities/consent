@@ -59,7 +59,6 @@ namespace CHC.Consent.EFCore
             return entity
                 .Select(
                     _ => new StudySubject(
-                        _.Id,
                         new StudyIdentity((long)_.Study.Id),
                         _.SubjectIdentifier,
                         new PersonIdentity((long)_.Person.Id)))
@@ -69,19 +68,23 @@ namespace CHC.Consent.EFCore
 
         public StudySubject FindStudySubject(StudyIdentity study, PersonIdentity personId)
         {
-            return GetStudySubject(SubjectsForStudy(study).Where(_ => _.Person.Id == personId.Id));
+            return GetStudySubject(FindStudySubjectForPerson(study, personId));
+        }
+
+        private IQueryable<StudySubjectEntity> FindStudySubjectForPerson(StudyIdentity study, PersonIdentity personId)
+        {
+            return SubjectsForStudy(study).Where(_ => _.Person.Id == personId.Id);
         }
 
         public ConsentIdentity FindActiveConsent(StudySubject studySubject, IEnumerable<CaseIdentifier> caseIdentifiers)
         {
-            var consents = studySubject.Id == null
-                ? Consents.Where(
+            var consents =
+                Consents.Where(
                     _ => _.StudySubject.Person.Id == studySubject.PersonId.Id &&
                          _.StudySubject.Study.Id == studySubject.StudyId.Id &&
-                         _.StudySubject.SubjectIdentifier == studySubject.SubjectIdentifier)
-                : Consents.Where(
-                    _ => _.StudySubject.Id == studySubject.Id && _.DateProvided <= DateTime.Now &&
+                         _.StudySubject.SubjectIdentifier == studySubject.SubjectIdentifier &&
                          _.DateWithdrawn == null);
+                
 
             if (!caseIdentifiers.Any())
             {
@@ -106,9 +109,9 @@ namespace CHC.Consent.EFCore
         /// <inheritdoc />
         public ConsentIdentity AddConsent(Common.Consent.Consent consent)
         {
-            var subject = consent.StudySubject.Id.HasValue ? StudySubjects.Get(consent.StudySubject.Id.Value) : null;
+            var subject = FindStudySubjectForPerson(consent.StudySubject.StudyId, consent.StudySubject.PersonId).FirstOrDefault();
             
-            if(subject == null) throw new NotImplementedException($"StudySubject#{consent.StudySubject.Id} not found");
+            if(subject == null) throw new NotImplementedException($"StudySubject#{consent.StudySubject} not found");
 
             var givenBy = People.Get(consent.GivenByPersonId);
             if(givenBy == null) throw new NotImplementedException($"Person#{consent.GivenByPersonId} not found");
@@ -169,7 +172,6 @@ namespace CHC.Consent.EFCore
                 });
 
             return new StudySubject(
-                saved.Id,
                 new StudyIdentity((long) saved.Study.Id),
                 saved.SubjectIdentifier,
                 new PersonIdentity((long) saved.Person.Id));

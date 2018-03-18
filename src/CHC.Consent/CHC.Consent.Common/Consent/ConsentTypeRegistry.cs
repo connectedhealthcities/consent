@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Infrastructure;
 using JetBrains.Annotations;
 
@@ -14,20 +15,15 @@ namespace CHC.Consent.Common.Consent
         private readonly EvidenceRegistry evidence;
 
         public ConsentTypeRegistry(
-            ITypeRegistry<CaseIdentifier> consentIdentifierRegistry, EvidenceRegistry evidence)
+            ITypeRegistry<CaseIdentifier> consentIdentifiers, 
+            ITypeRegistry<Evidence> evidences,
+            ITypeRegistry<IPersonIdentifier> personIdentifiers)
         {
-            this.consentIdentifierRegistry = consentIdentifierRegistry;
-            this.evidence = evidence;
+            Registries = new List<ITypeRegistry> {consentIdentifiers, evidences, personIdentifiers};
         }
 
-        private IEnumerable<ITypeRegistry> Registries
-        {
-            get
-            {
-                yield return consentIdentifierRegistry;
-                yield return evidence;
-            }
-        }
+        private IEnumerable<ITypeRegistry> Registries { get; }
+        
 
         /// <inheritdoc />
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

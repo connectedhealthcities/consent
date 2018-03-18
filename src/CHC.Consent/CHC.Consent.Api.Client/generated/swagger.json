@@ -44,10 +44,20 @@
             }
           },
           "303": {
-            "description": "Redirect"
+            "description": "Redirect",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
+            }
           }
         }
       }
@@ -118,6 +128,49 @@
         }
       }
     },
+    "/identities/search": {
+      "post": {
+        "tags": [
+          "Identity"
+        ],
+        "operationId": "IdentitiesSearchPost",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json",
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "match",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MatchSpecification"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/SearchResult"
+            }
+          }
+        }
+      }
+    },
     "/identities": {
       "put": {
         "tags": [
@@ -152,12 +205,144 @@
           "201": {
             "description": "Success",
             "schema": {
-              "format": "int64",
-              "type": "integer"
+              "$ref": "#/definitions/PersonCreatedResult"
             }
           },
           "303": {
-            "description": "Redirect"
+            "description": "Redirect",
+            "schema": {
+              "$ref": "#/definitions/PersonCreatedResult"
+            }
+          }
+        }
+      }
+    },
+    "/studies/{studyId}/subjects/byId/{stubjectId}": {
+      "get": {
+        "tags": [
+          "StudySubject"
+        ],
+        "operationId": "StudiesByStudyIdSubjectsByIdByStubjectIdGet",
+        "consumes": [
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "studyId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "subjectIdentifier",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "stubjectId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/StudySubject"
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/studies/{studyId}/subjects": {
+      "get": {
+        "tags": [
+          "StudySubject"
+        ],
+        "operationId": "StudiesByStudyIdSubjectsGet",
+        "consumes": [
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "studyId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/StudySubject"
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/subject-identifiers/{studyId}": {
+      "post": {
+        "tags": [
+          "SubjectIdentifier"
+        ],
+        "operationId": "Subject-identifiersByStudyIdPost",
+        "consumes": [
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "studyId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
           }
         }
       }
@@ -261,6 +446,29 @@
       },
       "discriminator": "$type"
     },
+    "MatchSpecification": {
+      "type": "object",
+      "properties": {
+        "identifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IPersonIdentifier"
+          }
+        }
+      }
+    },
+    "SearchResult": {
+      "required": [
+        "personId"
+      ],
+      "type": "object",
+      "properties": {
+        "personId": {
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
     "PersonSpecification": {
       "type": "object",
       "properties": {
@@ -278,14 +486,52 @@
         }
       }
     },
-    "MatchSpecification": {
+    "PersonCreatedResult": {
+      "required": [
+        "personId"
+      ],
       "type": "object",
       "properties": {
-        "identifiers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/IPersonIdentifier"
-          }
+        "personId": {
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "StudySubject": {
+      "type": "object",
+      "properties": {
+        "subjectIdentifier": {
+          "type": "string",
+          "readOnly": true
+        },
+        "studyId": {
+          "$ref": "#/definitions/StudyIdentity",
+          "readOnly": true
+        },
+        "personId": {
+          "$ref": "#/definitions/PersonIdentity",
+          "readOnly": true
+        }
+      }
+    },
+    "StudyIdentity": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int64",
+          "type": "integer",
+          "readOnly": true
+        }
+      }
+    },
+    "PersonIdentity": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int64",
+          "type": "integer",
+          "readOnly": true
         }
       }
     },

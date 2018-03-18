@@ -25,8 +25,8 @@ namespace CHC.Consent.Api.Features.Consent
 
         [HttpPut]
         [ProducesResponseType((int) HttpStatusCode.Created, Type=typeof(long))]
-        [ProducesResponseType((int) HttpStatusCode.SeeOther)]
-        [ProducesResponseType((int) HttpStatusCode.BadRequest)]
+        [ProducesResponseType((int) HttpStatusCode.SeeOther, Type=typeof(long))]
+        [ProducesResponseType((int) HttpStatusCode.BadRequest, Type=typeof(SerializableError))]
         [AutoCommit]
         public IActionResult PutConsent([FromBody]ConsentSpecification specification)
         {
@@ -68,7 +68,7 @@ namespace CHC.Consent.Api.Features.Consent
                 if (existingConsent != null)
                 {
                     //TODO: Decide what to do with evidence, etc, for existing consents, or if you can be consented twice
-                    return RedirectToAction("Get", new {id = existingConsent.Id });
+                    return new SeeOtherOjectActionResult("Get", routeValues:new {id = existingConsent.Id }, result:existingConsent.Id);
 
                 }
             }
