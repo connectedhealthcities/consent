@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Reflection;
 using CHC.Consent.Api.Features.Consent;
 using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure;
+using CHC.Consent.Api.Infrastructure.Identity;
 using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
@@ -15,8 +17,13 @@ using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.DependencyInjection;
 using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.Identity;
+using IdentityServer4.EntityFramework.Options;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -30,15 +37,77 @@ namespace CHC.Consent.Api
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private static readonly string MigrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
+
+        public Startup(IConfiguration configuration, IHostingEnvironment environment)
         {
             Configuration = configuration;
+            Environment = environment;
         }
 
         public IConfiguration Configuration { get; }
+        public IHostingEnvironment Environment { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
+        {
+            AddConsentSystemTypeRegistrations(services);
+   
+            services
+                .AddMvc(
+                    options =>
+                    {
+                        options.ReturnHttpNotAcceptable = true;
+                        options.RespectBrowserAcceptHeader = true;
+                    })
+                .AddFeatureFolders()
+                .AddJsonOptions(
+                    config =>
+                    {
+                        SerializerSettings(config.SerializerSettings);
+                    })
+                .AddRazorPagesOptions(o => o.Conventions.AuthorizeFolder("/"));
+
+
+            var identityServerConfiguration =
+                Configuration.GetSection("IdentityServer").Get<IdentityServerConfiguration>();
+            services
+                .AddAuthentication()
+                .AddCookie("Monster")
+                .AddOpenIdConnect(
+                    options =>
+                    {
+                        options.SignInScheme = "Monster";
+                        options.Authority = identityServerConfiguration.Authority;
+                        options.ClientId = "UI";
+                        if (Environment.IsDevelopment())
+                            options.RequireHttpsMetadata = false;
+                        options.SaveTokens = true;
+                        options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                    });
+
+
+            services.AddTransient<IConfigureOptions<SwaggerGenOptions>, SwaggerGenOptionsProvider>();
+            services.AddSwaggerGen(_ => {});
+            
+            AddDataServices(services);
+        }
+
+
+        private void AddDataServices(IServiceCollection services)
+        {
+            services.AddScoped<IIdentityRepository, IdentityRepository>();
+            services.AddScoped<IConsentRepository, ConsentRepository>();
+            services.AddScoped<ISubjectIdentifierRepository, SubjectIdentifierRepository>();
+
+            services.AddDbContext<ConsentContext>(
+                ConfigureDatabaseOptions);
+            services.AddScoped<IStoreProvider>(
+                provider => new ContextStoreProvider(provider.GetService<ConsentContext>()));
+            services.AddScoped(typeof(IStore<>), typeof(Store<>));
+        }
+
+        private static void AddConsentSystemTypeRegistrations(IServiceCollection services)
         {
             services.AddPersonIdentifiers(
                 registry =>
@@ -55,13 +124,13 @@ namespace CHC.Consent.Api
                     registry.Add<MedwayBirthOrder>(o => o.WithXmlMarshaller(valueType: "BIB4All.MedwayBirthOrder"));
                 }
             );
-            
-            
-            var consentIdentifierRegistry = new TypeRegistry<CaseIdentifier,CaseIdentifierAttribute>();
+
+
+            var consentIdentifierRegistry = new TypeRegistry<CaseIdentifier, CaseIdentifierAttribute>();
             consentIdentifierRegistry.Add<PregnancyNumberIdentifier>();
             services.AddSingleton(consentIdentifierRegistry);
             services.AddSingleton<ITypeRegistry<CaseIdentifier>>(consentIdentifierRegistry);
-            
+
             var evidenceRegistry = new EvidenceRegistry();
             evidenceRegistry.Add<MedwayEvidence>();
             evidenceRegistry.Add<ImportFileEvidence>();
@@ -70,42 +139,20 @@ namespace CHC.Consent.Api
 
             services.AddSingleton<ConsentTypeRegistry>();
 
-            services
-                .AddTransient<IPostConfigureOptions<MvcOptions>, IdentityModelBinderProviderConfiguration<
-                    ITypeRegistry<IPersonIdentifier>, PersonSpecification>>();
-            services
-                .AddTransient<IPostConfigureOptions<MvcOptions>, IdentityModelBinderProviderConfiguration<
-                    ITypeRegistry<IPersonIdentifier>, MatchSpecification>>();
-            services
-                .AddTransient<IPostConfigureOptions<MvcOptions>, IdentityModelBinderProviderConfiguration<
-                    ConsentTypeRegistry, ConsentSpecification>>();
-            
-            services
-                .AddMvc(
-                    options =>
-                    {
-                        options.ReturnHttpNotAcceptable = true;
-                        options.RespectBrowserAcceptHeader = true;
-                    })
-                .AddFeatureFolders()
-                .AddJsonOptions(
-                    config =>
-                    {
-                        SerializerSettings(config.SerializerSettings);
-                    });
 
-            services.AddTransient<IConfigureOptions<SwaggerGenOptions>, SwaggerGenOptionsProvider>();
-            services.AddSwaggerGen(_ => {});
-            
-            services.AddScoped<IIdentityRepository, IdentityRepository>();
-            services.AddScoped<IConsentRepository, ConsentRepository>();
-            services.AddScoped<ISubjectIdentifierRepository, SubjectIdentifierRepository>();
-
-            services.AddDbContext<ConsentContext>(
-                ConfigureDatabaseOptions);
-            services.AddScoped<IStoreProvider>(
-                provider => new ContextStoreProvider(provider.GetService<ConsentContext>()));
-            services.AddScoped(typeof(IStore<>), typeof(Store<>));
+            //These setup the relevant body binders
+            services
+                .AddTransient<
+                    IPostConfigureOptions<MvcOptions>,
+                    IdentityModelBinderProviderConfiguration<ITypeRegistry<IPersonIdentifier>, PersonSpecification>>();
+            services
+                .AddTransient<
+                    IPostConfigureOptions<MvcOptions>, 
+                    IdentityModelBinderProviderConfiguration<ITypeRegistry<IPersonIdentifier>, MatchSpecification>>();
+            services
+                .AddTransient<
+                    IPostConfigureOptions<MvcOptions>, 
+                    IdentityModelBinderProviderConfiguration<ConsentTypeRegistry, ConsentSpecification>>();
         }
 
         protected virtual void ConfigureDatabaseOptions(IServiceProvider provider, DbContextOptionsBuilder options)
@@ -120,9 +167,16 @@ namespace CHC.Consent.Api
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseDatabaseErrorPage();
             }
-            
-            app.UseMvc();
+
+            if (Configuration.GetIdentityServer().EnableInteralServer)
+            {
+                app.UseIdentityServer();
+            }
+
+            app.UseStaticFiles();
+            app.UseMvc(r => r.MapRoute("default", "{controller=home}/{action=index}"));
             app.UseSwagger();
             app.UseSwaggerUI(ui =>
             {
@@ -130,12 +184,12 @@ namespace CHC.Consent.Api
             });
         }
 
-        public static JsonSerializerSettings SerializerSettings(JsonSerializerSettings Settings)
+        public static JsonSerializerSettings SerializerSettings(JsonSerializerSettings settings)
         {
-            Settings.TypeNameHandling = TypeNameHandling.Auto;
-            Settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-            Settings.Formatting = Formatting.Indented;
-            return Settings;
+            settings.TypeNameHandling = TypeNameHandling.Auto;
+            settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+            settings.Formatting = Formatting.Indented;
+            return settings;
         }
     }
 }

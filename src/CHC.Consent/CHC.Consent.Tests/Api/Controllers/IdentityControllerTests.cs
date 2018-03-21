@@ -19,6 +19,7 @@ using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.Identity;
 using CHC.Consent.Testing.Utils;
+using CHC.Consent.Testing.Utils.Data;
 using FakeItEasy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Rest;
@@ -28,20 +29,10 @@ using Xunit.Abstractions;
 
 namespace CHC.Consent.Tests.Api.Controllers
 {
-    [Collection(WebServerCollection.Name)]
+    
     public class IdentityControllerTests
     {
-        private readonly WebServerFixture serverFixture;
         private readonly ITestOutputHelper output;
-
-        private static readonly string PersonSpecificationJson =
-            new StreamReader(
-                    Assembly.GetExecutingAssembly().GetManifestResourceStream(
-                        typeof(IdentityControllerTests),
-                        "PersonSpecification.json"),
-                    Encoding.UTF8)
-                .ReadToEnd();
-
 
         private readonly ITypeRegistry<IPersonIdentifier> personIdentifierRegistry =
             Create.IdentifierRegistry.WithIdentifiers<NhsNumberIdentifier, BradfordHospitalNumberIdentifier>().Build();
@@ -50,9 +41,8 @@ namespace CHC.Consent.Tests.Api.Controllers
 
 
         /// <inheritdoc />
-        public IdentityControllerTests(WebServerFixture serverFixture, ITestOutputHelper output)
+        public IdentityControllerTests(ITestOutputHelper output)
         {
-            this.serverFixture = serverFixture;
             this.output = output;
         }
 
@@ -187,7 +177,7 @@ namespace CHC.Consent.Tests.Api.Controllers
         {
             var personSpecification =
                 JsonConvert.DeserializeObject<PersonSpecification>(
-                    PersonSpecificationJson,
+                    Data.PersonSpecificationJson,
                     Create.IdentifierRegistry
                         .WithIdentifier<NhsNumberIdentifier>()
                         .WithIdentifier<DateOfBirthIdentifier>()
@@ -210,25 +200,6 @@ namespace CHC.Consent.Tests.Api.Controllers
         }
 
 
-        [Fact]
-        public async void HandlesPutPerson()
-        {
-            var client = serverFixture.Client;
-            
-            var stringContent = new StringContent(
-                PersonSpecificationJson,
-                Encoding.UTF8,
-                "application/json");
-
-            var response = await client.PutAsync(
-                "/identities",
-                stringContent);
-
-            if (!Equals(HttpStatusCode.Created, response.StatusCode))
-            {
-                output.WriteLine(response.AsFormattedString());
-            }
-            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        }
+        
     }
 }

@@ -18,8 +18,11 @@ namespace CHC.Consent.Api.Infrastructure.Web
                         // {3} - Feature Name
                         // Replace normal view location entirely
                         options.ViewLocationFormats.Clear();
+                        options.ViewLocationFormats.Add("/Views/{1}/{0}.cshtml");
+                        options.ViewLocationFormats.Add("/Views/Shared/{0}.cshtml");
                         options.ViewLocationFormats.Add("/Features/{3}/{1}/{0}.cshtml");
                         options.ViewLocationFormats.Add("/Features/{3}/{0}.cshtml");
+                        options.ViewLocationFormats.Add("/Features/{3}/Shared/{0}.cshtml");
                         options.ViewLocationFormats.Add("/Features/Shared/{0}.cshtml");
                         options.ViewLocationExpanders.Add(new FeatureViewLocationExpander());
                     });

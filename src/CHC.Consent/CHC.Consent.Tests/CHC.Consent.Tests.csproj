@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="FakeItEasy" Version="4.5.1" />
+    <PackageReference Include="IdentityModel" Version="3.3.1" />
     <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="2.0.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.6.0" />
     <PackageReference Include="xunit" Version="2.3.1" />
@@ -13,7 +14,6 @@
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CHC.Consent.Api.Client\CHC.Consent.Api.Client.csproj" />
     <ProjectReference Include="..\CHC.Consent.Api\CHC.Consent.Api.csproj">
       <Project>{DB92F0CE-E26C-42FF-90FF-40720930E233}</Project>
       <Name>CHC.Consent.Api</Name>

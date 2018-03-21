@@ -8,6 +8,10 @@
     <Folder Include="wwwroot\" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="IdentityServer4" Version="2.1.2" />
+    <PackageReference Include="IdentityServer4.AccessTokenValidation" Version="2.4.0" />
+    <PackageReference Include="IdentityServer4.AspNetIdentity" Version="2.1.0" />
+    <PackageReference Include="IdentityServer4.EntityFramework" Version="2.1.1" />
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.6" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
@@ -17,11 +21,22 @@
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.2" />
   </ItemGroup>
   <ItemGroup>
+    <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="2.0.0" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\CHC.Consent.Common\CHC.Consent.Common.csproj" />
     <ProjectReference Include="..\CHC.Consent.DependencyInjection\CHC.Consent.DependencyInjection.csproj">
       <Project>{4B512A33-8B34-4BB8-A810-0F9FE4E8EBDC}</Project>
       <Name>CHC.Consent.DependencyInjection</Name>
     </ProjectReference>
     <ProjectReference Include="..\CHC.Consent.EFCore\CHC.Consent.EFCore.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="IdentityServer\Login\Views\Account\LoggedOut.cshtml" />
+    <_ContentIncludedByDefault Remove="IdentityServer\Login\Views\Account\Login.cshtml" />
+    <_ContentIncludedByDefault Remove="IdentityServer\Login\Views\Account\Logout.cshtml" />
+    <_ContentIncludedByDefault Remove="IdentityServer\Login\Views\Consent\Index.cshtml" />
+    <_ContentIncludedByDefault Remove="IdentityServer\Login\Views\Consent\_ScopeListItem.cshtml" />
+    <_ContentIncludedByDefault Remove="IdentityServer\Login\Views\Diagnostics\Index.cshtml" />
   </ItemGroup>
 </Project>

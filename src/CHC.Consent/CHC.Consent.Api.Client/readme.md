@@ -9,6 +9,14 @@ autorest --input-file=???
 
 ```
 
+if you're running the development server
+
+``` PowerShell
+
+autorest --input-file=http://localhost:5000/swagger/v1/swagger.json
+
+```
+
 ``` yaml
 output-folder: .\generated
 message-format: json
@@ -33,5 +41,6 @@ output-artifact:
  - swagger-document.json        
 csharp:
     namespace: CHC.Consent.Api.Client
+    add-credentials: true
             
 ```

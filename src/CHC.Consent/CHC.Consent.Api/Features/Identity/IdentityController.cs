@@ -10,6 +10,8 @@ using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Formatters;
@@ -18,6 +20,7 @@ using Newtonsoft.Json;
 namespace CHC.Consent.Api.Features.Identity
 {
     [Route("/identities")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class IdentityController : Controller
     {
         private readonly IPersonIdentifierListChecker identifierChecker;

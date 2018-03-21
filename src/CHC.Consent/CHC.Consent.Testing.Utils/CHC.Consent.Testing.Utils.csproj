@@ -10,4 +10,8 @@
       <HintPath>..\..\..\..\..\..\Users\David Kemp\.nuget\packages\xunit.abstractions\2.0.1\lib\netstandard1.0\xunit.abstractions.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="Data\PersonSpecification.json" />
+    <EmbeddedResource Include="Data\PersonSpecification.json" />
+  </ItemGroup>
 </Project>

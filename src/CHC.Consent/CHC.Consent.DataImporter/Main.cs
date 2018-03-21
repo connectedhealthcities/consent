@@ -111,7 +111,7 @@ namespace CHC.Consent.DataImporter
             {
                 foreach (var person in new XmlParser(loggerProvider.CreateLogger<XmlParser>()).GetPeople(xmlReader))
                 {
-                    var api = new Api.Client.Api(new Uri("http://localhost:5000/"), new HttpClientHandler{AllowAutoRedirect = false});
+                    var api = new Api.Client.Api(new Uri("http://localhost:5000/"), null, new HttpClientHandler{AllowAutoRedirect = false});
                 
                     using(Log.BeginScope(person))
                     {

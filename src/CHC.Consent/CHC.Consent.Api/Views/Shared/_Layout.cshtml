@@ -1,0 +1,51 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CHC Consent</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">CHC Consent</a>
+            <button type="button" class="navbar-toggler" data-toggle="collapse" data-target=".navbar-collapse" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            
+            <div class="navbar-collapse collapse">
+                <ul class="navbar-nav">
+                    <li><a class="nav-item nav-link active" asp-page="/Index">Home</a></li>
+                    <li><a class="nav-item nav-link" asp-page="/About">About</a></li>
+                    <li><a class="nav-item nav-link" asp-page="/Contact">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container body-content">
+        @RenderBody()
+        <hr />
+        <footer>
+            <p>&copy; 2017 - Consumer</p>
+        </footer>
+    </div>
+
+    
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive-bootstrap/dist/unobtrusive-bootstrap.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
+
+

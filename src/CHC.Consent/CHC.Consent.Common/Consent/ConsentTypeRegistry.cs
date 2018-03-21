@@ -11,9 +11,6 @@ namespace CHC.Consent.Common.Consent
     [UsedImplicitly]
     public class ConsentTypeRegistry : ITypeRegistry
     {
-        private readonly ITypeRegistry<CaseIdentifier> consentIdentifierRegistry;
-        private readonly EvidenceRegistry evidence;
-
         public ConsentTypeRegistry(
             ITypeRegistry<CaseIdentifier> consentIdentifiers, 
             ITypeRegistry<Evidence> evidences,

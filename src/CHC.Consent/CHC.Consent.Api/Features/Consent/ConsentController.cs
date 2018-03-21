@@ -3,6 +3,8 @@ using System.Net;
 using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -11,6 +13,7 @@ namespace CHC.Consent.Api.Features.Consent
 {
     using Consent = Common.Consent.Consent;
     [Route("/consent")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ConsentController : Controller
     {
         private ILogger Logger { get; }

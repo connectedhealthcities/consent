@@ -31,6 +31,12 @@ namespace CHC.Consent.Api.Client
         /// </summary>
         JsonSerializerSettings DeserializationSettings { get; }
 
+        /// <summary>
+        /// Subscription credentials which uniquely identify client
+        /// subscription.
+        /// </summary>
+        ServiceClientCredentials Credentials { get; }
+
 
         /// <param name='specification'>
         /// </param>
