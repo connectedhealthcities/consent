@@ -10,6 +10,7 @@ using CHC.Consent.EFCore.Security;
 using IdentityModel;
 using IdentityServer4.Extensions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace CHC.Consent.Api.Pages
@@ -32,7 +33,7 @@ namespace CHC.Consent.Api.Pages
         public IEnumerable<StudyEntity> Studies { get; private set; }
 
 
-        public void OnGet()
+        public IActionResult OnGet()
         {
             var roles = user.Roles.ToArray();
             var userName = user.UserName;
@@ -43,8 +44,15 @@ namespace CHC.Consent.Api.Pages
                                    || roles.Contains(((RoleSecurityPrincipal) acl.Prinicipal).Role.Name))))
                 .ToImmutableArray();
 
-            SubjectId = User.GetSubjectId();
+            if (Studies.Count() == 1)
+            {
+                return RedirectToPage("Studies", new {id = Studies.Single().Id});
+            }
             
+            SubjectId = User.GetSubjectId();
+
+            return Page();
+
         }
     }
 }
