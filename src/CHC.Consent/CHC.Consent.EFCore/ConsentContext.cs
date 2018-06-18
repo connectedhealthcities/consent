@@ -1,13 +1,18 @@
-﻿using CHC.Consent.Common.Consent;
+﻿using System.Linq;
+using CHC.Consent.Common.Consent;
 using CHC.Consent.EFCore.Configuration;
 using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
+using CHC.Consent.EFCore.Security;
+using Microsoft.AspNet.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace CHC.Consent.EFCore
 {
-    public class ConsentContext : DbContext
+    public class ConsentContext : IdentityDbContext<ConsentUser, ConsentRole, string>
     {
         /// <inheritdoc />
         public ConsentContext(DbContextOptions<ConsentContext> options) : base(options)
@@ -29,10 +34,30 @@ namespace CHC.Consent.EFCore
         public virtual DbSet<PersonEntity> People { get; set; }
         public virtual DbSet<StudyEntity> Studies { get; set; }
         public virtual DbSet<SubjectIdentifierEntity> SubjectIdentifiers { get; set; }
-        
+
+        /// <inheritdoc />
+        public override int SaveChanges(bool acceptAllChangesOnSuccess)
+        {
+            if(!ChangeTracker.AutoDetectChangesEnabled) return base.SaveChanges(acceptAllChangesOnSuccess);
+
+            var newStudies = ChangeTracker.Entries<StudyEntity>().Where(_ => _.State == EntityState.Added).ToList();
+            var result = base.SaveChanges(acceptAllChangesOnSuccess);
+
+            foreach (var study in newStudies)
+            {
+                study.Entity.ACL.Description = $"Study {study.Entity.Id}";
+            }
+
+            base.SaveChanges(acceptAllChangesOnSuccess);
+
+            return result;
+        }
+
         /// <inheritdoc />
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            
+            base.OnModelCreating(modelBuilder);
             //TODO: Do we need to get (some of) these from somewhere else configurable
             
             modelBuilder.ApplyConfiguration(new StudyConfiguration());
@@ -48,6 +73,37 @@ namespace CHC.Consent.EFCore
             modelBuilder.ApplyConfiguration(new PersonIdentifierEntityConfiguration());
 
             modelBuilder.ApplyConfiguration(new SubjectIdentifierEntityConfiguration());
+
+
+            modelBuilder.ApplyConfiguration(new AccessControlEntityConfiguration());
+            modelBuilder.ApplyConfiguration(new PermissionEntityConfiguration());
+            modelBuilder.ApplyConfiguration(new AccessControlListConfiguration());
+            
+            modelBuilder.Entity<SecurityPrinicipal>();
+            
+            modelBuilder.Entity<UserSecurityPrincipal>().Property<string>("ConsentUserId");
+            modelBuilder.Entity<UserSecurityPrincipal>().HasOne(_ => _.User).WithOne(_ => _.Principal)
+                .HasForeignKey<UserSecurityPrincipal>("ConsentUserId")
+                .HasPrincipalKey<ConsentUser>();
+                
+            modelBuilder.Entity<RoleSecurityPrincipal>().Property<string>("ConsentRoleId");
+            modelBuilder.Entity<RoleSecurityPrincipal>()
+                .HasOne(_ => _.Role).WithOne(_ => _.Principal)
+                .HasPrincipalKey<ConsentRole>()
+                .HasForeignKey<RoleSecurityPrincipal>("ConsentRoleId");
+
+            foreach (var securableEntity in modelBuilder.Model.GetEntityTypes()
+                .Where(_ => _.BaseType == null)
+                .Where(_ => typeof(ISecurable).IsAssignableFrom(_.ClrType)))
+            {
+                var type = securableEntity.ClrType;
+                var entityBuilder = modelBuilder.Entity(type);
+                entityBuilder.Property<long>("AccessControlListId").IsRequired();
+                entityBuilder.HasOne(typeof(AccessControlList), nameof(ISecurable.ACL)).WithOne()
+                    .HasPrincipalKey(typeof(AccessControlList), nameof(AccessControlList.Id))
+                    .HasForeignKey(type, "AccessControlListId")
+                    .IsRequired();
+            }
         }
     }
 }

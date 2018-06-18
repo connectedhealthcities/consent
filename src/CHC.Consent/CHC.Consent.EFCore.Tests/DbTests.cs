@@ -12,6 +12,9 @@ namespace CHC.Consent.EFCore.Tests
         protected IDbContextTransaction transaction;
         protected ITestOutputHelper outputHelper;
         protected DatabaseFixture fixture;
+        private protected ConsentContext createContext;
+        private protected ConsentContext updateContext;
+        private protected ConsentContext readContext;
         protected ConsentContext Context { get; }
 
         protected DbTests(ITestOutputHelper outputHelper, DatabaseFixture fixture)
@@ -20,6 +23,10 @@ namespace CHC.Consent.EFCore.Tests
             this.fixture = fixture;
             Context = fixture.GetContext(outputHelper);
             transaction = Context.Database.BeginTransaction();
+
+            createContext = CreateNewContextInSameTransaction();
+            updateContext = CreateNewContextInSameTransaction();
+            readContext = CreateNewContextInSameTransaction();
         }
 
         protected ConsentContext CreateNewContextInSameTransaction()
@@ -34,7 +41,9 @@ namespace CHC.Consent.EFCore.Tests
         {
             transaction?.Dispose();
             Context?.Dispose();
-            
+            createContext?.Dispose();
+            updateContext?.Dispose();
+            readContext?.Dispose();
         }
     }
 }

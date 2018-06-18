@@ -12,13 +12,13 @@ namespace CHC.Consent.EFCore.Identity
     /// <summary>
     /// Deals with storing, finding, and retrieving <see cref="IPersonIdentifier"/>
     /// </summary>
-    public class PersonIdentifierHandler<TIdentifier> : IPersonIdentifierHandler<TIdentifier> where TIdentifier : IPersonIdentifier
+    public class PersonIdentifierPersistanceHandler<TIdentifier> : IPersonIdentifierPersistanceHandler<TIdentifier> where TIdentifier : IPersonIdentifier
     {
         private ILogger Logger { get; }
         private readonly IIdentifierMarshaller<TIdentifier> marshaller;
         private readonly string typeName;
 
-        public PersonIdentifierHandler(IIdentifierMarshaller<TIdentifier> marshaller, string typeName, ILogger<PersonIdentifierHandler<TIdentifier>> logger)
+        public PersonIdentifierPersistanceHandler(IIdentifierMarshaller<TIdentifier> marshaller, string typeName, ILogger<PersonIdentifierPersistanceHandler<TIdentifier>> logger)
         {
             Logger = logger;
             this.marshaller = marshaller;

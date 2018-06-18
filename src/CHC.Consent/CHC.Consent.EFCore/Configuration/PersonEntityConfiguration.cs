@@ -10,6 +10,8 @@ namespace CHC.Consent.EFCore.Configuration
         public void Configure(EntityTypeBuilder<PersonEntity> modelBuilder)
         {
             modelBuilder.ToTable("Person");
+            
+            
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using CHC.Consent.Common.Consent;
 using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
+using CHC.Consent.EFCore.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

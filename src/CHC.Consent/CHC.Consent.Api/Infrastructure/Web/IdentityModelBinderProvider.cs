@@ -7,12 +7,14 @@ using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Common.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Internal;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.ObjectPool;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -28,7 +30,7 @@ namespace CHC.Consent.Api.Infrastructure.Web
         private static readonly Type ModelType = typeof(TModel);
         private readonly ArrayPool<char> charPool;
         private readonly ObjectPoolProvider objectPoolProvider;
-        private readonly bool suppressInputFormatterBuffering;
+        private readonly IOptions<MvcJsonOptions> mvcJsonOptions;
         private readonly IHttpRequestStreamReaderFactory readerFactory;
         private readonly ILoggerFactory loggerFactory;
         private readonly MvcOptions mvcOptions;
@@ -38,15 +40,15 @@ namespace CHC.Consent.Api.Infrastructure.Web
         public IdentityModelBinderProvider(
             ArrayPool<char> charPool,
             ObjectPoolProvider objectPoolProvider,
-            bool suppressInputFormatterBuffering,
             IHttpRequestStreamReaderFactory readerFactory,
             ILoggerFactory loggerFactory,
             MvcOptions mvcOptions, 
+            IOptions<MvcJsonOptions> mvcJsonOptions,
             JsonSerializerSettings serializerSettings)
         {
+            this.mvcJsonOptions = mvcJsonOptions;
             this.charPool = charPool;
             this.objectPoolProvider = objectPoolProvider;
-            this.suppressInputFormatterBuffering = suppressInputFormatterBuffering;
             this.readerFactory = readerFactory;
             this.loggerFactory = loggerFactory;
             this.mvcOptions = mvcOptions;
@@ -58,30 +60,28 @@ namespace CHC.Consent.Api.Infrastructure.Web
         public IModelBinder GetBinder(ModelBinderProviderContext context)
         {
             if (context.BindingInfo.BindingSource != BindingSource.Body) return null;
-            if (ShouldBindTo(context) 
-                
-                )
-            {
-                Logger.LogDebug(
-                    "Providing binder for Body of type {modelType}",
-                    ModelType);
+            if (!ShouldBindTo(context)) return null;
+            
+            Logger.LogDebug(
+                "Providing binder for Body of type {modelType}",
+                ModelType);
 
-                return new BodyModelBinder(
-                    new IInputFormatter[]
-                    {
-                        new JsonInputFormatter(
-                            NullLogger.Instance,
-                            serializerSettings,
-                            charPool,
-                            objectPoolProvider,
-                            suppressInputFormatterBuffering)
-                    },
-                    readerFactory,
-                    loggerFactory,
-                    mvcOptions);
-            }
+            return new BodyModelBinder(
+                new IInputFormatter[]
+                {
+                    new JsonInputFormatter(
+                        loggerFactory.CreateLogger(typeof(JsonInputFormatter)),
+                        serializerSettings,
+                        charPool,
+                        objectPoolProvider,
+                        mvcOptions,
+                        mvcJsonOptions.Value), 
+                        
+                },
+                readerFactory,
+                loggerFactory,
+                mvcOptions);
 
-            return null;
         }
 
         private static bool ShouldBindTo(ModelBinderProviderContext context)

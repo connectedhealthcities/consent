@@ -1,8 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices.ComTypes;
 using CHC.Consent.Api.Features.Consent;
 using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure;
+using CHC.Consent.Api.Infrastructure.IdentifierDisplay;
 using CHC.Consent.Api.Infrastructure.Identity;
 using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
@@ -17,6 +22,7 @@ using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.DependencyInjection;
 using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.Identity;
+using IdentityModel;
 using IdentityServer4.EntityFramework.Options;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -29,6 +35,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -71,6 +78,7 @@ namespace CHC.Consent.Api
 
             var identityServerConfiguration =
                 Configuration.GetSection("IdentityServer").Get<IdentityServerConfiguration>();
+            
             services
                 .AddAuthentication()
                 .AddCookie("Monster")
@@ -84,8 +92,9 @@ namespace CHC.Consent.Api
                             options.RequireHttpsMetadata = false;
                         options.SaveTokens = true;
                         options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                        options.GetClaimsFromUserInfoEndpoint = true;                        
                     });
-
+            services.AddTransient<IUserProvider, HttpContextUserProvider>();
 
             services.AddTransient<IConfigureOptions<SwaggerGenOptions>, SwaggerGenOptionsProvider>();
             services.AddSwaggerGen(_ => {});
@@ -107,7 +116,7 @@ namespace CHC.Consent.Api
             services.AddScoped(typeof(IStore<>), typeof(Store<>));
         }
 
-        private static void AddConsentSystemTypeRegistrations(IServiceCollection services)
+        private void AddConsentSystemTypeRegistrations(IServiceCollection services)
         {
             services.AddPersonIdentifiers(
                 registry =>
@@ -153,6 +162,22 @@ namespace CHC.Consent.Api
                 .AddTransient<
                     IPostConfigureOptions<MvcOptions>, 
                     IdentityModelBinderProviderConfiguration<ConsentTypeRegistry, ConsentSpecification>>();
+
+
+            services.Configure<IdentifierDisplayOptions>(GetIdentifierDisplayOptions);
+
+        }
+
+        private void GetIdentifierDisplayOptions(IdentifierDisplayOptions displayOptions)
+        {
+            var typeNames = new List<string>();
+            Configuration.Bind("IdentifierDisplay:Default", typeNames);
+            foreach (var typeName in typeNames)
+            {
+                var type = Type.GetType(typeName);
+                if(type == null) throw new InvalidOperationException($"Cannot find type {typeName} for identifier display");
+                displayOptions.Default.Add(type);
+            }
         }
 
         protected virtual void ConfigureDatabaseOptions(IServiceProvider provider, DbContextOptionsBuilder options)

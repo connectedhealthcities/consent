@@ -8,6 +8,7 @@ namespace CHC.Consent.Common.Identity
     public class IdentifierAttribute : Attribute, ITypeName
     {
         public string Name { get; }
+        public string DisplayName { get; set; }
         public bool AllowMultipleValues { get; set; }
 
         /// <inheritdoc />

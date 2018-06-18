@@ -77,9 +77,9 @@ namespace CHC.Consent.EFCore
             }
         }
 
-        private IPersonIdentifierHandler GetHandler(IPersonIdentifier identifier) =>
+        private IPersonIdentifierPersistanceHandler GetHandler(IPersonIdentifier identifier) =>
             GetHandler(identifier.GetType());
-        private IPersonIdentifierHandler GetHandler(Type identifierType) =>
-            handlerProvider.GetHandler(identifierType);
+        private IPersonIdentifierPersistanceHandler GetHandler(Type identifierType) =>
+            handlerProvider.GetPersistanceHandler(identifierType);
     }
 }

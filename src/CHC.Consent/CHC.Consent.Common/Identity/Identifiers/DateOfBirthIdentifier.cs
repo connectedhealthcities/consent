@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace CHC.Consent.Common.Identity.Identifiers
 {
-    [Identifier(TypeName)]
+    [Identifier(TypeName, DisplayName = "Date of Birth")]
     public class DateOfBirthIdentifier : IPersonIdentifier
     {
         public const string TypeName = "uk.nhs.bradfordhospitals.bib4all.medway.date-of-birth";

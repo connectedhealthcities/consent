@@ -8,7 +8,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Security.Principal;
 using System.Threading.Tasks;
-using CHC.Consent.Api.Infrastructure.Identity;
+using CHC.Consent.EFCore.Security;
 using IdentityModel;
 using IdentityServer4.Events;
 using IdentityServer4.Extensions;

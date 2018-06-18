@@ -1,6 +1,6 @@
 ﻿namespace CHC.Consent.Common.Identity.Identifiers.Medway
 {
-    [Identifier(TypeName)]
+    [Identifier(TypeName, DisplayName = "Sex")]
     public class MedwaySexIdentifier : IPersonIdentifier
     {
         public const string TypeName = "uk.nhs.bradfordhospitals.bib4all.medway.sex";

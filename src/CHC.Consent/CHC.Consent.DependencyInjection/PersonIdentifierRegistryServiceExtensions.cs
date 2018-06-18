@@ -3,6 +3,7 @@ using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace CHC.Consent.DependencyInjection
 {
@@ -13,11 +14,14 @@ namespace CHC.Consent.DependencyInjection
             Action<PersonIdentifierRegistryOptions> setup
         )
         {
+            var log = services.BuildServiceProvider().GetService<ILoggerProvider>()
+                .CreateLogger("PersonIdentifierRegistry");
+            
             var options = new PersonIdentifierRegistryOptions();
             
             setup(options);
             
-            AddHandlers(services, options);
+            AddHandlers(services, options, log);
 
             AddTypeRegistry(services, options);
 
@@ -39,15 +43,28 @@ namespace CHC.Consent.DependencyInjection
             services.AddSingleton<ITypeRegistry<IPersonIdentifier>>(registry);
         }
 
-        private static void AddHandlers(IServiceCollection services, PersonIdentifierRegistryOptions options)
+        private static void AddHandlers(IServiceCollection services, PersonIdentifierRegistryOptions options, ILogger log)
         {
             foreach (var description in options.IdentifierDescriptions)
             {
-                var handlerType = typeof(IPersonIdentifierHandler<>).MakeGenericType(description.IdentifierType);
-                services.AddScoped(handlerType, description.HandlerProvider);    
+                var handlerType = typeof(IPersonIdentifierPersistanceHandler<>).MakeGenericType(description.IdentifierType);
+                services.AddScoped(handlerType, description.PersistanceHandlerProvider);
+
+                if (description.DisplayHandlerProvider == null)
+                {
+                    log.LogDebug("No display handler available for {0}", description.IdentifierType);
+                    continue;
+                }
+                
+                log.LogTrace("Adding display handler for {0}", description.IdentifierType);
+                services.AddScoped(
+                    typeof(IPersonIdentifierDisplayHandler<>).MakeGenericType(description.IdentifierType),
+                    description.DisplayHandlerProvider
+                );
             }
             
-            services.AddScoped(typeof(PersonIdentifierHandlerWrapper<>));
+            services.AddScoped(typeof(PersonIdentifierPersistanceHandlerWrapper<>));
+            services.AddScoped(typeof(PersonIdentifierDisplayHandlerWrapper<>));
 
             services.AddScoped<IIdentifierHandlerProvider, IdentifierHandlerProvider>();
         }

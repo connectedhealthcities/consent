@@ -3,6 +3,7 @@ using System.Linq;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Internal;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.Extensions.Logging;
@@ -22,6 +23,7 @@ namespace CHC.Consent.Api.Infrastructure.Web
     public class IdentityModelBinderProviderConfiguration<TRegistry, TModel> : IPostConfigureOptions<MvcOptions>
         where TRegistry:ITypeRegistry
     {
+        public IOptions<MvcJsonOptions> JsonOptions { get; }
         private readonly ILoggerFactory loggerFactory;
         private readonly ArrayPool<char> charPool;
         private readonly ObjectPoolProvider objectPoolProvider;
@@ -34,8 +36,10 @@ namespace CHC.Consent.Api.Infrastructure.Web
             ArrayPool<char> charPool,
             ObjectPoolProvider objectPoolProvider,
             IHttpRequestStreamReaderFactory readerFactory,
+            IOptions<MvcJsonOptions> jsonOptions, 
             TRegistry registry)
         {
+            JsonOptions = jsonOptions;
             this.loggerFactory = loggerFactory;
             this.charPool = charPool;
             this.objectPoolProvider = objectPoolProvider;
@@ -49,10 +53,10 @@ namespace CHC.Consent.Api.Infrastructure.Web
             var identityModelBinderProvider = new IdentityModelBinderProvider<TModel>(
                 charPool,
                 objectPoolProvider,
-                options.SuppressInputFormatterBuffering,
                 readerFactory,
                 loggerFactory,
                 options,
+                JsonOptions,
                 registry.CreateSerializerSettings()
             );
 

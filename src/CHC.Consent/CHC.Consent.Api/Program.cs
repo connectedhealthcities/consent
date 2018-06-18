@@ -6,6 +6,8 @@ using System.Reflection;
 using System.Threading.Tasks;
 using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Api.Infrastructure.Identity;
+using CHC.Consent.EFCore;
+using CHC.Consent.EFCore.Security;
 using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
@@ -33,13 +35,14 @@ namespace CHC.Consent.Api
                 .Build();
 
         private static readonly string MigrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
-        private static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
+
+        public static void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
         {
             var configuration = context.Configuration;
             var environment = context.HostingEnvironment;
 
             services.AddIdentity<ConsentUser, ConsentRole>()
-                .AddEntityFrameworkStores<ConsentIdentityDbContext>()
+                .AddEntityFrameworkStores<ConsentContext>()
                 .AddDefaultTokenProviders();
 
             services.AddDbContext<ConsentIdentityDbContext>(

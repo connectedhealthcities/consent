@@ -8,24 +8,24 @@ using CHC.Consent.EFCore.Entities;
 namespace CHC.Consent.EFCore
 {
     /// <summary>
-    /// Wraps a typed <see cref="IPersonIdentifierHandler{T}"/> into an untyped <see cref="IPersonIdentifierHandler"/> 
+    /// Wraps a typed <see cref="IPersonIdentifierPersistanceHandler{TIdentifier}"/> into an untyped <see cref="IPersonIdentifierPersistanceHandler"/> 
     /// </summary>
     /// <remarks>
     /// This bridges the gap between where we know which class of identifier we are dealing with, and where we don't 
     /// </remarks>
-    public class PersonIdentifierHandlerWrapper<TIdentifier> : IPersonIdentifierHandler where TIdentifier : IPersonIdentifier
+    public class PersonIdentifierPersistanceHandlerWrapper<TIdentifier> : IPersonIdentifierPersistanceHandler where TIdentifier : IPersonIdentifier
     {
-        private readonly IPersonIdentifierHandler<TIdentifier> handler;
+        private readonly IPersonIdentifierPersistanceHandler<TIdentifier> persistanceHandler;
 
         /// <inheritdoc />
-        public PersonIdentifierHandlerWrapper(IPersonIdentifierHandler<TIdentifier> handler)
+        public PersonIdentifierPersistanceHandlerWrapper(IPersonIdentifierPersistanceHandler<TIdentifier> persistanceHandler)
         {
-            this.handler = handler;
+            this.persistanceHandler = persistanceHandler;
         }
 
         /// <inheritdoc />
         public bool Update(PersonEntity person, IEnumerable<IPersonIdentifier> identifiers, IStoreProvider stores) =>
-            handler.Update(person, identifiers.Select(ConvertToCorrectType).ToArray(), stores);
+            persistanceHandler.Update(person, identifiers.Select(ConvertToCorrectType).ToArray(), stores);
 
         private static TIdentifier ConvertToCorrectType(IPersonIdentifier value)
         {
@@ -41,10 +41,10 @@ namespace CHC.Consent.EFCore
 
         /// <inheritdoc />
         public IEnumerable<IPersonIdentifier> Get(PersonEntity person, IStoreProvider stores) 
-            => handler.Get(person, stores).Cast<IPersonIdentifier>();
+            => persistanceHandler.Get(person, stores).Cast<IPersonIdentifier>();
 
         /// <inheritdoc />
         public IQueryable<PersonEntity> Filter(IQueryable<PersonEntity> people, IPersonIdentifier identifier, IStoreProvider storeProvider) 
-            => handler.Filter(people, ConvertToCorrectType(identifier), storeProvider);
+            => persistanceHandler.Filter(people, ConvertToCorrectType(identifier), storeProvider);
     }
 }

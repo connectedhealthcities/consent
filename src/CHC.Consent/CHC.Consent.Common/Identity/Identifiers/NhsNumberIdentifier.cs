@@ -1,6 +1,6 @@
 ﻿namespace CHC.Consent.Common.Identity.Identifiers
 {
-    [Identifier(TypeName)]
+    [Identifier(TypeName, DisplayName = "NHS Number")]
     public class NhsNumberIdentifier : IPersonIdentifier
     {
         public const string TypeName = "uk.nhs.nhs-number";

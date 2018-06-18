@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CHC.Consent.Api.Infrastructure.Identity;
+using CHC.Consent.EFCore.Security;
 using IdentityServer4.EntityFramework.DbContexts;
 using IdentityServer4.EntityFramework.Mappers;
 using IdentityServer4.Models;
@@ -16,6 +18,7 @@ namespace CHC.Consent.Api.Bootstrap
     {
         static async Task Main(string[] args)
         {
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
             var host = BuildWebHost(args);
 
             using (var serviceScope = host.Services.CreateScope())
@@ -44,18 +47,22 @@ namespace CHC.Consent.Api.Bootstrap
                     {
                         db.ApiResources.Add(api.ToEntity());
                     }
-                    
+
                 }
 
                 db.SaveChanges();
 
 
+                var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<ConsentRole>>();
                 var userManager = serviceScope.ServiceProvider.GetRequiredService<UserManager<ConsentUser>>();
 
-                await userManager.CreateAsync(new ConsentUser {UserName = "alice"}, "Pass123$");
-                await userManager.CreateAsync(new ConsentUser {UserName = "bob"}, "Pass123$");
+                await roleManager.CreateAsync(new ConsentRole {Name = "BiB4All Study Manager"});
 
-            }            
+                await userManager.CreateAsync(new ConsentUser {UserName = "alice"}, "Pass123$");
+                var consentUser = await userManager.FindByNameAsync("alice");
+                await userManager.AddToRoleAsync(consentUser, "BiB4All Study Manager");
+                await userManager.CreateAsync(new ConsentUser {UserName = "bob"}, "Pass123$");
+            }
         }
 
         static IEnumerable<ApiResource> Apis()
@@ -94,10 +101,6 @@ namespace CHC.Consent.Api.Bootstrap
             };
         }
 
-        private static IWebHost BuildWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseEnvironment("Development")
-                .UseStartup<Startup>()
-                .Build();
+        private static IWebHost BuildWebHost(string[] args) => Api.Program.BuildWebHost(args);
     }
 }

@@ -15,7 +15,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
     {
         private const string IdentifierTypeName = "Testing";
         public const string ValueTypeName = "chc.testing";
-        private readonly PersonIdentifierHandler<Identifier> handler;
+        private readonly PersonIdentifierPersistanceHandler<Identifier> persistanceHandler;
         private ConsentContext creatingContext;
         private ConsentContext updatingContext;
         private ConsentContext readingContext;
@@ -27,10 +27,10 @@ namespace CHC.Consent.EFCore.Tests.Identity
         public PersonIdentifierHandlerTests(ITestOutputHelper outputHelper, DatabaseFixture fixture) : base(outputHelper, fixture)
         {
             marshaller = new IdentifierMarshaller();
-            handler = new PersonIdentifierHandler<Identifier>(
+            persistanceHandler = new PersonIdentifierPersistanceHandler<Identifier>(
                 marshaller,
                 IdentifierTypeName,
-                new XunitLogger<PersonIdentifierHandler<Identifier>>(outputHelper, "test"));
+                new XunitLogger<PersonIdentifierPersistanceHandler<Identifier>>(outputHelper, "test"));
             creatingContext = CreateNewContextInSameTransaction();
             updatingContext = CreateNewContextInSameTransaction();
             readingContext = CreateNewContextInSameTransaction();
@@ -133,7 +133,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
             creatingContext.SaveChanges();
 
 
-            var foundPeople = handler.Filter(
+            var foundPeople = persistanceHandler.Filter(
                 readingContext.People,
                 new Identifier {Value = "find me"},
                 new ContextStoreProvider(readingContext))
@@ -153,7 +153,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
             creatingContext.SaveChanges();
 
 
-            var retrievedIdentifiers = handler.Get(personEntity, new ContextStoreProvider(readingContext)).ToArray();
+            var retrievedIdentifiers = persistanceHandler.Get(personEntity, new ContextStoreProvider(readingContext)).ToArray();
 
 
             var identifier = Assert.Single(retrievedIdentifiers);
@@ -214,7 +214,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
         {
             context = context ?? updatingContext;
             person = person ?? personEntity;
-            var updated = handler.Update(
+            var updated = persistanceHandler.Update(
                 context.Find<PersonEntity>(person.Id),
                 identifiers,
                 new ContextStoreProvider(context));

@@ -1,9 +1,11 @@
 using System;
+using CHC.Consent.Common.Identity;
 
 namespace CHC.Consent.EFCore
 {
     public interface IIdentifierHandlerProvider
     {
-        IPersonIdentifierHandler GetHandler(Type identifierType);
+        IPersonIdentifierPersistanceHandler GetPersistanceHandler(Type identifierType);
+        IPersonIdentifierDisplayHandler GetDisplayHandler(Type identifierType);
     }
 }

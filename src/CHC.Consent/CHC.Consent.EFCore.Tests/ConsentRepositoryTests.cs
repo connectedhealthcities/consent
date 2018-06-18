@@ -26,9 +26,6 @@ namespace CHC.Consent.EFCore.Tests
         
         private readonly ConsentEntity activeConsent;
         
-        private ConsentContext readContext;
-        private ConsentContext updateContext;
-        private ConsentContext createContext;
         private readonly StudyIdentity studyId;
         private readonly PersonIdentity consentedPersonId;
         private readonly PersonIdentity unconsentedPersonId;
@@ -158,7 +155,7 @@ namespace CHC.Consent.EFCore.Tests
 
             var consent = CreateRepository(updateContext)
                 .AddConsent(
-                    new Consent(studySubject, dateGiven, personId, null, Enumerable.Empty<CaseIdentifier>())
+                    new Common.Consent.Consent(studySubject, dateGiven, personId, null, Enumerable.Empty<CaseIdentifier>())
                 );
             
             updateContext.SaveChanges();
@@ -200,7 +197,7 @@ namespace CHC.Consent.EFCore.Tests
             var pregnancyNumber = new PregnancyNumberIdentifier("6");
             var consent = CreateRepository(updateContext)
                 .AddConsent(
-                    new Consent(studySubject, dateGiven, personId, null, new [] { pregnancyNumber })
+                    new Common.Consent.Consent(studySubject, dateGiven, personId, null, new [] { pregnancyNumber })
                 );
             
             updateContext.SaveChanges();
@@ -243,7 +240,7 @@ namespace CHC.Consent.EFCore.Tests
             var evidence = new MedwayEvidence { CompetentStatus = "alan", ConsentGivenBy = "phil", ConsentTakenBy = "dawn" };
             var consent = CreateRepository(updateContext)
                 .AddConsent(
-                    new Consent(studySubject, dateGiven, personId, new [] { evidence }, new [] { pregnancyNumber })
+                    new Common.Consent.Consent(studySubject, dateGiven, personId, new [] { evidence }, new [] { pregnancyNumber })
                 );
             
             updateContext.SaveChanges();

@@ -1,0 +1,42 @@
+﻿@page "{id:long}"
+
+@model StudiesModel
+
+<h1>@Model.Study.Name</h1>
+<table class="table">
+    <thead>
+    <th></th>
+    @foreach (var identifierType in Model.DisplayOptions.Value.Default)
+    {
+        <th>@Model.IdentifierHandlerProvider.GetDisplayHandler(identifierType).DisplayName</th>
+
+    }
+    </thead>
+    <tbody>
+    @foreach (var person in Model.People)
+    {
+        <tr>
+            <td>@person.Id</td>
+            @{
+                var personIdentifiers = Model.Identifiers[person].Where(_ => _ != null);
+                foreach (var identifierType in Model.DisplayOptions.Value.Default)
+                {
+                    <td>
+                        @{
+                            var identifiers = personIdentifiers.Where(x => x.GetType() == identifierType);
+
+                            foreach (var identifier in identifiers)
+                            {
+                                <span><vc:identifier identifier="identifier"/></span>
+                            }
+                        } 
+                    </td>
+                }
+            }
+        </tr>
+
+    }
+    </tbody>
+</table>
+
+<p class="small">Found @Model.People.Count people</p>

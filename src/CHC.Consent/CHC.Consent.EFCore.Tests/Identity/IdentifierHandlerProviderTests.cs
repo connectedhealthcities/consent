@@ -13,7 +13,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
     {
         class Identifier : IPersonIdentifier {}
 
-        class IdentifierHandler : IPersonIdentifierHandler<Identifier>
+        class IdentifierPersistanceHandler : IPersonIdentifierPersistanceHandler<Identifier>
         {
             /// <inheritdoc />
             public IQueryable<PersonEntity> Filter(
@@ -32,18 +32,18 @@ namespace CHC.Consent.EFCore.Tests.Identity
         [Fact]
         public void CannotGetHandlerForNonPersonType() =>
             Assert.Throws<ArgumentException>(
-                () => new IdentifierHandlerProvider(A.Dummy<IServiceProvider>()).GetHandler(typeof(DateTime)));
+                () => new IdentifierHandlerProvider(A.Dummy<IServiceProvider>()).GetPersistanceHandler(typeof(DateTime)));
 
         [Fact]
         public void GetsHandlerFromServiceProvider()
         {
             var services = A.Fake<IServiceProvider>(_ => _.Strict());
             var wrapper =
-                new PersonIdentifierHandlerWrapper<Identifier>(new IdentifierHandler());
+                new PersonIdentifierPersistanceHandlerWrapper<Identifier>(new IdentifierPersistanceHandler());
                 
-            A.CallTo(() => services.GetService(typeof(PersonIdentifierHandlerWrapper<Identifier>))).Returns(wrapper);
+            A.CallTo(() => services.GetService(typeof(PersonIdentifierPersistanceHandlerWrapper<Identifier>))).Returns(wrapper);
 
-            var handler = new IdentifierHandlerProvider(services).GetHandler(typeof(Identifier));
+            var handler = new IdentifierHandlerProvider(services).GetPersistanceHandler(typeof(Identifier));
             
             Assert.Equal(wrapper, handler);
         }

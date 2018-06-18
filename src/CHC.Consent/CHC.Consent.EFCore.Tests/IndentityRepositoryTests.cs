@@ -43,13 +43,13 @@ namespace CHC.Consent.EFCore.Tests
             Context.SaveChanges();
 
 
-            var identityHandler = new PersonIdentifierHandler<NhsNumberIdentifier>(
+            var identityHandler = new PersonIdentifierPersistanceHandler<NhsNumberIdentifier>(
                 new NhsNumberIdentifierMarshaller(),
                 NhsNumberIdentifier.TypeName,
-                new XunitLogger<PersonIdentifierHandler<NhsNumberIdentifier>>(outputHelper, "test"));
+                new XunitLogger<PersonIdentifierPersistanceHandler<NhsNumberIdentifier>>(outputHelper, "test"));
             
             var handlerProvider = A.Fake<IIdentifierHandlerProvider>();
-            A.CallTo(() => handlerProvider.GetHandler(typeof(NhsNumberIdentifier))).Returns(new PersonIdentifierHandlerWrapper<NhsNumberIdentifier>(identityHandler));
+            A.CallTo(() => handlerProvider.GetPersistanceHandler(typeof(NhsNumberIdentifier))).Returns(new PersonIdentifierPersistanceHandlerWrapper<NhsNumberIdentifier>(identityHandler));
             
             var storeProvider = (IStoreProvider)new ContextStoreProvider (CreateNewContextInSameTransaction());
 
@@ -83,10 +83,10 @@ namespace CHC.Consent.EFCore.Tests
 
             var handlerProvider = A.Fake<IIdentifierHandlerProvider>();
 
-            var handlerFake = A.Fake<IPersonIdentifierHandler>();
+            var handlerFake = A.Fake<IPersonIdentifierPersistanceHandler>();
             
             
-            A.CallTo(() => handlerProvider.GetHandler(A<Type>._)).Returns(handlerFake);
+            A.CallTo(() => handlerProvider.GetPersistanceHandler(A<Type>._)).Returns(handlerFake);
             
             var repository = new IdentityRepository(
                 registryBuilder.CreateTypeRegistry(),

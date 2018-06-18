@@ -4,20 +4,21 @@ using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore.Identity;
+using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CHC.Consent.EFCore
 {
     /// <summary>
     /// <para>
-    /// Retrieves <see cref="PersonIdentifierHandlerWrapper{TIdentifier}"/> from a <see cref="IServiceProvider"/>
+    /// Retrieves <see cref="PersonIdentifierPersistanceHandlerWrapper{TIdentifier}"/> from a <see cref="IServiceProvider"/>
     /// by <see cref="Type"/> of Identifier
     /// </para> 
     /// </summary>
     public class IdentifierHandlerProvider : IIdentifierHandlerProvider
     {
         private IServiceProvider Services { get; }
-        
+
         public IdentifierHandlerProvider(IServiceProvider services)
         {
             Services = services;
@@ -45,18 +46,36 @@ namespace CHC.Consent.EFCore
             }
         }
 
-        private readonly WrapperTypeCache handlerWrapperTypeCache =
-            new WrapperTypeCache(typeof(PersonIdentifierHandlerWrapper<>));
+        private readonly WrapperTypeCache persistanceHandlerWrapperTypeCache =
+            new WrapperTypeCache(typeof(PersonIdentifierPersistanceHandlerWrapper<>));
 
-        public IPersonIdentifierHandler GetHandler(Type identifierType)
+        private readonly WrapperTypeCache displayHandlerWrapperTypeCache =
+            new WrapperTypeCache(typeof(PersonIdentifierDisplayHandlerWrapper<>));
+
+
+        private static void EnsureIsPersonIdentifierType(Type identifierType)
         {
             if (!identifierType.IsSubtypeOf<IPersonIdentifier>())
                 throw new ArgumentException(
                     $"{identifierType} is not a {nameof(IPersonIdentifier)}",
                     nameof(identifierType));
-            
-            var wrapperType = handlerWrapperTypeCache.GetWrapperType(identifierType);
-            return (IPersonIdentifierHandler) Services.GetRequiredService(wrapperType);
+        }
+
+        public IPersonIdentifierPersistanceHandler GetPersistanceHandler(Type identifierType)
+        {
+            EnsureIsPersonIdentifierType(identifierType);
+
+            var wrapperType = persistanceHandlerWrapperTypeCache.GetWrapperType(identifierType);
+            return (IPersonIdentifierPersistanceHandler) Services.GetRequiredService(wrapperType);
+        }
+
+        public IPersonIdentifierDisplayHandler GetDisplayHandler(Type identifierType)
+        {
+            EnsureIsPersonIdentifierType(identifierType);
+
+            var wrapperType = displayHandlerWrapperTypeCache.GetWrapperType(identifierType);
+            return (IPersonIdentifierDisplayHandler) Services.GetService(wrapperType) ??
+                   throw new InvalidOperationException($"No display handler registered for {identifierType}");
         }
     }
 }

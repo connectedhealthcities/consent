@@ -6,7 +6,7 @@ using CHC.Consent.EFCore.Entities;
 
 namespace CHC.Consent.EFCore
 {
-    public interface IPersonIdentifierHandler
+    public interface IPersonIdentifierPersistanceHandler
     {
         bool Update(PersonEntity person, IEnumerable<IPersonIdentifier> value, IStoreProvider stores);
         IEnumerable<IPersonIdentifier> Get(PersonEntity person, IStoreProvider stores);
@@ -15,7 +15,7 @@ namespace CHC.Consent.EFCore
             IQueryable<PersonEntity> people, IPersonIdentifier identifier, IStoreProvider storeProvider);
     }
 
-    public interface IPersonIdentifierHandler<TIdentifier> where TIdentifier : IPersonIdentifier
+    public interface IPersonIdentifierPersistanceHandler<TIdentifier> where TIdentifier : IPersonIdentifier
     {
         IQueryable<PersonEntity> Filter(
             IQueryable<PersonEntity> people, TIdentifier value, IStoreProvider stores);

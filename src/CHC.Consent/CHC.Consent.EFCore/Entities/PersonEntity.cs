@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Infrastructure.Data;
+using CHC.Consent.EFCore.Security;
 
 [assembly:InternalsVisibleTo("CHC.Consent.EFCore.Tests")]
 
@@ -10,7 +11,7 @@ namespace CHC.Consent.EFCore.Entities
     /// <summary>
     /// Stored (and allocates) Ids for people
     /// </summary>
-    public class PersonEntity : IEntity
+    public class PersonEntity : IEntity, ISecurable
     {
         public virtual long Id { get; set; }
         
@@ -19,7 +20,7 @@ namespace CHC.Consent.EFCore.Entities
             return entity == null ? null : new PersonIdentity( entity.Id );
         }
 
-        protected bool Equals(PersonEntity other)
+        private bool Equals(PersonEntity other)
         {
             return Id == other.Id;
         }
@@ -38,5 +39,8 @@ namespace CHC.Consent.EFCore.Entities
         {
             return Id.GetHashCode();
         }
+
+        /// <inheritdoc />
+        public AccessControlList ACL { get; set; } = new AccessControlList { Description = "Person"};
     }
 }
