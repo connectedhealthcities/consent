@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Razor;
 
 [assembly: AspMvcViewLocationFormat("~/Features/{3}/{1}/{0}.cshtml")]
+[assembly: AspMvcViewLocationFormat("~/Features/IdentityServer/{1}/{0}.cshtml")]
 [assembly: AspMvcViewLocationFormat("~/Features/{1}/{0}.cshtml")]
 [assembly: AspMvcViewLocationFormat("~/Features/{3}/Shared/{0}.cshtml")]
 [assembly: AspMvcViewLocationFormat("~/Features/Shared/{0}.cshtml")]
