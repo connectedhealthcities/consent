@@ -6,7 +6,7 @@ namespace CHC.Consent.Common.Infrastructure
     /// <summary>
     /// A mapping between types and names - used for marhsalling/serializations 
     /// </summary>
-    public interface ITypeRegistry : IEnumerable<ClassMapping>
+    public interface ITypeRegistry 
     {
         bool TryGetName(Type type, out string name);
         bool TryGetType(string name, out  Type type);
@@ -15,6 +15,9 @@ namespace CHC.Consent.Common.Infrastructure
         Type this[string name] { get; }
         /// <exception cref="KeyNotFoundException"  />
         string this[Type type] { get; }
+
+        IEnumerable<Type> RegisteredTypes { get; }
+        IEnumerable<string> RegisteredNames { get;  }
     }
 
     /// <summary>

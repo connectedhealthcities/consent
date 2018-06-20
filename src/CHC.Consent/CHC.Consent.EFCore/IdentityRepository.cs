@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using CHC.Consent.Common;
@@ -12,8 +11,7 @@ namespace CHC.Consent.EFCore
     {
         private readonly IStoreProvider stores;
         private IStore<PersonEntity> People => stores.Get<PersonEntity>();
-        private readonly IIdentifierHandlerProvider handlerProvider;
-        private readonly ITypeRegistry identifierRegistry;
+        private readonly PersonIdentifierHandlerProvider handlers;
 
         public IdentityRepository(
             ITypeRegistry<IPersonIdentifier> identifierRegistry, 
@@ -21,11 +19,12 @@ namespace CHC.Consent.EFCore
             IStoreProvider stores)
         {
             this.stores = stores;
-            this.identifierRegistry = identifierRegistry;
-            handlerProvider = identifierHandlerProvider;
+
+            handlers = new PersonIdentifierHandlerProvider(identifierHandlerProvider, identifierRegistry);
         }
 
-        public PersonIdentity FindPersonBy(params IPersonIdentifier[] identifiers) => FindPersonBy(identifiers.AsEnumerable());
+        public PersonIdentity FindPersonBy(params IPersonIdentifier[] identifiers) => 
+            FindPersonBy(identifiers.AsEnumerable());
         
         public PersonIdentity FindPersonBy(IEnumerable<IPersonIdentifier> identifiers)
         {
@@ -37,17 +36,15 @@ namespace CHC.Consent.EFCore
             IQueryable<PersonEntity> peopleEntities, 
             IPersonIdentifier identifier)
         {
-            return GetHandler(identifier).Filter(peopleEntities, identifier, stores);
+            return handlers.GetPersistanceHandler(identifier).Filter(peopleEntities, identifier, stores);
         }
 
         public IEnumerable<IPersonIdentifier> GetPersonIdentities(long personId)
         {
             var person = People.Get(personId);
 
-            return identifierRegistry
-                .Select(_ => _.Type)
-                .Select(GetHandler)
-                .SelectMany(handler => handler.Get(person, stores));
+            return handlers.AllHandlers()
+                .SelectMany(handler => handler.GetIdentifiers(person, stores));
 
         }
 
@@ -59,7 +56,6 @@ namespace CHC.Consent.EFCore
             UpdatePerson(person, identifiers);
             
             return person;
-            
         }
 
         /// <inheritdoc />
@@ -72,13 +68,8 @@ namespace CHC.Consent.EFCore
         {
             foreach (var identifierGroup in identifiers.GroupBy(_ => _.GetType()))
             {
-                GetHandler(identifierGroup.Key).Update(person, identifierGroup.ToArray(), stores);
+                handlers.GetPersistanceHandler(identifierGroup.Key).Update(person, identifierGroup.ToArray(), stores);
             }
         }
-
-        private IPersonIdentifierPersistanceHandler GetHandler(IPersonIdentifier identifier) =>
-            GetHandler(identifier.GetType());
-        private IPersonIdentifierPersistanceHandler GetHandler(Type identifierType) =>
-            handlerProvider.GetPersistanceHandler(identifierType);
     }
 }

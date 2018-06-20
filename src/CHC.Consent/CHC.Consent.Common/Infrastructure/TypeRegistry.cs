@@ -14,7 +14,7 @@ namespace CHC.Consent.Common.Infrastructure
     /// </summary>
     /// <typeparam name="TBaseType">The base type/interface which types inherit/implement</typeparam>
     /// <typeparam name="TAttribute">The type of the attribute - must implement <see cref="ITypeName"/></typeparam>
-    public class TypeRegistry<TBaseType, TAttribute> : ITypeRegistry<TBaseType> 
+    public class TypeRegistry<TBaseType, TAttribute> : ITypeRegistry<TBaseType>, IEnumerable<ClassMapping>
         where TAttribute: Attribute, ITypeName
     {
         private readonly IDictionary<string, Type> namesToTypes = new Dictionary<string, Type>();
@@ -41,13 +41,11 @@ namespace CHC.Consent.Common.Infrastructure
             typesToNames.Add(type, name);
         }
 
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        public IEnumerator<ClassMapping> GetEnumerator()
-        {
-            return namesToTypes.Select(_ => new ClassMapping(name:_.Key, type:_.Value)).GetEnumerator();
-        }
+        public IEnumerable<Type> RegisteredTypes => namesToTypes.Values;
+        public IEnumerable<string> RegisteredNames => namesToTypes.Keys;
         
+        
+
         public bool TryGetName(Type type, out string name) => typesToNames.TryGetValue(type, out name);
 
         public bool TryGetType(string name, out Type type) => namesToTypes.TryGetValue(name, out type);
@@ -55,5 +53,12 @@ namespace CHC.Consent.Common.Infrastructure
 
         public Type this[string name] => namesToTypes[name];
         public string this[Type type] => typesToNames[type];
+
+        /// <inheritdoc />
+        public IEnumerator<ClassMapping> GetEnumerator() =>
+            namesToTypes.Select(_ => new ClassMapping(_.Key, _.Value)).GetEnumerator();
+
+        /// <inheritdoc />
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

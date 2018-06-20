@@ -127,7 +127,7 @@ namespace CHC.Consent.Tests.Infrastructure
         [Fact]
         public void EnumeratesKnownMappings()
         {
-            Action<ClassMapping> Mapping<T>(string name)
+            Action<ClassMapping> IsMapping<T>(string name)
             {
                 return _ =>
                 {
@@ -143,9 +143,9 @@ namespace CHC.Consent.Tests.Infrastructure
 
             Assert.Collection(
                 registry,
-                Mapping<Type1>(nameof(Type1)),
-                Mapping<Type2>(nameof(Type2)),
-                Mapping<UnnamedType>("test")
+                IsMapping<Type1>(nameof(Type1)),
+                IsMapping<Type2>(nameof(Type2)),
+                IsMapping<UnnamedType>("test")
             );
         }
     }

@@ -31,13 +31,13 @@ namespace CHC.Consent.Api.Infrastructure
                 model.Discriminator = "$type";
                 model.Properties.Add(
                     "$type",
-                    new Schema {Enum = registry.Select(_ => _.Name).Cast<object>().ToArray(), Type = "string"});
+                    new Schema {Enum = registry.RegisteredNames.Cast<object>().ToArray(), Type = "string"});
                 if(model.Required == null) model.Required = new List<string>();
                 model.Required.Add("$type");
 
-                foreach (var identifierRegistration in registry)
+                foreach (var identifierType in registry.RegisteredTypes)
                 {
-                    context.SchemaRegistry.GetOrRegister(identifierRegistration.Type);
+                    context.SchemaRegistry.GetOrRegister(identifierType);
                 }
             }
             else

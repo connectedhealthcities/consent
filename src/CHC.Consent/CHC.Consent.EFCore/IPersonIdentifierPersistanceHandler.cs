@@ -8,7 +8,7 @@ namespace CHC.Consent.EFCore
     public interface IPersonIdentifierPersistanceHandler
     {
         bool Update(PersonEntity person, IEnumerable<IPersonIdentifier> value, IStoreProvider stores);
-        IEnumerable<IPersonIdentifier> Get(PersonEntity person, IStoreProvider stores);
+        IEnumerable<IPersonIdentifier> GetIdentifiers(PersonEntity person, IStoreProvider stores);
 
         IQueryable<PersonEntity> Filter(
             IQueryable<PersonEntity> people, IPersonIdentifier identifier, IStoreProvider storeProvider);

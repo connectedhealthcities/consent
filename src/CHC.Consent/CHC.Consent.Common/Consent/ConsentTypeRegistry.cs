@@ -20,13 +20,10 @@ namespace CHC.Consent.Common.Consent
         }
 
         private IEnumerable<ITypeRegistry> Registries { get; }
-        
 
-        /// <inheritdoc />
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        /// <inheritdoc />
-        public IEnumerator<ClassMapping> GetEnumerator() => Registries.SelectMany(_ => _).GetEnumerator();
+        public IEnumerable<Type> RegisteredTypes => Registries.SelectMany(_ => _.RegisteredTypes);
+        public IEnumerable<string> RegisteredNames => Registries.SelectMany(_ => _.RegisteredNames);
 
         /// <inheritdoc />
         public bool TryGetName(Type type, out string name)

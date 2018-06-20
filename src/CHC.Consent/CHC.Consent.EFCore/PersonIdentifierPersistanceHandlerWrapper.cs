@@ -39,7 +39,7 @@ namespace CHC.Consent.EFCore
 
 
         /// <inheritdoc />
-        public IEnumerable<IPersonIdentifier> Get(PersonEntity person, IStoreProvider stores) 
+        public IEnumerable<IPersonIdentifier> GetIdentifiers(PersonEntity person, IStoreProvider stores) 
             => persistanceHandler.Get(person, stores).Cast<IPersonIdentifier>();
 
         /// <inheritdoc />
