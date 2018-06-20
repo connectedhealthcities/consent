@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.Consent;
@@ -18,41 +19,28 @@ namespace CHC.Consent.Api.Pages
     [Authorize]
     public class IndexModel : PageModel
     {
+        private IConsentRepository Consent { get; }
         private readonly IUserProvider user;
-        public ConsentContext Context { get; }
 
         /// <inheritdoc />
-        public IndexModel(ConsentContext context, IUserProvider user)
+        public IndexModel(IConsentRepository consent, IUserProvider user)
         {
+            Consent = consent;
             this.user = user;
-            Context = context;
         }
 
-
-        public string SubjectId { get; private set; }
-        public IEnumerable<StudyEntity> Studies { get; private set; }
-
+        public IEnumerable<Study> Studies { get; private set; }
 
         public IActionResult OnGet()
         {
-            var roles = user.Roles.ToArray();
-            var userName = user.UserName;
-            Studies = Context.Studies.Where(
-                    _ => _.ACL.Entries.Any(
-                        acl => acl.Permission.Access == "Read" && (
-                                   ((UserSecurityPrincipal) acl.Prinicipal).User.UserName == userName
-                                   || roles.Contains(((RoleSecurityPrincipal) acl.Prinicipal).Role.Name))))
-                .ToImmutableArray();
+            Studies = Consent.GetStudies(user);
 
             if (Studies.Count() == 1)
             {
-                return RedirectToPage("Studies", new {id = Studies.Single().Id});
+                return RedirectToPage("Studies", new {id = Studies.Single().Id.Id});
             }
-            
-            SubjectId = User.GetSubjectId();
 
             return Page();
-
         }
     }
 }

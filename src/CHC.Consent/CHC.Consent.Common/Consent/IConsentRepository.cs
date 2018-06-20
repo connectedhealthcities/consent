@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using CHC.Consent.Common.Infrastructure;
 
 namespace CHC.Consent.Common.Consent
 {
@@ -12,5 +13,7 @@ namespace CHC.Consent.Common.Consent
 
         ConsentIdentity FindActiveConsent(StudySubject studySubject, IEnumerable<CaseIdentifier> caseIdentifiers);
         ConsentIdentity AddConsent(Consent consent);
+
+        IEnumerable<Study> GetStudies(IUserProvider user);
     }
 }

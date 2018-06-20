@@ -1,5 +1,4 @@
 ﻿@page
-@using Microsoft.IdentityModel.Clients.ActiveDirectory
 @model IndexModel
 
 Hello @User.Identity.Name
@@ -14,4 +13,8 @@ Hello @User.Identity.Name
             </li>
         }
     </ul>
+}
+else
+{
+    <div class="alert alert-info"><span class="glyphicon-info-sign"></span>You do not have access to any studies</div>
 }

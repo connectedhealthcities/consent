@@ -6,6 +6,8 @@ using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
+using CHC.Consent.EFCore.Security;
+using Microsoft.AspNet.Identity;
 
 namespace CHC.Consent.EFCore
 {
@@ -145,6 +147,21 @@ namespace CHC.Consent.EFCore
             }
 
             return new ConsentIdentity(saved.Id);
+        }
+
+
+        public IEnumerable<Study> GetStudies(IUserProvider user)
+        {
+            var roles = user.Roles.ToArray();
+            var userName = user.UserName;
+            
+            return Studies.Where(
+                    _ => _.ACL.Entries.Any(
+                        acl => acl.Permission.Access == "Read" && (
+                                   ((UserSecurityPrincipal) acl.Prinicipal).User.UserName == userName
+                                   || roles.Contains(((RoleSecurityPrincipal) acl.Prinicipal).Role.Name))))
+                .Select(_ => new Study(_.Id, _.Name))
+                .ToArray();
         }
 
         private XmlMarshaller GetMarshaller(CaseIdentifier caseIdentifier)
