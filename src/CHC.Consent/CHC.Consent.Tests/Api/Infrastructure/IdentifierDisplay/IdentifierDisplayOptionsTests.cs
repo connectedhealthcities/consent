@@ -28,9 +28,9 @@ namespace CHC.Consent.Tests.Api.Infrastructure.IdentifierDisplay
                 }
             ).Build();
 
-            Assert.Equal(null,  configuration.GetValue<Type>("Test"));
+            Assert.Null(configuration.GetValue<Type>("Test"));
 
-            Assert.Equal(null, configuration.Get<TestConfig>().Test);
+            Assert.Null(configuration.Get<TestConfig>().Test);
         }
         
     }
