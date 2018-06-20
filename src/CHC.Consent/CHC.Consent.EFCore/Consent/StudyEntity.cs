@@ -1,5 +1,4 @@
-﻿using CHC.Consent.Common.Infrastructure.Data;
-using CHC.Consent.EFCore.Security;
+﻿using CHC.Consent.EFCore.Security;
 
 namespace CHC.Consent.EFCore.Consent
 {

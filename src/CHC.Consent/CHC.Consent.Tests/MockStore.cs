@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using CHC.Consent.Common.Infrastructure.Data;
+using CHC.Consent.EFCore;
 
 namespace CHC.Consent.Tests
 {

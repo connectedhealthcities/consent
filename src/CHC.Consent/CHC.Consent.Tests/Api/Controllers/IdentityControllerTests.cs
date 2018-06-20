@@ -15,7 +15,6 @@ using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
-using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.Identity;
 using CHC.Consent.Testing.Utils;

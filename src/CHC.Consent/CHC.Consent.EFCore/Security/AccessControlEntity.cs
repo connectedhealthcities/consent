@@ -1,6 +1,4 @@
-﻿using CHC.Consent.Common.Infrastructure.Data;
-
-namespace CHC.Consent.EFCore.Security
+﻿namespace CHC.Consent.EFCore.Security
 {
     public class AccessControlEntity : IEntity
     {

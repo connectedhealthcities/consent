@@ -5,7 +5,6 @@ using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Consent.Identifiers;
 using CHC.Consent.Common.Infrastructure;
-using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.Testing.Utils;

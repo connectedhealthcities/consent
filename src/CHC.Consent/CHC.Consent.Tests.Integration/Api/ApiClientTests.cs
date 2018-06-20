@@ -6,7 +6,6 @@ using System.Runtime.CompilerServices;
 using CHC.Consent.Api.Client;
 using CHC.Consent.Api.Client.Models;
 using CHC.Consent.Common;
-using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.Testing.Utils;

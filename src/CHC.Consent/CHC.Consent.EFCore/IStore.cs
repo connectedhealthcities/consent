@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace CHC.Consent.Common.Infrastructure.Data
+namespace CHC.Consent.EFCore
 {
     public interface IStore<T> : IQueryable<T> where T : IEntity
     {

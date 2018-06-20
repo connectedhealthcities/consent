@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using CHC.Consent.Common;
-using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore.Security;
 
 [assembly:InternalsVisibleTo("CHC.Consent.EFCore.Tests")]

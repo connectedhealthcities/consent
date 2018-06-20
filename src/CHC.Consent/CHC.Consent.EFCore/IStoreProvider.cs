@@ -1,4 +1,4 @@
-﻿namespace CHC.Consent.Common.Infrastructure.Data
+﻿namespace CHC.Consent.EFCore
 {
     public interface IStoreProvider
     {

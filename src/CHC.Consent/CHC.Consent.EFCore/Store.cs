@@ -3,9 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using CHC.Consent.Common.Infrastructure.Data;
 
-namespace CHC.Consent.Api.Infrastructure
+namespace CHC.Consent.EFCore
 {
     /// <summary>
     /// Helper class to provide resolution of <see cref="IStore{T}"/> from <see cref="IStoreProvider"/> 

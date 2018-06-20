@@ -1,6 +1,4 @@
-﻿using CHC.Consent.Common.Infrastructure.Data;
-
-namespace CHC.Consent.EFCore.Consent
+﻿namespace CHC.Consent.EFCore.Consent
 {
     public class CaseIdentifierEntity : IEntity
     {

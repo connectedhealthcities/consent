@@ -1,5 +1,4 @@
 ﻿using System;
-using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.EFCore.Entities;
 
 namespace CHC.Consent.EFCore.Consent

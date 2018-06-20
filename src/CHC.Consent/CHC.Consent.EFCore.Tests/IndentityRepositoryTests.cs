@@ -4,7 +4,6 @@ using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Identity.Identifiers.Medway;
 using CHC.Consent.Common.Infrastructure;
-using CHC.Consent.Common.Infrastructure.Data;
 using CHC.Consent.DependencyInjection;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.Identity;
