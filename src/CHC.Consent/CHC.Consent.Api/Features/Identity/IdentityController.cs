@@ -56,7 +56,7 @@ namespace CHC.Consent.Api.Features.Identity
         [AutoCommit]
         public IActionResult GetPerson(long id)
         {
-            return Ok(IdentityRepository.GetPersonIdentities(id));
+            return Ok(IdentityRepository.GetPersonIdentifiers(id));
         }
 
         [HttpPost("search")]

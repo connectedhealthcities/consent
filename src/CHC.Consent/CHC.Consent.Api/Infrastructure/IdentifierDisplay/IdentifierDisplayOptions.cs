@@ -5,6 +5,6 @@ namespace CHC.Consent.Api.Infrastructure.IdentifierDisplay
 {
     public class IdentifierDisplayOptions
     {
-        public List<Type> Default { get; set; } = new List<Type>();
+        public List<string> Default { get; set; } = new List<string>();
     }
 }

@@ -4,6 +4,7 @@ using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore.Entities;
+using CHC.Consent.EFCore.Security;
 
 namespace CHC.Consent.EFCore
 {
@@ -39,11 +40,11 @@ namespace CHC.Consent.EFCore
             return handlers.GetPersistanceHandler(identifier).Filter(peopleEntities, identifier, stores);
         }
 
-        public IEnumerable<IPersonIdentifier> GetPersonIdentities(long personId)
+        public IEnumerable<IPersonIdentifier> GetPersonIdentifiers(long personId)
         {
             var person = People.Get(personId);
 
-            return handlers.AllHandlers()
+            return handlers.AllPersistanceHandlers()
                 .SelectMany(handler => handler.GetIdentifiers(person, stores));
 
         }
@@ -62,6 +63,45 @@ namespace CHC.Consent.EFCore
         public void UpdatePerson(PersonIdentity personIdentity, IEnumerable<IPersonIdentifier> identifiers)
         {
             Update(People.Get(personIdentity.Id), identifiers);
+        }
+
+        /// <inheritdoc />
+        public IDictionary<PersonIdentity, IDictionary<string, IEnumerable<IPersonIdentifier>>>
+            GetPeopleWithIdentifiers(
+                IEnumerable<PersonIdentity> personIds,
+                IEnumerable<string> identifierNames,
+                IUserProvider user)
+        {
+            var userName = user.UserName;
+            var roles = user.Roles.ToArray();
+
+            var peopleIdValues = personIds.Select(_ => _.Id).ToArray();
+            var people = People.Where(
+                    p => p.ACL.Entries.Any(
+                        acl => acl.Permission.Access == "Read" && (
+                                   ((UserSecurityPrincipal) acl.Prinicipal).User.UserName == userName
+                                   || roles.Contains(((RoleSecurityPrincipal) acl.Prinicipal).Role.Name)))
+                )
+                .Where(
+                    p => peopleIdValues.Contains(p.Id))
+                .Distinct()
+                .ToList();
+
+            var identifiers = new Dictionary<PersonIdentity, IDictionary<string, IEnumerable<IPersonIdentifier>>>();
+            var namesAndHandlers = identifierNames.Distinct().Select(_ => (_, handlers.GetPersistanceHandler(_))).ToArray(); 
+            
+            foreach (var personEntity in people)
+            {
+                var personIdentifiers = new Dictionary<string, IEnumerable<IPersonIdentifier>>();
+                foreach (var (name, handler) in namesAndHandlers)
+                {
+                    personIdentifiers[name] = handler.GetIdentifiers(personEntity, stores);
+                }
+
+                identifiers[personEntity] = personIdentifiers;
+            }
+
+            return identifiers;
         }
 
         private void Update(PersonEntity person, IEnumerable<IPersonIdentifier> identifiers)

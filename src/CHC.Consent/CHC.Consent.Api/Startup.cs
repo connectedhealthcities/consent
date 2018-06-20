@@ -33,6 +33,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
@@ -133,6 +134,7 @@ namespace CHC.Consent.Api
                 }
             );
 
+            services.AddTransient<IPersonIdentifierDisplayHandlerProvider, PersonIdentifierHandlerProvider>();
 
             var consentIdentifierRegistry = new TypeRegistry<CaseIdentifier, CaseIdentifierAttribute>();
             consentIdentifierRegistry.Add<PregnancyNumberIdentifier>();
@@ -163,20 +165,9 @@ namespace CHC.Consent.Api
                     IdentityModelBinderProviderConfiguration<ConsentTypeRegistry, ConsentSpecification>>();
 
 
-            services.Configure<IdentifierDisplayOptions>(GetIdentifierDisplayOptions);
+            services.Configure<IdentifierDisplayOptions>(
+                displayOptions => Configuration.Bind("IdentifierDisplay", displayOptions));
 
-        }
-
-        private void GetIdentifierDisplayOptions(IdentifierDisplayOptions displayOptions)
-        {
-            var typeNames = new List<string>();
-            Configuration.Bind("IdentifierDisplay:Default", typeNames);
-            foreach (var typeName in typeNames)
-            {
-                var type = Type.GetType(typeName);
-                if(type == null) throw new InvalidOperationException($"Cannot find type {typeName} for identifier display");
-                displayOptions.Default.Add(type);
-            }
         }
 
         protected virtual void ConfigureDatabaseOptions(IServiceProvider provider, DbContextOptionsBuilder options)

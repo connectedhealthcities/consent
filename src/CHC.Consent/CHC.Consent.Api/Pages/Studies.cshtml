@@ -6,26 +6,23 @@
 <table class="table">
     <thead>
     <th></th>
-    @foreach (var identifierType in Model.DisplayOptions.Value.Default)
+    @foreach (var identifierType in Model.IdentifierNames)
     {
-        <th>@Model.IdentifierHandlerProvider.GetDisplayHandler(identifierType).DisplayName</th>
+        <th>@Model.DisplayNames[identifierType]</th>
 
     }
     </thead>
     <tbody>
-    @foreach (var person in Model.People)
+    @foreach (var (person, identifiers) in Model.People)
     {
         <tr>
             <td>@person.Id</td>
             @{
-                var personIdentifiers = Model.Identifiers[person].Where(_ => _ != null);
-                foreach (var identifierType in Model.DisplayOptions.Value.Default)
+                foreach (var identifierType in Model.IdentifierNames)
                 {
                     <td>
                         @{
-                            var identifiers = personIdentifiers.Where(x => x.GetType() == identifierType);
-
-                            foreach (var identifier in identifiers)
+                            foreach (var identifier in identifiers[identifierType])
                             {
                                 <span><vc:identifier identifier="identifier"/></span>
                             }

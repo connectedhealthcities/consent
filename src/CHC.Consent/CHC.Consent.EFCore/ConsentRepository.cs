@@ -164,6 +164,16 @@ namespace CHC.Consent.EFCore
                 .ToArray();
         }
 
+        /// <inheritdoc />
+        public IEnumerable<PersonIdentity> GetConsentedPeopleIds(StudyIdentity studyIdentity)
+        {
+            return StudySubjects.Where(
+                    s => s.Study.Id == studyIdentity.Id &&
+                         Consents.Any(c => c.StudySubject.Id == s.Id && c.DateWithdrawn == null))
+                .Select(_ => new PersonIdentity(_.Person.Id))
+                .ToArray();
+        }
+
         private XmlMarshaller GetMarshaller(CaseIdentifier caseIdentifier)
         {
             var typeName = CaseIdentifierRegistry[caseIdentifier.GetType()];
