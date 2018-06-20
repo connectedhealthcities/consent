@@ -4,6 +4,10 @@
     <LangVersion>7.2</LangVersion>
     <RuntimeIdentifiers>netcore21;win-x64</RuntimeIdentifiers>
   </PropertyGroup>
+  <PropertyGroup>
+    <!-- see https://github.com/aspnet/Razor/issues/2406 -->
+    <_RazorBuildServerPipeName>razor-issues-2406</_RazorBuildServerPipeName>
+  </PropertyGroup>
   <ItemGroup>
     <Folder Include="wwwroot\" />
   </ItemGroup>
