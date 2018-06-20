@@ -5,6 +5,7 @@ using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.Security;
+using NeinLinq.EntityFrameworkCore;
 
 namespace CHC.Consent.EFCore
 {
@@ -76,14 +77,9 @@ namespace CHC.Consent.EFCore
             var roles = user.Roles.ToArray();
 
             var peopleIdValues = personIds.Select(_ => _.Id).ToArray();
-            var people = People.Where(
-                    p => p.ACL.Entries.Any(
-                        acl => acl.Permission.Access == "Read" && (
-                                   ((UserSecurityPrincipal) acl.Prinicipal).User.UserName == userName
-                                   || roles.Contains(((RoleSecurityPrincipal) acl.Prinicipal).Role.Name)))
-                )
-                .Where(
-                    p => peopleIdValues.Contains(p.Id))
+            var people = People.ToInjectable()
+                .Where(p => p.GrantsPermission(user, "read"))
+                .Where(p => peopleIdValues.Contains(p.Id))
                 .Distinct()
                 .ToList();
 

@@ -155,11 +155,8 @@ namespace CHC.Consent.EFCore
             var roles = user.Roles.ToArray();
             var userName = user.UserName;
             
-            return Studies.Where(
-                    _ => _.ACL.Entries.Any(
-                        acl => acl.Permission.Access == "Read" && (
-                                   ((UserSecurityPrincipal) acl.Prinicipal).User.UserName == userName
-                                   || roles.Contains(((RoleSecurityPrincipal) acl.Prinicipal).Role.Name))))
+            return Studies.ToInjectable()
+                .Where(s => s.GrantsPermission(user, "read"))
                 .Select(_ => new Study(_.Id, _.Name))
                 .ToArray();
         }
