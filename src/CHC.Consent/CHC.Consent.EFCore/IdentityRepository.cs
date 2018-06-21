@@ -73,12 +73,9 @@ namespace CHC.Consent.EFCore
                 IEnumerable<string> identifierNames,
                 IUserProvider user)
         {
-            var userName = user.UserName;
-            var roles = user.Roles.ToArray();
-
             var peopleIdValues = personIds.Select(_ => _.Id).ToArray();
             var people = People.ToInjectable()
-                .Where(p => p.GrantsPermission(user, "read"))
+                .WithReadPermissionGrantedTo(user)
                 .Where(p => peopleIdValues.Contains(p.Id))
                 .Distinct()
                 .ToList();

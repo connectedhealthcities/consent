@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Linq.Expressions;
 using CHC.Consent.Common.Infrastructure;
-using Microsoft.AspNet.Identity;
 using NeinLinq;
 
 namespace CHC.Consent.EFCore.Security
@@ -21,5 +20,11 @@ namespace CHC.Consent.EFCore.Security
                 acl => permissions.Contains(acl.Permission.Access) && (
                            ((UserSecurityPrincipal) acl.Prinicipal).User.UserName == user.UserName
                            || user.Roles.Contains(((RoleSecurityPrincipal) acl.Prinicipal).Role.Name)));
+
+
+        public static IQueryable<T> WithReadPermissionGrantedTo<T>(this IQueryable<T> securables, IUserProvider user)
+            where T : ISecurable
+            => securables.Where(s => s.GrantsPermission(user, "read"));
+
     }
 }

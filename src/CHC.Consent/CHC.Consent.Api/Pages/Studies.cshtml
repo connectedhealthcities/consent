@@ -5,9 +5,10 @@
 <h1>@Model.Study.Name</h1>
 <table class="table">
     <thead>
-    <th></th>
+    <th>Subject Identifier</th>
     @foreach (var identifierType in Model.IdentifierNames)
     {
+    
         <th>@Model.DisplayNames[identifierType]</th>
 
     }
@@ -16,7 +17,7 @@
     @foreach (var (person, identifiers) in Model.People)
     {
         <tr>
-            <td>@person.Id</td>
+            <td><a asp-page="Subject"  asp-route-studyId="@person.StudyId.Id" asp-route-subjectIdentifier="@person.SubjectIdentifier">@person.SubjectIdentifier</a> </td>
             @{
                 foreach (var identifierType in Model.IdentifierNames)
                 {
