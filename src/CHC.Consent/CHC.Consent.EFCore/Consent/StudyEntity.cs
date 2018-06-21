@@ -2,7 +2,7 @@
 
 namespace CHC.Consent.EFCore.Consent
 {
-    public class StudyEntity : IEntity, ISecurable
+    public class StudyEntity : Securable, IEntity
     {
         /// <inheritdoc />
         public long Id { get; set; }

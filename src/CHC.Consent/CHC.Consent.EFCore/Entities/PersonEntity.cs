@@ -10,7 +10,7 @@ namespace CHC.Consent.EFCore.Entities
     /// <summary>
     /// Stored (and allocates) Ids for people
     /// </summary>
-    public class PersonEntity : IEntity, ISecurable
+    public class PersonEntity : Securable, IEntity
     {
         public virtual long Id { get; set; }
         
@@ -38,8 +38,5 @@ namespace CHC.Consent.EFCore.Entities
         {
             return Id.GetHashCode();
         }
-
-        /// <inheritdoc />
-        public AccessControlList ACL { get; set; } = new AccessControlList { Description = "Person"};
     }
 }

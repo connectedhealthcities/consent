@@ -15,6 +15,8 @@ namespace CHC.Consent.Common.Consent
         ConsentIdentity AddConsent(Consent consent);
 
         IEnumerable<Study> GetStudies(IUserProvider user);
-        IEnumerable<PersonIdentity> GetConsentedPeopleIds(StudyIdentity studyIdentity);
+        StudySubject[] GetConsentedSubjects(StudyIdentity studyIdentity);
+        IEnumerable<Consent> GetActiveConsentsForSubject(
+            StudyIdentity studyId, string subjectIdentifier, IUserProvider user);
     }
 }

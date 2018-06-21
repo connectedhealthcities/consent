@@ -8,6 +8,9 @@ using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.Security;
 using Microsoft.AspNet.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.Expressions;
+using NeinLinq.EntityFrameworkCore;
 
 namespace CHC.Consent.EFCore
 {
@@ -89,7 +92,7 @@ namespace CHC.Consent.EFCore
 
             if (!caseIdentifiers.Any())
             {
-                consents = consents.Where(_ => CaseIdentifiers.All(c => c.Consent != _));
+                consents = consents.Where(consent => CaseIdentifiers.All(caseId => caseId.Consent != consent));
             }
             else
             {
@@ -159,21 +162,86 @@ namespace CHC.Consent.EFCore
         }
 
         /// <inheritdoc />
-        public IEnumerable<PersonIdentity> GetConsentedPeopleIds(StudyIdentity studyIdentity)
+        public StudySubject[] GetConsentedSubjects(StudyIdentity studyIdentity)
         {
             return StudySubjects.Where(
                     s => s.Study.Id == studyIdentity.Id &&
                          Consents.Any(c => c.StudySubject.Id == s.Id && c.DateWithdrawn == null))
-                .Select(_ => new PersonIdentity(_.Person.Id))
+                .Select(_ => new StudySubject(studyIdentity, _.SubjectIdentifier, new PersonIdentity(_.Person.Id)))
                 .ToArray();
         }
 
-        private XmlMarshaller GetMarshaller(CaseIdentifier caseIdentifier)
+        /// <inheritdoc />
+        public IEnumerable<Common.Consent.Consent> GetActiveConsentsForSubject(
+            StudyIdentity studyId,
+            string subjectIdentifier,
+            IUserProvider user)
         {
-            var typeName = CaseIdentifierRegistry[caseIdentifier.GetType()];
-            var xmlMarshaller = new XmlMarshaller(caseIdentifier.GetType(), typeName);
+            var consentDetails = (
+                    from c in Consents.ToInjectable()
+                        .WithReadPermissionGrantedTo(user)
+                    let subject = c.StudySubject
+                    where c.DateWithdrawn == null
+                          && subject.SubjectIdentifier == subjectIdentifier
+                          && subject.Study.Id == studyId.Id
+                    select new
+                    {
+                        c.Id,
+                        c.DateProvided,
+                        PersonId = subject.Person.Id,
+                        GivenBy = c.GivenBy.Id,
+                    }
+                )
+                .ToArray();
+            var consentIds = consentDetails.Select(c => c.Id).ToArray();
+            var evidences =
+                Evidence
+                    .OfType<GivenEvidenceEntity>()
+                    .Where(e => consentIds.Contains(e.Consent.Id))
+                    .GroupBy(e => e.Consent.Id)
+                    .ToDictionary(e => e.Key, e => e.Select(Unmarshall));
+            
+            var caseIdentifiers =
+                CaseIdentifiers
+                    .Where(c => consentIds.Contains(c.Consent.Id))
+                    .GroupBy(c => c.Consent.Id)
+                    .ToDictionary(c => c.Key, c => c.Select(Unmarshall));
+
+            return consentDetails
+                .Select(
+                    _ => new Common.Consent.Consent(
+                        new StudySubject(studyId, subjectIdentifier, new PersonIdentity(_.PersonId)),
+                        _.DateProvided,
+                        _.GivenBy,
+                        evidences.TryGetValue(_.Id, out var evidence) ? evidence : Array.Empty<Evidence>(),
+                        caseIdentifiers.TryGetValue(_.Id, out var caseIds)
+                            ? caseIds
+                            : Array.Empty<CaseIdentifier>()));
+        }
+
+
+        private Evidence Unmarshall(EvidenceEntity evidenceEntity) =>
+            (Evidence) GetXmlMarshaller(evidenceEntity)
+                .Unmarshall(evidenceEntity.Type, evidenceEntity.Value);
+        
+        private CaseIdentifier Unmarshall(CaseIdentifierEntity caseIdentifierEntity) => 
+            (CaseIdentifier)GetXmlMarshaller(caseIdentifierEntity)
+            .Unmarshall(caseIdentifierEntity.Type, caseIdentifierEntity.Value);
+        
+        private XmlMarshaller GetXmlMarshaller(EvidenceEntity evidenceEntity)
+        {
+            var caseIdentifierType = EvidenceRegistry[evidenceEntity.Type];
+            var xmlMarshaller = new XmlMarshaller(caseIdentifierType, evidenceEntity.Type);
             return xmlMarshaller;
         }
+
+        private XmlMarshaller GetXmlMarshaller(CaseIdentifierEntity caseIdentifierEntity)
+        {
+            var caseIdentifierType = CaseIdentifierRegistry[caseIdentifierEntity.Type];
+            var xmlMarshaller = new XmlMarshaller(caseIdentifierType, caseIdentifierEntity.Type);
+            return xmlMarshaller;
+        }
+
 
         public StudySubject AddStudySubject(StudySubject studySubject)
         {
@@ -195,6 +263,13 @@ namespace CHC.Consent.EFCore
                 new StudyIdentity((long) saved.Study.Id),
                 saved.SubjectIdentifier,
                 new PersonIdentity((long) saved.Person.Id));
+        }
+
+        private XmlMarshaller GetMarshaller(CaseIdentifier caseIdentifier)
+        {
+            var typeName = CaseIdentifierRegistry[caseIdentifier.GetType()];
+            var xmlMarshaller = new XmlMarshaller(caseIdentifier.GetType(), typeName);
+            return xmlMarshaller;
         }
     }
 }

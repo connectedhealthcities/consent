@@ -1,0 +1,38 @@
+﻿@page "{studyId:long}/subject/{subjectIdentifier}"
+
+@model Subject
+
+<table class="table">
+    <thead>
+    <tr>
+        <td>Date Given</td>
+        <td>Given For</td>
+    </tr>
+    </thead>
+    <tbody>
+
+    @foreach (var consent in Model.ActiveConsents)
+    {
+        <tr>
+            <td>@consent.DateGiven.ToLongDateString()</td>
+            <td>
+                @if (consent.CaseIdentifiers.Any())
+                {
+                    <ul class="list-unstyled">
+                        @foreach (var identifier in consent.CaseIdentifiers)
+                        {
+                            <li>
+                                <vc:case-identifier identifier="identifier"/>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <text>N/A</text>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

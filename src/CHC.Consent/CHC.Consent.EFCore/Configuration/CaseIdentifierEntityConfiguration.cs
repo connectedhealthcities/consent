@@ -12,7 +12,7 @@ namespace CHC.Consent.EFCore.Configuration
             builder.ToTable("CaseIdentifier");
 
             builder.Property<long>("ConsentId").IsRequired();
-            builder.HasOne(_ => _.Consent).WithMany().HasForeignKey("ConsentId").IsRequired();
+            builder.HasOne(_ => _.Consent).WithMany(_ => _.CaseIdentifiers).HasForeignKey("ConsentId").IsRequired();
 
             builder.Property(_ => _.Value).IsRequired().HasMaxLength(int.MaxValue);
             builder.Property(_ => _.Type).IsRequired();
