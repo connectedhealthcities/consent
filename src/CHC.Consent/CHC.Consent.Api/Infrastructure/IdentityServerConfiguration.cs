@@ -6,6 +6,6 @@ namespace CHC.Consent.Api.Infrastructure
     public class IdentityServerConfiguration
     {
         public string Authority { get; set; }
-        public bool EnableInteralServer { get; set; } = true;
+        public bool EnableInternalServer { get; set; } = true;
     }
 }

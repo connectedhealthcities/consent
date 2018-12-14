@@ -82,11 +82,11 @@ namespace CHC.Consent.Tests
 
         public static IPersonIdentifier DateOfBirth(DateTime value)
         {
-            return new DateOfBirthIdentifier(value);
+            throw new NotImplementedException();
         }
 
-        public static IPersonIdentifier NhsNumber(string nhsNumber) => new NhsNumberIdentifier(nhsNumber);
+        public static IPersonIdentifier NhsNumber(string nhsNumber) => throw new NotImplementedException();
 
-        public static IPersonIdentifier BradfordHospitalNumber(string hosptialNumber) => new BradfordHospitalNumberIdentifier(hosptialNumber);
+        public static IPersonIdentifier BradfordHospitalNumber(string hosptialNumber) => throw new NotImplementedException();
     }
 }

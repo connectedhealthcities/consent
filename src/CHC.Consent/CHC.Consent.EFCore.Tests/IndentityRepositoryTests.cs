@@ -1,15 +1,4 @@
 using System;
-using System.Collections.Generic;
-using CHC.Consent.Common.Identity;
-using CHC.Consent.Common.Identity.Identifiers;
-using CHC.Consent.Common.Identity.Identifiers.Medway;
-using CHC.Consent.Common.Infrastructure;
-using CHC.Consent.DependencyInjection;
-using CHC.Consent.EFCore.Entities;
-using CHC.Consent.EFCore.Identity;
-using CHC.Consent.Testing.Utils;
-using FakeItEasy;
-using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -20,7 +9,8 @@ namespace CHC.Consent.EFCore.Tests
         [Fact]
         public void ThisTestIsInTheWrongPlace()
         {
-            var personOne = new PersonEntity();
+            throw new NotImplementedException();
+            /*var personOne = new PersonEntity();
             var personOneNhsNumber = new PersonIdentifierEntity
             {
                 Person = personOne,
@@ -59,7 +49,7 @@ namespace CHC.Consent.EFCore.Tests
 
             Assert.Equal(repository.FindPersonBy(new NhsNumberIdentifier(personOneNhsNumber.Value)), personOne);
             Assert.Equal(repository.FindPersonBy(new NhsNumberIdentifier(personTwoNhsNumber.Value)), personTwo);
-            Assert.Null(repository.FindPersonBy(new NhsNumberIdentifier("7787773")));
+            Assert.Null(repository.FindPersonBy(new NhsNumberIdentifier("7787773")));*/
         }
 
         /// <inheritdoc />
@@ -73,7 +63,8 @@ namespace CHC.Consent.EFCore.Tests
         [Fact]
         public void GroupsIdentityUpdatesByIdentityType()
         {
-            var registryBuilder = new PersonIdentifierRegistryOptions();
+            throw new NotImplementedException();
+            /*var registryBuilder = new PersonIdentifierRegistryOptions();
 
             registryBuilder.Add<NhsNumberIdentifier>(_ => _.WithMarshaller<NhsNumberIdentifierMarshaller>());
             registryBuilder.Add<MedwayContactNumberIdentifier>(_ => _.WithXmlMarshaller("Bib4All.MedwayNumber"));
@@ -118,7 +109,7 @@ namespace CHC.Consent.EFCore.Tests
                         A<PersonEntity>._,
                         A<IEnumerable<IPersonIdentifier>>.That.IsSameSequenceAs(nhsNumberIdentifier),
                         storeProvider))
-                .MustHaveHappened();
+                .MustHaveHappened();*/
                 
         }
     }

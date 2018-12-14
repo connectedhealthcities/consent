@@ -20,9 +20,9 @@ namespace CHC.Consent.Api.Client
             /// </param>
             /// <param name='specification'>
             /// </param>
-            public static object ConsentPut(this IApi operations, ConsentSpecification specification = default(ConsentSpecification))
+            public static object PutConsent(this IApi operations, ConsentSpecification specification = default(ConsentSpecification))
             {
-                return operations.ConsentPutAsync(specification).GetAwaiter().GetResult();
+                return operations.PutConsentAsync(specification).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -33,9 +33,9 @@ namespace CHC.Consent.Api.Client
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<object> ConsentPutAsync(this IApi operations, ConsentSpecification specification = default(ConsentSpecification), CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<object> PutConsentAsync(this IApi operations, ConsentSpecification specification = default(ConsentSpecification), CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.ConsentPutWithHttpMessagesAsync(specification, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.PutConsentWithHttpMessagesAsync(specification, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
@@ -46,9 +46,9 @@ namespace CHC.Consent.Api.Client
             /// </param>
             /// <param name='id'>
             /// </param>
-            public static void ConsentByIdGet(this IApi operations, long id)
+            public static void Get(this IApi operations, long id)
             {
-                operations.ConsentByIdGetAsync(id).GetAwaiter().GetResult();
+                operations.GetAsync(id).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -59,9 +59,9 @@ namespace CHC.Consent.Api.Client
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task ConsentByIdGetAsync(this IApi operations, long id, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task GetAsync(this IApi operations, long id, CancellationToken cancellationToken = default(CancellationToken))
             {
-                (await operations.ConsentByIdGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false)).Dispose();
+                (await operations.GetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false)).Dispose();
             }
 
             /// <param name='operations'>
@@ -69,9 +69,9 @@ namespace CHC.Consent.Api.Client
             /// </param>
             /// <param name='id'>
             /// </param>
-            public static IList<IPersonIdentifier> IdentitiesByIdGet(this IApi operations, long id)
+            public static IList<IPersonIdentifier> GetPerson(this IApi operations, long id)
             {
-                return operations.IdentitiesByIdGetAsync(id).GetAwaiter().GetResult();
+                return operations.GetPersonAsync(id).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -82,9 +82,9 @@ namespace CHC.Consent.Api.Client
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<IList<IPersonIdentifier>> IdentitiesByIdGetAsync(this IApi operations, long id, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<IList<IPersonIdentifier>> GetPersonAsync(this IApi operations, long id, CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.IdentitiesByIdGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.GetPersonWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
@@ -95,9 +95,9 @@ namespace CHC.Consent.Api.Client
             /// </param>
             /// <param name='match'>
             /// </param>
-            public static SearchResult IdentitiesSearchPost(this IApi operations, IList<MatchSpecification> match = default(IList<MatchSpecification>))
+            public static SearchResult FindPerson(this IApi operations, IList<MatchSpecification> match)
             {
-                return operations.IdentitiesSearchPostAsync(match).GetAwaiter().GetResult();
+                return operations.FindPersonAsync(match).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -108,9 +108,9 @@ namespace CHC.Consent.Api.Client
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<SearchResult> IdentitiesSearchPostAsync(this IApi operations, IList<MatchSpecification> match = default(IList<MatchSpecification>), CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<SearchResult> FindPersonAsync(this IApi operations, IList<MatchSpecification> match, CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.IdentitiesSearchPostWithHttpMessagesAsync(match, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.FindPersonWithHttpMessagesAsync(match, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
@@ -121,9 +121,9 @@ namespace CHC.Consent.Api.Client
             /// </param>
             /// <param name='specification'>
             /// </param>
-            public static PersonCreatedResult IdentitiesPut(this IApi operations, PersonSpecification specification = default(PersonSpecification))
+            public static PersonCreatedResult PutPerson(this IApi operations, PersonSpecification specification)
             {
-                return operations.IdentitiesPutAsync(specification).GetAwaiter().GetResult();
+                return operations.PutPersonAsync(specification).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -134,9 +134,9 @@ namespace CHC.Consent.Api.Client
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<PersonCreatedResult> IdentitiesPutAsync(this IApi operations, PersonSpecification specification = default(PersonSpecification), CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<PersonCreatedResult> PutPersonAsync(this IApi operations, PersonSpecification specification, CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.IdentitiesPutWithHttpMessagesAsync(specification, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.PutPersonWithHttpMessagesAsync(specification, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
@@ -151,9 +151,9 @@ namespace CHC.Consent.Api.Client
             /// </param>
             /// <param name='subjectIdentifier'>
             /// </param>
-            public static StudySubject StudiesByStudyIdSubjectsByIdByStubjectIdGet(this IApi operations, long studyId, string stubjectId, string subjectIdentifier = default(string))
+            public static StudySubject Get1(this IApi operations, long studyId, string stubjectId, string subjectIdentifier = default(string))
             {
-                return operations.StudiesByStudyIdSubjectsByIdByStubjectIdGetAsync(studyId, stubjectId, subjectIdentifier).GetAwaiter().GetResult();
+                return operations.Get1Async(studyId, stubjectId, subjectIdentifier).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -168,9 +168,9 @@ namespace CHC.Consent.Api.Client
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<StudySubject> StudiesByStudyIdSubjectsByIdByStubjectIdGetAsync(this IApi operations, long studyId, string stubjectId, string subjectIdentifier = default(string), CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<StudySubject> Get1Async(this IApi operations, long studyId, string stubjectId, string subjectIdentifier = default(string), CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.StudiesByStudyIdSubjectsByIdByStubjectIdGetWithHttpMessagesAsync(studyId, stubjectId, subjectIdentifier, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.Get1WithHttpMessagesAsync(studyId, stubjectId, subjectIdentifier, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
@@ -183,9 +183,9 @@ namespace CHC.Consent.Api.Client
             /// </param>
             /// <param name='personId'>
             /// </param>
-            public static StudySubject StudiesByStudyIdSubjectsGet(this IApi operations, long studyId, long personId)
+            public static StudySubject FindBySubjectId(this IApi operations, long studyId, long personId)
             {
-                return operations.StudiesByStudyIdSubjectsGetAsync(studyId, personId).GetAwaiter().GetResult();
+                return operations.FindBySubjectIdAsync(studyId, personId).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -198,9 +198,9 @@ namespace CHC.Consent.Api.Client
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<StudySubject> StudiesByStudyIdSubjectsGetAsync(this IApi operations, long studyId, long personId, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<StudySubject> FindBySubjectIdAsync(this IApi operations, long studyId, long personId, CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.StudiesByStudyIdSubjectsGetWithHttpMessagesAsync(studyId, personId, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.FindBySubjectIdWithHttpMessagesAsync(studyId, personId, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
@@ -211,9 +211,9 @@ namespace CHC.Consent.Api.Client
             /// </param>
             /// <param name='studyId'>
             /// </param>
-            public static string SubjectIdentifiersByStudyIdPost(this IApi operations, long studyId)
+            public static string Generate(this IApi operations, long studyId)
             {
-                return operations.SubjectIdentifiersByStudyIdPostAsync(studyId).GetAwaiter().GetResult();
+                return operations.GenerateAsync(studyId).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -224,9 +224,9 @@ namespace CHC.Consent.Api.Client
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<string> SubjectIdentifiersByStudyIdPostAsync(this IApi operations, long studyId, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<string> GenerateAsync(this IApi operations, long studyId, CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.SubjectIdentifiersByStudyIdPostWithHttpMessagesAsync(studyId, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.GenerateWithHttpMessagesAsync(studyId, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }

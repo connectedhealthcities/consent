@@ -16,11 +16,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHC.Consent.DataImporter", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHC.Consent.Api.Client", "CHC.Consent.Api.Client\CHC.Consent.Api.Client.csproj", "{02A0FC9D-494A-412F-AFCA-83589832619C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHC.Consent.DependencyInjection", "CHC.Consent.DependencyInjection\CHC.Consent.DependencyInjection.csproj", "{4B512A33-8B34-4BB8-A810-0F9FE4E8EBDC}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHC.Consent.Api.Bootstrap", "CHC.Consent.Api.Bootstrap\CHC.Consent.Api.Bootstrap.csproj", "{2CA234E7-601D-4994-9FBA-DD078256E1E0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHC.Consent.Tests.Integration", "CHC.Consent.Tests.Integration\CHC.Consent.Tests.Integration.csproj", "{D7CD6C78-5E22-4474-8FE3-6433E1D5F90E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Config", "Config", "{E31A558A-83DA-45AC-A748-BFD33E58489E}"
+ProjectSection(SolutionItems) = preProject
+	Config\Identifiers.json = Config\Identifiers.json
+EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -60,10 +63,6 @@ Global
 		{02A0FC9D-494A-412F-AFCA-83589832619C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{02A0FC9D-494A-412F-AFCA-83589832619C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{02A0FC9D-494A-412F-AFCA-83589832619C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4B512A33-8B34-4BB8-A810-0F9FE4E8EBDC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4B512A33-8B34-4BB8-A810-0F9FE4E8EBDC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4B512A33-8B34-4BB8-A810-0F9FE4E8EBDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4B512A33-8B34-4BB8-A810-0F9FE4E8EBDC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2CA234E7-601D-4994-9FBA-DD078256E1E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2CA234E7-601D-4994-9FBA-DD078256E1E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2CA234E7-601D-4994-9FBA-DD078256E1E0}.Release|Any CPU.ActiveCfg = Release|Any CPU

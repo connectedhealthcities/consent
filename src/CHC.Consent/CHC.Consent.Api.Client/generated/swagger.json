@@ -10,7 +10,7 @@
         "tags": [
           "Consent"
         ],
-        "operationId": "ConsentPut",
+        "operationId": "PutConsent",
         "consumes": [
           "application/json-patch+json",
           "application/json",
@@ -67,7 +67,7 @@
         "tags": [
           "Consent"
         ],
-        "operationId": "ConsentByIdGet",
+        "operationId": "Get",
         "consumes": [
           "application/xml",
           "application/xml",
@@ -95,7 +95,7 @@
         "tags": [
           "Identity"
         ],
-        "operationId": "IdentitiesByIdGet",
+        "operationId": "GetPerson",
         "consumes": [
           "application/xml",
           "application/xml",
@@ -119,6 +119,7 @@
           "200": {
             "description": "Success",
             "schema": {
+              "uniqueItems": false,
               "type": "array",
               "items": {
                 "$ref": "#/definitions/IPersonIdentifier"
@@ -133,7 +134,7 @@
         "tags": [
           "Identity"
         ],
-        "operationId": "IdentitiesSearchPost",
+        "operationId": "FindPerson",
         "consumes": [
           "application/json-patch+json",
           "application/json",
@@ -143,17 +144,14 @@
           "application/xml",
           "application/xml"
         ],
-        "produces": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
+        "produces": [],
         "parameters": [
           {
             "name": "match",
             "in": "body",
-            "required": false,
+            "required": true,
             "schema": {
+              "uniqueItems": false,
               "type": "array",
               "items": {
                 "$ref": "#/definitions/MatchSpecification"
@@ -176,7 +174,7 @@
         "tags": [
           "Identity"
         ],
-        "operationId": "IdentitiesPut",
+        "operationId": "PutPerson",
         "consumes": [
           "application/json-patch+json",
           "application/json",
@@ -195,7 +193,7 @@
           {
             "name": "specification",
             "in": "body",
-            "required": false,
+            "required": true,
             "schema": {
               "$ref": "#/definitions/PersonSpecification"
             }
@@ -222,7 +220,7 @@
         "tags": [
           "StudySubject"
         ],
-        "operationId": "StudiesByStudyIdSubjectsByIdByStubjectIdGet",
+        "operationId": "Get",
         "consumes": [
           "application/xml",
           "application/xml",
@@ -272,7 +270,7 @@
         "tags": [
           "StudySubject"
         ],
-        "operationId": "StudiesByStudyIdSubjectsGet",
+        "operationId": "FindBySubjectId",
         "consumes": [
           "application/xml",
           "application/xml",
@@ -317,17 +315,13 @@
         "tags": [
           "SubjectIdentifier"
         ],
-        "operationId": "Subject-identifiersByStudyIdPost",
+        "operationId": "Generate",
         "consumes": [
           "application/xml",
           "application/xml",
           "application/xml"
         ],
-        "produces": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
+        "produces": [],
         "parameters": [
           {
             "name": "studyId",
@@ -376,12 +370,14 @@
           "type": "string"
         },
         "evidence": {
+          "uniqueItems": false,
           "type": "array",
           "items": {
             "$ref": "#/definitions/Evidence"
           }
         },
         "caseId": {
+          "uniqueItems": false,
           "type": "array",
           "items": {
             "$ref": "#/definitions/CaseIdentifier"
@@ -432,24 +428,101 @@
       "properties": {
         "$type": {
           "enum": [
-            "uk.nhs.nhs-number",
-            "uk.nhs.bradfordhospitals.hospital-number",
-            "uk.nhs.bradfordhospitals.bib4all.medway.sex",
-            "uk.nhs.bradfordhospitals.bib4all.medway.date-of-birth",
-            "uk.nhs.bradfordhospitals.bib4all.medway.name",
-            "uk.nhs.bradfordhospitals.bib4all.medway.address",
-            "uk.nhs.bradfordhospitals.bib4all.medway.contact-number",
-            "uk.nhs.bradfordhospitals.bib4all.medway.birth-order"
+            "nhs-number",
+            "sex",
+            "date-of-birth",
+            "bradford-hospital-number",
+            "address",
+            "birth-order",
+            "name"
           ],
           "type": "string"
         }
       },
       "discriminator": "$type"
     },
+    "sex": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/IPersonIdentifier"
+        },
+        {
+          "properties": {
+            "value": {
+              "enum": [
+                "Female",
+                "Male"
+              ],
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "address": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/IPersonIdentifier"
+        },
+        {
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "line-1": {
+                  "type": "string"
+                },
+                "line-2": {
+                  "type": "string"
+                },
+                "line-3": {
+                  "type": "string"
+                },
+                "line-4": {
+                  "type": "string"
+                },
+                "line-5": {
+                  "type": "string"
+                },
+                "postcode": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "name": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/IPersonIdentifier"
+        },
+        {
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "first-name": {
+                  "type": "string"
+                },
+                "last-name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
     "MatchSpecification": {
       "type": "object",
       "properties": {
         "identifiers": {
+          "uniqueItems": false,
           "type": "array",
           "items": {
             "$ref": "#/definitions/IPersonIdentifier"
@@ -473,12 +546,14 @@
       "type": "object",
       "properties": {
         "identifiers": {
+          "uniqueItems": false,
           "type": "array",
           "items": {
             "$ref": "#/definitions/IPersonIdentifier"
           }
         },
         "matchSpecifications": {
+          "uniqueItems": false,
           "type": "array",
           "items": {
             "$ref": "#/definitions/MatchSpecification"
@@ -600,13 +675,13 @@
       "x-ms-client-name": "PregnancyNumberIdentifier",
       "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.consent.pregnancy-number"
     },
-    "ukNhsNhsNumber": {
+    "nhsNumber": {
+      "type": "object",
       "allOf": [
         {
           "$ref": "#/definitions/IPersonIdentifier"
         },
         {
-          "type": "object",
           "properties": {
             "value": {
               "type": "string"
@@ -614,163 +689,75 @@
           }
         }
       ],
-      "x-ms-client-name": "NhsNumberIdentifier",
-      "x-ms-discriminator-value": "uk.nhs.nhs-number"
+      "x-ms-discriminator-value": "nhs-number"
     },
-    "ukNhsBradfordhospitalsHospitalNumber": {
+    "dateOfBirth": {
+      "type": "object",
       "allOf": [
         {
           "$ref": "#/definitions/IPersonIdentifier"
         },
         {
-          "type": "object",
           "properties": {
             "value": {
-              "type": "string",
-              "readOnly": true
+              "format": "date",
+              "type": "string"
             }
           }
         }
       ],
-      "x-ms-client-name": "BradfordHospitalNumberIdentifier",
-      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.hospital-number"
+      "x-ms-discriminator-value": "date-of-birth"
     },
-    "ukNhsBradfordhospitalsBib4allMedwaySex": {
+    "bradfordHospitalNumber": {
+      "type": "object",
       "allOf": [
         {
           "$ref": "#/definitions/IPersonIdentifier"
         },
         {
-          "type": "object",
           "properties": {
-            "sex": {
-              "enum": [
-                "Unknown",
-                "Male",
-                "Female"
-              ],
+            "value": {
               "type": "string"
             }
           }
         }
       ],
-      "x-ms-client-name": "MedwaySexIdentifier",
-      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.medway.sex"
+      "x-ms-discriminator-value": "bradford-hospital-number"
     },
-    "ukNhsBradfordhospitalsBib4allMedwayDateOfBirth": {
+    "birthOrder": {
+      "type": "object",
       "allOf": [
         {
           "$ref": "#/definitions/IPersonIdentifier"
         },
         {
-          "required": [
-            "dateOfBirth"
-          ],
-          "type": "object",
           "properties": {
-            "dateOfBirth": {
-              "format": "date-time",
-              "type": "string"
+            "value": {
+              "type": "object",
+              "properties": {
+                "pregnancy-number": {
+                  "type": "integer"
+                },
+                "birth-order": {
+                  "type": "integer"
+                }
+              }
             }
           }
         }
       ],
-      "x-ms-client-name": "DateOfBirthIdentifier",
-      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.medway.date-of-birth"
-    },
-    "ukNhsBradfordhospitalsBib4allMedwayName": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/IPersonIdentifier"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "firstName": {
-              "type": "string"
-            },
-            "lastName": {
-              "type": "string"
-            }
-          }
-        }
-      ],
-      "x-ms-client-name": "MedwayNameIdentifier",
-      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.medway.name"
-    },
-    "ukNhsBradfordhospitalsBib4allMedwayAddress": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/IPersonIdentifier"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "addressLine1": {
-              "type": "string"
-            },
-            "addressLine2": {
-              "type": "string"
-            },
-            "addressLine3": {
-              "type": "string"
-            },
-            "addressLine4": {
-              "type": "string"
-            },
-            "addressLine5": {
-              "type": "string"
-            },
-            "postcode": {
-              "type": "string"
-            }
-          }
-        }
-      ],
-      "x-ms-client-name": "MedwayAddressIdentifier",
-      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.medway.address"
-    },
-    "ukNhsBradfordhospitalsBib4allMedwayContactNumber": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/IPersonIdentifier"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "number": {
-              "type": "string"
-            },
-            "type": {
-              "type": "string"
-            }
-          }
-        }
-      ],
-      "x-ms-client-name": "MedwayContactNumberIdentifier",
-      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.medway.contact-number"
-    },
-    "ukNhsBradfordhospitalsBib4allMedwayBirthOrder": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/IPersonIdentifier"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "pregnancyNumber": {
-              "format": "int32",
-              "type": "integer"
-            },
-            "birthOrder": {
-              "format": "int32",
-              "type": "integer"
-            }
-          }
-        }
-      ],
-      "x-ms-client-name": "MedwayBirthOrder",
-      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.medway.birth-order"
+      "x-ms-discriminator-value": "birth-order"
+    }
+  },
+  "securityDefinitions": {
+    "oauth2": {
+      "flow": "implicit",
+      "authorizationUrl": "http://localhost:5000/connect/authorize",
+      "scopes": {
+        "read": "read",
+        "write": "write"
+      },
+      "type": "oauth2"
     }
   }
 }

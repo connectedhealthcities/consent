@@ -8,6 +8,7 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using CHC.Consent.Api.Client.Models;
+using CHC.Consent.Common.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json;
@@ -105,8 +106,8 @@ namespace CHC.Consent.DataImporter
             Dictionary<string, Type> consentIdentifiers,
             Dictionary<string, Type> evidenceIdentifiers) 
         {
-            var date = (DateTime)consentNode.Attribute("dateGiven");
-            var studyId = (long)consentNode.Attribute("studyId");
+            var date = (DateTime)consentNode.Attribute("date-given");
+            var studyId = (long)consentNode.Attribute("study-id");
 
             //TODO: better error recording and typey stuff here
 
@@ -184,30 +185,47 @@ namespace CHC.Consent.DataImporter
 
             var identifierType = typeNameLookup[typeName];
 
-            var constructor = identifierType.GetConstructors()
-                .Select(_ => new {Constructor = _, Parameters = _.GetParameters()})
-                .OrderByDescending(_ => _.Parameters.Length)
-                .First();
+            return CreateObject(identifierType, identifierNode);
+        }
+
+        private object CreateObject(Type identifierType, XElement parentElement)
+        {
+            var constructor = GetConstructor(identifierType);
 
 
-            if (identifierNode.IsEmpty || identifierNode.FirstNode.NodeType == XmlNodeType.Text)
+            var parameters = constructor.GetParameters();
+            if (parameters.Length == 1)
             {
-                //TODO: throw error if it's the wrong number of parameters for the constructor 
-                var node = identifierNode.FirstNode;
-                var stringValue = ((XText) node)?.Value;
-                var parameterInfo = constructor.Parameters[0];
-                var type = parameterInfo.ParameterType;
+                var singleParameter = parameters[0];
+                if (CanHaveInlineValue(singleParameter.ParameterType))
+                {
+                    if (parentElement.IsEmpty || parentElement.FirstNode.NodeType == XmlNodeType.Text)
+                    {
+                        //TODO: throw error if it's the wrong number of parameters for the constructor 
+                        var node = parentElement.FirstNode;
+                        var stringValue = ((XText) node)?.Value;
+                        var type = singleParameter.ParameterType;
 
-                var typedValue = TypedValue(identifierNode, stringValue, parameterInfo);
-                Log.LogTrace("Constructing {type} with {@typedValue} for {parameter}", type, typedValue, parameterInfo);
-                return constructor.Constructor.Invoke(new[] {typedValue});
+                        var typedValue = TypedValue(parentElement, stringValue, singleParameter);
+                        Log.LogTrace(
+                            "Constructing {type} with {@typedValue} for {parameter}",
+                            type,
+                            typedValue,
+                            singleParameter);
+                        return constructor.Invoke(new[] {typedValue});
+                    }
+                }
+                else if(GetElementForParameter(parentElement, singleParameter) == null)
+                {
+                    return constructor.Invoke(new[] {CreateObject(singleParameter.ParameterType, parentElement)});
+                }
             }
 
             var parameterValues = new List<object>();
-            foreach (var parameter in constructor.Parameters)
+            foreach (var parameter in parameters)
             {
                 //TODO: add some checking here
-                var parameterElement = identifierNode.Element(parameter.Name);
+                var parameterElement = GetElementForParameter(parentElement, parameter);
 
                 if (parameterElement == null)
                 {
@@ -224,12 +242,34 @@ namespace CHC.Consent.DataImporter
                 else
                 {
                     var value = (parameterElement.FirstNode as XText)?.Value;
-                    parameterValues.Add(TypedValue(identifierNode, value, parameter));
+                    parameterValues.Add(TypedValue(parentElement, value, parameter));
                 }
             }
 
-            Log.LogTrace("Constructing {type} with {@parametersValues}", identifierType, parameterValues);
-            return constructor.Constructor.Invoke(parameterValues.ToArray());
+            Log.LogTrace("Constructing {type} with {@parametersValues}", constructor.ReflectedType, parameterValues);
+            return constructor.Invoke(parameterValues.ToArray());
+        }
+
+        private static XElement GetElementForParameter(XElement parentElement, ParameterInfo singleParameter)
+        {
+            return parentElement.Element(singleParameter.Name.ToKebabCase()) ?? parentElement.Element(singleParameter.Name);
+        }
+
+        private static ConstructorInfo GetConstructor(Type identifierType)
+        {
+            return identifierType.GetConstructors()
+                .Select(_ => new {Constructor = _, Parameters = _.GetParameters()})
+                .OrderByDescending(_ => _.Parameters.Length)
+                .Select(_ => _.Constructor)
+                .First();
+        }
+
+        private bool CanHaveInlineValue(Type type)
+        {
+            return
+                type.IsValueType ||
+                type.IsPrimitive ||
+                type == typeof(string);
         }
 
         private object TypedValue(XElement identifierNode, string stringValue, ParameterInfo parameterInfo)

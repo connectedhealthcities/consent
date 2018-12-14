@@ -48,7 +48,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             var person = consentContext.Add(new PersonEntity()).Entity;
             consentContext.SaveChanges();
 
-            var result = ApiClient.ConsentPut(
+            var result = ApiClient.PutConsent(
                 new ConsentSpecification
                 {
                     StudyId = study.Id,

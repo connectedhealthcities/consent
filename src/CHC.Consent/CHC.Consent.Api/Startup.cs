@@ -16,9 +16,7 @@ using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Consent.Identifiers;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
-using CHC.Consent.Common.Identity.Identifiers.Medway;
 using CHC.Consent.Common.Infrastructure;
-using CHC.Consent.DependencyInjection;
 using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.Identity;
 using IdentityModel;
@@ -118,22 +116,9 @@ namespace CHC.Consent.Api
 
         private void AddConsentSystemTypeRegistrations(IServiceCollection services)
         {
-            services.AddPersonIdentifiers(
-                registry =>
-                {
-                    registry.Add<NhsNumberIdentifier>(o => o.WithMarshaller<NhsNumberIdentifierMarshaller>());
-                    registry.Add<BradfordHospitalNumberIdentifier>(
-                        o => o.WithMarshaller<BradfordHospitalNumberIdentifierMarshaller>());
-                    registry.Add<MedwaySexIdentifier>(o => o.WithMarshaller<SexIdentifierMarshaller>());
-                    registry.Add<DateOfBirthIdentifier>(o => o.WithXmlMarshaller(valueType: "dateOfBirth"));
-                    registry.Add<MedwayNameIdentifier>(o => o.WithXmlMarshaller(valueType: "BIB4All.MedwayName"));
-                    registry.Add<MedwayAddressIdentifier>(o => o.WithXmlMarshaller(valueType: "BIB4All.MedwayAddress"));
-                    registry.Add<MedwayContactNumberIdentifier>(
-                        o => o.WithXmlMarshaller(valueType: "BIB4All.MedwayContactNumber"));
-                    registry.Add<MedwayBirthOrder>(o => o.WithXmlMarshaller(valueType: "BIB4All.MedwayBirthOrder"));
-                }
-            );
-
+            services.AddSingleton<IdentifierDefinitionRegistryProvider>();
+            services.AddTransient(c => c.GetService<IdentifierDefinitionRegistryProvider>().GetRegistry());
+            
             services.AddTransient<IPersonIdentifierDisplayHandlerProvider, PersonIdentifierHandlerProvider>();
 
             var consentIdentifierRegistry = new TypeRegistry<CaseIdentifier, CaseIdentifierAttribute>();
@@ -151,14 +136,15 @@ namespace CHC.Consent.Api
 
 
             //These setup the relevant body binders
-            services
+            /*services
                 .AddTransient<
                     IPostConfigureOptions<MvcOptions>,
-                    IdentityModelBinderProviderConfiguration<ITypeRegistry<IPersonIdentifier>, PersonSpecification>>();
-            services
+                    IdentityModelBinderProviderConfiguration<ITypeRegistry<IPersonIdentifier>, PersonSpecification>>();*/
+            /*services
                 .AddTransient<
                     IPostConfigureOptions<MvcOptions>, 
                     IdentityModelBinderProviderConfiguration<ITypeRegistry<IPersonIdentifier>, MatchSpecification>>();
+
             services
                 .AddTransient<
                     IPostConfigureOptions<MvcOptions>, 
@@ -166,7 +152,7 @@ namespace CHC.Consent.Api
 
 
             services.Configure<IdentifierDisplayOptions>(
-                displayOptions => Configuration.Bind("IdentifierDisplay", displayOptions));
+                displayOptions => Configuration.Bind("IdentifierDisplay", displayOptions));*/
 
         }
 
@@ -185,7 +171,7 @@ namespace CHC.Consent.Api
                 app.UseDatabaseErrorPage();
             }
 
-            if (Configuration.GetIdentityServer().EnableInteralServer)
+            if (Configuration.GetIdentityServer().EnableInternalServer)
             {
                 app.UseIdentityServer();
             }

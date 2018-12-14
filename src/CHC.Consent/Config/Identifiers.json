@@ -1,0 +1,46 @@
+{
+  "Identifiers": [
+    { "Name": "NHS Number", "Type": "string" },
+    {
+      "Name": "Sex",
+      "Type": "enum",
+      "Config": { "Values": [ "Male", "Female" ] }
+    },
+    { "Name": "Date of Birth", "Type": "date" },
+    { "Name": "Bradford Hospital Number", "Type": "string" },
+    { 
+      "Name": "Address",
+      "Type": "composite",
+      "Config": {
+        "Fields": [
+          { "Name": "Line 1", "Type": "string" },
+          { "Name": "Line 2", "Type": "string" },
+          { "Name": "Line 3", "Type": "string" },
+          { "Name": "Line 4", "Type": "string" },
+          { "Name": "Line 5", "Type": "string" },
+          { "Name": "Postcode", "Type": "string" }
+        ]
+      }
+    },
+    {
+      "Name": "Birth Order",
+      "Type": "composite",
+      "Config": {
+        "Fields": [
+          { "Name": "Pregnancy Number", "Type":  "number" },
+          { "Name": "Birth Order", "Type":  "number" }
+        ]
+      }
+    },
+    {
+      "Name": "Name",
+      "Type": "composite",
+      "Config": {
+        "Fields": [
+          { "Name": "First Name", "Type":  "string" },
+          { "Name": "Last Name", "Type":  "string" }
+        ]
+      }
+    }
+  ]
+}

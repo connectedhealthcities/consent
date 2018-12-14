@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Xml;
 using CHC.Consent.Api.Client;
 using CHC.Consent.Api.Client.Models;
+using CHC.Consent.Common.Identity;
 using Microsoft.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -30,7 +31,7 @@ namespace CHC.Consent.DataImporter
             
             ServiceClientTracing.IsEnabled = true;
             ServiceClientTracing.AddTracingInterceptor(
-                new LoggerServiceClientTracingIntercepter(
+                new LoggerServiceClientTracingInterceptor(
                     _loggerFactory.CreateLogger("Http"),
                     LogLevel.Trace));
             
@@ -107,15 +108,16 @@ namespace CHC.Consent.DataImporter
 
         public void Import(string source)
         {
+            var xmlParser = new XmlParser(loggerProvider.CreateLogger<XmlParser>());
             using (var xmlReader = XmlReader.Create(source))
             {
-                foreach (var person in new XmlParser(loggerProvider.CreateLogger<XmlParser>()).GetPeople(xmlReader))
+                foreach (var person in xmlParser.GetPeople(xmlReader))
                 {
                     var api = new Api.Client.Api(new Uri("http://localhost:5000/"), null, new HttpClientHandler{AllowAutoRedirect = false});
                 
                     using(Log.BeginScope(person))
                     {
-                        var personId = api.IdentitiesPut(person.PersonSpecification);
+                        var personId = api.PutPerson(person.PersonSpecification);
                     
                         Log.LogDebug("Person Id is {personId}", personId);
                     
@@ -130,7 +132,7 @@ namespace CHC.Consent.DataImporter
 
                         foreach (var consent in person.ConsentSpecifications)
                         {
-                            var givenBy = api.IdentitiesSearchPost(consent.GivenBy);
+                            var givenBy = api.FindPerson(consent.GivenBy);
 
                             if (givenBy == null)
                             {
@@ -138,14 +140,14 @@ namespace CHC.Consent.DataImporter
                                 Log.LogError("Cannot find person who gave consent");
                                 throw new NotImplementedException("Cannot find ");
                             }
-                            var existingSubject = api.StudiesByStudyIdSubjectsGet(consent.StudyId, personId.PersonId);
+                            var existingSubject = api.FindBySubjectId(consent.StudyId, personId.PersonId);
 
                             var subjectIdentifier =
                                 existingSubject == null
-                                    ? api.SubjectIdentifiersByStudyIdPost(consent.StudyId)
+                                    ? api.Generate(consent.StudyId)
                                     : existingSubject.SubjectIdentifier;
                         
-                            api.ConsentPut(
+                            api.PutConsent(
                                 new ConsentSpecification(
                                     consent.StudyId,
                                     subjectIdentifier,

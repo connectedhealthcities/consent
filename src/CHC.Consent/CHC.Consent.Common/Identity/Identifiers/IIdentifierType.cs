@@ -1,0 +1,7 @@
+namespace CHC.Consent.Common.Identity.Identifiers
+{
+    public interface IIdentifierType
+    {
+        void Accept(IIdentifierDefinitionVisitor visitor);
+    }
+}

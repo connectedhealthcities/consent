@@ -16,7 +16,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Serilog.Core;
 using Xunit;
 using Xunit.Abstractions;
-using Sex = CHC.Consent.Common.Sex;
 
 namespace CHC.Consent.Tests.DataImporter
 {
@@ -69,17 +68,17 @@ namespace CHC.Consent.Tests.DataImporter
         [Fact]
         public void CanParseSexIdentifier()
         {
-            var xml = @"<mdwy:sex xmlns:mdwy=""uk.nhs.bradfordhosptials.bib4all.medway"">Male</mdwy:sex>";
+            var xml = @"<sex>Male</sex>";
             
-            var sexIdentifier = ParseIdentifierString<UkNhsBradfordhospitalsBib4allMedwaySex>(
+            var sexIdentifier = ParseIdentifierString<Sex>(
                 xml,
                 new Dictionary<string, Type>
                 {
-                    ["uk.nhs.bradfordhosptials.bib4all.medway.sex"] = typeof(UkNhsBradfordhospitalsBib4allMedwaySex) 
+                    ["sex"] = typeof(Sex) 
                 }
                 );
             
-            Assert.Equal(Sex.Male.ToString(), sexIdentifier.Sex);
+            Assert.Equal("Male", sexIdentifier.Value);
         }
 
         class DummyIdentifierWithOneArg<T> : IPersonIdentifier
@@ -114,15 +113,15 @@ namespace CHC.Consent.Tests.DataImporter
         {
             const string xml = @"<dummyIdentifier>Male</dummyIdentifier>";
             
-            var identifier = ParseIdentifierString<DummyIdentifierWithOneArg<Sex>>(
+            var identifier = ParseIdentifierString<DummyIdentifierWithOneArg<string>>(
                 xml,
                 new Dictionary<string, Type>
                 {
-                    ["dummy-identifier"] = typeof(DummyIdentifierWithOneArg<Sex>) 
+                    ["dummy-identifier"] = typeof(DummyIdentifierWithOneArg<string>) 
                 }
             );
             
-            Assert.Equal(Sex.Male, identifier.Value);
+            Assert.Equal("Male", identifier.Value);
         }
 
         [Fact]
@@ -141,15 +140,19 @@ namespace CHC.Consent.Tests.DataImporter
         [Fact]
         public void CanParseDateOfBirthIdentifier()
         {
-           
-            var dateofBirthIdentifier = ParseIdentifier<UkNhsBradfordhospitalsBib4allMedwayDateOfBirth>("2016-03-14");
-            AssertDateOfBirth(14.March(2016), dateofBirthIdentifier);
+            AssertDateOfBirth(14.March(2016), ParseIdentifier<DateOfBirth>("2016-03-14"));
+        }
+        
+        [Fact]
+        public void CanParseDateOfBirthIdentifierAsValue()
+        {
+            AssertDateOfBirth(14.March(2016), ParseIdentifier<DateOfBirth>("<value>2016-03-14</value>"));
         }
 
         [Fact]
         public void CanParseNameIdentifier()
         {
-            var nameIdentifier = ParseIdentifier<UkNhsBradfordhospitalsBib4allMedwayName>("<firstName>Bart</firstName><lastName>Simpson</lastName>");
+            var nameIdentifier = ParseIdentifier<Name>("<first-name>Bart</first-name><last-name>Simpson</last-name>");
             AssertName("Bart", "Simpson", nameIdentifier);
         }
 
@@ -157,8 +160,8 @@ namespace CHC.Consent.Tests.DataImporter
         public void CanParsePartialAddress()
         {
             var address =
-                ParseIdentifier<UkNhsBradfordhospitalsBib4allMedwayAddress>(
-                    "<addressLine1>line 1</addressLine1><postcode>T3 3ST</postcode>");
+                ParseIdentifier<Address>(
+                    "<line-1>line 1</line-1><postcode>T3 3ST</postcode>");
             
             AssertAddress(address, line1:"line 1", postcode:"T3 3ST");
         }
@@ -166,7 +169,7 @@ namespace CHC.Consent.Tests.DataImporter
         [Fact]
         public void ReportsErrorOnIncorrectType()
         {
-            var parseException = Assert.ThrowsAny<XmlParseException>(() => ParseIdentifier<UkNhsNhsNumber>("", EmptyTypeMap));
+            var parseException = Assert.ThrowsAny<XmlParseException>(() => ParseIdentifier<NhsNumber>("", EmptyTypeMap));
 
             Assert.Contains("identifier", parseException.Message);
             Assert.True(parseException.HasLineInfo);
@@ -179,38 +182,30 @@ namespace CHC.Consent.Tests.DataImporter
         public void CanParseWholePerson()
         {
             const string personXml = @"<?xml version=""1.0""?>
-<people xmlns:nhs=""uk.nhs"" xmlns:bfd=""uk.nhs.bradfordhospitals"" xmlns:mdw=""uk.nhs.bradfordhospitals.bib4all.medway"" xmlns:b4acase=""uk.nhs.bradfordhospitals.bib4all.consent"" xmlns:b4aevidence=""uk.nhs.bradfordhospitals.bib4all.evidence"">
+<people xmlns:b4acase=""uk.nhs.bradfordhospitals.bib4all.consent"" xmlns:b4aevidence=""uk.nhs.bradfordhospitals.bib4all.evidence"">
     <person>
         <identity>
-            <nhs:nhsNumber>4099999999</nhs:nhsNumber>
-            <bfd:hospitalNumber>RAE9999999</bfd:hospitalNumber>
-            <mdw:name><firstName>Jo</firstName><lastName>Bloggs</lastName></mdw:name>
-            <mdw:dateOfBirth>1990-06-16</mdw:dateOfBirth>
-            <mdw:address>
-                <addressLine1>22 Love Street</addressLine1>
-                <addressLine2>Holmestown</addressLine2>
-                <addressLine3>Bradtopia</addressLine3>
-                <addressLine4>West Yorkshire</addressLine4>
+            <nhs-number>4099999999</nhs-number>
+            <bradford-hospital-number>RAE9999999</bradford-hospital-number>
+            <name><first-name>Jo</first-name><last-name>Bloggs</last-name></name>
+            <date-of-birth>1990-06-16</date-of-birth>
+            <address>
+                <line-1>22 Love Street</line-1>
+                <line-2>Holmestown</line-2>
+                <line-3>Bradtopia</line-3>
+                <line-4>West Yorkshire</line-4>
                 <postcode>BD92 4FX</postcode>
-            </mdw:address>
-            <mdw:contactNumber>
-                <type>Home</type>
-                <number>01234999999</number>
-            </mdw:contactNumber>
-            <mdw:contactNumber>
-                <type>Mobile</type>
-                <number>01234999999</number>
-            </mdw:contactNumber>
+            </address>
         </identity>
         <lookup>
-            <match><nhs:nhsNumber>4099999999</nhs:nhsNumber></match>
-            <match><bfd:hospitalNumber>RAE9999999</bfd:hospitalNumber></match>
+            <match><nhs-number>4099999999</nhs-number></match>
+            <match><bradford-hospital-number>RAE9999999</bradford-hospital-number></match>
         </lookup>
-        <consent dateGiven=""2017-10-14"" studyId=""1"">
-			<givenBy>
-				<match><nhs:nhsNumber>4099999999</nhs:nhsNumber></match>
-				<match><bfd:hospitalNumber>RAE9999999</bfd:hospitalNumber></match>
-			</givenBy>
+        <consent date-given=""2017-10-14"" study-id=""1"">
+			<given-by>
+				<match><nhs-number>4099999999</nhs-number></match>
+				<match><bradford-hospital-number>RAE9999999</bradford-hospital-number></match>
+			</given-by>
             <case>
                 <b4acase:pregnancyNumber>2</b4acase:pregnancyNumber>
             </case>
@@ -236,19 +231,17 @@ namespace CHC.Consent.Tests.DataImporter
                 string line4 = null,
                 string line5 = null,
                 string postcode = null) =>
-                AssertIdentifier<UkNhsBradfordhospitalsBib4allMedwayAddress>(
+                AssertIdentifier<Address>(
                     _ => AssertAddress(_, line1, line2, line3, line4, line5, postcode));
             
 
-//            Assert.DoesNotContain(person.Identifiers, _ => _ == null);
+//            Assert.DoesNotContain(person.Identifiers, identifier => identifier == null);
             Assert.Collection(person.Identifiers,
                 NhsNumber("4099999999"),
                 HospitalNumber("RAE9999999"),
                 Name("Jo", "Bloggs"),
                 DateOfBirth(16.June(1990)),
-                Address("22 Love Street", "Holmestown", "Bradtopia", "West Yorkshire", postcode: "BD92 4FX"),
-                ContactNumber("Home", "01234999999"),
-                ContactNumber("Mobile", "01234999999")
+                Address("22 Love Street", "Holmestown", "Bradtopia", "West Yorkshire", postcode: "BD92 4FX")
                 );
             
             Assert.Collection(person.MatchSpecifications,
@@ -274,7 +267,7 @@ namespace CHC.Consent.Tests.DataImporter
         [Fact]
         public void CanParseSimpleConsent()
         {
-            var consentSpec = ParseConsent(@"<consent dateGiven=""2017-03-12"" studyId=""42"" />");
+            var consentSpec = ParseConsent(@"<consent date-given=""2017-03-12"" study-id=""42"" />");
                 
             Assert.NotNull(consentSpec);
             Assert.Equal(12.March(2017), consentSpec.DateGiven);
@@ -289,12 +282,12 @@ namespace CHC.Consent.Tests.DataImporter
         {
             var exception = Assert.Throws<XmlParseException>(
                 () => ParseConsent(
-                    @"<consent dateGiven=""2017-03-12"" studyId=""42"" xmlns:err=""error"" >
+                    @"<consent date-given=""2017-03-12"" study-id=""42"" xmlns:err=""error"" >
                         <givenBy><match><err:error>45</err:error></match></givenBy>
                     </consent>",
                     personIdentifierTypes: new Dictionary<string, Type>
                     {
-                        ["uk.test"] = typeof(UkNhsNhsNumber)
+                        ["uk.test"] = typeof(NhsNumber)
                     }));
             
             Assert.Contains("error.error", exception.Message);
@@ -307,7 +300,7 @@ namespace CHC.Consent.Tests.DataImporter
             var exception = Assert.Throws<XmlParseException>(
                 () => ParseConsent(
 
-                    @"<consent dateGiven=""2017-03-12"" studyId=""42"" xmlns:err=""error"" >
+                    @"<consent date-given=""2017-03-12"" study-id=""42"" xmlns:err=""error"" >
                         <case>
                             <err:error>45</err:error>
                         </case>
@@ -329,7 +322,7 @@ namespace CHC.Consent.Tests.DataImporter
             var exception = Assert.Throws<XmlParseException>(
                 () => ParseConsent(
                     
-                        @"<consent dateGiven=""2017-03-12"" studyId=""42"" xmlns:err=""error"" >
+                        @"<consent date-given=""2017-03-12"" study-id=""42"" xmlns:err=""error"" >
     <evidence>
         <err:error>45</err:error>
     </evidence>
@@ -349,10 +342,10 @@ namespace CHC.Consent.Tests.DataImporter
         {
 
             var consent = ParseConsent(
-                @"<consent dateGiven=""2017-03-12"" studyId=""42"" xmlns:nhs=""uk.nhs"" xmlns:bfd=""uk.nhs.bradfordhospitals"" xmlns:b4acase=""uk.nhs.bradfordhospitals.bib4all.consent"" xmlns:b4aevidence=""uk.nhs.bradfordhospitals.bib4all.evidence"">
+                @"<consent date-given=""2017-03-12"" study-id=""42"" xmlns:nhs=""uk.nhs"" xmlns:bfd=""uk.nhs.bradfordhospitals"" xmlns:b4acase=""uk.nhs.bradfordhospitals.bib4all.consent"" xmlns:b4aevidence=""uk.nhs.bradfordhospitals.bib4all.evidence"">
                     <givenBy>
-                        <match><nhs:nhsNumber>8877881</nhs:nhsNumber></match>
-                        <match><bfd:hospitalNumber>1122112</bfd:hospitalNumber></match>
+                        <match><nhs-number>8877881</nhs-number></match>
+                        <match><bradford-hospital-number>1122112</bradford-hospital-number></match>
                     </givenBy>
                     <case>
                         <b4acase:pregnancyNumber>3</b4acase:pregnancyNumber>
@@ -367,8 +360,8 @@ namespace CHC.Consent.Tests.DataImporter
                 </consent>",
                 personIdentifierTypes: new Dictionary<string, Type>
                 {
-                    [BradfordHospitalNumberIdentifier.TypeName] = typeof(UkNhsBradfordhospitalsHospitalNumber),
-                    [NhsNumberIdentifier.TypeName] = typeof(UkNhsNhsNumber),
+                    ["bradford-hospital-number"] = typeof(BradfordHospitalNumber),
+                    ["nhs-number"] = typeof(NhsNumber),
                 },
                 consentTypes: new Dictionary<string, Type>
                 {
@@ -413,43 +406,32 @@ namespace CHC.Consent.Tests.DataImporter
         
         
 
-        private static Action<IPersonIdentifier> NhsNumber(string expectedValue) => AssertIdentifier<UkNhsNhsNumber>(
+        private static Action<IPersonIdentifier> NhsNumber(string expectedValue) => AssertIdentifier<NhsNumber>(
             i => AssertNhsNumber(expectedValue, i));
 
-        private static void AssertNhsNumber(string expectedValue, UkNhsNhsNumber identifier) => Assert.Equal(expectedValue, identifier.Value);
+        private static void AssertNhsNumber(string expectedValue, NhsNumber identifier) => Assert.Equal(expectedValue, identifier.Value);
 
-        private static Action<IPersonIdentifier> HospitalNumber(string expectedValue) => AssertIdentifier<UkNhsBradfordhospitalsHospitalNumber>(
-            i => AssertHosptialNumber(expectedValue, i));
+        private static Action<IPersonIdentifier> HospitalNumber(string expectedValue) => AssertIdentifier<BradfordHospitalNumber>(
+            i => AssertHospitalNumber(expectedValue, i));
 
-        private static void AssertHosptialNumber(string expectedValue, UkNhsBradfordhospitalsHospitalNumber i) => Assert.Equal(expectedValue, i.Value);
+        private static void AssertHospitalNumber(string expectedValue, BradfordHospitalNumber i) => Assert.Equal(expectedValue, i.Value);
 
-        private static Action<IPersonIdentifier> DateOfBirth(DateTime dateofBirth) => AssertIdentifier<UkNhsBradfordhospitalsBib4allMedwayDateOfBirth>(
-            i => AssertDateOfBirth(dateofBirth, i));
+        private static Action<IPersonIdentifier> DateOfBirth(DateTime dateofBirth) => AssertIdentifier<DateOfBirth>(i => AssertDateOfBirth(dateofBirth, i));
 
-        private static void AssertDateOfBirth(DateTime dateofBirth, UkNhsBradfordhospitalsBib4allMedwayDateOfBirth i) => Assert.Equal(dateofBirth, i.DateOfBirth);
+        private static void AssertDateOfBirth(DateTime dateofBirth, DateOfBirth i) => Assert.Equal(dateofBirth, i.Value);
 
-        private static Action<IPersonIdentifier> Name(string firstName, string lastName) => AssertIdentifier<UkNhsBradfordhospitalsBib4allMedwayName>(
-            _ => { AssertName(firstName, lastName, _); });
+        private static Action<IPersonIdentifier> Name(string firstName, string lastName) => AssertIdentifier<Name>(_ => { AssertName(firstName, lastName, _); });
 
-        private static void AssertName(string firstName, string lastName, UkNhsBradfordhospitalsBib4allMedwayName _)
+        private static void AssertName(string firstName, string lastName, Name identifier)
         {
-            Assert.Equal(firstName, _.FirstName);
-            Assert.Equal(lastName, _.LastName);
-        }
-
-        private static Action<IPersonIdentifier> ContactNumber(string type, string number) => AssertIdentifier<UkNhsBradfordhospitalsBib4allMedwayContactNumber>(
-            _ => { AssertContactNumber(type, number, _); });
-
-        private static void AssertContactNumber(string type, string number, UkNhsBradfordhospitalsBib4allMedwayContactNumber _)
-        {
-            Assert.Equal(type, _.Type);
-            Assert.Equal(number, _.Number);
+            Assert.Equal(firstName, identifier.Value?.FirstName);
+            Assert.Equal(lastName, identifier.Value?.LastName);
         }
 
         private static Action<IPersonIdentifier> AssertIdentifier<T>(Action<T> test) => _ => test(Assert.IsType<T>(_));
 
-        private void AssertAddress(
-            UkNhsBradfordhospitalsBib4allMedwayAddress address,
+        private static void AssertAddress(
+            Address address,
             string line1 = null,
             string line2 = null,
             string line3 = null,
@@ -457,12 +439,12 @@ namespace CHC.Consent.Tests.DataImporter
             string line5 = null,
             string postcode = null)
         {
-            Assert.Equal(line1, address.AddressLine1);
-            Assert.Equal(line2, address.AddressLine2);
-            Assert.Equal(line3, address.AddressLine3);
-            Assert.Equal(line4, address.AddressLine4);
-            Assert.Equal(line5, address.AddressLine5);
-            Assert.Equal(postcode, address.Postcode);
+            Assert.Equal(line1, address.Value?.Line1);
+            Assert.Equal(line2, address.Value?.Line2);
+            Assert.Equal(line3, address.Value?.Line3);
+            Assert.Equal(line4, address.Value?.Line4);
+            Assert.Equal(line5, address.Value?.Line5);
+            Assert.Equal(postcode, address.Value?.Postcode);
         }
     }
 }

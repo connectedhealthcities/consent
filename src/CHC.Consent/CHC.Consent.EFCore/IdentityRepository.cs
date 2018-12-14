@@ -5,7 +5,7 @@ using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.Security;
-using NeinLinq.EntityFrameworkCore;
+using NeinLinq;
 
 namespace CHC.Consent.EFCore
 {

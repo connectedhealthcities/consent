@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -49,6 +50,36 @@ namespace CHC.Consent.Api.Infrastructure
                 model.Required = null;
                 model.Type = null;
             }
+        }
+    }
+    
+    /// <summary>
+    /// Add types from a <see cref="ITypeRegistry"/> to the Swagger 2.0 documentation 
+    /// </summary>
+    /// <remarks>OpenAPI 3.0 seems to change the way this works</remarks>
+    public class SwaggerSchemaIdentityTypeProvider : ISchemaFilter
+    {
+        private readonly IdentifierDefinitionRegistry registry;
+
+        public SwaggerSchemaIdentityTypeProvider(IdentifierDefinitionRegistry  registry)
+        {
+            this.registry = registry;            
+        }
+
+        public void Apply(Schema model, SchemaFilterContext context)
+        {   
+            if(!typeof(IPersonIdentifier).IsAssignableFrom(context.SystemType)) return;
+            if (context.SystemType != typeof(IPersonIdentifier)) return;
+            
+            model.Discriminator = "$type";
+            model.Properties.Add(
+                "$type",
+                new Schema {Enum = registry.Keys.Cast<object>().ToArray(), Type = "string"});
+            if(model.Required == null) model.Required = new List<string>();
+            model.Required.Add("$type");
+
+            var schemaGenerator = new IdentityDefinitionSwaggerSchemaGenerator(context.SchemaRegistry.Definitions);
+            registry.Accept(schemaGenerator);
         }
     }
 }

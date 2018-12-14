@@ -40,6 +40,19 @@ namespace CHC.Consent.Api.Client
         /// <summary>
         /// Initializes a new instance of the Api class.
         /// </summary>
+        /// <param name='httpClient'>
+        /// HttpClient to be used
+        /// </param>
+        /// <param name='disposeHttpClient'>
+        /// True: will dispose the provided httpClient on calling Api.Dispose(). False: will not dispose provided httpClient</param>
+        protected Api(HttpClient httpClient, bool disposeHttpClient) : base(httpClient, disposeHttpClient)
+        {
+            Initialize();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Api class.
+        /// </summary>
         /// <param name='handlers'>
         /// Optional. The delegating handlers to add to the http client pipeline.
         /// </param>
@@ -120,6 +133,33 @@ namespace CHC.Consent.Api.Client
         /// Thrown when a required parameter is null
         /// </exception>
         public Api(ServiceClientCredentials credentials, params DelegatingHandler[] handlers) : this(handlers)
+        {
+            if (credentials == null)
+            {
+                throw new System.ArgumentNullException("credentials");
+            }
+            Credentials = credentials;
+            if (Credentials != null)
+            {
+                Credentials.InitializeServiceClient(this);
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Api class.
+        /// </summary>
+        /// <param name='credentials'>
+        /// Required. Subscription credentials which uniquely identify client subscription.
+        /// </param>
+        /// <param name='httpClient'>
+        /// HttpClient to be used
+        /// </param>
+        /// <param name='disposeHttpClient'>
+        /// True: will dispose the provided httpClient on calling Api.Dispose(). False: will not dispose provided httpClient</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown when a required parameter is null
+        /// </exception>
+        public Api(ServiceClientCredentials credentials, HttpClient httpClient, bool disposeHttpClient) : this(httpClient, disposeHttpClient)
         {
             if (credentials == null)
             {
@@ -289,7 +329,7 @@ namespace CHC.Consent.Api.Client
         /// <return>
         /// A response object containing the response body and response headers.
         /// </return>
-        public async Task<HttpOperationResponse<object>> ConsentPutWithHttpMessagesAsync(ConsentSpecification specification = default(ConsentSpecification), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<HttpOperationResponse<object>> PutConsentWithHttpMessagesAsync(ConsentSpecification specification = default(ConsentSpecification), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (specification != null)
             {
@@ -304,7 +344,7 @@ namespace CHC.Consent.Api.Client
                 Dictionary<string, object> tracingParameters = new Dictionary<string, object>();
                 tracingParameters.Add("specification", specification);
                 tracingParameters.Add("cancellationToken", cancellationToken);
-                ServiceClientTracing.Enter(_invocationId, this, "ConsentPut", tracingParameters);
+                ServiceClientTracing.Enter(_invocationId, this, "PutConsent", tracingParameters);
             }
             // Construct URL
             var _baseUrl = BaseUri.AbsoluteUri;
@@ -458,7 +498,7 @@ namespace CHC.Consent.Api.Client
         /// <return>
         /// A response object containing the response body and response headers.
         /// </return>
-        public async Task<HttpOperationResponse> ConsentByIdGetWithHttpMessagesAsync(long id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<HttpOperationResponse> GetWithHttpMessagesAsync(long id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             // Tracing
             bool _shouldTrace = ServiceClientTracing.IsEnabled;
@@ -469,7 +509,7 @@ namespace CHC.Consent.Api.Client
                 Dictionary<string, object> tracingParameters = new Dictionary<string, object>();
                 tracingParameters.Add("id", id);
                 tracingParameters.Add("cancellationToken", cancellationToken);
-                ServiceClientTracing.Enter(_invocationId, this, "ConsentByIdGet", tracingParameters);
+                ServiceClientTracing.Enter(_invocationId, this, "Get", tracingParameters);
             }
             // Construct URL
             var _baseUrl = BaseUri.AbsoluteUri;
@@ -567,7 +607,7 @@ namespace CHC.Consent.Api.Client
         /// <return>
         /// A response object containing the response body and response headers.
         /// </return>
-        public async Task<HttpOperationResponse<IList<IPersonIdentifier>>> IdentitiesByIdGetWithHttpMessagesAsync(long id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<HttpOperationResponse<IList<IPersonIdentifier>>> GetPersonWithHttpMessagesAsync(long id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             // Tracing
             bool _shouldTrace = ServiceClientTracing.IsEnabled;
@@ -578,7 +618,7 @@ namespace CHC.Consent.Api.Client
                 Dictionary<string, object> tracingParameters = new Dictionary<string, object>();
                 tracingParameters.Add("id", id);
                 tracingParameters.Add("cancellationToken", cancellationToken);
-                ServiceClientTracing.Enter(_invocationId, this, "IdentitiesByIdGet", tracingParameters);
+                ServiceClientTracing.Enter(_invocationId, this, "GetPerson", tracingParameters);
             }
             // Construct URL
             var _baseUrl = BaseUri.AbsoluteUri;
@@ -691,11 +731,21 @@ namespace CHC.Consent.Api.Client
         /// <exception cref="SerializationException">
         /// Thrown when unable to deserialize the response
         /// </exception>
+        /// <exception cref="ValidationException">
+        /// Thrown when a required parameter is null
+        /// </exception>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown when a required parameter is null
+        /// </exception>
         /// <return>
         /// A response object containing the response body and response headers.
         /// </return>
-        public async Task<HttpOperationResponse<SearchResult>> IdentitiesSearchPostWithHttpMessagesAsync(IList<MatchSpecification> match = default(IList<MatchSpecification>), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<HttpOperationResponse<SearchResult>> FindPersonWithHttpMessagesAsync(IList<MatchSpecification> match, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
+            if (match == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "match");
+            }
             // Tracing
             bool _shouldTrace = ServiceClientTracing.IsEnabled;
             string _invocationId = null;
@@ -705,7 +755,7 @@ namespace CHC.Consent.Api.Client
                 Dictionary<string, object> tracingParameters = new Dictionary<string, object>();
                 tracingParameters.Add("match", match);
                 tracingParameters.Add("cancellationToken", cancellationToken);
-                ServiceClientTracing.Enter(_invocationId, this, "IdentitiesSearchPost", tracingParameters);
+                ServiceClientTracing.Enter(_invocationId, this, "FindPerson", tracingParameters);
             }
             // Construct URL
             var _baseUrl = BaseUri.AbsoluteUri;
@@ -823,11 +873,21 @@ namespace CHC.Consent.Api.Client
         /// <exception cref="SerializationException">
         /// Thrown when unable to deserialize the response
         /// </exception>
+        /// <exception cref="ValidationException">
+        /// Thrown when a required parameter is null
+        /// </exception>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown when a required parameter is null
+        /// </exception>
         /// <return>
         /// A response object containing the response body and response headers.
         /// </return>
-        public async Task<HttpOperationResponse<PersonCreatedResult>> IdentitiesPutWithHttpMessagesAsync(PersonSpecification specification = default(PersonSpecification), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<HttpOperationResponse<PersonCreatedResult>> PutPersonWithHttpMessagesAsync(PersonSpecification specification, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
+            if (specification == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "specification");
+            }
             // Tracing
             bool _shouldTrace = ServiceClientTracing.IsEnabled;
             string _invocationId = null;
@@ -837,7 +897,7 @@ namespace CHC.Consent.Api.Client
                 Dictionary<string, object> tracingParameters = new Dictionary<string, object>();
                 tracingParameters.Add("specification", specification);
                 tracingParameters.Add("cancellationToken", cancellationToken);
-                ServiceClientTracing.Enter(_invocationId, this, "IdentitiesPut", tracingParameters);
+                ServiceClientTracing.Enter(_invocationId, this, "PutPerson", tracingParameters);
             }
             // Construct URL
             var _baseUrl = BaseUri.AbsoluteUri;
@@ -986,7 +1046,7 @@ namespace CHC.Consent.Api.Client
         /// <return>
         /// A response object containing the response body and response headers.
         /// </return>
-        public async Task<HttpOperationResponse<StudySubject>> StudiesByStudyIdSubjectsByIdByStubjectIdGetWithHttpMessagesAsync(long studyId, string stubjectId, string subjectIdentifier = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<HttpOperationResponse<StudySubject>> Get1WithHttpMessagesAsync(long studyId, string stubjectId, string subjectIdentifier = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (stubjectId == null)
             {
@@ -1003,7 +1063,7 @@ namespace CHC.Consent.Api.Client
                 tracingParameters.Add("subjectIdentifier", subjectIdentifier);
                 tracingParameters.Add("stubjectId", stubjectId);
                 tracingParameters.Add("cancellationToken", cancellationToken);
-                ServiceClientTracing.Enter(_invocationId, this, "StudiesByStudyIdSubjectsByIdByStubjectIdGet", tracingParameters);
+                ServiceClientTracing.Enter(_invocationId, this, "Get1", tracingParameters);
             }
             // Construct URL
             var _baseUrl = BaseUri.AbsoluteUri;
@@ -1131,7 +1191,7 @@ namespace CHC.Consent.Api.Client
         /// <return>
         /// A response object containing the response body and response headers.
         /// </return>
-        public async Task<HttpOperationResponse<StudySubject>> StudiesByStudyIdSubjectsGetWithHttpMessagesAsync(long studyId, long personId, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<HttpOperationResponse<StudySubject>> FindBySubjectIdWithHttpMessagesAsync(long studyId, long personId, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             // Tracing
             bool _shouldTrace = ServiceClientTracing.IsEnabled;
@@ -1143,7 +1203,7 @@ namespace CHC.Consent.Api.Client
                 tracingParameters.Add("studyId", studyId);
                 tracingParameters.Add("personId", personId);
                 tracingParameters.Add("cancellationToken", cancellationToken);
-                ServiceClientTracing.Enter(_invocationId, this, "StudiesByStudyIdSubjectsGet", tracingParameters);
+                ServiceClientTracing.Enter(_invocationId, this, "FindBySubjectId", tracingParameters);
             }
             // Construct URL
             var _baseUrl = BaseUri.AbsoluteUri;
@@ -1265,7 +1325,7 @@ namespace CHC.Consent.Api.Client
         /// <return>
         /// A response object containing the response body and response headers.
         /// </return>
-        public async Task<HttpOperationResponse<string>> SubjectIdentifiersByStudyIdPostWithHttpMessagesAsync(long studyId, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<HttpOperationResponse<string>> GenerateWithHttpMessagesAsync(long studyId, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             // Tracing
             bool _shouldTrace = ServiceClientTracing.IsEnabled;
@@ -1276,7 +1336,7 @@ namespace CHC.Consent.Api.Client
                 Dictionary<string, object> tracingParameters = new Dictionary<string, object>();
                 tracingParameters.Add("studyId", studyId);
                 tracingParameters.Add("cancellationToken", cancellationToken);
-                ServiceClientTracing.Enter(_invocationId, this, "SubjectIdentifiersByStudyIdPost", tracingParameters);
+                ServiceClientTracing.Enter(_invocationId, this, "Generate", tracingParameters);
             }
             // Construct URL
             var _baseUrl = BaseUri.AbsoluteUri;

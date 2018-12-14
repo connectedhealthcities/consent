@@ -1,0 +1,5 @@
+<Project>
+	<ItemGroup>
+		<PackageReference Include="JetBrains.Annotations" Version="2018.2.*" />
+	</ItemGroup>
+</Project>

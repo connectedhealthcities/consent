@@ -7,10 +7,8 @@ using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.Security;
-using Microsoft.AspNet.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query.Expressions;
-using NeinLinq.EntityFrameworkCore;
+using NeinLinq;
+
 
 namespace CHC.Consent.EFCore
 {

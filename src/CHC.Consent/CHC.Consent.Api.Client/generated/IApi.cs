@@ -46,7 +46,7 @@ namespace CHC.Consent.Api.Client
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<object>> ConsentPutWithHttpMessagesAsync(ConsentSpecification specification = default(ConsentSpecification), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<object>> PutConsentWithHttpMessagesAsync(ConsentSpecification specification = default(ConsentSpecification), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='id'>
         /// </param>
@@ -56,7 +56,7 @@ namespace CHC.Consent.Api.Client
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse> ConsentByIdGetWithHttpMessagesAsync(long id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse> GetWithHttpMessagesAsync(long id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='id'>
         /// </param>
@@ -66,7 +66,7 @@ namespace CHC.Consent.Api.Client
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<IList<IPersonIdentifier>>> IdentitiesByIdGetWithHttpMessagesAsync(long id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<IList<IPersonIdentifier>>> GetPersonWithHttpMessagesAsync(long id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='match'>
         /// </param>
@@ -76,7 +76,7 @@ namespace CHC.Consent.Api.Client
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<SearchResult>> IdentitiesSearchPostWithHttpMessagesAsync(IList<MatchSpecification> match = default(IList<MatchSpecification>), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<SearchResult>> FindPersonWithHttpMessagesAsync(IList<MatchSpecification> match, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='specification'>
         /// </param>
@@ -86,7 +86,7 @@ namespace CHC.Consent.Api.Client
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<PersonCreatedResult>> IdentitiesPutWithHttpMessagesAsync(PersonSpecification specification = default(PersonSpecification), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<PersonCreatedResult>> PutPersonWithHttpMessagesAsync(PersonSpecification specification, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='studyId'>
         /// </param>
@@ -100,7 +100,7 @@ namespace CHC.Consent.Api.Client
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<StudySubject>> StudiesByStudyIdSubjectsByIdByStubjectIdGetWithHttpMessagesAsync(long studyId, string stubjectId, string subjectIdentifier = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<StudySubject>> Get1WithHttpMessagesAsync(long studyId, string stubjectId, string subjectIdentifier = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='studyId'>
         /// </param>
@@ -112,7 +112,7 @@ namespace CHC.Consent.Api.Client
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<StudySubject>> StudiesByStudyIdSubjectsGetWithHttpMessagesAsync(long studyId, long personId, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<StudySubject>> FindBySubjectIdWithHttpMessagesAsync(long studyId, long personId, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='studyId'>
         /// </param>
@@ -122,7 +122,7 @@ namespace CHC.Consent.Api.Client
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<string>> SubjectIdentifiersByStudyIdPostWithHttpMessagesAsync(long studyId, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<string>> GenerateWithHttpMessagesAsync(long studyId, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
     }
 }

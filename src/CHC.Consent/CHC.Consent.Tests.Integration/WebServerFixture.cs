@@ -126,7 +126,7 @@ namespace CHC.Consent.Tests
                     .ConfigureLogging(_ => _.AddProvider(LoggerProvider))
                     .ConfigureAppConfiguration(
                         b => b.AddInMemoryCollection(
-                            new Dictionary<string, string> {["IdentityServer:EnableInteralServer"] = false.ToString()}))
+                            new Dictionary<string, string> {["IdentityServer:EnableInternalServer"] = false.ToString()}))
                     .ConfigureServices(
                         services =>
                         {
