@@ -14,34 +14,35 @@ namespace CHC.Consent.EFCore.Identity
     public class PersonIdentifierPersistanceHandler<TIdentifier> : IPersonIdentifierPersistanceHandler<TIdentifier> where TIdentifier : IPersonIdentifier
     {
         private ILogger Logger { get; }
-        private readonly IIdentifierMarshaller<TIdentifier> marshaller;
+        private readonly IDictionary<string, IIdentifierMarshaller> marshaller;
         private readonly string typeName;
 
-        public PersonIdentifierPersistanceHandler(IIdentifierMarshaller<TIdentifier> marshaller, string typeName, ILogger<PersonIdentifierPersistanceHandler<TIdentifier>> logger)
+        public PersonIdentifierPersistanceHandler(IIdentifierMarshaller marshaller, string typeName, ILogger<PersonIdentifierPersistanceHandler<TIdentifier>> logger)
         {
             Logger = logger;
-            this.marshaller = marshaller;
-            this.typeName = typeName;
+            throw new NotImplementedException();
         }
 
         public IQueryable<PersonEntity> Filter(IQueryable<PersonEntity> people,TIdentifier value,IStoreProvider stores)
         {
-            var marshalledValue = marshaller.MarshalledValue(value);
+            throw new NotImplementedException();
+            /*var marshalledValue = marshaller.MarshalledValue(value);
             return people.Where(
                 p => stores.Get<PersonIdentifierEntity>().Any(
                     _ =>
                         _.Person == p &&
                         _.TypeName == typeName
                         && _.Deleted == null &&
-                        _.Value == marshalledValue));
+                        _.Value == marshalledValue));*/
         }
 
         /// <inheritdoc />
         public IEnumerable<TIdentifier> Get(PersonEntity person, IStoreProvider stores)
         {
-            return  ExistingIdentifierEntities(person, stores)
+            throw new NotImplementedException();
+            /*return  ExistingIdentifierEntities(person, stores)
                 .AsEnumerable()
-                .Select(_ => marshaller.Unmarshall(_.ValueType, _.Value) );
+                .Select(_ => marshaller.Unmarshall(_.ValueType, _.Value) );*/
         }
 
         private IQueryable<PersonIdentifierEntity> ExistingIdentifierEntities(PersonEntity person, IStoreProvider stores)
@@ -52,6 +53,8 @@ namespace CHC.Consent.EFCore.Identity
         /// <inheritdoc />
         public bool Update(PersonEntity person, TIdentifier[] identifiers, IStoreProvider stores)
         {
+            throw new NotImplementedException();
+/*
             using (Logger.BeginScope(person))
             {
                 var existing = ExistingIdentifierEntities(person, stores).ToList();
@@ -93,6 +96,7 @@ namespace CHC.Consent.EFCore.Identity
 
                 return changed;
             }
+*/
         }
     }
 }

@@ -52,9 +52,9 @@ namespace CHC.Consent.Api.Infrastructure
         }
 
         /// <inheritdoc />
-        public void Visit(IdentifierDefinition type)
+        public void Visit(IdentifierDefinition definition)
         {
-            currentSchema = CreateNewSchema(type);
+            currentSchema = CreateNewSchema(definition);
             
         }
 

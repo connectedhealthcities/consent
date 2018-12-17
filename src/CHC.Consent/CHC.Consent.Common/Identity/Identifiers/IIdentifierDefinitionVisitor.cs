@@ -9,6 +9,6 @@ namespace CHC.Consent.Common.Identity.Identifiers
         void Visit(CompositeIdentifierType type);
         void Visit(IntegerIdentifierType type);
         void Visit(StringIdentifierType type);
-        void Visit(IdentifierDefinition type);
+        void Visit(IdentifierDefinition definition);
     }
 }

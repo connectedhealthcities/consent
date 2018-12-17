@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
+using System.Xml.Linq;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.Identity;
 using CHC.Consent.Testing.Utils;
@@ -22,6 +24,22 @@ namespace CHC.Consent.EFCore.Tests.Identity
         private readonly PersonEntity personEntity;
         private readonly IdentifierMarshaller marshaller;
 
+        private class Identifier : PersonIdentifier
+        {
+            /// <inheritdoc />
+            public Identifier() : base(NotImplemented, null)
+            {
+                
+            }
+
+            public static IdentifierValue NotImplemented => throw new NotImplementedException();
+
+            public string Value
+            {
+                get => throw new NotImplementedException();
+                set => throw new NotImplementedException();
+            }
+        }
 
         /// <inheritdoc />
         public PersonIdentifierHandlerTests(ITestOutputHelper outputHelper, DatabaseFixture fixture) : base(outputHelper, fixture)
@@ -38,25 +56,24 @@ namespace CHC.Consent.EFCore.Tests.Identity
             personEntity = creatingContext.Add(new PersonEntity()).Entity;
             creatingContext.SaveChanges();
         }
+        
+        
 
-        [Identifier(name: IdentifierTypeName)]
-        class Identifier : IPersonIdentifier
+        class IdentifierMarshaller : IIdentifierMarshaller
         {
-            public string Value { get; set; }
-        }
-
-        class IdentifierMarshaller : IIdentifierMarshaller<Identifier>
-        {
-            /// <inheritdoc />
-            public string ValueType => ValueTypeName;
+            private static readonly IdentifierDefinition IdentifierDefinition = new IdentifierDefinition("Test", new StringIdentifierType());
 
             /// <inheritdoc />
-            public string MarshalledValue(Identifier value) => value?.Value;
+            public XElement MarshallToXml(PersonIdentifier identifier)
+            {
+                return new XElement("test", identifier.Value.Value);
+            }
 
             /// <inheritdoc />
-            public Identifier Unmarshall(string valueType, string value) =>
-                value == null ? null : new Identifier() {Value = value};
-
+            public PersonIdentifier MarshallFromXml(XElement xElement)
+            {
+                return new PersonIdentifier(new IdentifierValue(xElement.Value), IdentifierDefinition );
+            }
         }
 
         [Fact]
@@ -70,7 +87,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
 
             Assert.True(updated);
             
-            AssertActiveIdentifier(marshaller.MarshalledValue(identifier), Assert.Single(identifiers));
+            AssertActiveIdentifier(marshaller.MarshallToXml(identifier), Assert.Single(identifiers));
         }
 
         [Fact]
@@ -84,7 +101,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
             
             Assert.False(updated);
 
-            AssertActiveIdentifier("A Value", Assert.Single(identifiers));
+            AssertActiveIdentifier(new XElement("nope", "A Value"), Assert.Single(identifiers));
         }
 
         [Fact]
@@ -167,8 +184,8 @@ namespace CHC.Consent.EFCore.Tests.Identity
             return Update(new Identifier {Value = Random.String()}, person, creatingContext);
         }
 
-        private Action<PersonIdentifierEntity> ElementIsActiveIdentifier(string expectedValue) => 
-            i => AssertActiveIdentifier(expectedValue, i);
+        private Action<PersonIdentifierEntity> ElementIsActiveIdentifier(string expectedValue) =>
+            i => AssertActiveIdentifier(new XElement("test", expectedValue), i);
 
         private Action<PersonIdentifierEntity> ElementIsDeletedIdentifier(string expectedValue) =>
             i => AssertDeletedIdentifier(expectedValue, i);
@@ -181,7 +198,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
                 .ToArray();
         }
 
-        private void AssertActiveIdentifier(string expectedValue, PersonIdentifierEntity identifier)
+        private void AssertActiveIdentifier(XElement expectedValue, PersonIdentifierEntity identifier)
         {
             AssertIdentifier(expectedValue, identifier);
             Assert.Null(identifier.Deleted);
@@ -193,6 +210,9 @@ namespace CHC.Consent.EFCore.Tests.Identity
             Assert.NotNull(identifier.Deleted);
         }
 
+        private static void AssertIdentifier(XElement expectedValue, PersonIdentifierEntity identifier)
+            => AssertIdentifier(expectedValue.Value, identifier);
+        
         private static void AssertIdentifier(string expectedValue, PersonIdentifierEntity identifier)
         {
             Assert.NotNull(identifier);

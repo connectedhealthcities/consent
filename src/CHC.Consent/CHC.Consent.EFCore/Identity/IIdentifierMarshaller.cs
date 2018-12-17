@@ -1,11 +1,11 @@
-﻿using CHC.Consent.Common.Identity;
+using System.Xml.Linq;
+using CHC.Consent.Common.Identity.Identifiers;
 
 namespace CHC.Consent.EFCore.Identity
 {
-    public interface IIdentifierMarshaller<T> where T:IPersonIdentifier
+    public interface IIdentifierMarshaller
     {
-        string ValueType { get; }
-        string MarshalledValue(T value);
-        T Unmarshall(string valueType, string value);
+        XElement MarshallToXml(PersonIdentifier identifier);
+        PersonIdentifier MarshallFromXml(XElement xElement);
     }
 }

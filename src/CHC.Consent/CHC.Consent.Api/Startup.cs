@@ -132,8 +132,6 @@ namespace CHC.Consent.Api
             services.AddSingleton(evidenceRegistry);
             services.AddSingleton<ITypeRegistry<Evidence>>(evidenceRegistry);
 
-            services.AddSingleton<ConsentTypeRegistry>();
-
 
             //These setup the relevant body binders
             /*services

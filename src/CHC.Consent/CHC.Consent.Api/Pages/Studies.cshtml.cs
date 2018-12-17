@@ -16,7 +16,7 @@ namespace CHC.Consent.Api.Pages
     {
         private ILogger<StudiesModel> Logger { get; }
         private readonly IUserProvider user;
-        private readonly IPersonIdentifierDisplayHandlerProvider diplayHandlerProvider;
+        private readonly IPersonIdentifierDisplayHandlerProvider displayHandlerProvider;
         private readonly IConsentRepository consent;
         private readonly IIdentityRepository identifiers;
         private readonly IOptions<IdentifierDisplayOptions> displayOptions;
@@ -32,14 +32,14 @@ namespace CHC.Consent.Api.Pages
             IConsentRepository consent,
             IIdentityRepository identifiers,
             IUserProvider user, 
-            IPersonIdentifierDisplayHandlerProvider diplayHandlerProvider,
+            IPersonIdentifierDisplayHandlerProvider displayHandlerProvider,
             IOptions<IdentifierDisplayOptions> displayOptions,
             ILogger<StudiesModel> logger
             )
         {
             Logger = logger;
             this.user = user;
-            this.diplayHandlerProvider = diplayHandlerProvider;
+            this.displayHandlerProvider = displayHandlerProvider;
             this.consent = consent;
             this.identifiers = identifiers;
             this.displayOptions = displayOptions;
@@ -53,7 +53,7 @@ namespace CHC.Consent.Api.Pages
             IdentifierNames = displayOptions.Value.Default;
             DisplayNames = IdentifierNames.ToDictionary(
                 name => name,
-                name => diplayHandlerProvider.GetDisplayHandler(name).DisplayName);
+                name => displayHandlerProvider.GetDisplayHandler(name).DisplayName);
 
             var studyIdentity = Study.Id;
             var consentedSubjects = consent.GetConsentedSubjects(studyIdentity);

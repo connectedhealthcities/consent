@@ -14,5 +14,11 @@ namespace CHC.Consent.Common.Identity.Identifiers
         {
             visitor.Visit(this);
         }
+
+        /// <inheritdoc />
+        public IdentifierParseResult Parse(string value)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }
