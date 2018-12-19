@@ -34,6 +34,7 @@ namespace CHC.Consent.EFCore
         public virtual DbSet<PersonEntity> People { get; set; }
         public virtual DbSet<StudyEntity> Studies { get; set; }
         public virtual DbSet<SubjectIdentifierEntity> SubjectIdentifiers { get; set; }
+        public virtual DbSet<PersonIdentifierEntity> PersonIdentifiers { get; set; }
 
         /// <inheritdoc />
         public override int SaveChanges(bool acceptAllChangesOnSuccess)

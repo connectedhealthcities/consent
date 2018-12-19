@@ -29,7 +29,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
             
             var marshaller = creator.Marshallers["test"];
 
-            var stringMarshaller = Assert.IsType<IdentifierToStringMarshaller>(marshaller);
+            var stringMarshaller = Assert.IsType<IdentifierToXmlElementMarshaller>(marshaller);
             Assert.Equal(identifierDefinition, stringMarshaller.Definition);
         }
     }

@@ -1,17 +1,29 @@
 ﻿using System;
+using System.Buffers;
+using System.Collections.Generic;
+using System.Linq;
 using CHC.Consent.Api;
+using CHC.Consent.Api.Features.Identity;
 using CHC.Consent.Api.Features.Identity.Dto;
+using CHC.Consent.Api.Infrastructure.Web;
+using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Testing.Utils;
+using FakeItEasy;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace CHC.Consent.Tests.Api.Controllers
 {
+    using Random = CHC.Consent.Testing.Utils.Random;
     
     public class IdentityControllerTests
     {
         private readonly ITestOutputHelper output;
+
 
         /// <inheritdoc />
         public IdentityControllerTests(ITestOutputHelper output)
@@ -19,19 +31,21 @@ namespace CHC.Consent.Tests.Api.Controllers
             this.output = output;
         }
 
+
         [Fact]
         public void Test()
         {
-            var nhsNumber = Create.NhsNumber("32222");
+            var nhsNumber = Identifiers.NhsNumber("32222");
             output.WriteLine(
                 JsonConvert.SerializeObject(
                     new PersonSpecification
                     {
                         Identifiers =
                         {
-                            Create.DateOfBirth(2018, 12, 1),
-                            Create.BradfordHospitalNumber("1112333"),
-                            nhsNumber
+                            Identifiers.DateOfBirth(2018, 12, 1),
+                            Identifiers.HospitalNumber("1112333"),
+                            nhsNumber,
+                            Identifiers.Address("3 Sheaf Street", "Leeds", postcode:"LS10 1HD")
                         },
                         MatchSpecifications =
                         {
@@ -39,8 +53,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                         }
                     },
                     Formatting.Indented,
-                    Startup.SerializerSettings(
-                        new JsonSerializerSettings())
+                    Startup.SerializerSettings(new JsonSerializerSettings(), Identifiers.Registry)
                 )
             );
         }
@@ -48,21 +61,21 @@ namespace CHC.Consent.Tests.Api.Controllers
         [Fact]
         public void UpdatesAnExistingPerson()
         {
-            throw new NotImplementedException();
-            /*var existingPerson = new PersonIdentity(Random.Long());
+         
+            var existingPerson = new PersonIdentity(Random.Long());
 
-            var nhsNumberIdentifier = new NhsNumberIdentifier("444-333-111");
-            var bradfordHospitalNumberIdentifier = new BradfordHospitalNumberIdentifier("Added HospitalNumber");
+            var nhsNumberIdentifier = Identifiers.NhsNumber("444-333-111");
+            var bradfordHospitalNumberIdentifier = Identifiers.HospitalNumber("Added HospitalNumber");
             
             var identityRepository = A.Fake<IIdentityRepository>();
-            A.CallTo(() => identityRepository.FindPersonBy(A<IEnumerable<IPersonIdentifier>>.That.IsSameSequenceAs(nhsNumberIdentifier))).Returns(existingPerson);
+            A.CallTo(() => identityRepository.FindPersonBy(A<IEnumerable<PersonIdentifier>>.That.IsSameSequenceAs(nhsNumberIdentifier))).Returns(existingPerson);
             
             
                 
             var controller = new IdentityController(
                 identityRepository,
                 A.Fake<IPersonIdentifierListChecker>(),
-                personIdentifierRegistry,
+                Identifiers.Registry, 
                 ArrayPool<char>.Create());
 
 
@@ -88,22 +101,22 @@ namespace CHC.Consent.Tests.Api.Controllers
 
             A.CallTo(
                     () => identityRepository.UpdatePerson(existingPerson,
-                        A<IEnumerable<IPersonIdentifier>>.That.IsSameSequenceAs(nhsNumberIdentifier, bradfordHospitalNumberIdentifier)))
+                        A<IEnumerable<PersonIdentifier>>.That.IsSameSequenceAs(nhsNumberIdentifier, bradfordHospitalNumberIdentifier)))
                 .MustHaveHappenedOnceExactly();
-            Assert.IsType<SeeOtherOjectActionResult>(result);*/
+            Assert.IsType<SeeOtherOjectActionResult>(result);
         }
         
         [Fact]
         public void CreatesAPerson()
         {
-            throw new NotImplementedException();
-            /*var nhsNumberIdentifier = new NhsNumberIdentifier("New NHS Number");
-            var bradfordHospitalNumberIdentifier = new BradfordHospitalNumberIdentifier("New HospitalNumber");
+            
+            var nhsNumberIdentifier = Identifiers.NhsNumber("New NHS Number");
+            var bradfordHospitalNumberIdentifier = Identifiers.HospitalNumber("New HospitalNumber");
             
             var identityRepository = A.Fake<IIdentityRepository>();
             A.CallTo(
                     () => identityRepository.FindPersonBy(
-                        A<IEnumerable<IPersonIdentifier>>.That.IsSameSequenceAs(nhsNumberIdentifier)))
+                        A<IEnumerable<PersonIdentifier>>.That.IsSameSequenceAs(nhsNumberIdentifier)))
                 .Returns(null);
             
             
@@ -111,7 +124,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             var controller = new IdentityController(
                 identityRepository,
                 A.Fake<IPersonIdentifierListChecker>(),
-                personIdentifierRegistry,
+                Identifiers.Registry, 
                 ArrayPool<char>.Create());
 
 
@@ -140,33 +153,33 @@ namespace CHC.Consent.Tests.Api.Controllers
 
             A.CallTo(
                     () => identityRepository.CreatePerson(
-                        A<IEnumerable<IPersonIdentifier>>.That.IsSameSequenceAs(
+                        A<IEnumerable<PersonIdentifier>>.That.IsSameSequenceAs(
                             nhsNumberIdentifier,
                             bradfordHospitalNumberIdentifier)))
-                .MustHaveHappenedOnceExactly();*/
+                .MustHaveHappenedOnceExactly();
         }
 
 
-        [Fact]
+        [Fact(Skip = "Work in progress")]
         public void CanDeserializePersonSpecificationFromJson()
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("Design in progress");
             /*var personSpecification =
                 JsonConvert.DeserializeObject<PersonSpecification>(
                     Data.PersonSpecificationJson,
-                    Create.IdentifierRegistry
-                        .WithIdentifier<NhsNumberIdentifier>()
-                        .WithIdentifier<DateOfBirthIdentifier>()
-                        .WithIdentifier<BradfordHospitalNumberIdentifier>()
-                        .Build()
-                        .CreateSerializerSettings());
+                    Startup.SerializerSettings(
+                        new JsonSerializerSettings(), 
+                        Registry
+                        )
+                    /*
+                        .CreateSerializerSettings()#1#);
             
             Assert.NotNull(personSpecification);
-            var identifier = Assert.Single(personSpecification.Identifiers);
-            var nhsNumber = Assert.IsType<NhsNumberIdentifier>(identifier);
-            Assert.Equal("111-222-333", nhsNumber.Value);
+            var identifier = Assert.IsType<PersonIdentifier>(personSpecification.Identifiers[0]);
+            Assert.Equal("nhs-number", identifier.Definition.SystemName);
+            Assert.Equal("111-222-333", identifier.Value.Value);*/
 
-            var matchSpecifications = personSpecification.MatchSpecifications;
+            /*var matchSpecifications = personSpecification.MatchSpecifications;
             var matchSpecification =  Assert.Single(matchSpecifications);
             var matchIdentifier = Assert.Single(matchSpecification.Identifiers);
             Assert.NotNull(matchIdentifier);

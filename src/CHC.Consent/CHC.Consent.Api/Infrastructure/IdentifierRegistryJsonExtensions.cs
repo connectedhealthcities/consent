@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using CHC.Consent.Common.Identity;
+﻿using System.Collections.Generic;
+using CHC.Consent.Common.Consent;
+using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -10,37 +10,27 @@ namespace CHC.Consent.Api.Infrastructure
 {
     public static class IdentifierRegistryJsonExtensions
     {
-        public static JsonSerializerSettings CreateSerializerSettings(this ITypeRegistry identifierRegistry)
+        
+        public static JsonSerializerSettings CreateSerializerSettings(this ITypeRegistry<CaseIdentifier> identifierRegistry)
+        {
+            return new JsonSerializerSettings
+            {
+                Formatting = Formatting.Indented,
+                TypeNameHandling = TypeNameHandling.Auto,
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                Converters = { new StringEnumConverter() }
+            };
+        }
+        
+        public static JsonSerializerSettings CreateSerializerSettings(this IdentifierDefinitionRegistry identifierRegistry)
         {
             return new JsonSerializerSettings
             {
                 TypeNameHandling = TypeNameHandling.Auto,
                 SerializationBinder = new IdentifierRegistrySerializationBinder(identifierRegistry),
-                
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                Converters = { new StringEnumConverter(), new IdentityConverter() }
+                Converters = { new StringEnumConverter(), new PersonIdentifierConverter(identifierRegistry) }
             };
-        }
-    }
-
-    public class IdentityConverter : JsonConverter
-    {
-        /// <inheritdoc />
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc />
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc />
-        public override bool CanConvert(Type objectType)
-        {
-            return typeof(IPersonIdentifier).IsAssignableFrom(objectType);
         }
     }
 }

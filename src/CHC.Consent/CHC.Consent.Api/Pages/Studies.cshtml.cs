@@ -3,6 +3,7 @@ using System.Linq;
 using CHC.Consent.Api.Infrastructure.IdentifierDisplay;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -21,7 +22,7 @@ namespace CHC.Consent.Api.Pages
         private readonly IIdentityRepository identifiers;
         private readonly IOptions<IdentifierDisplayOptions> displayOptions;
 
-        public Dictionary<StudySubject, IDictionary<string, IEnumerable<IPersonIdentifier>>> People { get; private set; }
+        public Dictionary<StudySubject, IDictionary<string, IEnumerable<PersonIdentifier>>> People { get; private set; }
         public IEnumerable<string> IdentifierNames { get; private set; }
         public Dictionary<string, string> DisplayNames { get; private set; }
 
@@ -70,11 +71,7 @@ namespace CHC.Consent.Api.Pages
                     select new {s, p}
                 ).ToDictionary(o => o.s, o => o.p.Value);
                     
-
-
             return Page();
-        }
-
-       
+        }       
     }
 }

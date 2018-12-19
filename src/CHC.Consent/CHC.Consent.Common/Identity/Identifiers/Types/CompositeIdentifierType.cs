@@ -1,3 +1,5 @@
+using System.Linq;
+
 namespace CHC.Consent.Common.Identity.Identifiers
 {
     public class CompositeIdentifierType : IIdentifierType
@@ -7,6 +9,7 @@ namespace CHC.Consent.Common.Identity.Identifiers
         public CompositeIdentifierType(params IdentifierDefinition[] identifiers)
         {
             Identifiers = new IdentifierDefinitionRegistry(identifiers);
+            SystemName = $"composite({string.Join(",", identifiers.Select(_ => _.Type.SystemName))})";
         }
 
         /// <inheritdoc />
@@ -16,9 +19,6 @@ namespace CHC.Consent.Common.Identity.Identifiers
         }
 
         /// <inheritdoc />
-        public IdentifierParseResult Parse(string value)
-        {
-            throw new System.NotImplementedException();
-        }
+        public string SystemName { get; }
     }
 }

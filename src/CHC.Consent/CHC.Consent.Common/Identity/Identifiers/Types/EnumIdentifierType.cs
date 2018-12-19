@@ -11,6 +11,7 @@ namespace CHC.Consent.Common.Identity.Identifiers
         public EnumIdentifierType(params string[] values)
         {
             Values = new HashSet<string>(values, StringComparer.InvariantCultureIgnoreCase);
+            SystemName = $"enum({string.Join(",", Values)})";
         }
 
         /// <inheritdoc />
@@ -18,6 +19,9 @@ namespace CHC.Consent.Common.Identity.Identifiers
         {
             visitor.Visit(this);
         }
+
+        /// <inheritdoc />
+        public string SystemName { get; }
 
         /// <inheritdoc />
         public IdentifierParseResult Parse(string value) => IdentifierParseResult.Success(value);

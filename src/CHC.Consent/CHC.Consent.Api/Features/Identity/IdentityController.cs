@@ -7,7 +7,9 @@ using System.Threading.Tasks;
 using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Api.Infrastructure.Web;
+using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -24,14 +26,14 @@ namespace CHC.Consent.Api.Features.Identity
     public class IdentityController : Controller
     {
         private readonly IPersonIdentifierListChecker identifierChecker;
-        private readonly ITypeRegistry<IPersonIdentifier> registry;
+        private readonly IdentifierDefinitionRegistry registry;
         private readonly ArrayPool<char> arrayPool;
         private IIdentityRepository IdentityRepository { get; }
 
         public IdentityController(
             IIdentityRepository identityRepository, 
             IPersonIdentifierListChecker identifierChecker,
-            ITypeRegistry<IPersonIdentifier> registry, 
+            IdentifierDefinitionRegistry registry, 
             ArrayPool<char> arrayPool)
         {
             this.identifierChecker = identifierChecker;
@@ -65,12 +67,17 @@ namespace CHC.Consent.Api.Features.Identity
         {
             if(!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
             
-            var person = IdentityRepository.FindPerson(match.Select(_ => _.Identifiers));
+            var person = FindMatchingPerson(match);
 
             return
                 person == null
                     ? (IActionResult) NotFound()
                     : Ok(new SearchResult {PersonId = person});
+        }
+
+        private PersonIdentity FindMatchingPerson(IEnumerable<MatchSpecification> match)
+        {
+            return IdentityRepository.FindPerson(match.Select(_ => _.Identifiers.Cast<PersonIdentifier>()));
         }
 
         [HttpPut]
@@ -83,16 +90,16 @@ namespace CHC.Consent.Api.Features.Identity
             
             identifierChecker.EnsureHasNoInvalidDuplicates(specification.Identifiers);
             
-            var person = IdentityRepository.FindPerson(specification.MatchSpecifications.Select(_ => _.Identifiers));
+            var person = FindMatchingPerson(specification.MatchSpecifications);
 
             if (person == null)
             {
-                person = IdentityRepository.CreatePerson(specification.Identifiers);
+                person = IdentityRepository.CreatePerson(specification.Identifiers.Cast<PersonIdentifier>());
                 return CreatedAtAction("GetPerson", new {id = person.Id}, new PersonCreatedResult {PersonId = person});
             }
             else
             {
-                IdentityRepository.UpdatePerson(person, specification.Identifiers);
+                IdentityRepository.UpdatePerson(person, specification.Identifiers.Cast<PersonIdentifier>());
 
                 return new SeeOtherOjectActionResult(
                     "GetPerson",

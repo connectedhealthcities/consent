@@ -19,13 +19,13 @@ namespace CHC.Consent.EFCore.Identity
         /// <inheritdoc />
         public void Visit(DateIdentifierType type)
         {
-            Marshallers[currentKey] = new IdentifierToStringMarshaller(currentDefinition, new ValueParser<DateTime>(DateTime.TryParse));
+            Marshallers[currentKey] = new IdentifierToXmlElementMarshaller(currentDefinition, new ValueParser<DateTime>(DateTime.TryParse));
         }
 
         /// <inheritdoc />
         public void Visit(EnumIdentifierType type)
         {
-            Marshallers[currentKey] = new IdentifierToStringMarshaller(currentDefinition);
+            Marshallers[currentKey] = new IdentifierToXmlElementMarshaller(currentDefinition);
         }
 
         /// <inheritdoc />
@@ -37,13 +37,13 @@ namespace CHC.Consent.EFCore.Identity
         /// <inheritdoc />
         public void Visit(IntegerIdentifierType type)
         {
-            Marshallers[currentKey] = new IdentifierToStringMarshaller(currentDefinition, new ValueParser<long>(long.TryParse));
+            Marshallers[currentKey] = new IdentifierToXmlElementMarshaller(currentDefinition, new ValueParser<long>(long.TryParse));
         }
 
         /// <inheritdoc />
         public void Visit(StringIdentifierType type)
         {
-            Marshallers[currentKey] = new IdentifierToStringMarshaller(currentDefinition);
+            Marshallers[currentKey] = new IdentifierToXmlElementMarshaller(currentDefinition);
         }
 
         /// <inheritdoc />

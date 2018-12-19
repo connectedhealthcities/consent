@@ -21,6 +21,7 @@ using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.Identity;
 using IdentityModel;
 using IdentityServer4.EntityFramework.Options;
+using IdentityServer4.Stores.Serialization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -35,6 +36,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -67,10 +69,7 @@ namespace CHC.Consent.Api
                     })
                 .AddFeatureFolders()
                 .AddJsonOptions(
-                    config =>
-                    {
-                        SerializerSettings(config.SerializerSettings);
-                    })
+                    config => throw new NotImplementedException("Work In Progress"))
                 .AddRazorPagesOptions(o => o.Conventions.AuthorizeFolder("/"));
 
 
@@ -183,12 +182,69 @@ namespace CHC.Consent.Api
             });
         }
 
-        public static JsonSerializerSettings SerializerSettings(JsonSerializerSettings settings)
+        public static JsonSerializerSettings SerializerSettings(
+            JsonSerializerSettings settings, IdentifierDefinitionRegistry identifierDefinitionRegistry)
         {
             settings.TypeNameHandling = TypeNameHandling.Auto;
             settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
             settings.Formatting = Formatting.Indented;
+            settings.Converters.Add(new PersonIdentifierConverter(identifierDefinitionRegistry));
+            settings.SerializationBinder = new IdentifierRegistrySerializationBinder(identifierDefinitionRegistry);
             return settings;
+        }
+    }
+
+    public class PersonIdentifierConverter : JsonConverter
+    {
+        public IdentifierDefinitionRegistry Registry { get; }
+
+        public PersonIdentifierConverter(IdentifierDefinitionRegistry registry)
+        {
+            Registry = registry;
+        }
+
+        /// <inheritdoc />
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            var identifier = (PersonIdentifier) value;
+            writer.WriteStartObject();
+            writer.WritePropertyName("$type", escape: true);
+
+            writer.WriteValue(identifier.Definition.SystemName);
+
+
+            writer.WritePropertyName("value");
+            if (identifier.Definition.Type is CompositeIdentifierType)
+            {
+                writer.WriteStartObject();
+                foreach (var subIdentifier in ((IDictionary<string, PersonIdentifier>) identifier.Value.Value).Values)
+                {
+                    writer.WritePropertyName(subIdentifier.Definition.SystemName);
+                    writer.WriteValue(subIdentifier.Value.Value);
+                }
+
+                writer.WriteEndObject();
+            }
+            else
+            {
+                writer.WriteValue(identifier.Value.Value);
+            }
+
+            writer.WriteEndObject();
+        }
+
+        /// <inheritdoc />
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            var jObject = JObject.Load(reader);
+            if (!Registry.TryGetValue((string) jObject["$type"], out var definition)) return null;
+            throw new NotImplementedException("This is going to need to be revisited");
+        }
+
+        /// <inheritdoc />
+        public override bool CanConvert(Type objectType)
+        {
+            return objectType == typeof(PersonIdentifier) || objectType == typeof(IPersonIdentifier);
         }
     }
 }

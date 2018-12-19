@@ -15,4 +15,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.1.0" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CHC.Consent.Common\CHC.Consent.Common.csproj" />
+  </ItemGroup>
 </Project>

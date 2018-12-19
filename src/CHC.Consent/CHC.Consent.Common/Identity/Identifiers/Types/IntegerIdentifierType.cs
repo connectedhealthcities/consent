@@ -7,5 +7,8 @@ namespace CHC.Consent.Common.Identity.Identifiers
         {
             visitor.Visit(this);
         }
+
+        /// <inheritdoc />
+        public string SystemName => "integer";
     }
 }

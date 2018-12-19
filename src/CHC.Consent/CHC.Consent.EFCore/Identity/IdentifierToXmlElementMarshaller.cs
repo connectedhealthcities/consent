@@ -3,13 +3,13 @@ using CHC.Consent.Common.Identity.Identifiers;
 
 namespace CHC.Consent.EFCore.Identity
 {
-    public class IdentifierToStringMarshaller : IIdentifierMarshaller
+    public class IdentifierToXmlElementMarshaller : IIdentifierMarshaller
     {
         public IdentifierDefinition Definition { get; }
         private IStringValueParser Parser { get; }
 
         /// <inheritdoc />
-        public IdentifierToStringMarshaller(IdentifierDefinition definition, IStringValueParser parser=null)
+        public IdentifierToXmlElementMarshaller(IdentifierDefinition definition, IStringValueParser parser=null)
         {
             Definition = definition;
             Parser = parser ?? PassThroughParser.Instance;

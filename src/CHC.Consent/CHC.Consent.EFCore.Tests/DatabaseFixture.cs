@@ -39,7 +39,7 @@ namespace CHC.Consent.EFCore.Tests
                 output,
                 new DbContextOptionsBuilder<ConsentContext>()
                     .UseSqlServer(
-                        $@"Server=(localdb)\MSSqlLocalDB;Integrated Security=true;Initial Catalog=ChCEntityFrameworkTest"));
+                        $@"Server=(localdb)\MSSqlLocalDB;Integrated Security=true;Initial Catalog=ChCEFTest"));
 
         private void EnsureInitialised(ITestOutputHelper output)
         {

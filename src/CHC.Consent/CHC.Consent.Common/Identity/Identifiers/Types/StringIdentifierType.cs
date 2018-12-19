@@ -9,6 +9,9 @@ namespace CHC.Consent.Common.Identity.Identifiers
         }
 
         /// <inheritdoc />
+        public string SystemName => "string";
+
+        /// <inheritdoc />
         public IdentifierParseResult Parse(string value) 
             => IdentifierParseResult.Success(value);
     }

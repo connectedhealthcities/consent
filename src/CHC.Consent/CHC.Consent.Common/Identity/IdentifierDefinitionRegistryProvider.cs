@@ -4,7 +4,7 @@ namespace CHC.Consent.Common.Identity
 {
     public class IdentifierDefinitionRegistryProvider
     {
-        private static IdentifierDefinitionRegistry identifiers = new IdentifierDefinitionRegistry
+        private readonly IdentifierDefinitionRegistry identifiers = new IdentifierDefinitionRegistry
         {
             new IdentifierDefinition(name: "NHS Number", type: new StringIdentifierType()),
             new IdentifierDefinition(name: "Sex", type: new EnumIdentifierType("Female", "Male")),
@@ -34,7 +34,11 @@ namespace CHC.Consent.Common.Identity
                 ))
         };
 
-        public static IdentifierDefinitionRegistry Registry() => identifiers;
+        /// <inheritdoc />
+        public IdentifierDefinitionRegistryProvider(IdentifierDefinitionRegistry identifiers=null)
+        {
+            this.identifiers = identifiers ?? this.identifiers;
+        }
 
         public IdentifierDefinitionRegistry GetRegistry() => identifiers;
     }

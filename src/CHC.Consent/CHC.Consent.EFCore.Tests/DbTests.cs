@@ -35,15 +35,23 @@ namespace CHC.Consent.EFCore.Tests
             newContext.Database.UseTransaction(transaction.GetDbTransaction());
             return newContext;
         }
-
-        /// <inheritdoc />
-        public virtual void Dispose()
+        
+        protected virtual void Dispose(bool disposing)
         {
+            if (!disposing) return;
+            transaction?.Rollback();
             transaction?.Dispose();
             Context?.Dispose();
             createContext?.Dispose();
             updateContext?.Dispose();
             readContext?.Dispose();
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

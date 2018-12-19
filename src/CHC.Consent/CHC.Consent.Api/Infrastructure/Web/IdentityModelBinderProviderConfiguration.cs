@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.Linq;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -27,7 +28,7 @@ namespace CHC.Consent.Api.Infrastructure.Web
         private readonly ILoggerFactory loggerFactory;
         private readonly ArrayPool<char> charPool;
         private readonly ObjectPoolProvider objectPoolProvider;
-        private readonly ITypeRegistry registry;
+        private readonly IdentifierDefinitionRegistry registry;
         private readonly IHttpRequestStreamReaderFactory readerFactory;
 
         /// <inheritdoc />
@@ -37,7 +38,7 @@ namespace CHC.Consent.Api.Infrastructure.Web
             ObjectPoolProvider objectPoolProvider,
             IHttpRequestStreamReaderFactory readerFactory,
             IOptions<MvcJsonOptions> jsonOptions, 
-            TRegistry registry)
+            IdentifierDefinitionRegistry registry)
         {
             JsonOptions = jsonOptions;
             this.loggerFactory = loggerFactory;
