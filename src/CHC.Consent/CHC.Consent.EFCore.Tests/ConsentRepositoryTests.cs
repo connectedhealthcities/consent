@@ -8,6 +8,7 @@ using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.Testing.Utils;
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 using Xunit.Abstractions;
@@ -245,20 +246,22 @@ namespace CHC.Consent.EFCore.Tests
             updateContext.SaveChanges();
 
 
-            var storedEvidence = readContext
-                .Set<EvidenceEntity>()
-                .Include(_ => _.Consent)
-                .SingleOrDefault(_ => _.Consent.Id == consent.Id);
-                
-            Assert.NotNull(storedEvidence);
-            Assert.IsType<GivenEvidenceEntity>(storedEvidence);
+            var savedConsent = readContext.Set<ConsentEntity>().AsNoTracking()
+                .Where(_ => _.Id == consent.Id)
+                .Include(_ => _.GivenEvidence)
+                .SingleOrDefault();
+
+            savedConsent.Should().NotBeNull();
+            savedConsent.GivenEvidence.Should().ContainSingle();
+            var storedEvidence = savedConsent.GivenEvidence.SingleOrDefault();
+            storedEvidence.Should().NotBeNull().And.BeOfType<GivenEvidenceEntity>();
+            
             Assert.Equal(MedwayEvidence.TypeName, storedEvidence.Type);
             Assert.Equal(new XmlMarshaller<MedwayEvidence>(MedwayEvidence.TypeName).MarshalledValue(evidence),
                 storedEvidence.Value);
             Assert.NotNull(storedEvidence.Consent);
             
         }
-
 
         [Fact]
         public void CanGetStudyById()

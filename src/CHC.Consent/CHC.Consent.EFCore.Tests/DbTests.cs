@@ -39,7 +39,7 @@ namespace CHC.Consent.EFCore.Tests
         protected virtual void Dispose(bool disposing)
         {
             if (!disposing) return;
-            transaction?.Rollback();
+            try {transaction?.Rollback();} catch(InvalidOperationException) { }
             transaction?.Dispose();
             Context?.Dispose();
             createContext?.Dispose();
