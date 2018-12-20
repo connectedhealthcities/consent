@@ -13,9 +13,9 @@ namespace CHC.Consent.EFCore.Consent
         public StudySubjectEntity StudySubject { get; set; }
         public DateTime DateProvided { get; set; }
         public DateTime? DateWithdrawn { get; set; }
-        public IEnumerable<CaseIdentifierEntity> CaseIdentifiers { get; set; } = new List<CaseIdentifierEntity>();
-        public IEnumerable<GivenEvidenceEntity> GivenEvidence { get; set; } = new List<GivenEvidenceEntity>();
-        public IEnumerable<WithdrawnEvidenceEntity> WithdrawnEvidence { get; set; } = new List<WithdrawnEvidenceEntity>();
+        public ICollection<CaseIdentifierEntity> CaseIdentifiers { get; set; } = new List<CaseIdentifierEntity>();
+        public ICollection<GivenEvidenceEntity> GivenEvidence { get; set; } = new List<GivenEvidenceEntity>();
+        public ICollection<WithdrawnEvidenceEntity> WithdrawnEvidence { get; set; } = new List<WithdrawnEvidenceEntity>();
         
     }
 }

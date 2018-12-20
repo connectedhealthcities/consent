@@ -17,6 +17,7 @@ namespace CHC.Consent.EFCore.Configuration
             
             builder.Property(_ => _.Value).HasMaxLength(int.MaxValue).IsRequired();
             builder.Property(_ => _.Type).IsRequired();
+            builder.Ignore(_ => _.Consent);
             builder.HasDiscriminator()
                 .HasValue<GivenEvidenceEntity>("Given")
                 .HasValue<WithdrawnEvidenceEntity>("Withdrawn");
@@ -25,14 +26,16 @@ namespace CHC.Consent.EFCore.Configuration
         /// <inheritdoc />
         public void Configure(EntityTypeBuilder<GivenEvidenceEntity> builder)
         {
-            //builder.HasOne(_ => _.Consent).WithMany(_ => _.GivenEvidence).HasForeignKey("ConsentId").IsRequired();
+            builder.HasOne(_ => _.Consent).WithMany(_ => _.GivenEvidence).HasForeignKey("ConsentId").IsRequired();
+            
             builder.HasBaseType<EvidenceEntity>();
+            
         }
 
         /// <inheritdoc />
         public void Configure(EntityTypeBuilder<WithdrawnEvidenceEntity> builder)
         {
-            //builder.HasOne(_ => _.Consent).WithMany(_ => _.WithdrawnEvidence).HasForeignKey("ConsentId").IsRequired();
+            builder.HasOne(_ => _.Consent).WithMany(_ => _.WithdrawnEvidence).HasForeignKey("ConsentId").IsRequired();
             builder.HasBaseType<EvidenceEntity>();
         }
     }
