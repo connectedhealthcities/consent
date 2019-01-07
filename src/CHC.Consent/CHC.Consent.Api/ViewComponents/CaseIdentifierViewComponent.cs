@@ -8,9 +8,9 @@ namespace CHC.Consent.Api.ViewComponents
     [ViewComponent(Name = "CaseIdentifier")]
     public class CaseIdentifierViewComponent : ViewComponent
     {
-        private class EmptyViewComonentResult : IViewComponentResult
+        private class EmptyViewComponentResult : IViewComponentResult
         {
-            private EmptyViewComonentResult()
+            private EmptyViewComponentResult()
             {
             }
 
@@ -20,17 +20,14 @@ namespace CHC.Consent.Api.ViewComponents
 
             public Task ExecuteAsync(ViewComponentContext context) => Task.CompletedTask;
 
-            public static IViewComponentResult Instance { get; } = new EmptyViewComonentResult();
+            public static IViewComponentResult Instance { get; } = new EmptyViewComponentResult();
         }
 
-        private IViewComponentResult Empty => EmptyViewComonentResult.Instance;
-
-
-        public async Task<IViewComponentResult> InvokeAsync(CaseIdentifier identifier)
+        private static IViewComponentResult Empty => EmptyViewComponentResult.Instance;
+        
+        public Task<IViewComponentResult> InvokeAsync(CaseIdentifier identifier)
         {
-            if (identifier == null) return Empty;
-
-            return View(identifier.GetType().Name, identifier);
+            return Task.FromResult(identifier == null ? Empty : View(identifier.GetType().Name, identifier));
         }
 
     }

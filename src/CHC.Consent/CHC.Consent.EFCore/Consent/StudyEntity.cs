@@ -4,9 +4,14 @@ namespace CHC.Consent.EFCore.Consent
 {
     public class StudyEntity : Securable, IEntity
     {
+        public StudyEntity() : base("Study")
+        {
+        }
+
         /// <inheritdoc />
         public long Id { get; set; }
+
+        /// <inheritdoc />
         public string Name { get; set; }
-        public AccessControlList ACL { get; set; } = new AccessControlList { Description = "Study"};
     }
 }

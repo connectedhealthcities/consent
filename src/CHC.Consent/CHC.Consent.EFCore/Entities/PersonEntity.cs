@@ -12,6 +12,10 @@ namespace CHC.Consent.EFCore.Entities
     /// </summary>
     public class PersonEntity : Securable, IEntity
     {
+        public PersonEntity() : base("Person")
+        {
+        }
+
         public virtual long Id { get; set; }
         
         public static implicit operator PersonIdentity(PersonEntity entity)

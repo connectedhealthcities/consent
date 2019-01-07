@@ -7,6 +7,10 @@ namespace CHC.Consent.EFCore.Consent
 {
     public class ConsentEntity : Securable, IEntity
     {
+        public ConsentEntity() : base("Consent")
+        {
+        }
+
         /// <inheritdoc />
         public long Id { get; protected set; }
         public PersonEntity GivenBy { get; set; }

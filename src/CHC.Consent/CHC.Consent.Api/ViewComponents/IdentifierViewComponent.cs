@@ -8,25 +8,22 @@ namespace CHC.Consent.Api.ViewComponents
     [ViewComponent(Name = "Identifier")]
     public class IdentifierViewComponent : ViewComponent
     {
-        private class EmptyViewComonentResult : IViewComponentResult
+        private class EmptyViewComponentResult : IViewComponentResult
         {
-            private EmptyViewComonentResult(){}
+            private EmptyViewComponentResult(){}
 
             public void Execute(ViewComponentContext context){}
 
             public Task ExecuteAsync(ViewComponentContext context) => Task.CompletedTask;
 
-            public static IViewComponentResult Instance { get; } = new EmptyViewComonentResult();
+            public static IViewComponentResult Instance { get; } = new EmptyViewComponentResult();
         }
         
-        private IViewComponentResult Empty() => EmptyViewComonentResult.Instance;
+        private static IViewComponentResult Empty() => EmptyViewComponentResult.Instance;
 
-        public async Task<IViewComponentResult> InvokeAsync(IPersonIdentifier identifier)
+        public Task<IViewComponentResult> InvokeAsync(IPersonIdentifier identifier)
         {
-            if (identifier == null) return Empty();
-            
-            return View(identifier.GetType().Name, identifier);
+            return Task.FromResult(identifier == null ? Empty() : View(identifier.GetType().Name, identifier));
         }
-        
     }
 }

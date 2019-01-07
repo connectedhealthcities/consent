@@ -1,8 +1,13 @@
 ﻿namespace CHC.Consent.EFCore.Security
 {
-    public class Securable : ISecurable
+    public abstract class Securable : ISecurable
     {
+        protected Securable(string description)
+        {
+            ACL = new AccessControlList { Description = description};
+        }
+
         /// <inheritdoc />
-        public AccessControlList ACL { get; set; } = new AccessControlList { Description = "Person"};
+        public AccessControlList ACL { get; private set; }
     }
 }

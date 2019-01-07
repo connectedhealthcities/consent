@@ -1,14 +1,10 @@
 ﻿using System.Linq;
-using CHC.Consent.Common.Consent;
 using CHC.Consent.EFCore.Configuration;
 using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.Security;
-using Microsoft.AspNet.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace CHC.Consent.EFCore
 {

@@ -28,11 +28,6 @@
       <Name>CHC.Consent.Testing.Utils</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="FakeItEasy, Version=4.0.0.0, Culture=neutral, PublicKeyToken=eff28e2146d5fd2c">
-      <HintPath>..\..\..\..\..\..\Users\David Kemp\.nuget\packages\fakeiteasy\4.4.0\lib\netstandard1.6\FakeItEasy.dll</HintPath>
-    </Reference>
-  </ItemGroup>
   <PropertyGroup>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>

@@ -40,9 +40,4 @@
     <_ContentIncludedByDefault Remove="Views\Shared\Components\Identifier\MedwayNameIdentifier.cshtml" />
     <_ContentIncludedByDefault Remove="Views\Shared\Components\Identifier\NhsNumberIdentifier.cshtml" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="Microsoft.AspNetCore.Mvc.RazorPages, Version=2.1.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
-      <HintPath>..\..\..\..\..\..\Users\David Kemp\.nuget\packages\microsoft.aspnetcore.mvc.razorpages\2.1.0\lib\netstandard2.0\Microsoft.AspNetCore.Mvc.RazorPages.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 </Project>
