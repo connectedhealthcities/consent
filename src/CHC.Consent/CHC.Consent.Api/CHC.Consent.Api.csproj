@@ -9,6 +9,7 @@
     <_RazorBuildServerPipeName>razor-issues-2406</_RazorBuildServerPipeName>
   </PropertyGroup>
   <ItemGroup>
+    <Folder Include="Infrastructure\Identity" />
     <Folder Include="Views\Shared\DisplayTemplates" />
     <Folder Include="wwwroot\" />
   </ItemGroup>

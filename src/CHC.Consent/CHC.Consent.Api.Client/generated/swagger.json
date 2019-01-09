@@ -122,7 +122,7 @@
               "uniqueItems": false,
               "type": "array",
               "items": {
-                "$ref": "#/definitions/IPersonIdentifier"
+                "$ref": "#/definitions/IdentifierValue"
               }
             }
           }
@@ -210,6 +210,37 @@
             "description": "Redirect",
             "schema": {
               "$ref": "#/definitions/PersonCreatedResult"
+            }
+          }
+        }
+      }
+    },
+    "/identities/meta": {
+      "get": {
+        "tags": [
+          "Meta"
+        ],
+        "operationId": "Identity Store Metadata",
+        "consumes": [
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IdentifierDefinition"
+              }
             }
           }
         }
@@ -420,103 +451,16 @@
       },
       "discriminator": "$type"
     },
-    "IPersonIdentifier": {
-      "required": [
-        "$type"
-      ],
+    "IdentifierValue": {
       "type": "object",
       "properties": {
-        "$type": {
-          "enum": [
-            "nhs-number",
-            "sex",
-            "date-of-birth",
-            "bradford-hospital-number",
-            "address",
-            "birth-order",
-            "name"
-          ],
+        "name": {
           "type": "string"
-        }
-      },
-      "discriminator": "$type"
-    },
-    "sex": {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/IPersonIdentifier"
         },
-        {
-          "properties": {
-            "value": {
-              "enum": [
-                "Female",
-                "Male"
-              ],
-              "type": "string"
-            }
-          }
+        "value": {
+          "type": "object"
         }
-      ]
-    },
-    "address": {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/IPersonIdentifier"
-        },
-        {
-          "properties": {
-            "value": {
-              "type": "object",
-              "properties": {
-                "line-1": {
-                  "type": "string"
-                },
-                "line-2": {
-                  "type": "string"
-                },
-                "line-3": {
-                  "type": "string"
-                },
-                "line-4": {
-                  "type": "string"
-                },
-                "line-5": {
-                  "type": "string"
-                },
-                "postcode": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
-    "name": {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/IPersonIdentifier"
-        },
-        {
-          "properties": {
-            "value": {
-              "type": "object",
-              "properties": {
-                "first-name": {
-                  "type": "string"
-                },
-                "last-name": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      ]
+      }
     },
     "MatchSpecification": {
       "type": "object",
@@ -525,7 +469,7 @@
           "uniqueItems": false,
           "type": "array",
           "items": {
-            "$ref": "#/definitions/IPersonIdentifier"
+            "$ref": "#/definitions/IdentifierValue"
           }
         }
       }
@@ -549,7 +493,7 @@
           "uniqueItems": false,
           "type": "array",
           "items": {
-            "$ref": "#/definitions/IPersonIdentifier"
+            "$ref": "#/definitions/IdentifierValue"
           }
         },
         "matchSpecifications": {
@@ -572,6 +516,146 @@
           "type": "integer"
         }
       }
+    },
+    "IdentifierDefinition": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "readOnly": true
+        },
+        "systemName": {
+          "type": "string",
+          "readOnly": true
+        },
+        "type": {
+          "$ref": "#/definitions/IIdentifierType",
+          "readOnly": true
+        }
+      }
+    },
+    "IIdentifierType": {
+      "required": [
+        "$type"
+      ],
+      "type": "object",
+      "properties": {
+        "systemName": {
+          "type": "string",
+          "readOnly": true
+        },
+        "$type": {
+          "enum": [
+            "CompositeIdentifierType",
+            "DateIdentifierType",
+            "EnumIdentifierType",
+            "IntegerIdentifierType",
+            "StringIdentifierType"
+          ],
+          "type": "string"
+        }
+      },
+      "discriminator": "$type"
+    },
+    "CompositeIdentifierType": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IIdentifierType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "identifiers": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/definitions/IdentifierDefinition"
+              },
+              "readOnly": true
+            },
+            "systemName": {
+              "type": "string",
+              "readOnly": true
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "CompositeIdentifierType"
+    },
+    "DateIdentifierType": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IIdentifierType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "systemName": {
+              "type": "string",
+              "readOnly": true
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "DateIdentifierType"
+    },
+    "EnumIdentifierType": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IIdentifierType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "values": {
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "readOnly": true
+            },
+            "systemName": {
+              "type": "string",
+              "readOnly": true
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "EnumIdentifierType"
+    },
+    "IntegerIdentifierType": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IIdentifierType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "systemName": {
+              "type": "string",
+              "readOnly": true
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "IntegerIdentifierType"
+    },
+    "StringIdentifierType": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IIdentifierType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "systemName": {
+              "type": "string",
+              "readOnly": true
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "StringIdentifierType"
     },
     "StudySubject": {
       "type": "object",
@@ -674,79 +758,6 @@
       ],
       "x-ms-client-name": "PregnancyNumberIdentifier",
       "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.consent.pregnancy-number"
-    },
-    "nhsNumber": {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/IPersonIdentifier"
-        },
-        {
-          "properties": {
-            "value": {
-              "type": "string"
-            }
-          }
-        }
-      ],
-      "x-ms-discriminator-value": "nhs-number"
-    },
-    "dateOfBirth": {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/IPersonIdentifier"
-        },
-        {
-          "properties": {
-            "value": {
-              "format": "date",
-              "type": "string"
-            }
-          }
-        }
-      ],
-      "x-ms-discriminator-value": "date-of-birth"
-    },
-    "bradfordHospitalNumber": {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/IPersonIdentifier"
-        },
-        {
-          "properties": {
-            "value": {
-              "type": "string"
-            }
-          }
-        }
-      ],
-      "x-ms-discriminator-value": "bradford-hospital-number"
-    },
-    "birthOrder": {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/IPersonIdentifier"
-        },
-        {
-          "properties": {
-            "value": {
-              "type": "object",
-              "properties": {
-                "pregnancy-number": {
-                  "type": "integer"
-                },
-                "birth-order": {
-                  "type": "integer"
-                }
-              }
-            }
-          }
-        }
-      ],
-      "x-ms-discriminator-value": "birth-order"
     }
   },
   "securityDefinitions": {
@@ -754,10 +765,18 @@
       "flow": "implicit",
       "authorizationUrl": "http://localhost:5000/connect/authorize",
       "scopes": {
-        "read": "read",
-        "write": "write"
+        "openid": "Open id (Required)",
+        "profile": "Profile",
+        "api": "Api"
       },
       "type": "oauth2"
     }
-  }
+  },
+  "security": [
+    {
+      "oauth2": [
+        "api"
+      ]
+    }
+  ]
 }

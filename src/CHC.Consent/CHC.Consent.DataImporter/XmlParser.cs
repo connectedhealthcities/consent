@@ -13,7 +13,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json;
 
-
 namespace CHC.Consent.DataImporter
 {
     /// <summary>
@@ -23,11 +22,17 @@ namespace CHC.Consent.DataImporter
     /// </summary>
     public class XmlParser
     {
-        ILogger Log { get; } = NullLogger.Instance;
+        private ILogger Log { get; } = NullLogger.Instance;
+        
+        private readonly IdentifierValueParser identifierValueParser;
 
-        public XmlParser(ILogger<XmlParser> logger)
+        public XmlParser(ILogger<XmlParser> logger, IList<IdentifierDefinition> identifierDefinitions)
         {
             Log = logger;
+        
+                
+            identifierValueParser = new IdentifierValueParser(
+                identifierDefinitions.ToDictionary(_ => _.SystemName, StringComparer.InvariantCultureIgnoreCase));
         }
 
         public IEnumerable<ImportedPersonSpecification> GetPeople(StreamReader source)
@@ -39,10 +44,6 @@ namespace CHC.Consent.DataImporter
 
         public IEnumerable<ImportedPersonSpecification> GetPeople(XmlReader xmlReader)
         {
-            var personIdentifierTypes = typeof(PersonSpecification).Assembly.GetExportedTypes()
-                .Where(type => type.IsSubclassOf(typeof(IPersonIdentifier)))
-                .ToDictionary(type => type.GetCustomAttribute<JsonObjectAttribute>().Id);
-
             var caseIdentifierTypes = typeof(ConsentSpecification).Assembly.GetExportedTypes()
                 .Where(type => type.IsSubclassOf(typeof(CaseIdentifier)))
                 .ToDictionary(type => type.GetCustomAttribute<JsonObjectAttribute>().Id);
@@ -53,7 +54,7 @@ namespace CHC.Consent.DataImporter
 
             xmlReader = XmlReader.Create(
                 xmlReader,
-                new XmlReaderSettings {IgnoreWhitespace = true, IgnoreComments = true,});
+                new XmlReaderSettings {IgnoreWhitespace = true, IgnoreComments = true});
 
             xmlReader.MoveToContent();
 
@@ -76,18 +77,17 @@ namespace CHC.Consent.DataImporter
 
                 var person = new PersonSpecification
                 {
-                    Identifiers = personNode.XPathSelectElements("/person/identity/*")
-                        .Select(_ => ParseIdentifier(_, personIdentifierTypes))
+                    Identifiers = personNode.XPathSelectElements("/person/identity/identifier")
+                        .Select(ParseIdentifier)
                         .ToArray(),
                     MatchSpecifications =
                         personNode.XPathSelectElements("/person/lookup/match")
-                            .Select(
-                                m => ParseMatchSpecification(m, personIdentifierTypes))
+                            .Select(ParseMatchSpecification)
                             .ToArray()
                 };
 
                 var consentSpecifications = personNode.XPathSelectElements("/person/consent")
-                    .Select(_ => ParseConsent(_, personIdentifierTypes, caseIdentifierTypes, evidenceIdentityTypes))
+                    .Select(_ => ParseConsent(_, caseIdentifierTypes, evidenceIdentityTypes))
                     .ToArray();
 
                 //TODO: Catch, record, log, and return details of exceptions 
@@ -102,7 +102,6 @@ namespace CHC.Consent.DataImporter
 
         public ImportedConsentSpecification ParseConsent(
             XElement consentNode,
-            Dictionary<string, Type> personIdentifiers,
             Dictionary<string, Type> consentIdentifiers,
             Dictionary<string, Type> evidenceIdentifiers) 
         {
@@ -126,7 +125,7 @@ namespace CHC.Consent.DataImporter
             }
 
             var givenBy = consentNode.XPathSelectElements("givenBy/match")
-                .Select(_ => ParseMatchSpecification(_, personIdentifiers))
+                .Select(ParseMatchSpecification)
                 .ToArray();
 
             return new ImportedConsentSpecification
@@ -153,19 +152,17 @@ namespace CHC.Consent.DataImporter
             yield return evidence;
         }
 
-        private MatchSpecification ParseMatchSpecification(XContainer node, Dictionary<string, Type> personIdentifierTypes)
+        private MatchSpecification ParseMatchSpecification(XContainer node)
         {
-            return new MatchSpecification(
-                node.Elements()
-                    .Select(_ => ParseIdentifier(_, personIdentifierTypes))
-                    .ToList());
+            return new MatchSpecification(node.Elements("identifier").Select(ParseIdentifier).ToList());
         }
 
 
-        public IPersonIdentifier ParseIdentifier(XElement identifierNode, Dictionary<string, Type> typeNameLookup)
+        public IdentifierValue ParseIdentifier(XElement identifierNode)
         {
-            return (IPersonIdentifier)ParseObject(identifierNode, typeNameLookup);
+            return identifierValueParser.Parse(identifierNode);
         }
+
 
         private object ParseObject(XElement identifierNode, Dictionary<string, Type> typeNameLookup)
         {
@@ -318,6 +315,9 @@ namespace CHC.Consent.DataImporter
         private static readonly Regex LowerCaseFollowedByUpperCase = new Regex(
             @"(\p{Ll})(\p{Lu})",
             RegexOptions.Compiled);
+
+        
+
         private static string KebabCase(string name)
         {
             return LowerCaseFollowedByUpperCase.Replace(name, match => match.Groups[1] + "-" + match.Groups[2].Value.ToLowerInvariant());

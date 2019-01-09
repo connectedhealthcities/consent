@@ -69,7 +69,7 @@ namespace CHC.Consent.Api.Client
             /// </param>
             /// <param name='id'>
             /// </param>
-            public static IList<IPersonIdentifier> GetPerson(this IApi operations, long id)
+            public static IList<IdentifierValue> GetPerson(this IApi operations, long id)
             {
                 return operations.GetPersonAsync(id).GetAwaiter().GetResult();
             }
@@ -82,7 +82,7 @@ namespace CHC.Consent.Api.Client
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<IList<IPersonIdentifier>> GetPersonAsync(this IApi operations, long id, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<IList<IdentifierValue>> GetPersonAsync(this IApi operations, long id, CancellationToken cancellationToken = default(CancellationToken))
             {
                 using (var _result = await operations.GetPersonWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
                 {
@@ -137,6 +137,28 @@ namespace CHC.Consent.Api.Client
             public static async Task<PersonCreatedResult> PutPersonAsync(this IApi operations, PersonSpecification specification, CancellationToken cancellationToken = default(CancellationToken))
             {
                 using (var _result = await operations.PutPersonWithHttpMessagesAsync(specification, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            public static IList<IdentifierDefinition> IdentityStoreMetadata(this IApi operations)
+            {
+                return operations.IdentityStoreMetadataAsync().GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<IList<IdentifierDefinition>> IdentityStoreMetadataAsync(this IApi operations, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.IdentityStoreMetadataWithHttpMessagesAsync(null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }

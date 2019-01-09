@@ -1,42 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
+using JetBrains.Annotations;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace CHC.Consent.Api.Infrastructure
 {
     /// <summary>
-    /// Add types from a <see cref="ITypeRegistry"/> to the Swagger 2.0 documentation 
+    /// Add subtypes to the Swagger 2.0 documentation 
     /// </summary>
     /// <remarks>OpenAPI 3.0 seems to change the way this works</remarks>
-    public class SwaggerSchemaIdentityTypeProvider<TIdentifier, TIdentifierRegistry> : ISchemaFilter
-        where TIdentifierRegistry:ITypeRegistry
+    public abstract class SwaggerSchemaSubtypeFilter<TIdentifier> : ISchemaFilter
     {
-        private readonly TIdentifierRegistry  registry;
-
-        public SwaggerSchemaIdentityTypeProvider(TIdentifierRegistry registry)
-        {
-            this.registry = registry;            
-        }
-
         public void Apply(Schema model, SchemaFilterContext context)
         {   
-            if(!typeof(TIdentifier).IsAssignableFrom(context.SystemType)) return;
+            if(!IsBaseOrSubtype(context.SystemType)) return;
             if (context.SystemType == typeof(TIdentifier))
             {
-                
                 model.Discriminator = "$type";
                 model.Properties.Add(
                     "$type",
-                    new Schema {Enum = registry.RegisteredNames.Cast<object>().ToArray(), Type = "string"});
+                    new Schema {Enum = TypeNames.Cast<object>().ToArray(), Type = "string"});
                 if(model.Required == null) model.Required = new List<string>();
                 model.Required.Add("$type");
 
-                foreach (var identifierType in registry.RegisteredTypes)
+                foreach (var identifierType in SubTypes())
                 {
                     context.SchemaRegistry.GetOrRegister(identifierType);
                 }
@@ -51,35 +44,63 @@ namespace CHC.Consent.Api.Infrastructure
                 model.Type = null;
             }
         }
+
+        protected static bool IsBaseOrSubtype(Type type)
+        {
+            return typeof(TIdentifier).IsAssignableFrom(type);
+        }
+
+        protected abstract IEnumerable<Type> SubTypes();
+        protected abstract IEnumerable<string> TypeNames { get; }
     }
     
+    /// <inheritdoc />
     /// <summary>
-    /// Add types from a <see cref="ITypeRegistry"/> to the Swagger 2.0 documentation 
+    /// Add types from a <see cref="T:CHC.Consent.Common.Infrastructure.ITypeRegistry" /> to the Swagger 2.0 documentation 
     /// </summary>
     /// <remarks>OpenAPI 3.0 seems to change the way this works</remarks>
-    public class SwaggerSchemaIdentityTypeProvider : ISchemaFilter
+    [UsedImplicitly]
+    public class SwaggerSchemaIdentityTypeProvider<TIdentifier, TIdentifierRegistry> : SwaggerSchemaSubtypeFilter<TIdentifier>
+        where TIdentifierRegistry:ITypeRegistry
     {
-        private readonly IdentifierDefinitionRegistry registry;
+        private readonly TIdentifierRegistry  registry;
 
-        public SwaggerSchemaIdentityTypeProvider(IdentifierDefinitionRegistry  registry)
+        public SwaggerSchemaIdentityTypeProvider(TIdentifierRegistry registry)
         {
-            this.registry = registry;            
+            this.registry = registry;
         }
 
-        public void Apply(Schema model, SchemaFilterContext context)
-        {   
-            if(!typeof(IPersonIdentifier).IsAssignableFrom(context.SystemType)) return;
-            if (context.SystemType != typeof(IPersonIdentifier)) return;
-            
-            model.Discriminator = "$type";
-            model.Properties.Add(
-                "$type",
-                new Schema {Enum = registry.Keys.Cast<object>().ToArray(), Type = "string"});
-            if(model.Required == null) model.Required = new List<string>();
-            model.Required.Add("$type");
+        protected override IEnumerable<Type> SubTypes() => registry.RegisteredTypes;
 
-            var schemaGenerator = new IdentityDefinitionSwaggerSchemaGenerator(context.SchemaRegistry.Definitions);
-            registry.Accept(schemaGenerator);
+        protected override IEnumerable<string> TypeNames => registry.RegisteredNames;
+    }
+
+    /// <inheritdoc />
+    /// <summary>
+    /// Add Identifier Types to the Swagger 2.0 documentation 
+    /// </summary>
+    /// <remarks>OpenAPI 3.0 seems to change the way this works</remarks>
+    [UsedImplicitly]
+    public class SwaggerSchemaIdentityTypeProvider : SwaggerSchemaSubtypeFilter<IIdentifierType>
+    {
+
+        private readonly Type[] identifierTypes;
+
+        public SwaggerSchemaIdentityTypeProvider()
+        {
+            identifierTypes = Assembly.GetEntryAssembly().GetReferencedAssemblies()
+                .Select(Assembly.Load)
+                .SelectMany(a => a.ExportedTypes)
+                .Where(IsBaseOrSubtype)
+                .Where(type => type != typeof(IIdentifierType))
+                .ToArray();
         }
+
+
+        /// <inheritdoc />
+        protected override IEnumerable<Type> SubTypes() => identifierTypes;
+
+        /// <inheritdoc />
+        protected override IEnumerable<string> TypeNames => identifierTypes.Select(_ => _.Name);
     }
 }

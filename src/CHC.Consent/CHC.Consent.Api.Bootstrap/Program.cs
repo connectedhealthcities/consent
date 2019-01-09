@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CHC.Consent.Api.Infrastructure.Identity;
 using CHC.Consent.EFCore.Security;
 using IdentityServer4.EntityFramework.DbContexts;
 using IdentityServer4.EntityFramework.Mappers;
 using IdentityServer4.Models;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,7 +25,9 @@ namespace CHC.Consent.Api.Bootstrap
 
                 foreach (var client in Clients())
                 {
-                    if (db.Clients.All(_ => _.ClientId != client.ClientId))
+                    
+                    var existingId = db.Clients.Where(_ => _.ClientId == client.ClientId).Select(_ => (int?)_.Id).FirstOrDefault();
+                    if (existingId == null)
                     {
                         db.Clients.Add(client.ToEntity());
                     }
@@ -67,7 +67,12 @@ namespace CHC.Consent.Api.Bootstrap
 
         static IEnumerable<ApiResource> Apis()
         {
-            yield return new ApiResource {Name = "api", DisplayName = "Consent API Services"};
+            yield return new ApiResource
+            {
+                Name = "api", 
+                DisplayName = "Consent API Services",
+                Scopes = { new Scope("read"), new Scope("write"), new Scope("api") }
+            };
         }
         
 
@@ -77,6 +82,7 @@ namespace CHC.Consent.Api.Bootstrap
             {
                 new IdentityResources.OpenId(),
                 new IdentityResources.Profile(),
+                new IdentityResources.Email(), 
             };
         }
         
@@ -99,6 +105,25 @@ namespace CHC.Consent.Api.Bootstrap
                 AllowOfflineAccess = true,
                 AllowedScopes = {"openid", "profile", "api"}
             };
+            
+            yield return new Client
+            {
+                ClientId = "ApiExplorer",
+                ClientName = "Api User Interface",
+
+                AllowedGrantTypes = GrantTypes.Implicit,
+                ClientSecrets = {new Secret("20672b51-679f-4de7-b6f8-810794afa6ca".Sha256())},
+                RequireClientSecret = false,
+                AllowAccessTokensViaBrowser = true,
+                
+                RedirectUris = {"http://localhost:5000/swagger/oauth2-redirect.html"},
+                
+                RequireConsent = false,
+
+                AllowOfflineAccess = true,
+                AllowedScopes = {"openid", "profile", "api", "read", "write" }
+            };
+            
         }
 
         private static IWebHost BuildWebHost(string[] args) => Api.Program.BuildWebHost(args);

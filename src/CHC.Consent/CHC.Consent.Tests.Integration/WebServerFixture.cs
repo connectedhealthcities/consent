@@ -151,16 +151,18 @@ namespace CHC.Consent.Tests
             
             Client = Server.CreateClient();
 
-            var discoveryClient = new DiscoveryClient(identityServer.BaseAddress.ToString(), identityServer.CreateHandler());
-            var discoveryResponse = discoveryClient.GetAsync().GetAwaiter().GetResult();
-            
-            var client = new TokenClient(
-                discoveryResponse.TokenEndpoint,
-                "client",
-                "secret",
-                innerHttpMessageHandler: identityServer.CreateHandler());
+            var discoveryResponse = Client.GetDiscoveryDocumentAsync().GetAwaiter().GetResult();
+            if(discoveryResponse.IsError) throw new Exception(discoveryResponse.Error);
 
-            var response = client.RequestClientCredentialsAsync(scope:"api").GetAwaiter().GetResult();
+            var response = Client.RequestClientCredentialsTokenAsync(
+                    new ClientCredentialsTokenRequest()
+                    {
+                        Scope = "api", Address = discoveryResponse.TokenEndpoint, ClientId = "client",
+                        ClientSecret = "secret"
+                    })
+                .GetAwaiter().GetResult();
+            if(response.IsError) throw new Exception(response.Error);
+            
 
             Client.SetBearerToken(response.AccessToken);
 

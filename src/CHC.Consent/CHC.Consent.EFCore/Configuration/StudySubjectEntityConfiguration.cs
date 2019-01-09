@@ -18,7 +18,7 @@ namespace CHC.Consent.EFCore.Configuration
             builder.Property<long>("PersonId").IsRequired();
             builder.HasOne(_ => _.Person).WithMany().HasForeignKey("PersonId").IsRequired();
             builder.Property<long>("StudyId").IsRequired();
-            builder.HasOne(_ => _.Study).WithMany().HasForeignKey("StudyId").IsRequired();
+            builder.HasOne(_ => _.Study).WithMany().HasForeignKey("StudyId").IsRequired().OnDelete(DeleteBehavior.ClientSetNull);
 
             builder.HasIndex("StudyId", "PersonId").IsUnique();
             builder.HasIndex("StudyId", nameof(StudySubjectEntity.SubjectIdentifier)).IsUnique();

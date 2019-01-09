@@ -7,23 +7,23 @@ namespace CHC.Consent.Api.Client.Models
     using Newtonsoft.Json;
     using System.Linq;
 
-    public partial class NameValue
+    public partial class IdentifierValue
     {
         /// <summary>
-        /// Initializes a new instance of the NameValue class.
+        /// Initializes a new instance of the IdentifierValue class.
         /// </summary>
-        public NameValue()
+        public IdentifierValue()
         {
             CustomInit();
         }
 
         /// <summary>
-        /// Initializes a new instance of the NameValue class.
+        /// Initializes a new instance of the IdentifierValue class.
         /// </summary>
-        public NameValue(string firstName = default(string), string lastName = default(string))
+        public IdentifierValue(string name = default(string), object value = default(object))
         {
-            FirstName = firstName;
-            LastName = lastName;
+            Name = name;
+            Value = value;
             CustomInit();
         }
 
@@ -34,13 +34,13 @@ namespace CHC.Consent.Api.Client.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "first-name")]
-        public string FirstName { get; set; }
+        [JsonProperty(PropertyName = "name")]
+        public string Name { get; set; }
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "last-name")]
-        public string LastName { get; set; }
+        [JsonProperty(PropertyName = "value")]
+        public object Value { get; set; }
 
     }
 }

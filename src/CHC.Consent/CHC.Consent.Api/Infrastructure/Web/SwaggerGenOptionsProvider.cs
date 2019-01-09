@@ -32,16 +32,18 @@ namespace CHC.Consent.Api.Infrastructure.Web
                     AuthorizationUrl = "http://localhost:5000/connect/authorize",
                     Scopes = new Dictionary<string, string>
                     {
-                        ["read"] = "read",
-                        ["write"] = "write"
+                        ["openid"] = "Open id (Required)",
+                        ["profile"] = "Profile",
+                        ["api"] = "Api"
                     }
                 });
+            gen.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>> {["oauth2"] = new[] {"api"}});
             gen.SwaggerDoc("v1", new Info {Title = "Api", Version = "1"});
             gen.DescribeAllEnumsAsStrings();
             gen.SchemaFilter<SwaggerSchemaIdentityTypeProvider>();
             gen.SchemaFilter<SwaggerSchemaIdentityTypeProvider<CaseIdentifier, ITypeRegistry<CaseIdentifier>>>();
             gen.SchemaFilter<SwaggerSchemaIdentityTypeProvider<Evidence, ITypeRegistry<Evidence>>>();
-            gen.CustomSchemaIds(t => GetSchemaId(t)?? t.FriendlyId(fullyQualified:false));
+            gen.CustomSchemaIds(type => GetSchemaId(type) ?? type.FriendlyId(fullyQualified:false));
         }
 
         private string GetSchemaId(Type type)
@@ -50,8 +52,18 @@ namespace CHC.Consent.Api.Infrastructure.Web
                 type,
                 /*Services.GetRequiredService<ITypeRegistry<IPersonIdentifier>>().TryGetName,*/
                 Services.GetRequiredService<ITypeRegistry<CaseIdentifier>>().TryGetName,
-                Services.GetRequiredService<ITypeRegistry<Evidence>>().TryGetName
+                Services.GetRequiredService<ITypeRegistry<Evidence>>().TryGetName,
+                StripDto
             );
+        }
+
+        private bool StripDto(Type key, out string value)
+        {
+            value = default;
+            if (!key.Name.EndsWith("Dto")) return false;
+
+            value = key.Name.Substring(0, key.Name.Length - 3);
+            return true;
         }
 
         delegate bool TryGetValue<in TKey, TValue>(TKey key, out TValue value);

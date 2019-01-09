@@ -4,26 +4,24 @@
 
 namespace CHC.Consent.Api.Client.Models
 {
-    using Newtonsoft.Json;
     using System.Linq;
 
-    [Newtonsoft.Json.JsonObject("name")]
-    public partial class Name : IPersonIdentifier
+    public partial class DateIdentifierType : IIdentifierType
     {
         /// <summary>
-        /// Initializes a new instance of the Name class.
+        /// Initializes a new instance of the DateIdentifierType class.
         /// </summary>
-        public Name()
+        public DateIdentifierType()
         {
             CustomInit();
         }
 
         /// <summary>
-        /// Initializes a new instance of the Name class.
+        /// Initializes a new instance of the DateIdentifierType class.
         /// </summary>
-        public Name(NameValue value = default(NameValue))
+        public DateIdentifierType(string systemName = default(string))
+            : base(systemName)
         {
-            Value = value;
             CustomInit();
         }
 
@@ -31,11 +29,6 @@ namespace CHC.Consent.Api.Client.Models
         /// An initialization method that performs custom operations like setting defaults
         /// </summary>
         partial void CustomInit();
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "value")]
-        public NameValue Value { get; set; }
 
     }
 }

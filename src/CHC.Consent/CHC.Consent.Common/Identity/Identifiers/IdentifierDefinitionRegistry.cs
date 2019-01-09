@@ -7,7 +7,9 @@ using CHC.Consent.Common.Infrastructure;
 
 namespace CHC.Consent.Common.Identity.Identifiers
 {
-    public class IdentifierDefinitionRegistry : KeyedCollection<string, IdentifierDefinition>, IReadOnlyDictionary<string, IdentifierDefinition>
+    public class IdentifierDefinitionRegistry : 
+        KeyedCollection<string, IdentifierDefinition>, 
+        IReadOnlyDictionary<string, IdentifierDefinition>
     {
         /// <inheritdoc />
         public IdentifierDefinitionRegistry()
@@ -80,8 +82,10 @@ namespace CHC.Consent.Common.Identity.Identifiers
                 definition.Accept(visitor);
             }
         }
+
         /// <inheritdoc />
-        public IEnumerator<KeyValuePair<string, IdentifierDefinition>> GetEnumerator() => Dictionary.GetEnumerator();
+        IEnumerator<KeyValuePair<string, IdentifierDefinition>>
+            IEnumerable<KeyValuePair<string, IdentifierDefinition>>.GetEnumerator() => Dictionary.GetEnumerator();
 
         /// <inheritdoc />
         public bool ContainsKey(string key) => Dictionary.ContainsKey(key);

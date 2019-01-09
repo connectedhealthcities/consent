@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CHC.Consent.EFCore
 {
-    public class ConsentContext : IdentityDbContext<ConsentUser, ConsentRole, string>
+    public class ConsentContext : IdentityDbContext<ConsentUser, ConsentRole, long>
     {
         /// <inheritdoc />
         public ConsentContext(DbContextOptions<ConsentContext> options) : base(options)
@@ -52,8 +52,7 @@ namespace CHC.Consent.EFCore
 
         /// <inheritdoc />
         protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            
+        {            
             base.OnModelCreating(modelBuilder);
             //TODO: Do we need to get (some of) these from somewhere else configurable
             
@@ -78,12 +77,12 @@ namespace CHC.Consent.EFCore
             
             modelBuilder.Entity<SecurityPrinicipal>();
             
-            modelBuilder.Entity<UserSecurityPrincipal>().Property<string>("ConsentUserId");
+            modelBuilder.Entity<UserSecurityPrincipal>().Property<long>("ConsentUserId");
             modelBuilder.Entity<UserSecurityPrincipal>().HasOne(_ => _.User).WithOne(_ => _.Principal)
                 .HasForeignKey<UserSecurityPrincipal>("ConsentUserId")
                 .HasPrincipalKey<ConsentUser>();
                 
-            modelBuilder.Entity<RoleSecurityPrincipal>().Property<string>("ConsentRoleId");
+            modelBuilder.Entity<RoleSecurityPrincipal>().Property<long>("ConsentRoleId");
             modelBuilder.Entity<RoleSecurityPrincipal>()
                 .HasOne(_ => _.Role).WithOne(_ => _.Principal)
                 .HasPrincipalKey<ConsentRole>()

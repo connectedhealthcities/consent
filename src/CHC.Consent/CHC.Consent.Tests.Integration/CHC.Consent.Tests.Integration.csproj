@@ -5,7 +5,8 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="IdentityModel" Version="3.10.4" />
+    <PackageReference Include="FluentAssertions" Version="5.5.3" />
+    <PackageReference Include="IdentityModel" Version="3.10.5" />
     <PackageReference Include="IdentityServer4" Version="2.3.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
     <PackageReference Include="xunit" Version="2.4.1" />

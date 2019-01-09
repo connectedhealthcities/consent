@@ -1,23 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using CHC.Consent.Api.Infrastructure;
-using CHC.Consent.Api.Infrastructure.Identity;
 using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.Security;
-using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Migrations.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace CHC.Consent.Api
 {
@@ -45,9 +37,6 @@ namespace CHC.Consent.Api
                 .AddEntityFrameworkStores<ConsentContext>()
                 .AddDefaultTokenProviders();
 
-            services.AddDbContext<ConsentIdentityDbContext>(
-                o => o.UseSqlServer(configuration.GetConnectionString("Users")));
-           
             var id4 = services.AddIdentityServer(
                     options =>
                     {

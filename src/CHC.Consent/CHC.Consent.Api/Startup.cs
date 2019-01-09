@@ -1,51 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices.ComTypes;
-using CHC.Consent.Api.Features.Consent;
-using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure;
-using CHC.Consent.Api.Infrastructure.IdentifierDisplay;
-using CHC.Consent.Api.Infrastructure.Identity;
 using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Consent.Identifiers;
 using CHC.Consent.Common.Identity;
-using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.Identity;
-using IdentityModel;
-using IdentityServer4.EntityFramework.Options;
-using IdentityServer4.Stores.Serialization;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace CHC.Consent.Api
 {
     public class Startup
     {
-        private static readonly string MigrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
-
         public Startup(IConfiguration configuration, IHostingEnvironment environment)
         {
             Configuration = configuration;
@@ -68,8 +46,8 @@ namespace CHC.Consent.Api
                         options.RespectBrowserAcceptHeader = true;
                     })
                 .AddFeatureFolders()
-                .AddJsonOptions(
-                    config => throw new NotImplementedException("Work In Progress"))
+                /*.AddJsonOptions(
+                    config => throw new NotImplementedException("Work In Progress"))*/
                 .AddRazorPagesOptions(o => o.Conventions.AuthorizeFolder("/"));
 
 
@@ -94,8 +72,7 @@ namespace CHC.Consent.Api
             services.AddTransient<IUserProvider, HttpContextUserProvider>();
 
             services.AddTransient<IConfigureOptions<SwaggerGenOptions>, SwaggerGenOptionsProvider>();
-            services.AddSwaggerGen(_ => {});
-            
+            services.AddSwaggerGen();
             AddDataServices(services);
         }
 
@@ -103,20 +80,35 @@ namespace CHC.Consent.Api
         private void AddDataServices(IServiceCollection services)
         {
             services.AddScoped<IIdentityRepository, IdentityRepository>();
+            services.AddScoped<IDictionary<string, IIdentifierMarshaller>>(
+                delegate(IServiceProvider s)
+                {
+                    s.GetService<ILoggerProvider>().CreateLogger("Activation")
+                        .LogDebug("Creating Marshallers Dictionary");
+                    var marshallers = new Dictionary<string, IIdentifierMarshaller>();
+                    s.GetService<IdentifierDefinitionRegistryProvider>()
+                        .GetRegistry()
+                        .Accept(new IdentifierMarshallerCreator(marshallers));
+                    return marshallers;
+                });
             services.AddScoped<IConsentRepository, ConsentRepository>();
             services.AddScoped<ISubjectIdentifierRepository, SubjectIdentifierRepository>();
 
-            services.AddDbContext<ConsentContext>(
-                ConfigureDatabaseOptions);
-            services.AddScoped<IStoreProvider>(
-                provider => new ContextStoreProvider(provider.GetService<ConsentContext>()));
+            services.AddDbContext<ConsentContext>(ConfigureDatabaseOptions);
+            services.AddScoped<IStoreProvider, ContextStoreProvider>();
+            
             services.AddScoped(typeof(IStore<>), typeof(Store<>));
         }
 
         private void AddConsentSystemTypeRegistrations(IServiceCollection services)
         {
-            services.AddSingleton<IdentifierDefinitionRegistryProvider>();
-            services.AddTransient(c => c.GetService<IdentifierDefinitionRegistryProvider>().GetRegistry());
+            services.AddSingleton<IdentifierDefinitionRegistryProvider>(new IdentifierDefinitionRegistryProvider());
+            services.AddTransient(c =>
+            {
+                c.GetService<ILoggerProvider>().CreateLogger("Activation")
+                    .LogDebug("Creating IdentifierDefinitionRegistryProvider");
+                return c.GetService<IdentifierDefinitionRegistryProvider>().GetRegistry();
+            });
             
             services.AddTransient<IPersonIdentifierDisplayHandlerProvider, PersonIdentifierHandlerProvider>();
 
@@ -179,72 +171,9 @@ namespace CHC.Consent.Api
             app.UseSwaggerUI(ui =>
             {
                 ui.SwaggerEndpoint("/swagger/v1/swagger.json", "Api");
+                ui.OAuthClientId("ApiExplorer");
+                ui.OAuthAppName("API Explorer");
             });
-        }
-
-        public static JsonSerializerSettings SerializerSettings(
-            JsonSerializerSettings settings, IdentifierDefinitionRegistry identifierDefinitionRegistry)
-        {
-            settings.TypeNameHandling = TypeNameHandling.Auto;
-            settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-            settings.Formatting = Formatting.Indented;
-            settings.Converters.Add(new PersonIdentifierConverter(identifierDefinitionRegistry));
-            settings.SerializationBinder = new IdentifierRegistrySerializationBinder(identifierDefinitionRegistry);
-            return settings;
-        }
-    }
-
-    public class PersonIdentifierConverter : JsonConverter
-    {
-        public IdentifierDefinitionRegistry Registry { get; }
-
-        public PersonIdentifierConverter(IdentifierDefinitionRegistry registry)
-        {
-            Registry = registry;
-        }
-
-        /// <inheritdoc />
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-        {
-            var identifier = (PersonIdentifier) value;
-            writer.WriteStartObject();
-            writer.WritePropertyName("$type", escape: true);
-
-            writer.WriteValue(identifier.Definition.SystemName);
-
-
-            writer.WritePropertyName("value");
-            if (identifier.Definition.Type is CompositeIdentifierType)
-            {
-                writer.WriteStartObject();
-                foreach (var subIdentifier in ((IDictionary<string, PersonIdentifier>) identifier.Value.Value).Values)
-                {
-                    writer.WritePropertyName(subIdentifier.Definition.SystemName);
-                    writer.WriteValue(subIdentifier.Value.Value);
-                }
-
-                writer.WriteEndObject();
-            }
-            else
-            {
-                writer.WriteValue(identifier.Value.Value);
-            }
-
-            writer.WriteEndObject();
-        }
-
-        /// <inheritdoc />
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-        {
-            var jObject = JObject.Load(reader);
-            if (!Registry.TryGetValue((string) jObject["$type"], out var definition)) return null;
-            throw new NotImplementedException("This is going to need to be revisited");
-        }
-
-        /// <inheritdoc />
-        public override bool CanConvert(Type objectType)
-        {
-            return objectType == typeof(PersonIdentifier) || objectType == typeof(IPersonIdentifier);
         }
     }
 }

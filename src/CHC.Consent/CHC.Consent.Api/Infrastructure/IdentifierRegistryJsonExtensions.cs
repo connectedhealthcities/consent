@@ -29,7 +29,7 @@ namespace CHC.Consent.Api.Infrastructure
                 TypeNameHandling = TypeNameHandling.Auto,
                 SerializationBinder = new IdentifierRegistrySerializationBinder(identifierRegistry),
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                Converters = { new StringEnumConverter(), new PersonIdentifierConverter(identifierRegistry) }
+                Converters = { new StringEnumConverter() }
             };
         }
     }

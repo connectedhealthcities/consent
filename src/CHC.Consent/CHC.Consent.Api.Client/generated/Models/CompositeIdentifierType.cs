@@ -9,20 +9,21 @@ namespace CHC.Consent.Api.Client.Models
     using System.Collections.Generic;
     using System.Linq;
 
-    public partial class MatchSpecification
+    public partial class CompositeIdentifierType : IIdentifierType
     {
         /// <summary>
-        /// Initializes a new instance of the MatchSpecification class.
+        /// Initializes a new instance of the CompositeIdentifierType class.
         /// </summary>
-        public MatchSpecification()
+        public CompositeIdentifierType()
         {
             CustomInit();
         }
 
         /// <summary>
-        /// Initializes a new instance of the MatchSpecification class.
+        /// Initializes a new instance of the CompositeIdentifierType class.
         /// </summary>
-        public MatchSpecification(IList<IdentifierValue> identifiers = default(IList<IdentifierValue>))
+        public CompositeIdentifierType(string systemName = default(string), IDictionary<string, IdentifierDefinition> identifiers = default(IDictionary<string, IdentifierDefinition>))
+            : base(systemName)
         {
             Identifiers = identifiers;
             CustomInit();
@@ -36,7 +37,7 @@ namespace CHC.Consent.Api.Client.Models
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "identifiers")]
-        public IList<IdentifierValue> Identifiers { get; set; }
+        public IDictionary<string, IdentifierDefinition> Identifiers { get; private set; }
 
     }
 }

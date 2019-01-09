@@ -2,34 +2,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
 using CHC.Consent.Api.Client;
 using CHC.Consent.Api.Client.Models;
-using CHC.Consent.Common;
-using CHC.Consent.Common.Identity;
-using CHC.Consent.EFCore;
-using CHC.Consent.EFCore.Entities;
 using CHC.Consent.Testing.Utils;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal;
-using Microsoft.EntityFrameworkCore.Storage.Internal;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Rest;
-using Newtonsoft.Json;
+using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
-using IPersonIdentifier = CHC.Consent.Api.Client.Models.IPersonIdentifier;
-using Sex = CHC.Consent.Api.Client.Models.Sex;
+using IdentifierDefinition = CHC.Consent.Common.Identity.Identifiers.IdentifierDefinition;
 
-namespace CHC.Consent.Tests.Api.Client
+
+namespace CHC.Consent.Tests.Integration.Api
 {
     using Random = Testing.Utils.Random;
-    using Api = CHC.Consent.Api.Client.Api;
+
     [Collection(WebServerCollection.Name)]
     public class ApiClientTests
     {
-        public ITestOutputHelper Output { get; }
-        public WebServerFixture Fixture { get; }
+        private ITestOutputHelper Output { get; }
+        private WebServerFixture Fixture { get; }
 
         /// <inheritdoc />
         public ApiClientTests(ITestOutputHelper output, WebServerFixture fixture)
@@ -37,18 +27,17 @@ namespace CHC.Consent.Tests.Api.Client
             Output = output;
             Fixture = fixture;
             Fixture.Output = output;
-            
         }
 
         [Theory, MemberData(nameof(IdentityTestData))]
-        public void CanSendIdentitiesToServer(IPersonIdentifier identifier, Action<IPersonIdentifier> checkResult)
+        public void CanSendIdentitiesToServer(IdentifierValue identifier, Action<IdentifierValue> checkResult)
         {
             var response = Fixture.ApiClient.PutPerson(
                 new PersonSpecification(
-                    new List<IPersonIdentifier> {identifier},
+                    new List<IdentifierValue> {identifier},
                     new List<MatchSpecification>
                     {
-                        new MatchSpecification {Identifiers = new List<IPersonIdentifier> {identifier}}
+                        new MatchSpecification {Identifiers = new List<IdentifierValue> {identifier}}
                     }));
 
             Assert.NotNull(response);
@@ -69,70 +58,87 @@ namespace CHC.Consent.Tests.Api.Client
                 MedwayName()
             );
 
-        private static (IPersonIdentifier, Action<IPersonIdentifier>) MedwayName()
+        private static (IdentifierValue, Action<IdentifierValue>) MedwayName()
         {
-            var firstName = Random.String();
-            var lastName = Random.String();
+            var (name, firstNameValue, lastNameValue) = Name(Random.String(), Random.String());
             return (
-                new Name(new NameValue(firstName, lastName)), 
+                name,
                 i =>
                 {
-                    var otherName = Assert.IsType<Name>(i);
-                    Assert.Equal(firstName, otherName.Value?.FirstName);
-                    Assert.Equal(lastName, otherName.Value?.LastName);
+                    var nameParts = Assert.IsType<IdentifierValue[]>(i.Value);
+                    nameParts.Should()
+                        .Contain(Identifier(firstNameValue))
+                        .And
+                        .Contain(Identifier(lastNameValue))
+                        .And
+                        .HaveCount(2);
                 }
             );
         }
 
-
-        private static IEnumerable<object[]> MakeTestData(params (
-            IPersonIdentifier, 
-            Action<IPersonIdentifier>)[] tests)
+        private static (IdentifierValue name, IdentifierValue fistName, IdentifierValue lastName) Name(string firstName, string lastName)
         {
-            IEnumerable<object> ToEnumerable(ITuple tuple)
-            {
-                for (var i = 0; i < tuple.Length; i++)
+            var firstNameValue = Value(Identifiers.Definitions.FirstName, firstName);
+            var lastNameValue = Value(Identifiers.Definitions.LastName, lastName);
+            var name = Value(
+                Identifiers.Definitions.Name,
+                new[]
                 {
-                    yield return tuple[i];
-                }
+                    firstNameValue,
+                    lastNameValue,
+                });
+            return (name, firstNameValue, lastNameValue);
+        }
+
+        private static IdentifierValue Value(IdentifierDefinition identifierDefinition, object value)
+        {
+            return new IdentifierValue {Name = identifierDefinition.SystemName, Value = value};
+        }
+
+        private static Expression<Func<IdentifierValue, bool>> Identifier(IdentifierValue value)
+        {
+            return _ => _.Name == value.Name && Equals(_.Value, value.Value);
+        }
+
+
+        private static IEnumerable<object[]> MakeTestData(params (IdentifierValue,Action<IdentifierValue>)[] tests)
+        {
+            IEnumerable<object> ToEnumerable((IdentifierValue, Action<IdentifierValue>) tuple)
+            {
+                var (value, test) = tuple;
+                yield return value;
+                yield return test ?? (i => i.Should().Match(Identifier(value)));
             }
-            
-            return tests.Cast<ITuple>().Select(ToEnumerable).Select(Enumerable.ToArray);
+
+            return tests.Select(ToEnumerable).Select(Enumerable.ToArray);
         }
         
-        private static (IPersonIdentifier, Action<IPersonIdentifier>) NhsNumberTestData()
+        private static (IdentifierValue, Action<IdentifierValue>) NhsNumberTestData()
         {
-            var nhsNumber = Random.String();
-            return (
-                new NhsNumber(nhsNumber), 
-                i => Assert.Equal(nhsNumber, Assert.IsType<NhsNumber>(i).Value));
+            var value = NhsNumber(Random.String());
+            return (value,null);
         }
 
-        private static (IPersonIdentifier, Action<IPersonIdentifier>) DateOfBirthTestData()
+        private static IdentifierValue NhsNumber(string value)
         {
-            DateTime date = 24.April(1865);
-            return (
-                new DateOfBirth(date), 
-                i => Assert.Equal(
-                    date.ToLocalTime(),
-                    Assert.IsType<DateOfBirth>(i).Value)
-            );
+            return Value(Identifiers.Definitions.NhsNumber, value);
         }
 
-        private static (IPersonIdentifier, Action<IPersonIdentifier>) SexMale()
+        private static (IdentifierValue, Action<IdentifierValue>) DateOfBirthTestData()
         {
-            var sex = new Sex("Male");
-            return (
-                sex, 
-                i => Assert.Equal("Male", Assert.IsType<Sex>(i).Value));
+            return (Value(Identifiers.Definitions.DateOfBirth, 24.April(1865)), null);
+
+        }
+
+        private static (IdentifierValue, Action<IdentifierValue>) SexMale()
+        {
+            return (Value(Identifiers.Definitions.Sex, "Male"), null);
         }
         
-        private static (IPersonIdentifier, Action<IPersonIdentifier>) SexFemale()
+        private static (IdentifierValue, Action<IdentifierValue>) SexFemale()
         {
-            var sex = new Sex(Common.Sex.Female.ToString());
-            return (
-                sex, 
-                i => Assert.Equal("Female", Assert.IsType<Sex>(i).Value));
+            var sex = Value(Identifiers.Definitions.Sex, "Female");
+            return (sex,null);
         }
         
         [Fact]
@@ -141,27 +147,25 @@ namespace CHC.Consent.Tests.Api.Client
             
             var api = Fixture.ApiClient;
 
-            var nhsNumber = new NhsNumber("4334443434");
-            var medwayName = new Name(new NameValue("Rachel", "Thompson"));
+            var nhsNumber = NhsNumber("4334443434");
+            var (name, _, _) = Name(Random.String(), Random.String());
             
             
             var response = api.PutPerson(
                 new PersonSpecification(
-                    new List<IPersonIdentifier> {nhsNumber, medwayName},
+                    new List<IdentifierValue> {nhsNumber, name},
                     new List<MatchSpecification>
                     {
-                        new MatchSpecification {Identifiers = new List<IPersonIdentifier> {nhsNumber}}
+                        new MatchSpecification {Identifiers = new List<IdentifierValue> {nhsNumber}}
                     }));
 
             Assert.NotNull(response);
             
             var identities = api.GetPerson(response.PersonId);
 
-            Assert.Equal(nhsNumber.Value, Assert.Single(identities.OfType<NhsNumber>()).Value);
-            var storedMedwayName = Assert.Single(identities.OfType<Name>());
-            Assert.NotNull(storedMedwayName);
-            Assert.Equal(medwayName.Value.FirstName, storedMedwayName.Value.FirstName);
-            Assert.Equal(medwayName.Value.LastName, storedMedwayName.Value.LastName);
+            identities.Should().Contain(Identifier(nhsNumber));
+            
+            
         }
     }
 }

@@ -15,7 +15,7 @@ namespace CHC.Consent.EFCore.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.1.0-rtm-30799")
+                .HasAnnotation("ProductVersion", "2.1.4-rtm-31024")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
@@ -77,7 +77,8 @@ namespace CHC.Consent.EFCore.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<long?>("ConsentId");
+                    b.Property<long?>("ConsentId")
+                        .IsRequired();
 
                     b.Property<string>("Discriminator")
                         .IsRequired();
@@ -248,8 +249,9 @@ namespace CHC.Consent.EFCore.Migrations
 
             modelBuilder.Entity("CHC.Consent.EFCore.Security.ConsentRole", b =>
                 {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd();
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken();
@@ -260,7 +262,7 @@ namespace CHC.Consent.EFCore.Migrations
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(256);
 
-                    b.Property<string>("ParentRoleId");
+                    b.Property<long?>("ParentRoleId");
 
                     b.HasKey("Id");
 
@@ -276,8 +278,9 @@ namespace CHC.Consent.EFCore.Migrations
 
             modelBuilder.Entity("CHC.Consent.EFCore.Security.ConsentUser", b =>
                 {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd();
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<int>("AccessFailedCount");
 
@@ -356,7 +359,7 @@ namespace CHC.Consent.EFCore.Migrations
                     b.HasDiscriminator<string>("Discriminator").HasValue("SecurityPrinicipal");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<long>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -366,8 +369,7 @@ namespace CHC.Consent.EFCore.Migrations
 
                     b.Property<string>("ClaimValue");
 
-                    b.Property<string>("RoleId")
-                        .IsRequired();
+                    b.Property<long>("RoleId");
 
                     b.HasKey("Id");
 
@@ -376,7 +378,7 @@ namespace CHC.Consent.EFCore.Migrations
                     b.ToTable("AspNetRoleClaims");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<long>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -386,8 +388,7 @@ namespace CHC.Consent.EFCore.Migrations
 
                     b.Property<string>("ClaimValue");
 
-                    b.Property<string>("UserId")
-                        .IsRequired();
+                    b.Property<long>("UserId");
 
                     b.HasKey("Id");
 
@@ -396,7 +397,7 @@ namespace CHC.Consent.EFCore.Migrations
                     b.ToTable("AspNetUserClaims");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<long>", b =>
                 {
                     b.Property<string>("LoginProvider");
 
@@ -404,8 +405,7 @@ namespace CHC.Consent.EFCore.Migrations
 
                     b.Property<string>("ProviderDisplayName");
 
-                    b.Property<string>("UserId")
-                        .IsRequired();
+                    b.Property<long>("UserId");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -414,11 +414,11 @@ namespace CHC.Consent.EFCore.Migrations
                     b.ToTable("AspNetUserLogins");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<long>", b =>
                 {
-                    b.Property<string>("UserId");
+                    b.Property<long>("UserId");
 
-                    b.Property<string>("RoleId");
+                    b.Property<long>("RoleId");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -427,9 +427,9 @@ namespace CHC.Consent.EFCore.Migrations
                     b.ToTable("AspNetUserRoles");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<long>", b =>
                 {
-                    b.Property<string>("UserId");
+                    b.Property<long>("UserId");
 
                     b.Property<string>("LoginProvider");
 
@@ -471,7 +471,7 @@ namespace CHC.Consent.EFCore.Migrations
                 {
                     b.HasBaseType("CHC.Consent.EFCore.Security.SecurityPrinicipal");
 
-                    b.Property<string>("ConsentRoleId");
+                    b.Property<long>("ConsentRoleId");
 
                     b.HasIndex("ConsentRoleId")
                         .IsUnique()
@@ -486,7 +486,7 @@ namespace CHC.Consent.EFCore.Migrations
                 {
                     b.HasBaseType("CHC.Consent.EFCore.Security.SecurityPrinicipal");
 
-                    b.Property<string>("ConsentUserId");
+                    b.Property<long>("ConsentUserId");
 
                     b.HasIndex("ConsentUserId")
                         .IsUnique()
@@ -515,7 +515,7 @@ namespace CHC.Consent.EFCore.Migrations
                     b.HasOne("CHC.Consent.EFCore.Entities.PersonEntity", "GivenBy")
                         .WithMany()
                         .HasForeignKey("GivenByPersonId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("CHC.Consent.EFCore.Consent.StudySubjectEntity", "StudySubject")
                         .WithMany()
@@ -540,8 +540,7 @@ namespace CHC.Consent.EFCore.Migrations
 
                     b.HasOne("CHC.Consent.EFCore.Consent.StudyEntity", "Study")
                         .WithMany()
-                        .HasForeignKey("StudyId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("StudyId");
                 });
 
             modelBuilder.Entity("CHC.Consent.EFCore.Entities.PersonEntity", b =>
@@ -569,8 +568,7 @@ namespace CHC.Consent.EFCore.Migrations
 
                     b.HasOne("CHC.Consent.EFCore.Consent.StudyEntity")
                         .WithMany()
-                        .HasForeignKey("StudyId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("StudyId");
                 });
 
             modelBuilder.Entity("CHC.Consent.EFCore.Security.AccessControlEntity", b =>
@@ -598,7 +596,7 @@ namespace CHC.Consent.EFCore.Migrations
                         .HasForeignKey("ParentRoleId");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<long>", b =>
                 {
                     b.HasOne("CHC.Consent.EFCore.Security.ConsentRole")
                         .WithMany()
@@ -606,7 +604,7 @@ namespace CHC.Consent.EFCore.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<long>", b =>
                 {
                     b.HasOne("CHC.Consent.EFCore.Security.ConsentUser")
                         .WithMany()
@@ -614,7 +612,7 @@ namespace CHC.Consent.EFCore.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<long>", b =>
                 {
                     b.HasOne("CHC.Consent.EFCore.Security.ConsentUser")
                         .WithMany()
@@ -622,7 +620,7 @@ namespace CHC.Consent.EFCore.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<long>", b =>
                 {
                     b.HasOne("CHC.Consent.EFCore.Security.ConsentRole")
                         .WithMany()
@@ -635,7 +633,7 @@ namespace CHC.Consent.EFCore.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<long>", b =>
                 {
                     b.HasOne("CHC.Consent.EFCore.Security.ConsentUser")
                         .WithMany()
@@ -647,7 +645,8 @@ namespace CHC.Consent.EFCore.Migrations
                 {
                     b.HasOne("CHC.Consent.EFCore.Consent.ConsentEntity", "Consent")
                         .WithMany("GivenEvidence")
-                        .HasForeignKey("ConsentId");
+                        .HasForeignKey("ConsentId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("CHC.Consent.EFCore.Consent.WithdrawnEvidenceEntity", b =>
@@ -655,21 +654,24 @@ namespace CHC.Consent.EFCore.Migrations
                     b.HasOne("CHC.Consent.EFCore.Consent.ConsentEntity", "Consent")
                         .WithMany("WithdrawnEvidence")
                         .HasForeignKey("ConsentId")
-                        .HasConstraintName("FK_Evidence_Consent_ConsentId1");
+                        .HasConstraintName("FK_Evidence_Consent_ConsentId1")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("CHC.Consent.EFCore.Security.RoleSecurityPrincipal", b =>
                 {
                     b.HasOne("CHC.Consent.EFCore.Security.ConsentRole", "Role")
                         .WithOne("Principal")
-                        .HasForeignKey("CHC.Consent.EFCore.Security.RoleSecurityPrincipal", "ConsentRoleId");
+                        .HasForeignKey("CHC.Consent.EFCore.Security.RoleSecurityPrincipal", "ConsentRoleId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("CHC.Consent.EFCore.Security.UserSecurityPrincipal", b =>
                 {
                     b.HasOne("CHC.Consent.EFCore.Security.ConsentUser", "User")
                         .WithOne("Principal")
-                        .HasForeignKey("CHC.Consent.EFCore.Security.UserSecurityPrincipal", "ConsentUserId");
+                        .HasForeignKey("CHC.Consent.EFCore.Security.UserSecurityPrincipal", "ConsentUserId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
         }

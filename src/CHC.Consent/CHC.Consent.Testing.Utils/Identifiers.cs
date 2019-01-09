@@ -18,6 +18,9 @@ namespace CHC.Consent.Testing.Utils
             public static IdentifierDefinition Composite(string name, params IdentifierDefinition[] fields) =>
                 new IdentifierDefinition(name,
                     new CompositeIdentifierType(fields));
+            
+            public static IdentifierDefinition Enum(string name, params string[] values) =>
+                new IdentifierDefinition(name, new EnumIdentifierType(values));
 
             public static readonly IdentifierDefinition DateOfBirth = Date("Date of Birth");
 
@@ -39,6 +42,12 @@ namespace CHC.Consent.Testing.Utils
 
             public static IdentifierDefinition Address { get; }
 
+            public static IdentifierDefinition Name { get; }
+            public static readonly IdentifierDefinition Sex = Enum("Sex", "Male", "Female");
+
+            public static readonly IdentifierDefinition FirstName = String("Given");
+            public static readonly IdentifierDefinition LastName = String("Family");
+
             static Definitions()
             {
                 Address = Composite(
@@ -50,6 +59,7 @@ namespace CHC.Consent.Testing.Utils
                     AddressLine5,
                     AddressPostcode
                 );
+                Name = Composite("Name", FirstName, LastName);
             }
         }
 
@@ -96,7 +106,8 @@ namespace CHC.Consent.Testing.Utils
                 Definitions.NhsNumber,
                 Definitions.HospitalNumber,
                 Definitions.DateOfBirth,
-                Definitions.Address);
+                Definitions.Address,
+                Definitions.Name);
 
         public static IdentifierDefinitionRegistryProvider Provider { get; }
             = new IdentifierDefinitionRegistryProvider(Registry);

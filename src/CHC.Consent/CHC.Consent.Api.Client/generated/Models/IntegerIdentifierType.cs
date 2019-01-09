@@ -4,26 +4,24 @@
 
 namespace CHC.Consent.Api.Client.Models
 {
-    using Newtonsoft.Json;
     using System.Linq;
 
-    [Newtonsoft.Json.JsonObject("nhs-number")]
-    public partial class NhsNumber : IPersonIdentifier
+    public partial class IntegerIdentifierType : IIdentifierType
     {
         /// <summary>
-        /// Initializes a new instance of the NhsNumber class.
+        /// Initializes a new instance of the IntegerIdentifierType class.
         /// </summary>
-        public NhsNumber()
+        public IntegerIdentifierType()
         {
             CustomInit();
         }
 
         /// <summary>
-        /// Initializes a new instance of the NhsNumber class.
+        /// Initializes a new instance of the IntegerIdentifierType class.
         /// </summary>
-        public NhsNumber(string value = default(string))
+        public IntegerIdentifierType(string systemName = default(string))
+            : base(systemName)
         {
-            Value = value;
             CustomInit();
         }
 
@@ -31,11 +29,6 @@ namespace CHC.Consent.Api.Client.Models
         /// An initialization method that performs custom operations like setting defaults
         /// </summary>
         partial void CustomInit();
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "value")]
-        public string Value { get; set; }
 
     }
 }

@@ -16,7 +16,8 @@ namespace CHC.Consent.EFCore.Configuration
             map
                 .HasOne(typeof(StudyEntity)).WithMany()
                 .IsRequired()
-                .HasForeignKey(nameof(SubjectIdentifierEntity.StudyId));
+                .HasForeignKey(nameof(SubjectIdentifierEntity.StudyId))
+                .OnDelete(DeleteBehavior.ClientSetNull);
         }
     }
 }

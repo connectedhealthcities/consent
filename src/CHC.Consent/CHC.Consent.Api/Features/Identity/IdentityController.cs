@@ -1,4 +1,5 @@
-﻿using System.Buffers;
+﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -54,11 +55,14 @@ namespace CHC.Consent.Api.Features.Identity
 
         [Route("{id:int}")]
         [HttpGet]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type=typeof(IEnumerable<IPersonIdentifier>))]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type=typeof(IEnumerable<IdentifierValueDto>))]
         [AutoCommit]
         public IActionResult GetPerson(long id)
         {
-            return Ok(IdentityRepository.GetPersonIdentifiers(id));
+            return Ok(
+                IdentityRepository.GetPersonIdentifiers(id)
+                    .Select(_ => new IdentifierValueDto{ Name = _.Definition.SystemName, Value = _.Value })
+                );
         }
 
         [HttpPost("search")]
@@ -88,7 +92,8 @@ namespace CHC.Consent.Api.Features.Identity
         {
             if(!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
             
-            identifierChecker.EnsureHasNoInvalidDuplicates(specification.Identifiers);
+            throw new NotImplementedException("Convert DTO to Values");
+            //identifierChecker.EnsureHasNoInvalidDuplicates(specification.Identifiers);
             
             var person = FindMatchingPerson(specification.MatchSpecifications);
 

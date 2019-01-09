@@ -22,7 +22,7 @@ namespace CHC.Consent.Api.Client.Models
         /// <summary>
         /// Initializes a new instance of the PersonSpecification class.
         /// </summary>
-        public PersonSpecification(IList<IPersonIdentifier> identifiers = default(IList<IPersonIdentifier>), IList<MatchSpecification> matchSpecifications = default(IList<MatchSpecification>))
+        public PersonSpecification(IList<IdentifierValue> identifiers = default(IList<IdentifierValue>), IList<MatchSpecification> matchSpecifications = default(IList<MatchSpecification>))
         {
             Identifiers = identifiers;
             MatchSpecifications = matchSpecifications;
@@ -37,7 +37,7 @@ namespace CHC.Consent.Api.Client.Models
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "identifiers")]
-        public IList<IPersonIdentifier> Identifiers { get; set; }
+        public IList<IdentifierValue> Identifiers { get; set; }
 
         /// <summary>
         /// </summary>

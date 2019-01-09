@@ -7,23 +7,22 @@ namespace CHC.Consent.Api.Client.Models
     using Newtonsoft.Json;
     using System.Linq;
 
-    [Newtonsoft.Json.JsonObject("bradford-hospital-number")]
-    public partial class BradfordHospitalNumber : IPersonIdentifier
+    public partial class IIdentifierType
     {
         /// <summary>
-        /// Initializes a new instance of the BradfordHospitalNumber class.
+        /// Initializes a new instance of the IIdentifierType class.
         /// </summary>
-        public BradfordHospitalNumber()
+        public IIdentifierType()
         {
             CustomInit();
         }
 
         /// <summary>
-        /// Initializes a new instance of the BradfordHospitalNumber class.
+        /// Initializes a new instance of the IIdentifierType class.
         /// </summary>
-        public BradfordHospitalNumber(string value = default(string))
+        public IIdentifierType(string systemName = default(string))
         {
-            Value = value;
+            SystemName = systemName;
             CustomInit();
         }
 
@@ -34,8 +33,8 @@ namespace CHC.Consent.Api.Client.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "value")]
-        public string Value { get; set; }
+        [JsonProperty(PropertyName = "systemName")]
+        public string SystemName { get; private set; }
 
     }
 }

@@ -15,10 +15,66 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
+using IdentifierValue = CHC.Consent.Api.Client.Models.IdentifierValue;
+
 
 namespace CHC.Consent.Tests.Api.Controllers
 {
-    using Random = CHC.Consent.Testing.Utils.Random;
+    using Random = Testing.Utils.Random;
+    using Identifiers = Identifiers.Definitions;
+
+    public static class IdentifierValueExtensions
+    {
+        public static CHC.Consent.Api.Client.Models.IdentifierValue Value<T>(
+            this CHC.Consent.Common.Identity.Identifiers.IdentifierDefinition definition,
+            T value)
+            => new CHC.Consent.Api.Client.Models.IdentifierValue {Name = definition.SystemName, Value = value};
+        
+        public static IdentifierValueDto Dto<T>(
+            this CHC.Consent.Common.Identity.Identifiers.IdentifierDefinition definition,
+            T value)
+            => new IdentifierValueDto {Name = definition.SystemName, Value = value};
+    }
+
+    public static class ClientIdentifierValues
+    {
+        public static CHC.Consent.Api.Client.Models.IdentifierValue Address(
+            string line1 = null,
+            string line2 = null,
+            string line3 = null,
+            string line4 = null,
+            string line5 = null,
+            string postcode = null)
+        {
+            return Identifiers.Address.Value(
+                NotNull(
+                    Identifiers.AddressLine1.Value(line1),
+                    Identifiers.AddressLine2.Value(line2),
+                    Identifiers.AddressLine3.Value(line2),
+                    Identifiers.AddressLine4.Value(line4),
+                    Identifiers.AddressLine5.Value(line5),
+                    Identifiers.AddressPostcode.Value(postcode)));
+        }
+
+        private static IdentifierValue[] NotNull(params IdentifierValue[] identifierValues)
+        {
+            return identifierValues.Where(_ => _.Value != null).ToArray();
+        }
+
+        public static CHC.Consent.Api.Client.Models.IdentifierValue Name(
+            string firstName=null,
+            string lastName=null
+        )
+        {
+            return Identifiers.Name.Value(
+                NotNull(
+
+                    Identifiers.FirstName.Value(firstName),
+                    Identifiers.LastName.Value(lastName)
+                )
+            );
+        }
+    }
     
     public class IdentityControllerTests
     {
@@ -35,25 +91,24 @@ namespace CHC.Consent.Tests.Api.Controllers
         [Fact]
         public void Test()
         {
-            var nhsNumber = Identifiers.NhsNumber("32222");
+            var nhsNumber = Identifiers.NhsNumber.Value("32222");
             output.WriteLine(
                 JsonConvert.SerializeObject(
-                    new PersonSpecification
+                    new CHC.Consent.Api.Client.Models.PersonSpecification
                     {
                         Identifiers =
                         {
-                            Identifiers.DateOfBirth(2018, 12, 1),
-                            Identifiers.HospitalNumber("1112333"),
+                            Identifiers.DateOfBirth.Value(1.December(2018)),
+                            Identifiers.HospitalNumber.Value("1112333"),
                             nhsNumber,
-                            Identifiers.Address("3 Sheaf Street", "Leeds", postcode:"LS10 1HD")
+                            ClientIdentifierValues.Address("3 Sheaf Street", "Leeds", postcode:"LS10 1HD")
                         },
                         MatchSpecifications =
                         {
-                            new MatchSpecification {Identifiers = new IPersonIdentifier[] {nhsNumber}}
+                            new CHC.Consent.Api.Client.Models.MatchSpecification {Identifiers = new [] {nhsNumber}}
                         }
                     },
-                    Formatting.Indented,
-                    Startup.SerializerSettings(new JsonSerializerSettings(), Identifiers.Registry)
+                    Formatting.Indented
                 )
             );
         }
@@ -64,8 +119,8 @@ namespace CHC.Consent.Tests.Api.Controllers
          
             var existingPerson = new PersonIdentity(Random.Long());
 
-            var nhsNumberIdentifier = Identifiers.NhsNumber("444-333-111");
-            var bradfordHospitalNumberIdentifier = Identifiers.HospitalNumber("Added HospitalNumber");
+            var nhsNumberIdentifier = Identifiers.NhsNumber.Dto("444-333-111");
+            var bradfordHospitalNumberIdentifier = Identifiers.HospitalNumber.Dto("Added HospitalNumber");
             
             var identityRepository = A.Fake<IIdentityRepository>();
             A.CallTo(() => identityRepository.FindPersonBy(A<IEnumerable<PersonIdentifier>>.That.IsSameSequenceAs(nhsNumberIdentifier))).Returns(existingPerson);
@@ -75,7 +130,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             var controller = new IdentityController(
                 identityRepository,
                 A.Fake<IPersonIdentifierListChecker>(),
-                Identifiers.Registry, 
+                Testing.Utils.Identifiers.Registry, 
                 ArrayPool<char>.Create());
 
 
@@ -92,7 +147,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                     {
                         new MatchSpecification
                         {
-                            Identifiers = new IPersonIdentifier[] {nhsNumberIdentifier}
+                            Identifiers = new [] {nhsNumberIdentifier}
                         }
                     }
                 }
@@ -110,8 +165,8 @@ namespace CHC.Consent.Tests.Api.Controllers
         public void CreatesAPerson()
         {
             
-            var nhsNumberIdentifier = Identifiers.NhsNumber("New NHS Number");
-            var bradfordHospitalNumberIdentifier = Identifiers.HospitalNumber("New HospitalNumber");
+            var nhsNumberIdentifier = Identifiers.NhsNumber.Dto("New NHS Number");
+            var bradfordHospitalNumberIdentifier = Identifiers.HospitalNumber.Dto("New HospitalNumber");
             
             var identityRepository = A.Fake<IIdentityRepository>();
             A.CallTo(
@@ -124,7 +179,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             var controller = new IdentityController(
                 identityRepository,
                 A.Fake<IPersonIdentifierListChecker>(),
-                Identifiers.Registry, 
+                Testing.Utils.Identifiers.Registry, 
                 ArrayPool<char>.Create());
 
 
@@ -142,7 +197,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                     {
                         new MatchSpecification
                         {
-                            Identifiers = new IPersonIdentifier[]{nhsNumberIdentifier}
+                            Identifiers = new []{nhsNumberIdentifier}
                         }
                     }
                 }
