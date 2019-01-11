@@ -122,7 +122,7 @@
               "uniqueItems": false,
               "type": "array",
               "items": {
-                "$ref": "#/definitions/IdentifierValue"
+                "$ref": "#/definitions/IIdentifierValueDto"
               }
             }
           }
@@ -451,16 +451,109 @@
       },
       "discriminator": "$type"
     },
-    "IdentifierValue": {
+    "IIdentifierValueDto": {
+      "required": [
+        "$type"
+      ],
       "type": "object",
       "properties": {
-        "name": {
+        "$type": {
+          "enum": [
+            "IdentifierValueDto[String]",
+            "IdentifierValueDto[DateTime]",
+            "IdentifierValueDto[Int64]",
+            "IdentifierValueDto[IIdentifierValueDto[]]"
+          ],
           "type": "string"
-        },
-        "value": {
-          "type": "object"
         }
-      }
+      },
+      "discriminator": "$type"
+    },
+    "IdentifierValueDto[String]": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IIdentifierValueDto"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "IdentifierValueDto[String]",
+      "x-ms-discriminator-value": "IdentifierValueDto[String]"
+    },
+    "IdentifierValueDto[DateTime]": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IIdentifierValueDto"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "IdentifierValueDto[DateTime]",
+      "x-ms-discriminator-value": "IdentifierValueDto[DateTime]"
+    },
+    "IdentifierValueDto[Int64]": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IIdentifierValueDto"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "IdentifierValueDto[Int64]",
+      "x-ms-discriminator-value": "IdentifierValueDto[Int64]"
+    },
+    "IdentifierValueDto[IIdentifierValueDto[]]": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IIdentifierValueDto"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IIdentifierValueDto"
+              }
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "IdentifierValueDto[IIdentifierValueDto[]]",
+      "x-ms-discriminator-value": "IdentifierValueDto[IIdentifierValueDto[]]"
     },
     "MatchSpecification": {
       "type": "object",
@@ -469,7 +562,7 @@
           "uniqueItems": false,
           "type": "array",
           "items": {
-            "$ref": "#/definitions/IdentifierValue"
+            "$ref": "#/definitions/IIdentifierValueDto"
           }
         }
       }
@@ -493,7 +586,7 @@
           "uniqueItems": false,
           "type": "array",
           "items": {
-            "$ref": "#/definitions/IdentifierValue"
+            "$ref": "#/definitions/IIdentifierValueDto"
           }
         },
         "matchSpecifications": {
@@ -579,7 +672,8 @@
           }
         }
       ],
-      "x-ms-client-name": "CompositeIdentifierType"
+      "x-ms-client-name": "CompositeIdentifierType",
+      "x-ms-discriminator-value": "CompositeIdentifierType"
     },
     "DateIdentifierType": {
       "allOf": [
@@ -596,7 +690,8 @@
           }
         }
       ],
-      "x-ms-client-name": "DateIdentifierType"
+      "x-ms-client-name": "DateIdentifierType",
+      "x-ms-discriminator-value": "DateIdentifierType"
     },
     "EnumIdentifierType": {
       "allOf": [
@@ -621,7 +716,8 @@
           }
         }
       ],
-      "x-ms-client-name": "EnumIdentifierType"
+      "x-ms-client-name": "EnumIdentifierType",
+      "x-ms-discriminator-value": "EnumIdentifierType"
     },
     "IntegerIdentifierType": {
       "allOf": [
@@ -638,7 +734,8 @@
           }
         }
       ],
-      "x-ms-client-name": "IntegerIdentifierType"
+      "x-ms-client-name": "IntegerIdentifierType",
+      "x-ms-discriminator-value": "IntegerIdentifierType"
     },
     "StringIdentifierType": {
       "allOf": [
@@ -655,7 +752,8 @@
           }
         }
       ],
-      "x-ms-client-name": "StringIdentifierType"
+      "x-ms-client-name": "StringIdentifierType",
+      "x-ms-discriminator-value": "StringIdentifierType"
     },
     "StudySubject": {
       "type": "object",

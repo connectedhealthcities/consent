@@ -16,7 +16,6 @@ using Random = CHC.Consent.Testing.Utils.Random;
 
 namespace CHC.Consent.EFCore.Tests
 {
-    using Consent = Common.Consent.Consent;
     [Collection(DatabaseCollection.Name)]
     public class ConsentRepositoryTests : DbTests
     {

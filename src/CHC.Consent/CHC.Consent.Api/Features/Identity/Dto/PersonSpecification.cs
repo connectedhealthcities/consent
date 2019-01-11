@@ -6,14 +6,8 @@
 {
     public class PersonSpecification
     {
-        public List<IdentifierValueDto> Identifiers { get; set; } = new List<IdentifierValueDto>();
+        public List<IIdentifierValueDto> Identifiers { get; set; } = new List<IIdentifierValueDto>();
 
         public List<MatchSpecification> MatchSpecifications { get; set; } = new List<MatchSpecification>();
-    }
-
-    public class IdentifierValueDto
-    {
-        public string Name { get; set; }
-        public object Value { get; set; }
     }
 }

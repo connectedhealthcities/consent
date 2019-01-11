@@ -3,9 +3,9 @@ namespace CHC.Consent.Common.Identity.Identifiers
     public class IntegerIdentifierType : IIdentifierType
     {
         /// <inheritdoc />
-        public virtual void Accept(IIdentifierDefinitionVisitor visitor)
+        public virtual void Accept(IIdentifierDefinitionVisitor visitor, IdentifierDefinition definition)
         {
-            visitor.Visit(this);
+            visitor.Visit( definition,this);
         }
 
         /// <inheritdoc />

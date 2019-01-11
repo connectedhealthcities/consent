@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -31,15 +32,12 @@ namespace CHC.Consent.Tests
         private TestOutputLoggerProvider LoggerProvider;
         private XUnitServiceClientTracingInterceptor tracingInterceptor;
         
-
-        
-        
         // used as type parameter
         // ReSharper disable once ClassNeverInstantiated.Local
-        private class InMemorydatabaseStartup : Startup
+        private class InMemoryDatabaseStartup : Startup
         {
             /// <inheritdoc />
-            public InMemorydatabaseStartup(IConfiguration configuration, IHostingEnvironment environment) : 
+            public InMemoryDatabaseStartup(IConfiguration configuration, IHostingEnvironment environment) : 
                 base(configuration, environment)
             {
             }
@@ -47,6 +45,8 @@ namespace CHC.Consent.Tests
             /// <inheritdoc />
             protected override void ConfigureDatabaseOptions(IServiceProvider provider, DbContextOptionsBuilder options)
             {
+                options.ConfigureWarnings(_ => _.Ignore(InMemoryEventId.TransactionIgnoredWarning));
+                options.EnableSensitiveDataLogging();
                 options.UseInMemoryDatabase("CHC-Testing");
             }
         }
@@ -91,7 +91,11 @@ namespace CHC.Consent.Tests
                                 .AddInMemoryApiResources(
                                     new[]
                                     {
-                                        new ApiResource("api", "The API") {ApiSecrets = {new Secret("secret".Sha256())}}
+                                        new ApiResource("api", "The API")
+                                        {
+                                            ApiSecrets = {new Secret("secret".Sha256())},
+                                            /*Scopes = { new Scope("api")}*/
+                                        }
                                     })
                                 .AddInMemoryClients(
                                     new[]
@@ -122,8 +126,8 @@ namespace CHC.Consent.Tests
 
             Server = new TestServer(
                 new WebHostBuilder()
-                    .UseStartup<InMemorydatabaseStartup>()
-                    .ConfigureLogging(_ => _.AddProvider(LoggerProvider))
+                    .UseStartup<InMemoryDatabaseStartup>()
+                    .ConfigureLogging(_ => _.AddProvider(LoggerProvider).SetMinimumLevel(LogLevel.Trace))
                     .ConfigureAppConfiguration(
                         b => b.AddInMemoryCollection(
                             new Dictionary<string, string> {["IdentityServer:EnableInternalServer"] = false.ToString()}))
@@ -151,18 +155,17 @@ namespace CHC.Consent.Tests
             
             Client = Server.CreateClient();
 
-            var discoveryResponse = Client.GetDiscoveryDocumentAsync().GetAwaiter().GetResult();
+            var discoveryClient = new DiscoveryClient(identityServer.BaseAddress.ToString(), identityServer.CreateHandler());
+            var discoveryResponse = discoveryClient.GetAsync().GetAwaiter().GetResult();
             if(discoveryResponse.IsError) throw new Exception(discoveryResponse.Error);
-
-            var response = Client.RequestClientCredentialsTokenAsync(
-                    new ClientCredentialsTokenRequest()
-                    {
-                        Scope = "api", Address = discoveryResponse.TokenEndpoint, ClientId = "client",
-                        ClientSecret = "secret"
-                    })
-                .GetAwaiter().GetResult();
-            if(response.IsError) throw new Exception(response.Error);
             
+            var client = new TokenClient(
+                discoveryResponse.TokenEndpoint,
+                "client",
+                "secret",
+                innerHttpMessageHandler: identityServer.CreateHandler());
+
+            var response = client.RequestClientCredentialsAsync(scope:"api").GetAwaiter().GetResult();
 
             Client.SetBearerToken(response.AccessToken);
 

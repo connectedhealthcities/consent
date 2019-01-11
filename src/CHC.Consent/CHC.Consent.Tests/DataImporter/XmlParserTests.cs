@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -12,7 +11,6 @@ using CHC.Consent.Common.Consent.Identifiers;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.DataImporter;
 using CHC.Consent.Testing.Utils;
-using CHC.Consent.Tests.Api.Controllers;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -20,7 +18,6 @@ using InternalIdentifierDefinition = CHC.Consent.Common.Identity.Identifiers.Ide
 using InternalIdentifierType = CHC.Consent.Common.Identity.Identifiers.IIdentifierType;
 using ClientIdentifierDefinition = CHC.Consent.Api.Client.Models.IdentifierDefinition;
 using ClientIdentifierType = CHC.Consent.Api.Client.Models.IIdentifierType;
-using IdentifierValue = CHC.Consent.Api.Client.Models.IdentifierValue;
 
 namespace CHC.Consent.Tests.DataImporter
 {
@@ -37,7 +34,7 @@ namespace CHC.Consent.Tests.DataImporter
         private static readonly Dictionary<string, Type> EmptyTypeMap = new Dictionary<string, Type>();
         private XunitLogger<XmlParser> Logger { get; }
 
-        private IdentifierValue ParseIdentifierString(string fullXml, params InternalIdentifierDefinition[] definitions)
+        private IIdentifierValueDto ParseIdentifierString(string fullXml, params InternalIdentifierDefinition[] definitions)
         {
             var xDocument = CreateXDocumentWithLineInfo(fullXml);
             
@@ -100,12 +97,14 @@ namespace CHC.Consent.Tests.DataImporter
                 xml,
                 Identifiers.Definitions.Sex
                 );
-            
-            Assert.Equal("Male", sexIdentifier.Value);
+
+            sexIdentifier.Should().BeOfType<IdentifierValueDtoString>()
+                .Subject.Value
+                .Should().Be("Male");
         }
 
 
-        public XElement IdentifierElement(string type, params object[] value)
+        private static XElement IdentifierElement(string type, params object[] value)
         {
             return new XElement("identifier", new XAttribute("type", type), value);
         }
@@ -225,7 +224,7 @@ namespace CHC.Consent.Tests.DataImporter
             var specification = new XmlParser(Logger, ConvertToClientType(Identifiers.Registry.Values)).GetPeople(xmlReader).Single();
             var person = specification.PersonSpecification;
 
-            Action<IdentifierValue> Address(
+            Action<IIdentifierValueDto> Address(
                 string line1 = null,
                 string line2 = null,
                 string line3 = null,
@@ -403,36 +402,30 @@ namespace CHC.Consent.Tests.DataImporter
 
         }
 
-        private static Action<IdentifierValue> NhsNumber(string expectedValue) =>
-            AssertIdentifier(Identifiers.Definitions.NhsNumber, expectedValue);
+        private static Action<IIdentifierValueDto> NhsNumber(string expectedValue) =>
+            v => v.Should().BeEquivalentTo(Identifiers.Definitions.NhsNumber.Value(expectedValue));
 
-        private static Action<IdentifierValue> HospitalNumber(string expectedValue) =>
-            AssertIdentifier(Identifiers.Definitions.HospitalNumber, expectedValue);
+        private static Action<IIdentifierValueDto> HospitalNumber(string expectedValue) =>
+            v => v.Should().BeEquivalentTo(Identifiers.Definitions.HospitalNumber.Value( expectedValue));
             
         
-        private static Action<IdentifierValue> AssertIdentifier<T>(
-            CHC.Consent.Common.Identity.Identifiers.IdentifierDefinition definition, 
-            T value)
-            => v => v.Should().BeEquivalentTo(
-                Value(definition, value));
-
-        private static IdentifierValue Value<T>(InternalIdentifierDefinition definition, T value) =>
-            new IdentifierValue {Name = definition.SystemName, Value = value};
-
-
-        private static Action<IdentifierValue> DateOfBirth(DateTime dateofBirth) =>
-            AssertIdentifier(Identifiers.Definitions.DateOfBirth, dateofBirth.Date);
-
-        private static Action<IdentifierValue> Name(string firstName, string lastName) => 
-            AssertIdentifier(Identifiers.Definitions.Name, new []
-            {
-                Value(Identifiers.Definitions.FirstName, firstName),
-                Value(Identifiers.Definitions.LastName, lastName)
-            });
-
         
+        
+
+
+        private static Action<IIdentifierValueDto> DateOfBirth(DateTime dateofBirth) =>
+            v => v.Should().BeEquivalentTo(Identifiers.Definitions.DateOfBirth.Value( dateofBirth.Date));
+
+        private static Action<IIdentifierValueDto> Name(string firstName, string lastName) => 
+            v => v.Should().BeEquivalentTo(Identifiers.Definitions.Name.Value( new []
+            {
+                Identifiers.Definitions.FirstName.Value(firstName),
+                Identifiers.Definitions.LastName.Value(lastName)
+            }));
+
+
         private static void AssertAddress(
-            IdentifierValue address,
+            IIdentifierValueDto address,
             string line1 = null,
             string line2 = null,
             string line3 = null,
@@ -440,18 +433,15 @@ namespace CHC.Consent.Tests.DataImporter
             string line5 = null,
             string postcode = null)
         {
-            AssertIdentifier(
-                Identifiers.Definitions.Address,
-                new[]
-                {
-                    Value(Identifiers.Definitions.AddressLine1, line1),
-                    Value(Identifiers.Definitions.AddressLine2, line2),
-                    Value(Identifiers.Definitions.AddressLine3, line2),
-                    Value(Identifiers.Definitions.AddressLine4, line4),
-                    Value(Identifiers.Definitions.AddressLine5, line5),
-                    Value(Identifiers.Definitions.AddressPostcode, postcode),
-
-                }.Where(_ => _.Value != null).ToArray());
+            address.Should().BeEquivalentTo(
+                ClientIdentifierValues.Address(
+                    line1,
+                    line2,
+                    line3,
+                    line4,
+                    line5,
+                    postcode)
+            );
         }
     }
 }

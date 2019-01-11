@@ -308,6 +308,8 @@ namespace CHC.Consent.Api.Client
             DeserializationSettings.Converters.Add(new  PolymorphicDeserializeJsonConverter<Evidence>("$type"));
             SerializationSettings.Converters.Add(new PolymorphicSerializeJsonConverter<CaseIdentifier>("$type"));
             DeserializationSettings.Converters.Add(new  PolymorphicDeserializeJsonConverter<CaseIdentifier>("$type"));
+            SerializationSettings.Converters.Add(new PolymorphicSerializeJsonConverter<IIdentifierValueDto>("$type"));
+            DeserializationSettings.Converters.Add(new  PolymorphicDeserializeJsonConverter<IIdentifierValueDto>("$type"));
             SerializationSettings.Converters.Add(new PolymorphicSerializeJsonConverter<IIdentifierType>("$type"));
             DeserializationSettings.Converters.Add(new  PolymorphicDeserializeJsonConverter<IIdentifierType>("$type"));
             CustomInitialize();
@@ -607,7 +609,7 @@ namespace CHC.Consent.Api.Client
         /// <return>
         /// A response object containing the response body and response headers.
         /// </return>
-        public async Task<HttpOperationResponse<IList<IdentifierValue>>> GetPersonWithHttpMessagesAsync(long id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<HttpOperationResponse<IList<IIdentifierValueDto>>> GetPersonWithHttpMessagesAsync(long id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             // Tracing
             bool _shouldTrace = ServiceClientTracing.IsEnabled;
@@ -689,7 +691,7 @@ namespace CHC.Consent.Api.Client
                 throw ex;
             }
             // Create Result
-            var _result = new HttpOperationResponse<IList<IdentifierValue>>();
+            var _result = new HttpOperationResponse<IList<IIdentifierValueDto>>();
             _result.Request = _httpRequest;
             _result.Response = _httpResponse;
             // Deserialize Response
@@ -698,7 +700,7 @@ namespace CHC.Consent.Api.Client
                 _responseContent = await _httpResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
                 try
                 {
-                    _result.Body = SafeJsonConvert.DeserializeObject<IList<IdentifierValue>>(_responseContent, DeserializationSettings);
+                    _result.Body = SafeJsonConvert.DeserializeObject<IList<IIdentifierValueDto>>(_responseContent, DeserializationSettings);
                 }
                 catch (JsonException ex)
                 {

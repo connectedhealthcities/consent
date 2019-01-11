@@ -7,20 +7,21 @@ namespace CHC.Consent.Api.Client.Models
     using Newtonsoft.Json;
     using System.Linq;
 
-    public partial class IdentifierValue
+    [Newtonsoft.Json.JsonObject("IdentifierValueDto[DateTime]")]
+    public partial class IdentifierValueDtoDateTime : IIdentifierValueDto
     {
         /// <summary>
-        /// Initializes a new instance of the IdentifierValue class.
+        /// Initializes a new instance of the IdentifierValueDtoDateTime class.
         /// </summary>
-        public IdentifierValue()
+        public IdentifierValueDtoDateTime()
         {
             CustomInit();
         }
 
         /// <summary>
-        /// Initializes a new instance of the IdentifierValue class.
+        /// Initializes a new instance of the IdentifierValueDtoDateTime class.
         /// </summary>
-        public IdentifierValue(string name = default(string), object value = default(object))
+        public IdentifierValueDtoDateTime(string name = default(string), System.DateTime? value = default(System.DateTime?))
         {
             Name = name;
             Value = value;
@@ -40,7 +41,7 @@ namespace CHC.Consent.Api.Client.Models
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "value")]
-        public object Value { get; set; }
+        public System.DateTime? Value { get; set; }
 
     }
 }

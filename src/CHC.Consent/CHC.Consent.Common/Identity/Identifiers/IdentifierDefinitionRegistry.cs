@@ -32,49 +32,6 @@ namespace CHC.Consent.Common.Identity.Identifiers
         {
         }
 
-        /*public bool Add(IdentifierDefinition definition)
-        {
-            var systemName = definition.SystemName;
-            
-            if (Definitions.ContainsKey(systemName)) return false;
-            Definitions.Add(systemName, definition);
-            return true;
-        }
-
-
-        /// <inheritdoc />
-        public IEnumerator<KeyValuePair<string, IdentifierDefinition>> GetEnumerator() => Definitions.GetEnumerator();
-
-        /// <inheritdoc />
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        /// <inheritdoc />
-        public int Count => Definitions.Count;
-
-        /// <inheritdoc />
-        public bool ContainsKey(string key) => Definitions.ContainsKey(key);
-        
-
-        /// <inheritdoc />
-        public bool TryGetValue(string key, out IdentifierDefinition value)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc />
-        public IdentifierDefinition this[string key]
-        {
-            get => Definitions[key];
-            set => Definitions[IdentifierDefinition.MakeSystemName(key)] = value;
-        }
-
-        /// <inheritdoc />
-        public IEnumerable<string> Keys => Definitions.Keys;
-
-        /// <inheritdoc />
-        public IEnumerable<IdentifierDefinition> Values => Definitions.Values;
-        */
-        
         public void Accept(IIdentifierDefinitionVisitor visitor)
         {
             foreach (var definition in Values)

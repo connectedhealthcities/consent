@@ -9,7 +9,8 @@ namespace CHC.Consent.Api.Features.Identity
     public static class PersonSpecificationRepositoryExtensions
     {
         public static PersonIdentity FindPerson(
-            this IIdentityRepository repository, IEnumerable<IEnumerable<PersonIdentifier>> matchSpecification) =>
+            this IIdentityRepository repository, 
+            IEnumerable<IEnumerable<PersonIdentifier>> matchSpecification) =>
             matchSpecification.Select(repository.FindPersonBy).FirstOrDefault(person => person != null);
     }
 }

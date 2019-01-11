@@ -30,16 +30,20 @@ namespace CHC.Consent.Tests.Integration.Api
         }
 
         [Theory, MemberData(nameof(IdentityTestData))]
-        public void CanSendIdentitiesToServer(IdentifierValue identifier, Action<IdentifierValue> checkResult)
+        public void CanSendIdentitiesToServer(IIdentifierValueDto identifier, Action<IIdentifierValueDto> checkResult)
         {
-            var response = Fixture.ApiClient.PutPerson(
-                new PersonSpecification(
-                    new List<IdentifierValue> {identifier},
-                    new List<MatchSpecification>
-                    {
-                        new MatchSpecification {Identifiers = new List<IdentifierValue> {identifier}}
-                    }));
-
+            PersonCreatedResult response=null;
+            Fixture.ApiClient.Invoking(
+                    _ => response  = _.PutPerson(
+                        new PersonSpecification(
+                            new List<IIdentifierValueDto> {identifier},
+                            new List<MatchSpecification>
+                            {
+                                new MatchSpecification {Identifiers = new List<IIdentifierValueDto> {identifier}}
+                            }))
+                )
+                .Should().NotThrow();
+                
             Assert.NotNull(response);
             
             var identities = Fixture.ApiClient.GetPerson(response.PersonId);
@@ -55,18 +59,18 @@ namespace CHC.Consent.Tests.Integration.Api
                 DateOfBirthTestData(),
                 SexMale(),
                 SexFemale(),
-                MedwayName()
+                Name()
             );
 
-        private static (IdentifierValue, Action<IdentifierValue>) MedwayName()
+        private static (IIdentifierValueDto, Action<IIdentifierValueDto>) Name()
         {
             var (name, firstNameValue, lastNameValue) = Name(Random.String(), Random.String());
             return (
                 name,
                 i =>
                 {
-                    var nameParts = Assert.IsType<IdentifierValue[]>(i.Value);
-                    nameParts.Should()
+                    i.Should().BeOfType<IdentifierValueDtoIIdentifierValueDto>()
+                        .Subject.Value.Should()
                         .Contain(Identifier(firstNameValue))
                         .And
                         .Contain(Identifier(lastNameValue))
@@ -76,12 +80,12 @@ namespace CHC.Consent.Tests.Integration.Api
             );
         }
 
-        private static (IdentifierValue name, IdentifierValue fistName, IdentifierValue lastName) Name(string firstName, string lastName)
+        private static (IIdentifierValueDto name, IIdentifierValueDto fistName, IIdentifierValueDto lastName) Name(string firstName, string lastName)
         {
-            var firstNameValue = Value(Identifiers.Definitions.FirstName, firstName);
-            var lastNameValue = Value(Identifiers.Definitions.LastName, lastName);
-            var name = Value(
-                Identifiers.Definitions.Name,
+            var firstNameValue = Identifiers.Definitions.FirstName.Value(firstName);
+            var lastNameValue = Identifiers.Definitions.LastName.Value(lastName);
+            var name = 
+                Identifiers.Definitions.Name.Value(
                 new[]
                 {
                     firstNameValue,
@@ -90,55 +94,71 @@ namespace CHC.Consent.Tests.Integration.Api
             return (name, firstNameValue, lastNameValue);
         }
 
-        private static IdentifierValue Value(IdentifierDefinition identifierDefinition, object value)
+        
+
+        private static Expression<Func<IIdentifierValueDto, bool>> Identifier(IIdentifierValueDto value)
         {
-            return new IdentifierValue {Name = identifierDefinition.SystemName, Value = value};
+            return actual => HasSameName(actual, value) && HasSameValue(actual, value);
         }
 
-        private static Expression<Func<IdentifierValue, bool>> Identifier(IdentifierValue value)
+        private static bool HasSameName(dynamic actual, dynamic value)
         {
-            return _ => _.Name == value.Name && Equals(_.Value, value.Value);
+            return Equals(actual.Name, value.Name);
+        }
+
+        private static bool HasSameValue(dynamic a, dynamic b)
+        {
+            return Equals(a.Value, b.Value);
         }
 
 
-        private static IEnumerable<object[]> MakeTestData(params (IdentifierValue,Action<IdentifierValue>)[] tests)
+        private static IEnumerable<object[]> MakeTestData(params (IIdentifierValueDto,Action<IIdentifierValueDto>)[] tests)
         {
-            IEnumerable<object> ToEnumerable((IdentifierValue, Action<IdentifierValue>) tuple)
+            IEnumerable<object> ToEnumerable((IIdentifierValueDto, Action<IIdentifierValueDto>) tuple)
             {
                 var (value, test) = tuple;
                 yield return value;
-                yield return test ?? (i => i.Should().Match(Identifier(value)));
+                yield return test ?? (i =>
+                                 i.Should().BeOfType(value.GetType()).And.Subject.Should()
+                                     .BeEquivalentTo(
+                                     value,
+                                     options => options.RespectingRuntimeTypes()));
             }
 
             return tests.Select(ToEnumerable).Select(Enumerable.ToArray);
         }
         
-        private static (IdentifierValue, Action<IdentifierValue>) NhsNumberTestData()
+        private static (IIdentifierValueDto, Action<IIdentifierValueDto>) NhsNumberTestData()
         {
             var value = NhsNumber(Random.String());
-            return (value,null);
+            return AreEqual(value);
         }
 
-        private static IdentifierValue NhsNumber(string value)
+        private static (IIdentifierValueDto, Action<IIdentifierValueDto>) AreEqual<T>(T value)
+            where T : IIdentifierValueDto
         {
-            return Value(Identifiers.Definitions.NhsNumber, value);
+            return (value, i => i.Should().BeEquivalentTo(value, options => options.RespectingRuntimeTypes()));
         }
 
-        private static (IdentifierValue, Action<IdentifierValue>) DateOfBirthTestData()
+        private static IdentifierValueDtoString NhsNumber(string value)
         {
-            return (Value(Identifiers.Definitions.DateOfBirth, 24.April(1865)), null);
+            return Identifiers.Definitions.NhsNumber.Value(value);
+        }
+
+        private static (IIdentifierValueDto, Action<IIdentifierValueDto>) DateOfBirthTestData()
+        {
+            return AreEqual(Identifiers.Definitions.DateOfBirth.Value(24.April(1865)));
 
         }
 
-        private static (IdentifierValue, Action<IdentifierValue>) SexMale()
+        private static (IIdentifierValueDto, Action<IIdentifierValueDto>) SexMale()
         {
-            return (Value(Identifiers.Definitions.Sex, "Male"), null);
+            return AreEqual(Identifiers.Definitions.Sex.Value("Male"));
         }
         
-        private static (IdentifierValue, Action<IdentifierValue>) SexFemale()
+        private static (IIdentifierValueDto, Action<IIdentifierValueDto>) SexFemale()
         {
-            var sex = Value(Identifiers.Definitions.Sex, "Female");
-            return (sex,null);
+            return AreEqual(Identifiers.Definitions.Sex.Value("Female"));
         }
         
         [Fact]
@@ -153,10 +173,10 @@ namespace CHC.Consent.Tests.Integration.Api
             
             var response = api.PutPerson(
                 new PersonSpecification(
-                    new List<IdentifierValue> {nhsNumber, name},
+                    new List<IIdentifierValueDto> {nhsNumber, name},
                     new List<MatchSpecification>
                     {
-                        new MatchSpecification {Identifiers = new List<IdentifierValue> {nhsNumber}}
+                        new MatchSpecification {Identifiers = new List<IIdentifierValueDto> {nhsNumber}}
                     }));
 
             Assert.NotNull(response);

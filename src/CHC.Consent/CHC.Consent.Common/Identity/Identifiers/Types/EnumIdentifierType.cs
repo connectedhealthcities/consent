@@ -15,9 +15,9 @@ namespace CHC.Consent.Common.Identity.Identifiers
         }
 
         /// <inheritdoc />
-        public void Accept(IIdentifierDefinitionVisitor visitor)
+        public void Accept(IIdentifierDefinitionVisitor visitor, IdentifierDefinition definition)
         {
-            visitor.Visit(this);
+            visitor.Visit(definition, this);
         }
 
         /// <inheritdoc />

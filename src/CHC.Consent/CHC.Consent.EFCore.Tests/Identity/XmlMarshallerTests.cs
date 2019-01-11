@@ -6,6 +6,7 @@ using System.Xml.Linq;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.EFCore.Identity;
 using CHC.Consent.Testing.Utils;
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore.Query.Expressions;
 using Xunit;
 using Random = CHC.Consent.Testing.Utils.Random;
@@ -71,10 +72,10 @@ namespace CHC.Consent.EFCore.Tests.Identity
 
             var identifier = new PersonIdentifier(
                 new IdentifierValue(
-                    new Dictionary<string, PersonIdentifier>
+                    new []
                     {
-                        ["string"] = new PersonIdentifier(new IdentifierValue("A Name"), stringIdentifierDefinition),
-                        ["date"] = new PersonIdentifier(new IdentifierValue(17.April(1872)), dateIdentifierDefinition)
+                        new PersonIdentifier(new IdentifierValue("A Name"), stringIdentifierDefinition),
+                        new PersonIdentifier(new IdentifierValue(17.April(1872)), dateIdentifierDefinition)
                     }),
                 compositeIdentifierDefinition);
 
@@ -98,9 +99,13 @@ namespace CHC.Consent.EFCore.Tests.Identity
             var identifier = marshaller.MarshallFromXml(XElement.Parse("<composite><string>A Name</string><date>1872-04-17T00:00:00</date></composite>"));
 
             var value = identifier.Value.Value;
-            var valueDictionary = Assert.IsType<Dictionary<string, PersonIdentifier>>(value);
-            Assert.Equal("A Name", valueDictionary["string"].Value.Value);
-            Assert.Equal(17.April(1872), valueDictionary["date"].Value.Value);
+            value.Should().BeOfType<PersonIdentifier[]>()
+                .And.Subject.As<PersonIdentifier[]>()
+                .Should().Contain(new PersonIdentifier(new IdentifierValue("A Name"), stringIdentifierDefinition))
+                .And
+                .Contain(new PersonIdentifier(new IdentifierValue(17.April(1872)), dateIdentifierDefinition))
+                .And
+                .HaveCount(2);
         }
 
 

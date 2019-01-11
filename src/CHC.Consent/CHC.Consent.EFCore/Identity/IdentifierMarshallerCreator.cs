@@ -6,51 +6,55 @@ namespace CHC.Consent.EFCore.Identity
 {
     public class IdentifierMarshallerCreator : IIdentifierDefinitionVisitor
     {
-        private string currentKey;
-        private IdentifierDefinition currentDefinition;
         public IDictionary<string, IIdentifierMarshaller> Marshallers { get; }
 
         /// <inheritdoc />
-        public IdentifierMarshallerCreator(IDictionary<string, IIdentifierMarshaller> marshallers)
+        public IdentifierMarshallerCreator(IDictionary<string, IIdentifierMarshaller> marshallers=null)
         {
-            Marshallers = marshallers;
+            Marshallers = marshallers??new Dictionary<string, IIdentifierMarshaller>();
+        }
+
+
+        private void SetMarshaller(IdentifierDefinition definition, IStringValueParser parser=null)
+        {
+            SetMarshaller(definition, new IdentifierToXmlElementMarshaller(
+                definition,
+                parser ?? PassThroughParser.Instance));
+        }
+
+        private void SetMarshaller(IdentifierDefinition definition, IIdentifierMarshaller marshaller)
+        {
+            Marshallers[definition.SystemName] = marshaller;
         }
 
         /// <inheritdoc />
-        public void Visit(DateIdentifierType type)
+        public void Visit(IdentifierDefinition definition, DateIdentifierType type)
         {
-            Marshallers[currentKey] = new IdentifierToXmlElementMarshaller(currentDefinition, new ValueParser<DateTime>(DateTime.TryParse));
+            SetMarshaller(definition, new ValueParser<DateTime>(DateTime.TryParse));
         }
 
         /// <inheritdoc />
-        public void Visit(EnumIdentifierType type)
+        public void Visit(IdentifierDefinition definition, EnumIdentifierType type)
         {
-            Marshallers[currentKey] = new IdentifierToXmlElementMarshaller(currentDefinition);
+            SetMarshaller(definition);
         }
 
         /// <inheritdoc />
-        public void Visit(CompositeIdentifierType type)
+        public void Visit(IdentifierDefinition definition, CompositeIdentifierType type)
         {
-            Marshallers[currentKey] = new CompositeIdentifierMarshaller(currentDefinition);
+            SetMarshaller(definition, new CompositeIdentifierMarshaller(definition));
         }
 
         /// <inheritdoc />
-        public void Visit(IntegerIdentifierType type)
+        public void Visit(IdentifierDefinition definition, IntegerIdentifierType type)
         {
-            Marshallers[currentKey] = new IdentifierToXmlElementMarshaller(currentDefinition, new ValueParser<long>(long.TryParse));
+            SetMarshaller(definition, new ValueParser<long>(long.TryParse));
         }
 
         /// <inheritdoc />
-        public void Visit(StringIdentifierType type)
+        public void Visit(IdentifierDefinition definition, StringIdentifierType type)
         {
-            Marshallers[currentKey] = new IdentifierToXmlElementMarshaller(currentDefinition);
-        }
-
-        /// <inheritdoc />
-        public void Visit(IdentifierDefinition definition)
-        {
-            currentKey = definition.SystemName;
-            currentDefinition = definition;
+            SetMarshaller(definition);
         }
     }
 }

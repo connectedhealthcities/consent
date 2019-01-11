@@ -69,7 +69,7 @@ namespace CHC.Consent.Api.Client
             /// </param>
             /// <param name='id'>
             /// </param>
-            public static IList<IdentifierValue> GetPerson(this IApi operations, long id)
+            public static IList<IIdentifierValueDto> GetPerson(this IApi operations, long id)
             {
                 return operations.GetPersonAsync(id).GetAwaiter().GetResult();
             }
@@ -82,7 +82,7 @@ namespace CHC.Consent.Api.Client
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<IList<IdentifierValue>> GetPersonAsync(this IApi operations, long id, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<IList<IIdentifierValueDto>> GetPersonAsync(this IApi operations, long id, CancellationToken cancellationToken = default(CancellationToken))
             {
                 using (var _result = await operations.GetPersonWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
                 {

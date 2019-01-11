@@ -63,14 +63,14 @@ namespace CHC.Consent.Testing.Utils
             }
         }
 
-        public static PersonIdentifier PersonIdentifier<T>(T value, IdentifierDefinition numberIdentifierDefinition) =>
-            new PersonIdentifier(new IdentifierValue(value), numberIdentifierDefinition);
+        public static PersonIdentifier PersonIdentifier<T>(T value, IdentifierDefinition definition) =>
+            new PersonIdentifier(new IdentifierValue(value), definition);
 
         private static PersonIdentifier CompositeIdentifier(
             IdentifierDefinition definition, params PersonIdentifier[] identifiers) =>
             new PersonIdentifier(
                 new IdentifierValue(
-                    identifiers.Where(_ => _.Value.Value != null).ToDictionary(_ => _.Definition.SystemName)),
+                    identifiers.Where(_ => _.Value.Value != null).ToArray()),
                 definition
             );
 
@@ -111,5 +111,12 @@ namespace CHC.Consent.Testing.Utils
 
         public static IdentifierDefinitionRegistryProvider Provider { get; }
             = new IdentifierDefinitionRegistryProvider(Registry);
+
+        public static PersonIdentifier Name(string given, string family) =>
+            CompositeIdentifier(
+                Definitions.Name,
+                PersonIdentifier(given, Definitions.FirstName),
+                PersonIdentifier(family, Definitions.LastName)
+            );
     }
 }

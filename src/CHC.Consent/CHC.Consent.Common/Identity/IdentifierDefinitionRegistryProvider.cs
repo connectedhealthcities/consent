@@ -29,8 +29,8 @@ namespace CHC.Consent.Common.Identity
             new IdentifierDefinition(
                 name: "Name",
                 type: new CompositeIdentifierType(
-                    new IdentifierDefinition("First Name", new StringIdentifierType()),
-                    new IdentifierDefinition("Last Name", new StringIdentifierType())
+                    new IdentifierDefinition("Given", new StringIdentifierType()),
+                    new IdentifierDefinition("Family", new StringIdentifierType())
                 ))
         };
 

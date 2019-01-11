@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using CHC.Consent.Common.Identity.Identifiers;
 
@@ -26,7 +27,7 @@ namespace CHC.Consent.EFCore.Identity
         /// <inheritdoc />
         public XElement MarshallToXml(PersonIdentifier identifier)
         {
-            var values = (IDictionary<string, PersonIdentifier>) identifier.Value.Value;
+            var values = ((IEnumerable<PersonIdentifier>) identifier.Value.Value).ToDictionary(_ => _.Definition.SystemName);
             return new XElement(
                 Definition.SystemName,
                 IdentifierType.Identifiers.Cast<KeyValuePair<string, IdentifierDefinition>>()
@@ -43,8 +44,8 @@ namespace CHC.Consent.EFCore.Identity
                     IdentifierType.Identifiers.Cast<KeyValuePair<string, IdentifierDefinition>>()
                         .Select(id => (id: id, value: xElement.Element(id.Key)))
                         .Where(i => i.value != null)
-                        .Select(i => (id: i.id, value: Marshallers[i.id.Key].MarshallFromXml(i.value)))
-                        .ToDictionary(i => i.id.Key, i => i.value)),
+                        .Select(i => Marshallers[i.id.Key].MarshallFromXml(i.value))
+                        .ToArray()),
                 Definition);
         }
     }

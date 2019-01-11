@@ -22,7 +22,7 @@ namespace CHC.Consent.Api.Client.Models
         /// <summary>
         /// Initializes a new instance of the MatchSpecification class.
         /// </summary>
-        public MatchSpecification(IList<IdentifierValue> identifiers = default(IList<IdentifierValue>))
+        public MatchSpecification(IList<IIdentifierValueDto> identifiers = default(IList<IIdentifierValueDto>))
         {
             Identifiers = identifiers;
             CustomInit();
@@ -36,7 +36,7 @@ namespace CHC.Consent.Api.Client.Models
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "identifiers")]
-        public IList<IdentifierValue> Identifiers { get; set; }
+        public IList<IIdentifierValueDto> Identifiers { get; set; }
 
     }
 }

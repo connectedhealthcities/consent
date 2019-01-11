@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure;
@@ -26,43 +26,34 @@ namespace CHC.Consent.Api.Features.Identity
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class IdentityController : Controller
     {
-        private readonly IPersonIdentifierListChecker identifierChecker;
         private readonly IdentifierDefinitionRegistry registry;
-        private readonly ArrayPool<char> arrayPool;
         private IIdentityRepository IdentityRepository { get; }
+        private IDictionary<string, PersonIdentifierIdentifierValueDtoMarshallerCreator.IMarshaller> DtoMarshallers { get;  }
 
         public IdentityController(
-            IIdentityRepository identityRepository, 
-            IPersonIdentifierListChecker identifierChecker,
-            IdentifierDefinitionRegistry registry, 
-            ArrayPool<char> arrayPool)
+            IIdentityRepository identityRepository,
+            IdentifierDefinitionRegistry registry)
         {
-            this.identifierChecker = identifierChecker;
+        
             this.registry = registry;
-            this.arrayPool = arrayPool;
             IdentityRepository = identityRepository;
+            var marshallerCreator = new PersonIdentifierIdentifierValueDtoMarshallerCreator();
+            registry.Accept(marshallerCreator);
+            DtoMarshallers = marshallerCreator.Marshallers;
         }
 
-        /// <inheritdoc />
-        public override void OnActionExecuted(ActionExecutedContext context)
-        {
-            if (context.Result is ObjectResult objectResult)
-            {
-                objectResult.Formatters.Add(new JsonOutputFormatter(registry.CreateSerializerSettings(), arrayPool));
-            }
-            base.OnActionExecuted(context);
-        }
 
         [Route("{id:int}")]
         [HttpGet]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type=typeof(IEnumerable<IdentifierValueDto>))]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type=typeof(IEnumerable<IIdentifierValueDto>))]
         [AutoCommit]
         public IActionResult GetPerson(long id)
         {
-            return Ok(
-                IdentityRepository.GetPersonIdentifiers(id)
-                    .Select(_ => new IdentifierValueDto{ Name = _.Definition.SystemName, Value = _.Value })
-                );
+            var identifierValueDtos = IdentityRepository.GetPersonIdentifiers(id)
+                .Select(identifier => DtoMarshallers[identifier.Definition.SystemName].MarshallToDto(identifier))
+                .ToArray();
+            
+            return Ok(identifierValueDtos);
         }
 
         [HttpPost("search")]
@@ -81,7 +72,7 @@ namespace CHC.Consent.Api.Features.Identity
 
         private PersonIdentity FindMatchingPerson(IEnumerable<MatchSpecification> match)
         {
-            return IdentityRepository.FindPerson(match.Select(_ => _.Identifiers.Cast<PersonIdentifier>()));
+            return IdentityRepository.FindPerson(match.Select(_ => ConvertToIdentifiers(_.Identifiers)));
         }
 
         [HttpPut]
@@ -91,25 +82,49 @@ namespace CHC.Consent.Api.Features.Identity
         public IActionResult PutPerson([FromBody, Required]PersonSpecification specification)
         {
             if(!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
-            
-            throw new NotImplementedException("Convert DTO to Values");
+            ValidateIdentifiers(specification.Identifiers, nameof(specification.Identifiers));
+            ValidateIdentifiers(
+                specification.MatchSpecifications.SelectMany(_ => _.Identifiers),
+                nameof(specification.MatchSpecifications));
+            if(!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
             //identifierChecker.EnsureHasNoInvalidDuplicates(specification.Identifiers);
+
+            var identifiers = ConvertToIdentifiers(specification.Identifiers);
             
+
             var person = FindMatchingPerson(specification.MatchSpecifications);
 
             if (person == null)
             {
-                person = IdentityRepository.CreatePerson(specification.Identifiers.Cast<PersonIdentifier>());
+                person = IdentityRepository.CreatePerson(identifiers);
                 return CreatedAtAction("GetPerson", new {id = person.Id}, new PersonCreatedResult {PersonId = person});
             }
             else
             {
-                IdentityRepository.UpdatePerson(person, specification.Identifiers.Cast<PersonIdentifier>());
+                IdentityRepository.UpdatePerson(person, identifiers);
 
                 return new SeeOtherOjectActionResult(
                     "GetPerson",
                     routeValues: new {id = person.Id},
                     result: new PersonCreatedResult {PersonId = person});
+            }
+        }
+
+        private PersonIdentifier[] ConvertToIdentifiers(IEnumerable<IIdentifierValueDto> identifiers)
+        {
+            return identifiers
+                .Select(identifier => DtoMarshallers[identifier.DefinitionSystemName].MarshallToIdentifier(identifier))
+                .ToArray();
+        }
+
+        private void ValidateIdentifiers(IEnumerable<IIdentifierValueDto> identifiers, string modelStateName)
+        {
+            foreach (var identifier in identifiers)
+            {
+                if (registry.IsValid(identifier)) continue;
+                ModelState.AddModelError(
+                    modelStateName,
+                    $"'{identifier.DefinitionSystemName}' is not a valid identifier type");
             }
         }
     }

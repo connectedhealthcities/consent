@@ -17,8 +17,7 @@ namespace CHC.Consent.Common.Identity.Identifiers
 
         public void Accept(IIdentifierDefinitionVisitor visitor)
         {
-            visitor.Visit(this);
-            Type.Accept(visitor);
+            Type.Accept(visitor, this);
         }
     }
 }

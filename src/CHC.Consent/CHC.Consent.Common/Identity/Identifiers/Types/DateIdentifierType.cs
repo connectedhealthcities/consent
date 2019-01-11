@@ -5,9 +5,9 @@ namespace CHC.Consent.Common.Identity.Identifiers
     public class DateIdentifierType : IIdentifierType
     {
         /// <inheritdoc />
-        public virtual void Accept(IIdentifierDefinitionVisitor visitor)
+        public virtual void Accept(IIdentifierDefinitionVisitor visitor, IdentifierDefinition definition)
         {
-            visitor.Visit(this);
+            visitor.Visit(definition, this);
         }
 
         /// <inheritdoc />

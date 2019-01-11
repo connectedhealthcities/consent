@@ -1,8 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
+using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Swagger;
@@ -41,6 +46,9 @@ namespace CHC.Consent.Api.Infrastructure.Web
             gen.SwaggerDoc("v1", new Info {Title = "Api", Version = "1"});
             gen.DescribeAllEnumsAsStrings();
             gen.SchemaFilter<SwaggerSchemaIdentityTypeProvider>();
+            gen.SchemaFilter<SwaggerSchemaSubtypeFilter<IIdentifierValueDto>>(
+                IdentifierValueDtos.KnownDtoTypes,
+                IdentifierValueDtos.KnownDtoTypes.Select(_ => _.FriendlyId()));
             gen.SchemaFilter<SwaggerSchemaIdentityTypeProvider<CaseIdentifier, ITypeRegistry<CaseIdentifier>>>();
             gen.SchemaFilter<SwaggerSchemaIdentityTypeProvider<Evidence, ITypeRegistry<Evidence>>>();
             gen.CustomSchemaIds(type => GetSchemaId(type) ?? type.FriendlyId(fullyQualified:false));
@@ -52,18 +60,8 @@ namespace CHC.Consent.Api.Infrastructure.Web
                 type,
                 /*Services.GetRequiredService<ITypeRegistry<IPersonIdentifier>>().TryGetName,*/
                 Services.GetRequiredService<ITypeRegistry<CaseIdentifier>>().TryGetName,
-                Services.GetRequiredService<ITypeRegistry<Evidence>>().TryGetName,
-                StripDto
+                Services.GetRequiredService<ITypeRegistry<Evidence>>().TryGetName
             );
-        }
-
-        private bool StripDto(Type key, out string value)
-        {
-            value = default;
-            if (!key.Name.EndsWith("Dto")) return false;
-
-            value = key.Name.Substring(0, key.Name.Length - 3);
-            return true;
         }
 
         delegate bool TryGetValue<in TKey, TValue>(TKey key, out TValue value);
@@ -78,4 +76,6 @@ namespace CHC.Consent.Api.Infrastructure.Web
             return default;
         }
     }
+
+    
 }

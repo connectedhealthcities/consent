@@ -39,13 +39,13 @@ namespace CHC.Consent.EFCore
                 PredicateBuilder.New<PersonEntity>(),
                 (t, i) =>
                 {
-                    
+                    var marshalledValue = MarshalledValue(i);
                     return t.Or(
                         p => IdentifierEntities.Any(
-                                 _ => _.Person == p 
-                                      && _.TypeName == i.Definition.SystemName 
-                             && _.Deleted == null
-                             && _.Value == MarshalledValue(i)));
+                                 _ => _.Person == p
+                                      && _.TypeName == i.Definition.SystemName
+                                      && _.Deleted == null
+                                      && _.Value == marshalledValue));
                 }
                 );
             var filteredPeople = People.Where(predicate);

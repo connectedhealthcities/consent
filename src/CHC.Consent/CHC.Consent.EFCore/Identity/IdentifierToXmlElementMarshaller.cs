@@ -1,5 +1,7 @@
+using System;
 using System.Xml.Linq;
 using CHC.Consent.Common.Identity.Identifiers;
+using JetBrains.Annotations;
 
 namespace CHC.Consent.EFCore.Identity
 {
@@ -9,10 +11,15 @@ namespace CHC.Consent.EFCore.Identity
         private IStringValueParser Parser { get; }
 
         /// <inheritdoc />
-        public IdentifierToXmlElementMarshaller(IdentifierDefinition definition, IStringValueParser parser=null)
+        public IdentifierToXmlElementMarshaller(IdentifierDefinition definition) : this(definition, PassThroughParser.Instance)
         {
-            Definition = definition;
-            Parser = parser ?? PassThroughParser.Instance;
+        }
+
+        /// <inheritdoc />
+        public IdentifierToXmlElementMarshaller([NotNull] IdentifierDefinition definition, [NotNull] IStringValueParser parser)
+        {
+            Definition = definition ?? throw new ArgumentNullException(nameof(definition));
+            Parser = parser ?? throw new ArgumentNullException(nameof(parser));
         }
 
         public XElement MarshallToXml(PersonIdentifier identifier)
@@ -24,22 +31,6 @@ namespace CHC.Consent.EFCore.Identity
         {
             Parser.TryParse(xElement.Value, out var value);
             return new PersonIdentifier(new IdentifierValue(value), Definition);
-        }
-
-        private class PassThroughParser : IStringValueParser
-        {
-            public static IStringValueParser Instance { get; } = new PassThroughParser();
-            /// <inheritdoc />
-            private PassThroughParser()
-            {
-            }
-
-            /// <inheritdoc />
-            public bool TryParse(string value, out object result)
-            {
-                result = value;
-                return true;
-            }
         }
     }
 }

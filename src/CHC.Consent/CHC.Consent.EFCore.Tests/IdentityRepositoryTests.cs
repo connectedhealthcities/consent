@@ -1,6 +1,10 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
+using System.Text;
+using System.Threading;
 using System.Xml.Linq;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
@@ -13,6 +17,7 @@ using FakeItEasy;
 using FakeItEasy.Sdk;
 using FluentAssertions;
 using FluentAssertions.Collections;
+using FluentAssertions.Formatting;
 using Microsoft.VisualBasic.CompilerServices;
 using Xunit;
 using Xunit.Abstractions;
@@ -61,6 +66,9 @@ namespace CHC.Consent.EFCore.Tests
         /// <inheritdoc />
         public IdentityRepositoryTests(ITestOutputHelper outputHelper, DatabaseFixture fixture) : base(outputHelper, fixture)
         {
+            Formatter.AddFormatter(PersonIdentifierFormatter.Instance);
+            Formatter.AddFormatter(DictionaryIdentifierFormatter.Instance);
+            
             personOne = new PersonEntity();
             personTwo = new PersonEntity();
             
@@ -83,18 +91,17 @@ namespace CHC.Consent.EFCore.Tests
 
         private IdentityRepository CreateRepository(ConsentContext context)
         {
-            IDictionary<string, IIdentifierMarshaller> marshallers = new Dictionary<string, IIdentifierMarshaller>
+            var marshallers = new Dictionary<string, IIdentifierMarshaller>
             {
                 [Identifiers.Definitions.NhsNumber.SystemName] =
                     new IdentifierToXmlElementMarshaller(Identifiers.Definitions.NhsNumber),
-                [testIdentifierDefinition.SystemName] = new IdentifierToXmlElementMarshaller(testIdentifierDefinition)
+                [testIdentifierDefinition.SystemName] = new IdentifierToXmlElementMarshaller(testIdentifierDefinition),
+                [Identifiers.Definitions.Name.SystemName] = new CompositeIdentifierMarshaller(Identifiers.Definitions.Name)
             };
 
             IStoreProvider storeProvider = new ContextStoreProvider(context);
 
-            return new IdentityRepository(
-                marshallers,
-                storeProvider);
+            return new IdentityRepository(marshallers,storeProvider);
         }
 
         [Fact]
@@ -191,8 +198,67 @@ namespace CHC.Consent.EFCore.Tests
                 .ContainSingleIdentifierValue(Identifiers.Definitions.NhsNumber, nhsNumber);
 
         }
+
+        [Fact]
+        public void CanPersistCompositeIdentifiers()
+        {
+            var name = Identifiers.Name("Francis", "Drake");
+            var nhsNumber = Identifiers.NhsNumber(Random.String());
+            var person = CreateRepository(createContext).CreatePerson(new[]{ name, nhsNumber });
+            createContext.SaveChanges();
+
+            var personIdentifiers = CreateRepository(readContext).GetPersonIdentifiers(person);
+
+            personIdentifiers.Should().Contain(name)
+                .And.Contain(nhsNumber)
+                .And.HaveCount(2)
+                .And.OnlyHaveUniqueItems();
+            
+        }
     }
 
+    public class PersonIdentifierFormatter : IValueFormatter
+    {
+        /// <inheritdoc />
+        public bool CanHandle(object value) => value is PersonIdentifier;
+
+        /// <inheritdoc />
+        public string Format(object value, FormattingContext context, FormatChild formatChild)
+        {            
+            var personIdentifier = (PersonIdentifier)value;
+            return $"{personIdentifier.Definition.SystemName}: {formatChild("Value", personIdentifier.Value.Value)}";
+        }
+        
+        public static IValueFormatter Instance { get; } = new PersonIdentifierFormatter();
+    }
+
+    public class DictionaryIdentifierFormatter : IValueFormatter
+    {
+        public bool CanHandle(object value) => value is IDictionary;
+
+        /// <inheritdoc />
+        public string Format(object value, FormattingContext context, FormatChild formatChild)
+        {
+            var newline = context.UseLineBreaks ? Environment.NewLine : "";
+            var padding = new string('\t', context.Depth);
+
+            var result = new StringBuilder($"{newline}{padding}{{");
+            foreach (DictionaryEntry entry in (IDictionary)value)
+            {
+                result.AppendFormat(
+                    "[{0}]: {{{1}}},",
+                    formatChild("Key", entry.Key),
+                    formatChild("Value", entry.Value));
+            }
+
+            result.Append($"{newline}{padding}}}");
+
+            return result.ToString();
+        }
+        
+        public static IValueFormatter Instance { get; } = new DictionaryIdentifierFormatter(); 
+    }
+    
     public static class PersonIdentifierCollectionAssertions
     {
         public static AndWhichConstraint<GenericCollectionAssertions<PersonIdentifierEntity>, PersonIdentifierEntity>

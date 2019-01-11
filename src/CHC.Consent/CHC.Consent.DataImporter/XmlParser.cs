@@ -158,7 +158,7 @@ namespace CHC.Consent.DataImporter
         }
 
 
-        public IdentifierValue ParseIdentifier(XElement identifierNode)
+        public IIdentifierValueDto ParseIdentifier(XElement identifierNode)
         {
             return identifierValueParser.Parse(identifierNode);
         }
