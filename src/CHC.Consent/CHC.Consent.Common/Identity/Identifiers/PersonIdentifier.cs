@@ -4,10 +4,10 @@ namespace CHC.Consent.Common.Identity.Identifiers
 {
     public class PersonIdentifier : IPersonIdentifier, IEquatable<PersonIdentifier>
     {
-        public IdentifierValue Value { get; }
+        public IIdentifierValue Value { get; }
         public IdentifierDefinition Definition { get; }
 
-        public PersonIdentifier(IdentifierValue value, IdentifierDefinition definition)
+        public PersonIdentifier(IIdentifierValue value, IdentifierDefinition definition)
         {
             Value = value;
             Definition = definition;

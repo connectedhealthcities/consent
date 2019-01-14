@@ -23,7 +23,8 @@ namespace CHC.Consent.EFCore.Identity
         /// <inheritdoc />
         public XElement MarshallToXml(PersonIdentifier identifier)
         {
-            var values = ((IEnumerable<PersonIdentifier>) identifier.Value.Value).ToDictionary(_ => _.Definition.SystemName);
+            var values = ((CompositeIdentifierValue) identifier.Value).Identifiers
+                .ToDictionary(_ => _.Definition.SystemName);
             return new XElement(
                 Definition.SystemName,
                 IdentifierType.Identifiers
@@ -36,12 +37,12 @@ namespace CHC.Consent.EFCore.Identity
         public PersonIdentifier MarshallFromXml(XElement xElement)
         {
             return new PersonIdentifier(
-                new IdentifierValue(
+                new CompositeIdentifierValue(
                     IdentifierType.Identifiers
                         .Select(id => ( typeName: id.SystemName, value: xElement.Element(id.SystemName)))
                         .Where(i => i.value != null)
                         .Select(i => Marshallers.MarshallFromXml(i.typeName, i.value))
-                        .ToArray()),
+                        .ToArray()), 
                 Definition);
         }
     }

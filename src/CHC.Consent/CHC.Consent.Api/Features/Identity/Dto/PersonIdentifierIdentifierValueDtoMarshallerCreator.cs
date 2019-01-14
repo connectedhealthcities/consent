@@ -37,7 +37,7 @@ namespace CHC.Consent.Api.Features.Identity.Dto
             /// <inheritdoc />
             public PersonIdentifier MarshallToIdentifier(IIdentifierValueDto dto)
             {
-                return new PersonIdentifier(new IdentifierValue(dto.Value), Definition);
+                return new PersonIdentifier(new SimpleIdentifierValue(dto.Value), Definition);
             }
         }
 
@@ -55,7 +55,7 @@ namespace CHC.Consent.Api.Features.Identity.Dto
 
             public IIdentifierValueDto MarshallToDto(PersonIdentifier identifier)
             {
-                var values = (IEnumerable<PersonIdentifier>)identifier.Value.Value;
+                var values = ((CompositeIdentifierValue)identifier.Value).Identifiers;
                 return
                     new IdentifierValueDto<IIdentifierValueDto[]>
                     (
@@ -70,7 +70,7 @@ namespace CHC.Consent.Api.Features.Identity.Dto
                 var value = (IIdentifierValueDto[]) dto.Value;
                 var identifiers = marshaller.ConvertToIdentifiers(value);
                 
-                return new PersonIdentifier(new IdentifierValue(identifiers), Definition);
+                return new PersonIdentifier(new CompositeIdentifierValue(identifiers), Definition);
             }
         }
 

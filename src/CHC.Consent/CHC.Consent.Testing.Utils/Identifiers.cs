@@ -64,12 +64,12 @@ namespace CHC.Consent.Testing.Utils
         }
 
         public static PersonIdentifier PersonIdentifier<T>(T value, IdentifierDefinition definition) =>
-            new PersonIdentifier(new IdentifierValue(value), definition);
+            new PersonIdentifier(new SimpleIdentifierValue(value), definition);
 
         private static PersonIdentifier CompositeIdentifier(
             IdentifierDefinition definition, params PersonIdentifier[] identifiers) =>
             new PersonIdentifier(
-                new IdentifierValue(
+                new CompositeIdentifierValue(
                     identifiers.Where(_ => _.Value.Value != null).ToArray()),
                 definition
             );

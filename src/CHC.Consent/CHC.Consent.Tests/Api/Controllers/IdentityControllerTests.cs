@@ -64,6 +64,15 @@ namespace CHC.Consent.Tests.Api.Controllers
             );
         }
 
+        
+        public PersonIdentifier Identifier(IIdentifierValueDto identifier)
+        {
+            return new PersonIdentifier(
+                new SimpleIdentifierValue(identifier.Value), 
+                registry[identifier.DefinitionSystemName]);
+        }
+
+        
         [Fact]
         public void UpdatesAnExistingPerson()
         {
@@ -104,8 +113,8 @@ namespace CHC.Consent.Tests.Api.Controllers
             A.CallTo(
                     () => identityRepository.UpdatePerson(existingPerson,
                         A<IEnumerable<PersonIdentifier>>.That.IsSameSequenceAs(
-                            registry.ConvertToPersonIdentifier(nhsNumberIdentifier), 
-                            registry.ConvertToPersonIdentifier(bradfordHospitalNumberIdentifier))))
+                            Identifier(nhsNumberIdentifier), 
+                            Identifier(bradfordHospitalNumberIdentifier))))
                 .MustHaveHappenedOnceExactly();
             Assert.IsType<SeeOtherOjectActionResult>(result);
         }
@@ -121,7 +130,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             A.CallTo(
                     () => identityRepository.FindPersonBy(
                         A<IEnumerable<PersonIdentifier>>.That.IsSameSequenceAs(
-                            registry.ConvertToPersonIdentifier(nhsNumberIdentifier))))
+                            Identifier(nhsNumberIdentifier))))
                 .Returns(null);
 
 
@@ -154,8 +163,8 @@ namespace CHC.Consent.Tests.Api.Controllers
             A.CallTo(
                     () => identityRepository.CreatePerson(
                         A<IEnumerable<PersonIdentifier>>.That.IsSameSequenceAs(
-                            registry.ConvertToPersonIdentifier(nhsNumberIdentifier),
-                            registry.ConvertToPersonIdentifier(bradfordHospitalNumberIdentifier))))
+                            Identifier(nhsNumberIdentifier),
+                            Identifier(bradfordHospitalNumberIdentifier))))
                 .MustHaveHappenedOnceExactly();
         }
 

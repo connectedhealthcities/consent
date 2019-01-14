@@ -38,7 +38,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
         {
             
             var identifier = new PersonIdentifier(
-                new IdentifierValue(value),
+                new SimpleIdentifierValue(value),
                 new IdentifierDefinition("Identifier", identifierType));
 
             var marshaller = CreateMarshallerFor(identifier.Definition);
@@ -71,12 +71,12 @@ namespace CHC.Consent.EFCore.Tests.Identity
             var (compositeIdentifierDefinition, stringIdentifierDefinition, dateIdentifierDefinition) = CompositeIdentifierDefinition();
 
             var identifier = new PersonIdentifier(
-                new IdentifierValue(
+                new CompositeIdentifierValue(
                     new []
                     {
-                        new PersonIdentifier(new IdentifierValue("A Name"), stringIdentifierDefinition),
-                        new PersonIdentifier(new IdentifierValue(17.April(1872)), dateIdentifierDefinition)
-                    }),
+                        new PersonIdentifier(new SimpleIdentifierValue("A Name"), stringIdentifierDefinition),
+                        new PersonIdentifier(new SimpleIdentifierValue(17.April(1872)), dateIdentifierDefinition)
+                    }), 
                 compositeIdentifierDefinition);
 
             var marshaller = new CompositeIdentifierXmlMarshaller(compositeIdentifierDefinition);
@@ -98,12 +98,11 @@ namespace CHC.Consent.EFCore.Tests.Identity
 
             var identifier = marshaller.MarshallFromXml(XElement.Parse("<composite><string>A Name</string><date>1872-04-17T00:00:00</date></composite>"));
 
-            var value = identifier.Value.Value;
-            value.Should().BeOfType<PersonIdentifier[]>()
-                .And.Subject.As<PersonIdentifier[]>()
-                .Should().Contain(new PersonIdentifier(new IdentifierValue("A Name"), stringIdentifierDefinition))
+            identifier.Value.Should().BeOfType<CompositeIdentifierValue>()
+                .And.Subject.As<CompositeIdentifierValue>().Identifiers.Should()
+                .Contain(new PersonIdentifier(new SimpleIdentifierValue("A Name"), stringIdentifierDefinition))
                 .And
-                .Contain(new PersonIdentifier(new IdentifierValue(17.April(1872)), dateIdentifierDefinition))
+                .Contain(new PersonIdentifier(new SimpleIdentifierValue(17.April(1872)), dateIdentifierDefinition))
                 .And
                 .HaveCount(2);
         }

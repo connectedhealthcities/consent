@@ -30,7 +30,7 @@ namespace CHC.Consent.EFCore.Identity
         public PersonIdentifier MarshallFromXml(XElement xElement)
         {
             Parser.TryParse(xElement.Value, out var value);
-            return new PersonIdentifier(new IdentifierValue(value), Definition);
+            return new PersonIdentifier(new SimpleIdentifierValue(value), Definition);
         }
     }
 }
