@@ -32,12 +32,15 @@ namespace CHC.Consent.Common.Identity.Identifiers
         {
         }
 
-        public void Accept(IIdentifierDefinitionVisitor visitor)
+        public T Accept<T>() where T : IIdentifierDefinitionVisitor, new() => Accept(new T());
+        public T Accept<T>(T visitor) where T:IIdentifierDefinitionVisitor
         {
             foreach (var definition in Values)
             {
                 definition.Accept(visitor);
             }
+
+            return visitor;
         }
 
         /// <inheritdoc />

@@ -14,7 +14,7 @@ namespace CHC.Consent.Api.Features.Identity
                 identifierDefinitionRegistry[identifier.DefinitionSystemName]);
         }
 
-        public static bool IsValid(
+        public static bool IsValidIdentifierType(
             this IdentifierDefinitionRegistry identifierDefinitionRegistry,
             IIdentifierValueDto identifier)
         {

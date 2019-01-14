@@ -24,14 +24,21 @@ namespace CHC.Consent.Tests.Api.Controllers
     public class IdentityControllerTests
     {
         private readonly ITestOutputHelper output;
+        private readonly IdentifierDefinitionRegistry registry;
 
 
         /// <inheritdoc />
         public IdentityControllerTests(ITestOutputHelper output)
         {
             this.output = output;
+            registry = Testing.Utils.Identifiers.Registry;
         }
 
+
+        private IdentityController CreateController(IIdentityRepository identityRepository)
+        {
+            return new IdentityController(identityRepository, registry);
+        }
 
         [Fact]
         public void Test()
@@ -56,7 +63,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 )
             );
         }
-        
+
         [Fact]
         public void UpdatesAnExistingPerson()
         {
@@ -73,12 +80,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 .Returns(existingPerson);
 
 
-            var registry = Testing.Utils.Identifiers.Registry;
-            var controller = new IdentityController(
-                identityRepository,
-                registry);
-
-
+            var controller = CreateController(identityRepository);
             
             var result = controller.PutPerson(
                 new PersonSpecification
@@ -107,7 +109,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 .MustHaveHappenedOnceExactly();
             Assert.IsType<SeeOtherOjectActionResult>(result);
         }
-        
+
         [Fact]
         public void CreatesAPerson()
         {
@@ -115,8 +117,6 @@ namespace CHC.Consent.Tests.Api.Controllers
             var nhsNumberIdentifier = Identifiers.NhsNumber.Dto("New NHS Number");
             var bradfordHospitalNumberIdentifier = Identifiers.HospitalNumber.Dto("New HospitalNumber");
 
-            var registry = Testing.Utils.Identifiers.Registry;
-            
             var identityRepository = A.Fake<IIdentityRepository>();
             A.CallTo(
                     () => identityRepository.FindPersonBy(
@@ -125,9 +125,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 .Returns(null);
 
 
-            var controller = new IdentityController(
-                identityRepository,
-                registry);
+            var controller = CreateController(identityRepository);
 
 
             
@@ -173,11 +171,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                     Testing.Utils.Identifiers.Name("Peng", "Chips")
                 });
 
-            var registry = Testing.Utils.Identifiers.Registry;
-
-            var controller = new IdentityController(
-                identityRepository,
-                registry);
+            var controller = CreateController(identityRepository);
 
             var result = controller.GetPerson(34);
 

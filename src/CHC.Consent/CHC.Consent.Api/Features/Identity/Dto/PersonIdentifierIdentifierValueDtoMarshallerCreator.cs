@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
 using IdentityModel.Internal;
 using Newtonsoft.Json.Linq;
@@ -10,15 +11,10 @@ namespace CHC.Consent.Api.Features.Identity.Dto
 {
     public class PersonIdentifierIdentifierValueDtoMarshallerCreator : IIdentifierDefinitionVisitor
     {
-        public IDictionary<string, IMarshaller> Marshallers { get; } = new Dictionary<string,IMarshaller>();
+        public IDictionary<string, PersonIdentifiersDtosMarshaller.IMarshaller> Marshallers { get; }
+            = new Dictionary<string, PersonIdentifiersDtosMarshaller.IMarshaller>();
 
-        public interface IMarshaller
-        {
-            IIdentifierValueDto MarshallToDto(PersonIdentifier identifier);
-            PersonIdentifier MarshallToIdentifier(IIdentifierValueDto dto);
-        }
-
-        private class SimpleMarshaller<T> : IMarshaller
+        private class SimpleMarshaller<T> : PersonIdentifiersDtosMarshaller.IMarshaller
         {
             public IdentifierDefinition Definition { get; }
 
@@ -45,29 +41,26 @@ namespace CHC.Consent.Api.Features.Identity.Dto
             }
         }
 
-        class CompositeMarshaller : IMarshaller
+        class CompositeMarshaller : PersonIdentifiersDtosMarshaller.IMarshaller
         {
             public IdentifierDefinition Definition { get; }
-            private IDictionary<string, IMarshaller> marshallers;
+            private readonly PersonIdentifiersDtosMarshaller marshaller;
 
             /// <inheritdoc />
             public CompositeMarshaller(CompositeIdentifierType type, IdentifierDefinition definition)
             {
                 Definition = definition;
-                var marshallerCreator = new PersonIdentifierIdentifierValueDtoMarshallerCreator();
-                type.Identifiers.Accept(marshallerCreator);
-                marshallers = marshallerCreator.Marshallers;
+                marshaller = new PersonIdentifiersDtosMarshaller(type.Identifiers);
             }
 
             public IIdentifierValueDto MarshallToDto(PersonIdentifier identifier)
             {
                 var values = (IEnumerable<PersonIdentifier>)identifier.Value.Value;
-                var dtos = values.Select(i => marshallers[i.Definition.SystemName].MarshallToDto(i)).ToArray();
                 return
                     new IdentifierValueDto<IIdentifierValueDto[]>
                     (
                         identifier.Definition.SystemName,
-                        dtos
+                        marshaller.MarshallToDtos(values)
                     );
             }
 
@@ -75,24 +68,16 @@ namespace CHC.Consent.Api.Features.Identity.Dto
             public PersonIdentifier MarshallToIdentifier(IIdentifierValueDto dto)
             {
                 var value = (IIdentifierValueDto[]) dto.Value;
-                var identifiers =
-                    value
-                        .Select(d => marshallers[d.DefinitionSystemName].MarshallToIdentifier(d))
-                        .ToArray(); 
+                var identifiers = marshaller.ConvertToIdentifiers(value);
                 
                 return new PersonIdentifier(new IdentifierValue(identifiers), Definition);
-            }
-
-            private PersonIdentifier ConvertDto(IIdentifierValueDto dto)
-            {
-                return marshallers[dto.DefinitionSystemName].MarshallToIdentifier(dto);
             }
         }
 
         private void UseSimpleMarshaller<T>(IdentifierDefinition definition)
             => UseMarshaller(definition, new SimpleMarshaller<T>(definition));
 
-        private IMarshaller UseMarshaller(IdentifierDefinition definition, IMarshaller marshaller)
+        private PersonIdentifiersDtosMarshaller.IMarshaller UseMarshaller(IdentifierDefinition definition, PersonIdentifiersDtosMarshaller.IMarshaller marshaller)
         {
             return Marshallers[definition.SystemName] = marshaller;
         }

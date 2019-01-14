@@ -27,19 +27,15 @@ namespace CHC.Consent.Api.Features.Identity
     public class IdentityController : Controller
     {
         private readonly IdentifierDefinitionRegistry registry;
+        private PersonIdentifiersDtosMarshaller IdentifierMarshaller { get; }
         private IIdentityRepository IdentityRepository { get; }
-        private IDictionary<string, PersonIdentifierIdentifierValueDtoMarshallerCreator.IMarshaller> DtoMarshallers { get;  }
 
         public IdentityController(
-            IIdentityRepository identityRepository,
-            IdentifierDefinitionRegistry registry)
+            IIdentityRepository identityRepository, IdentifierDefinitionRegistry registry)
         {
-        
-            this.registry = registry;
             IdentityRepository = identityRepository;
-            var marshallerCreator = new PersonIdentifierIdentifierValueDtoMarshallerCreator();
-            registry.Accept(marshallerCreator);
-            DtoMarshallers = marshallerCreator.Marshallers;
+            this.registry = registry;
+            IdentifierMarshaller = new PersonIdentifiersDtosMarshaller(this.registry);
         }
 
 
@@ -49,11 +45,7 @@ namespace CHC.Consent.Api.Features.Identity
         [AutoCommit]
         public IActionResult GetPerson(long id)
         {
-            var identifierValueDtos = IdentityRepository.GetPersonIdentifiers(id)
-                .Select(identifier => DtoMarshallers[identifier.Definition.SystemName].MarshallToDto(identifier))
-                .ToArray();
-            
-            return Ok(identifierValueDtos);
+            return Ok(IdentifierMarshaller.MarshallToDtos(IdentityRepository.GetPersonIdentifiers(id)));
         }
 
         [HttpPost("search")]
@@ -72,7 +64,7 @@ namespace CHC.Consent.Api.Features.Identity
 
         private PersonIdentity FindMatchingPerson(IEnumerable<MatchSpecification> match)
         {
-            return IdentityRepository.FindPerson(match.Select(_ => ConvertToIdentifiers(_.Identifiers)));
+            return IdentityRepository.FindPerson(match.Select(_ => IdentifierMarshaller.ConvertToIdentifiers(_.Identifiers)));
         }
 
         [HttpPut]
@@ -82,14 +74,14 @@ namespace CHC.Consent.Api.Features.Identity
         public IActionResult PutPerson([FromBody, Required]PersonSpecification specification)
         {
             if(!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
-            ValidateIdentifiers(specification.Identifiers, nameof(specification.Identifiers));
-            ValidateIdentifiers(
+            ValidateIdentifierTypes(specification.Identifiers, nameof(specification.Identifiers));
+            ValidateIdentifierTypes(
                 specification.MatchSpecifications.SelectMany(_ => _.Identifiers),
                 nameof(specification.MatchSpecifications));
             if(!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
             //identifierChecker.EnsureHasNoInvalidDuplicates(specification.Identifiers);
 
-            var identifiers = ConvertToIdentifiers(specification.Identifiers);
+            var identifiers = IdentifierMarshaller.ConvertToIdentifiers(specification.Identifiers);
             
 
             var person = FindMatchingPerson(specification.MatchSpecifications);
@@ -110,18 +102,11 @@ namespace CHC.Consent.Api.Features.Identity
             }
         }
 
-        private PersonIdentifier[] ConvertToIdentifiers(IEnumerable<IIdentifierValueDto> identifiers)
-        {
-            return identifiers
-                .Select(identifier => DtoMarshallers[identifier.DefinitionSystemName].MarshallToIdentifier(identifier))
-                .ToArray();
-        }
-
-        private void ValidateIdentifiers(IEnumerable<IIdentifierValueDto> identifiers, string modelStateName)
+        private void ValidateIdentifierTypes(IEnumerable<IIdentifierValueDto> identifiers, string modelStateName)
         {
             foreach (var identifier in identifiers)
             {
-                if (registry.IsValid(identifier)) continue;
+                if (registry.IsValidIdentifierType(identifier)) continue;
                 ModelState.AddModelError(
                     modelStateName,
                     $"'{identifier.DefinitionSystemName}' is not a valid identifier type");
