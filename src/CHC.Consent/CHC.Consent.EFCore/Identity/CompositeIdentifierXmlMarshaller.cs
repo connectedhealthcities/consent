@@ -6,22 +6,18 @@ using CHC.Consent.Common.Identity.Identifiers;
 
 namespace CHC.Consent.EFCore.Identity
 {
-    public class CompositeIdentifierMarshaller : IIdentifierMarshaller
+    //TODO: Add logging and handling of unknown identifiers
+    public class CompositeIdentifierXmlMarshaller : IIdentifierXmlMarshaller
     {
         private readonly CompositeIdentifierType IdentifierType;
         public IdentifierDefinition Definition { get; }
-        public IDictionary<string, IIdentifierMarshaller> Marshallers { get; } = new Dictionary<string, IIdentifierMarshaller>();
+        public PersonIdentifierXmlMarshallers Marshallers { get; }
 
-        public CompositeIdentifierMarshaller(IdentifierDefinition definition)
+        public CompositeIdentifierXmlMarshaller(IdentifierDefinition definition)
         {
             Definition = definition;
             IdentifierType = (CompositeIdentifierType)Definition.Type;
-            CreateMarshallersForDefinition();
-        }
-
-        private void CreateMarshallersForDefinition()
-        {
-            IdentifierType.Identifiers.Accept(new IdentifierMarshallerCreator(Marshallers));
+            Marshallers = new PersonIdentifierXmlMarshallers(IdentifierType.Identifiers);
         }
 
         /// <inheritdoc />
@@ -30,9 +26,9 @@ namespace CHC.Consent.EFCore.Identity
             var values = ((IEnumerable<PersonIdentifier>) identifier.Value.Value).ToDictionary(_ => _.Definition.SystemName);
             return new XElement(
                 Definition.SystemName,
-                IdentifierType.Identifiers.Cast<KeyValuePair<string, IdentifierDefinition>>()
-                    .Where(id => values.ContainsKey(id.Key))
-                    .Select(id => Marshallers[id.Key].MarshallToXml(values[id.Key])));
+                IdentifierType.Identifiers
+                    .Where(id => values.ContainsKey(id.SystemName))
+                    .Select(id => Marshallers.MarshallToXml(values[id.SystemName])));
 
         }
 
@@ -41,10 +37,10 @@ namespace CHC.Consent.EFCore.Identity
         {
             return new PersonIdentifier(
                 new IdentifierValue(
-                    IdentifierType.Identifiers.Cast<KeyValuePair<string, IdentifierDefinition>>()
-                        .Select(id => (id: id, value: xElement.Element(id.Key)))
+                    IdentifierType.Identifiers
+                        .Select(id => ( typeName: id.SystemName, value: xElement.Element(id.SystemName)))
                         .Where(i => i.value != null)
-                        .Select(i => Marshallers[i.id.Key].MarshallFromXml(i.value))
+                        .Select(i => Marshallers.MarshallFromXml(i.typeName, i.value))
                         .ToArray()),
                 Definition);
         }

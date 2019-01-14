@@ -4,25 +4,30 @@ using CHC.Consent.Common.Identity.Identifiers;
 
 namespace CHC.Consent.EFCore.Identity
 {
-    public class IdentifierMarshallerCreator : IIdentifierDefinitionVisitor
+    public class IdentifierXmlMarshallerCreator : IIdentifierDefinitionVisitor
     {
-        public IDictionary<string, IIdentifierMarshaller> Marshallers { get; }
+        public IDictionary<string, IIdentifierXmlMarshaller> Marshallers { get; }
 
         /// <inheritdoc />
-        public IdentifierMarshallerCreator(IDictionary<string, IIdentifierMarshaller> marshallers=null)
+        public IdentifierXmlMarshallerCreator()
         {
-            Marshallers = marshallers??new Dictionary<string, IIdentifierMarshaller>();
+            Marshallers = new Dictionary<string, IIdentifierXmlMarshaller>();
         }
 
 
         private void SetMarshaller(IdentifierDefinition definition, IStringValueParser parser=null)
         {
-            SetMarshaller(definition, new IdentifierToXmlElementMarshaller(
+            SetMarshaller(definition, new IdentifierXmlElementMarshaller(
                 definition,
                 parser ?? PassThroughParser.Instance));
         }
 
-        private void SetMarshaller(IdentifierDefinition definition, IIdentifierMarshaller marshaller)
+        private void SetMarshaller<T>(IdentifierDefinition definition, ValueParser<T>.TryParseDelegate tryParse)
+        {
+            SetMarshaller(definition, new ValueParser<T>(tryParse));
+        }
+
+        private void SetMarshaller(IdentifierDefinition definition, IIdentifierXmlMarshaller marshaller)
         {
             Marshallers[definition.SystemName] = marshaller;
         }
@@ -30,7 +35,7 @@ namespace CHC.Consent.EFCore.Identity
         /// <inheritdoc />
         public void Visit(IdentifierDefinition definition, DateIdentifierType type)
         {
-            SetMarshaller(definition, new ValueParser<DateTime>(DateTime.TryParse));
+            SetMarshaller<DateTime>(definition, DateTime.TryParse);
         }
 
         /// <inheritdoc />
@@ -42,13 +47,13 @@ namespace CHC.Consent.EFCore.Identity
         /// <inheritdoc />
         public void Visit(IdentifierDefinition definition, CompositeIdentifierType type)
         {
-            SetMarshaller(definition, new CompositeIdentifierMarshaller(definition));
+            SetMarshaller(definition, new CompositeIdentifierXmlMarshaller(definition));
         }
 
         /// <inheritdoc />
         public void Visit(IdentifierDefinition definition, IntegerIdentifierType type)
         {
-            SetMarshaller(definition, new ValueParser<long>(long.TryParse));
+            SetMarshaller<long>(definition, long.TryParse);
         }
 
         /// <inheritdoc />

@@ -5,18 +5,18 @@ using JetBrains.Annotations;
 
 namespace CHC.Consent.EFCore.Identity
 {
-    public class IdentifierToXmlElementMarshaller : IIdentifierMarshaller
+    public class IdentifierXmlElementMarshaller : IIdentifierXmlMarshaller
     {
         public IdentifierDefinition Definition { get; }
         private IStringValueParser Parser { get; }
 
         /// <inheritdoc />
-        public IdentifierToXmlElementMarshaller(IdentifierDefinition definition) : this(definition, PassThroughParser.Instance)
+        public IdentifierXmlElementMarshaller(IdentifierDefinition definition) : this(definition, PassThroughParser.Instance)
         {
         }
 
         /// <inheritdoc />
-        public IdentifierToXmlElementMarshaller([NotNull] IdentifierDefinition definition, [NotNull] IStringValueParser parser)
+        public IdentifierXmlElementMarshaller([NotNull] IdentifierDefinition definition, [NotNull] IStringValueParser parser)
         {
             Definition = definition ?? throw new ArgumentNullException(nameof(definition));
             Parser = parser ?? throw new ArgumentNullException(nameof(parser));

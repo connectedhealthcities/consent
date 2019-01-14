@@ -24,9 +24,9 @@ namespace CHC.Consent.EFCore.Tests.Identity
                 {new IntegerIdentifierType(), 263762L, "263762"}
             };
 
-        private static IIdentifierMarshaller CreateMarshallerFor(IdentifierDefinition identifierDefinition)
+        private static IIdentifierXmlMarshaller CreateMarshallerFor(IdentifierDefinition identifierDefinition)
         {
-            var marshallerCreator = new IdentifierMarshallerCreator(new Dictionary<string, IIdentifierMarshaller>());
+            var marshallerCreator = new IdentifierXmlMarshallerCreator();
             identifierDefinition.Accept(marshallerCreator);
             return marshallerCreator.Marshallers.Values.Single();
         }
@@ -79,7 +79,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
                     }),
                 compositeIdentifierDefinition);
 
-            var marshaller = new CompositeIdentifierMarshaller(compositeIdentifierDefinition);
+            var marshaller = new CompositeIdentifierXmlMarshaller(compositeIdentifierDefinition);
 
             var xml = marshaller.MarshallToXml(identifier);
 
@@ -94,7 +94,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
         {
             var (compositeIdentifierDefinition, stringIdentifierDefinition, dateIdentifierDefinition) = CompositeIdentifierDefinition();
 
-            var marshaller = new CompositeIdentifierMarshaller(compositeIdentifierDefinition);
+            var marshaller = new CompositeIdentifierXmlMarshaller(compositeIdentifierDefinition);
 
             var identifier = marshaller.MarshallFromXml(XElement.Parse("<composite><string>A Name</string><date>1872-04-17T00:00:00</date></composite>"));
 
@@ -114,10 +114,10 @@ namespace CHC.Consent.EFCore.Tests.Identity
         {
             var (composite, _, _) = CompositeIdentifierDefinition();
             
-            var marshaller = new CompositeIdentifierMarshaller(composite);
+            var marshaller = new CompositeIdentifierXmlMarshaller(composite);
 
-            Assert.Contains("string", marshaller.Marshallers);
-            Assert.Contains("date", marshaller.Marshallers);
+            Assert.Contains("string", marshaller.Marshallers.Marshallers);
+            Assert.Contains("date", marshaller.Marshallers.Marshallers);
         }
 
         private static (

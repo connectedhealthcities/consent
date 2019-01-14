@@ -7,23 +7,22 @@ using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore.Entities;
-using CHC.Consent.EFCore.Identity;
 using LinqKit;
 
 namespace CHC.Consent.EFCore
 {
     public class IdentityRepository : IIdentityRepository
     {
-        private IDictionary<string, IIdentifierMarshaller> Marshallers { get; }
         private IStore<PersonIdentifierEntity> IdentifierEntities => stores.Get<PersonIdentifierEntity>();
         private IStore<PersonEntity> People => stores.Get<PersonEntity>();
         private readonly IStoreProvider stores;
+        private readonly PersonIdentifierXmlMarshallers marshallers;
 
         public IdentityRepository(
-            IDictionary<string, IIdentifierMarshaller> marshallers, 
+            IdentifierDefinitionRegistry registry, 
             IStoreProvider stores)
         {
-            Marshallers = marshallers;
+            marshallers = new PersonIdentifierXmlMarshallers(registry);
             this.stores = stores;
         }
 
@@ -39,13 +38,13 @@ namespace CHC.Consent.EFCore
                 PredicateBuilder.New<PersonEntity>(),
                 (t, i) =>
                 {
-                    var marshalledValue = MarshalledValue(i);
+                    var xmlValue = MarshalledValue(i);
                     return t.Or(
                         p => IdentifierEntities.Any(
                                  _ => _.Person == p
                                       && _.TypeName == i.Definition.SystemName
                                       && _.Deleted == null
-                                      && _.Value == marshalledValue));
+                                      && _.Value == xmlValue));
                 }
                 );
             var filteredPeople = People.Where(predicate);
@@ -54,18 +53,13 @@ namespace CHC.Consent.EFCore
 
         private string MarshalledValue(PersonIdentifier identifier)
         {
-            return Marshallers[identifier.Definition.SystemName].MarshallToXml(identifier).ToString(SaveOptions.DisableFormatting);
+            return marshallers.MarshallToXml(identifier).ToString(SaveOptions.DisableFormatting);
         }
 
         public IEnumerable<PersonIdentifier> GetPersonIdentifiers(long personId)
         {
-            return IdentifierEntities.Where(_ => _.Person.Id == personId && _.Deleted == null).AsEnumerable()
-                .Select(UnMarshall);
-        }
-
-        private PersonIdentifier UnMarshall(PersonIdentifierEntity entity)
-        {
-            return Marshallers[entity.TypeName].MarshallFromXml(XElement.Parse(entity.Value));
+            var identifierEntities = IdentifierEntities.Where(_ => _.Person.Id == personId && _.Deleted == null).AsEnumerable();
+            return marshallers.MarshallFromXml(identifierEntities);
         }
 
         /// <inheritdoc />
@@ -97,7 +91,7 @@ namespace CHC.Consent.EFCore
 
             return IdentifierEntities
                 .Where(_ => peopleIdValues.Contains(_.Person.Id) && identifierNames.Contains(_.TypeName) && _.Deleted == null)
-                .Select(_ => new {Identity = new PersonIdentity(_.Person.Id), Identifier = UnMarshall(_)})
+                .Select(_ => new {Identity = new PersonIdentity(_.Person.Id), Identifier = marshallers.MarshallFromXml(_)})
                 .GroupBy(_ => _.Identity, _ => _.Identifier)
                 .ToDictionary(
                     _ => _.Key,

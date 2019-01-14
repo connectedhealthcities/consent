@@ -21,7 +21,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
         {
             var identifierDefinition = new IdentifierDefinition("test", type);
 
-            var creator = new IdentifierMarshallerCreator(new Dictionary<string, IIdentifierMarshaller>());
+            var creator = new IdentifierXmlMarshallerCreator();
             
             identifierDefinition.Accept(creator);
             
@@ -29,7 +29,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
             
             var marshaller = creator.Marshallers["test"];
 
-            var stringMarshaller = Assert.IsType<IdentifierToXmlElementMarshaller>(marshaller);
+            var stringMarshaller = Assert.IsType<IdentifierXmlElementMarshaller>(marshaller);
             Assert.Equal(identifierDefinition, stringMarshaller.Definition);
         }
     }

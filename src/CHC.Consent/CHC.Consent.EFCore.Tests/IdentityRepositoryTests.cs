@@ -58,7 +58,7 @@ namespace CHC.Consent.EFCore.Tests
 
         private static string MarshallValue(IdentifierDefinition identifierDefinition, string value)
         {
-            return new IdentifierToXmlElementMarshaller(identifierDefinition)
+            return new IdentifierXmlElementMarshaller(identifierDefinition)
                 .MarshallToXml(Identifiers.PersonIdentifier(value, identifierDefinition))
                 .ToString(SaveOptions.DisableFormatting);
         }
@@ -91,17 +91,15 @@ namespace CHC.Consent.EFCore.Tests
 
         private IdentityRepository CreateRepository(ConsentContext context)
         {
-            var marshallers = new Dictionary<string, IIdentifierMarshaller>
-            {
-                [Identifiers.Definitions.NhsNumber.SystemName] =
-                    new IdentifierToXmlElementMarshaller(Identifiers.Definitions.NhsNumber),
-                [testIdentifierDefinition.SystemName] = new IdentifierToXmlElementMarshaller(testIdentifierDefinition),
-                [Identifiers.Definitions.Name.SystemName] = new CompositeIdentifierMarshaller(Identifiers.Definitions.Name)
-            };
+            var registry = new IdentifierDefinitionRegistry(
+                Identifiers.Definitions.NhsNumber,
+                testIdentifierDefinition,
+                Identifiers.Definitions.Name
+            );
 
             IStoreProvider storeProvider = new ContextStoreProvider(context);
 
-            return new IdentityRepository(marshallers,storeProvider);
+            return new IdentityRepository(registry,storeProvider);
         }
 
         [Fact]
@@ -271,17 +269,16 @@ namespace CHC.Consent.EFCore.Tests
 
         private static string MarshallValue(IdentifierDefinition definition, string value)
         {
-            return definition.CreateMarshaller()
+            return definition.CreateXmlMarshaller()
                 .MarshallToXml(Identifiers.PersonIdentifier(value, definition))
                 .ToString(SaveOptions.DisableFormatting);
         }
 
-        public static IIdentifierMarshaller CreateMarshaller(this IdentifierDefinition definition)
+        public static IIdentifierXmlMarshaller CreateXmlMarshaller(this IdentifierDefinition definition)
         {
-            var creator = new IdentifierMarshallerCreator(new Dictionary<string, IIdentifierMarshaller>());
+            var creator = new IdentifierXmlMarshallerCreator();
             definition.Accept(creator);
-            var marshaller = creator.Marshallers.Values.Single();
-            return marshaller;
+            return creator.Marshallers.Values.Single();
         }
     }
 }

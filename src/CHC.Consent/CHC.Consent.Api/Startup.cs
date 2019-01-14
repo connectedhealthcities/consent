@@ -89,17 +89,6 @@ namespace CHC.Consent.Api
         private void AddDataServices(IServiceCollection services)
         {
             services.AddScoped<IIdentityRepository, IdentityRepository>();
-            services.AddScoped<IDictionary<string, IIdentifierMarshaller>>(
-                delegate(IServiceProvider s)
-                {
-                    s.GetService<ILoggerProvider>().CreateLogger("Activation")
-                        .LogDebug("Creating Marshallers Dictionary");
-                    var marshallers = new Dictionary<string, IIdentifierMarshaller>();
-                    s.GetService<IdentifierDefinitionRegistryProvider>()
-                        .GetRegistry()
-                        .Accept(new IdentifierMarshallerCreator(marshallers));
-                    return marshallers;
-                });
             services.AddScoped<IConsentRepository, ConsentRepository>();
             services.AddScoped<ISubjectIdentifierRepository, SubjectIdentifierRepository>();
 
@@ -111,7 +100,7 @@ namespace CHC.Consent.Api
 
         private void AddConsentSystemTypeRegistrations(IServiceCollection services)
         {
-            services.AddSingleton<IdentifierDefinitionRegistryProvider>(new IdentifierDefinitionRegistryProvider());
+            services.AddSingleton(new IdentifierDefinitionRegistryProvider());
             services.AddTransient(c =>
             {
                 c.GetService<ILoggerProvider>().CreateLogger("Activation")

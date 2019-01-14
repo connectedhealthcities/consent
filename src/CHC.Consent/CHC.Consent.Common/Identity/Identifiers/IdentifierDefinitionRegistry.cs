@@ -8,8 +8,7 @@ using CHC.Consent.Common.Infrastructure;
 namespace CHC.Consent.Common.Identity.Identifiers
 {
     public class IdentifierDefinitionRegistry : 
-        KeyedCollection<string, IdentifierDefinition>, 
-        IReadOnlyDictionary<string, IdentifierDefinition>
+        KeyedCollection<string, IdentifierDefinition> 
     {
         /// <inheritdoc />
         public IdentifierDefinitionRegistry()
@@ -44,18 +43,11 @@ namespace CHC.Consent.Common.Identity.Identifiers
         }
 
         /// <inheritdoc />
-        IEnumerator<KeyValuePair<string, IdentifierDefinition>>
-            IEnumerable<KeyValuePair<string, IdentifierDefinition>>.GetEnumerator() => Dictionary.GetEnumerator();
-
-        /// <inheritdoc />
         public bool ContainsKey(string key) => Dictionary.ContainsKey(key);
 
 
         /// <inheritdoc />
         public bool TryGetValue(string key, out IdentifierDefinition value) => Dictionary.TryGetValue(key, out value);
-
-        /// <inheritdoc />
-        public IEnumerable<string> Keys => Dictionary.Keys;
 
         /// <inheritdoc />
         public IEnumerable<IdentifierDefinition> Values => Dictionary.Values;
