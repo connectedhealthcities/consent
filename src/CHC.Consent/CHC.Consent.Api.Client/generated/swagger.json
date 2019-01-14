@@ -1,0 +1,880 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1",
+    "title": "Api"
+  },
+  "paths": {
+    "/consent": {
+      "put": {
+        "tags": [
+          "Consent"
+        ],
+        "operationId": "PutConsent",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json",
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "specification",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/ConsentSpecification"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          "303": {
+            "description": "Redirect",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/consent/{id}": {
+      "get": {
+        "tags": [
+          "Consent"
+        ],
+        "operationId": "Get",
+        "consumes": [
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/identities/{id}": {
+      "get": {
+        "tags": [
+          "Identity"
+        ],
+        "operationId": "GetPerson",
+        "consumes": [
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IIdentifierValueDto"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/identities/search": {
+      "post": {
+        "tags": [
+          "Identity"
+        ],
+        "operationId": "FindPerson",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json",
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [],
+        "parameters": [
+          {
+            "name": "match",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MatchSpecification"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/SearchResult"
+            }
+          }
+        }
+      }
+    },
+    "/identities": {
+      "put": {
+        "tags": [
+          "Identity"
+        ],
+        "operationId": "PutPerson",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json",
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "specification",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PersonSpecification"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/PersonCreatedResult"
+            }
+          },
+          "303": {
+            "description": "Redirect",
+            "schema": {
+              "$ref": "#/definitions/PersonCreatedResult"
+            }
+          }
+        }
+      }
+    },
+    "/identities/meta": {
+      "get": {
+        "tags": [
+          "Meta"
+        ],
+        "operationId": "Identity Store Metadata",
+        "consumes": [
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IdentifierDefinition"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/studies/{studyId}/subjects/byId/{stubjectId}": {
+      "get": {
+        "tags": [
+          "StudySubject"
+        ],
+        "operationId": "Get",
+        "consumes": [
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "studyId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "subjectIdentifier",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "stubjectId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/StudySubject"
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/studies/{studyId}/subjects": {
+      "get": {
+        "tags": [
+          "StudySubject"
+        ],
+        "operationId": "FindBySubjectId",
+        "consumes": [
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "studyId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/StudySubject"
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/subject-identifiers/{studyId}": {
+      "post": {
+        "tags": [
+          "SubjectIdentifier"
+        ],
+        "operationId": "Generate",
+        "consumes": [
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [],
+        "parameters": [
+          {
+            "name": "studyId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ConsentSpecification": {
+      "required": [
+        "studyId",
+        "subjectIdentifier",
+        "personId",
+        "dateGiven",
+        "evidence",
+        "givenBy"
+      ],
+      "type": "object",
+      "properties": {
+        "studyId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "subjectIdentifier": {
+          "type": "string"
+        },
+        "personId": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "dateGiven": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "evidence": {
+          "uniqueItems": false,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Evidence"
+          }
+        },
+        "caseId": {
+          "uniqueItems": false,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CaseIdentifier"
+          }
+        },
+        "givenBy": {
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "Evidence": {
+      "required": [
+        "$type"
+      ],
+      "type": "object",
+      "properties": {
+        "$type": {
+          "enum": [
+            "uk.nhs.bradfordhospitals.bib4all.evidence.medway",
+            "org.connectedhealthcities.import.file-source"
+          ],
+          "type": "string"
+        }
+      },
+      "discriminator": "$type"
+    },
+    "CaseIdentifier": {
+      "required": [
+        "$type"
+      ],
+      "type": "object",
+      "properties": {
+        "$type": {
+          "enum": [
+            "uk.nhs.bradfordhospitals.bib4all.consent.pregnancy-number"
+          ],
+          "type": "string"
+        }
+      },
+      "discriminator": "$type"
+    },
+    "IIdentifierValueDto": {
+      "required": [
+        "$type"
+      ],
+      "type": "object",
+      "properties": {
+        "$type": {
+          "enum": [
+            "IdentifierValueDto[String]",
+            "IdentifierValueDto[DateTime]",
+            "IdentifierValueDto[Int64]",
+            "IdentifierValueDto[IIdentifierValueDto[]]"
+          ],
+          "type": "string"
+        }
+      },
+      "discriminator": "$type"
+    },
+    "IdentifierValueDto[String]": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IIdentifierValueDto"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "IdentifierValueDto[String]",
+      "x-ms-discriminator-value": "IdentifierValueDto[String]"
+    },
+    "IdentifierValueDto[DateTime]": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IIdentifierValueDto"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "IdentifierValueDto[DateTime]",
+      "x-ms-discriminator-value": "IdentifierValueDto[DateTime]"
+    },
+    "IdentifierValueDto[Int64]": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IIdentifierValueDto"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "IdentifierValueDto[Int64]",
+      "x-ms-discriminator-value": "IdentifierValueDto[Int64]"
+    },
+    "IdentifierValueDto[IIdentifierValueDto[]]": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IIdentifierValueDto"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IIdentifierValueDto"
+              }
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "IdentifierValueDto[IIdentifierValueDto[]]",
+      "x-ms-discriminator-value": "IdentifierValueDto[IIdentifierValueDto[]]"
+    },
+    "MatchSpecification": {
+      "type": "object",
+      "properties": {
+        "identifiers": {
+          "uniqueItems": false,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IIdentifierValueDto"
+          }
+        }
+      }
+    },
+    "SearchResult": {
+      "required": [
+        "personId"
+      ],
+      "type": "object",
+      "properties": {
+        "personId": {
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "PersonSpecification": {
+      "type": "object",
+      "properties": {
+        "identifiers": {
+          "uniqueItems": false,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IIdentifierValueDto"
+          }
+        },
+        "matchSpecifications": {
+          "uniqueItems": false,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MatchSpecification"
+          }
+        }
+      }
+    },
+    "PersonCreatedResult": {
+      "required": [
+        "personId"
+      ],
+      "type": "object",
+      "properties": {
+        "personId": {
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "IdentifierDefinition": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "readOnly": true
+        },
+        "systemName": {
+          "type": "string",
+          "readOnly": true
+        },
+        "type": {
+          "$ref": "#/definitions/IIdentifierType",
+          "readOnly": true
+        }
+      }
+    },
+    "IIdentifierType": {
+      "required": [
+        "$type"
+      ],
+      "type": "object",
+      "properties": {
+        "systemName": {
+          "type": "string",
+          "readOnly": true
+        },
+        "$type": {
+          "enum": [
+            "CompositeIdentifierType",
+            "DateIdentifierType",
+            "EnumIdentifierType",
+            "IntegerIdentifierType",
+            "StringIdentifierType"
+          ],
+          "type": "string"
+        }
+      },
+      "discriminator": "$type"
+    },
+    "CompositeIdentifierType": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IIdentifierType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "identifiers": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/definitions/IdentifierDefinition"
+              },
+              "readOnly": true
+            },
+            "systemName": {
+              "type": "string",
+              "readOnly": true
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "CompositeIdentifierType",
+      "x-ms-discriminator-value": "CompositeIdentifierType"
+    },
+    "DateIdentifierType": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IIdentifierType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "systemName": {
+              "type": "string",
+              "readOnly": true
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "DateIdentifierType",
+      "x-ms-discriminator-value": "DateIdentifierType"
+    },
+    "EnumIdentifierType": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IIdentifierType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "values": {
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "readOnly": true
+            },
+            "systemName": {
+              "type": "string",
+              "readOnly": true
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "EnumIdentifierType",
+      "x-ms-discriminator-value": "EnumIdentifierType"
+    },
+    "IntegerIdentifierType": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IIdentifierType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "systemName": {
+              "type": "string",
+              "readOnly": true
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "IntegerIdentifierType",
+      "x-ms-discriminator-value": "IntegerIdentifierType"
+    },
+    "StringIdentifierType": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IIdentifierType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "systemName": {
+              "type": "string",
+              "readOnly": true
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "StringIdentifierType",
+      "x-ms-discriminator-value": "StringIdentifierType"
+    },
+    "StudySubject": {
+      "type": "object",
+      "properties": {
+        "subjectIdentifier": {
+          "type": "string",
+          "readOnly": true
+        },
+        "studyId": {
+          "$ref": "#/definitions/StudyIdentity",
+          "readOnly": true
+        },
+        "personId": {
+          "$ref": "#/definitions/PersonIdentity",
+          "readOnly": true
+        }
+      }
+    },
+    "StudyIdentity": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int64",
+          "type": "integer",
+          "readOnly": true
+        }
+      }
+    },
+    "PersonIdentity": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int64",
+          "type": "integer",
+          "readOnly": true
+        }
+      }
+    },
+    "ukNhsBradfordhospitalsBib4allEvidenceMedway": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/Evidence"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "competentStatus": {
+              "type": "string"
+            },
+            "consentGivenBy": {
+              "type": "string"
+            },
+            "consentTakenBy": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "MedwayEvidence",
+      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.evidence.medway"
+    },
+    "orgConnectedhealthcitiesImportFileSource": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/Evidence"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "baseUri": {
+              "type": "string"
+            },
+            "lineNumber": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "linePosition": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "ImportFileEvidence",
+      "x-ms-discriminator-value": "org.connectedhealthcities.import.file-source"
+    },
+    "ukNhsBradfordhospitalsBib4allConsentPregnancyNumber": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CaseIdentifier"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "PregnancyNumberIdentifier",
+      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.consent.pregnancy-number"
+    }
+  },
+  "securityDefinitions": {
+    "oauth2": {
+      "flow": "implicit",
+      "authorizationUrl": "http://localhost:5000/connect/authorize",
+      "scopes": {
+        "openid": "Open id (Required)",
+        "profile": "Profile",
+        "api": "Api"
+      },
+      "type": "oauth2"
+    }
+  },
+  "security": [
+    {
+      "oauth2": [
+        "api"
+      ]
+    }
+  ]
+}

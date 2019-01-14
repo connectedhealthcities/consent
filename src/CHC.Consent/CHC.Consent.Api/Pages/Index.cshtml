@@ -1,0 +1,20 @@
+﻿@page
+@model IndexModel
+
+Hello @User.Identity.Name
+
+@if (Model.Studies.Any())
+{
+    <ul>
+        @foreach(var study in Model.Studies)
+        {
+            <li>
+                <a asp-page="Studies" asp-route-id="@study.Id">@study.Name</a>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <div class="alert alert-info"><span class="glyphicon-info-sign"></span>You do not have access to any studies</div>
+}

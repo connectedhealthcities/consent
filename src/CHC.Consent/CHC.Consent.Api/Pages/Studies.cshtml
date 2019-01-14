@@ -1,0 +1,40 @@
+﻿@page "{id:long}"
+@model StudiesModel
+
+@section title {@Model.Study.Name}
+<h1>@Model.Study.Name</h1>
+<table class="table">
+    <thead>
+    <th>Subject Identifier</th>
+    @foreach (var identifierType in Model.IdentifierNames)
+    {
+    
+        <th>@Model.DisplayNames[identifierType]</th>
+
+    }
+    </thead>
+    <tbody>
+    @foreach (var (person, identifiers) in Model.People)
+    {
+        <tr>
+            <td><a asp-page="Subject"  asp-route-studyId="@person.StudyId.Id" asp-route-subjectIdentifier="@person.SubjectIdentifier">@person.SubjectIdentifier</a> </td>
+            @{
+                foreach (var identifierType in Model.IdentifierNames)
+                {
+                    <td>
+                        @{
+                            foreach (var identifier in identifiers[identifierType])
+                            {
+                                <span><vc:identifier identifier="identifier"/></span>
+                            }
+                        } 
+                    </td>
+                }
+            }
+        </tr>
+
+    }
+    </tbody>
+</table>
+
+<p class="small">Found @Model.People.Count people</p>

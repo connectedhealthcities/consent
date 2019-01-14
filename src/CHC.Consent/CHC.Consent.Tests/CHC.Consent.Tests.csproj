@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp2.1</TargetFrameworks>
+    <IsPackable>false</IsPackable>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="FakeItEasy" Version="4.9.1" />
+    <PackageReference Include="FluentAssertions" Version="5.5.3" />
+    <PackageReference Include="IdentityModel" Version="3.10.5" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="2.1.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CHC.Consent.Api\CHC.Consent.Api.csproj">
+      <Project>{DB92F0CE-E26C-42FF-90FF-40720930E233}</Project>
+      <Name>CHC.Consent.Api</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CHC.Consent.Common\CHC.Consent.Common.csproj">
+      <Project>{5CF2CE95-0242-4068-B31A-116171037E8B}</Project>
+      <Name>CHC.Consent.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CHC.Consent.DataImporter\CHC.Consent.DataImporter.csproj" />
+    <ProjectReference Include="..\CHC.Consent.Testing.Utils\CHC.Consent.Testing.Utils.csproj">
+      <Project>{7D1EFE71-9C0B-4F6A-8D17-DF15D18F5AA3}</Project>
+      <Name>CHC.Consent.Testing.Utils</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="**/*.json" Exclude="bin/**/*.json;obj/**/*.json" />
+  </ItemGroup>
+</Project>
