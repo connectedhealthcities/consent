@@ -15,7 +15,6 @@ namespace CHC.Consent.EFCore.Configuration
             builder.Property<long>("GivenByPersonId").IsRequired();
             builder.HasOne(_ => _.GivenBy).WithMany().HasForeignKey("GivenByPersonId").IsRequired().OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasMany(_ => _.CaseIdentifiers).WithOne(_ => _.Consent).HasForeignKey("ConsentId");
             builder.HasMany(_ => _.GivenEvidence).WithOne(_ => _.Consent).HasForeignKey("ConsentId").OnDelete(DeleteBehavior.Restrict);
             builder.HasMany(_ => _.WithdrawnEvidence).WithOne(_ => _.Consent).HasForeignKey("ConsentId").OnDelete(DeleteBehavior.Restrict);
             

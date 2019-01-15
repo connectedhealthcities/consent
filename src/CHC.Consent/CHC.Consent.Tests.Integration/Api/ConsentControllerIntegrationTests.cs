@@ -52,8 +52,6 @@ namespace CHC.Consent.Tests.Api.Controllers
                 new ConsentSpecification
                 {
                     StudyId = study.Id,
-                    CaseId = new CaseIdentifier[]
-                        {new UkNhsBradfordhospitalsBib4allConsentPregnancyNumber("1"),},
                     DateGiven = Random.Date().Date,
                     GivenBy = person.Id,
                     PersonId = person.Id,
@@ -78,8 +76,6 @@ namespace CHC.Consent.Tests.Api.Controllers
                 .Single(_ => _.Id == newConsentId);
             Assert.NotNull(consentEntity);
             Assert.Equal(1, consentContext.Set<GivenEvidenceEntity>().Count(_ => _.Consent.Id == newConsentId));
-            Assert.Equal(1, consentContext.Set<CaseIdentifierEntity>().Count(_ => _.Consent.Id == newConsentId));
-
         }
     }
 }

@@ -3,7 +3,6 @@ using System.Linq;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
-using CHC.Consent.Common.Consent.Identifiers;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
@@ -77,15 +76,11 @@ namespace CHC.Consent.EFCore.Tests
 
         private ConsentRepository CreateRepository(
             ConsentContext consentContext, 
-            Type[] caseIdentifierTypes=null, 
             Type[] evidentTypes=null)
         {
             var storeProvider = (IStoreProvider) new ContextStoreProvider(consentContext);
-            var caseIdentifierRegistry = new TypeRegistry<CaseIdentifier, CaseIdentifierAttribute>();
-            foreach (var caseIdentifierType in caseIdentifierTypes??new[] { typeof(PregnancyNumberIdentifier) })
-            {
-                 caseIdentifierRegistry.Add(caseIdentifierType);   
-            }
+            
+            
             var evidenceRegsitry = new TypeRegistry<Evidence, EvidenceAttribute>();
             foreach (var evidenceType in evidentTypes??new [] { typeof(MedwayEvidence) })
             {
@@ -97,9 +92,7 @@ namespace CHC.Consent.EFCore.Tests
                 storeProvider.Get<StudySubjectEntity>(),
                 storeProvider.Get<PersonEntity>(),
                 storeProvider.Get<ConsentEntity>(),
-                storeProvider.Get<CaseIdentifierEntity>(),
                 storeProvider.Get<EvidenceEntity>(),
-                caseIdentifierRegistry,
                 evidenceRegsitry
                 );
         }
@@ -154,7 +147,7 @@ namespace CHC.Consent.EFCore.Tests
 
             var consent = CreateRepository(updateContext)
                 .AddConsent(
-                    new Common.Consent.Consent(studySubject, dateGiven, personId, null, Enumerable.Empty<CaseIdentifier>())
+                    new Common.Consent.Consent(studySubject, dateGiven, personId, null)
                 );
             
             updateContext.SaveChanges();
@@ -172,48 +165,6 @@ namespace CHC.Consent.EFCore.Tests
             Assert.Null(consentEntity.DateWithdrawn);
         }
         
-        
-        [Fact]
-        public void StoresConsentCaseIdWhenAddingConsent()
-        {
-            var subjectIdentifier = Random.String();
-            var person = createContext.Add(new PersonEntity()).Entity;
-            var studySubjectEntity = createContext.Add(
-                new StudySubjectEntity
-                {
-                    Person = person,
-                    Study = createContext.Find<StudyEntity>(study.Id),
-                    SubjectIdentifier = subjectIdentifier
-                }).Entity;
-            createContext.SaveChanges();
-            
-            var personId = new PersonIdentity(person.Id);
-            var studySubject = new StudySubject(studyId, subjectIdentifier, personId);
-
-            var dateGiven = Random.Date().Date;
-
-
-            var pregnancyNumber = new PregnancyNumberIdentifier("6");
-            var consent = CreateRepository(updateContext)
-                .AddConsent(
-                    new Common.Consent.Consent(studySubject, dateGiven, personId, null, new [] { pregnancyNumber })
-                );
-            
-            updateContext.SaveChanges();
-
-
-            var caseIdentifier = readContext
-                .Set<CaseIdentifierEntity>()
-                .Include(_ => _.Consent)
-                .SingleOrDefault(_ => _.Consent.Id == consent.Id);
-                
-            Assert.NotNull(caseIdentifier);
-            Assert.Equal(PregnancyNumberIdentifier.TypeName, caseIdentifier.Type);
-            Assert.Equal(new XmlMarshaller<PregnancyNumberIdentifier>(PregnancyNumberIdentifier.TypeName).MarshalledValue(pregnancyNumber),
-                caseIdentifier.Value);
-            Assert.NotNull(caseIdentifier.Consent);
-            
-        }
         
         [Fact]
         public void StoresConsentGivenEvidenceWhenAddingConsent()
@@ -235,11 +186,10 @@ namespace CHC.Consent.EFCore.Tests
             var dateGiven = Random.Date().Date;
 
 
-            var pregnancyNumber = new PregnancyNumberIdentifier("6");
             var evidence = new MedwayEvidence { CompetentStatus = "alan", ConsentGivenBy = "phil", ConsentTakenBy = "dawn" };
             var consent = CreateRepository(updateContext)
                 .AddConsent(
-                    new Common.Consent.Consent(studySubject, dateGiven, personId, new [] { evidence }, new [] { pregnancyNumber })
+                    new Common.Consent.Consent(studySubject, dateGiven, personId, new [] { evidence })
                 );
             
             updateContext.SaveChanges();
@@ -307,8 +257,7 @@ namespace CHC.Consent.EFCore.Tests
                     new StudySubject(
                         studyId,
                         consentedStudySubject.SubjectIdentifier,
-                        consentedPersonId),
-                    Enumerable.Empty<CaseIdentifier>()).Id);
+                        consentedPersonId)).Id);
         }
 
         [Fact()]
@@ -316,53 +265,14 @@ namespace CHC.Consent.EFCore.Tests
         {
             Assert.Null(
                 repository.FindActiveConsent(
-                    new StudySubject(studyId, "Unconsented", unconsentedPersonId),
-                    Enumerable.Empty<CaseIdentifier>()));
+                    new StudySubject(studyId, "Unconsented", unconsentedPersonId)));
         }
 
         [Fact()]
         public void ReturnsNullConsentForAnUnknownStudySubject()
         {
             Assert.Null(repository.FindActiveConsent(
-                new StudySubject(studyId, "Unknown", new PersonIdentity(67)),
-                Enumerable.Empty<CaseIdentifier>()));
-        }
-
-        [Fact]
-        public void FindsConsentByCaseId()
-        {
-            var pregnancyNumber = new PregnancyNumberIdentifier("87");
-            
-            var marshaller = new XmlMarshaller(typeof(PregnancyNumberIdentifier), PregnancyNumberIdentifier.TypeName);
-            createContext.Set<CaseIdentifierEntity>().Add(
-                new CaseIdentifierEntity
-                {
-                    Consent = activeConsent,
-                    Type = marshaller.ValueType,
-                    Value = marshaller.MarshalledValue(pregnancyNumber)
-                });
-            createContext.SaveChanges();
-
-
-            Assert.NotNull(
-                repository.FindActiveConsent(
-                    new StudySubject(
-                        studyId,
-                        consentedStudySubject.SubjectIdentifier,
-                        consentedPersonId),
-                    new[] {pregnancyNumber}
-                ));
-
-            Assert.Null(
-                repository.FindActiveConsent(
-                    new StudySubject(
-                        studyId,
-                        consentedStudySubject.SubjectIdentifier,
-                        consentedPersonId),
-                    Enumerable.Empty<CaseIdentifier>()
-                )
-            );
-
+                new StudySubject(studyId, "Unknown", new PersonIdentity(67))));
         }
 
         private void AssertStudySubject(StudySubjectEntity expected, StudySubject actual)

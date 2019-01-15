@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
@@ -66,8 +65,7 @@ namespace CHC.Consent.Api.Features.Consent
             else
             {
                 var existingConsent = consentRepository.FindActiveConsent(
-                    studySubject,
-                    specification.CaseId ?? Array.Empty<CaseIdentifier>());
+                    studySubject);
                 if (existingConsent != null)
                 {
                     //TODO: Decide what to do with evidence, etc, for existing consents, or if you can be consented twice
@@ -81,8 +79,7 @@ namespace CHC.Consent.Api.Features.Consent
                     studySubject,
                     specification.DateGiven,
                     specification.GivenBy,
-                    specification.Evidence,
-                    specification.CaseId));
+                    specification.Evidence));
 
             return CreatedAtAction("Get", new {id = newConsentId.Id }, newConsentId.Id);
         }

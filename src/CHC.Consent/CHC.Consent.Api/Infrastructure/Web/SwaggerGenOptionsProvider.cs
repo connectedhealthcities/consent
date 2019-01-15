@@ -49,7 +49,6 @@ namespace CHC.Consent.Api.Infrastructure.Web
             gen.SchemaFilter<SwaggerSchemaSubtypeFilter<IIdentifierValueDto>>(
                 IdentifierValueDtos.KnownDtoTypes,
                 IdentifierValueDtos.KnownDtoTypes.Select(_ => _.FriendlyId()));
-            gen.SchemaFilter<SwaggerSchemaIdentityTypeProvider<CaseIdentifier, ITypeRegistry<CaseIdentifier>>>();
             gen.SchemaFilter<SwaggerSchemaIdentityTypeProvider<Evidence, ITypeRegistry<Evidence>>>();
             gen.CustomSchemaIds(type => GetSchemaId(type) ?? type.FriendlyId(fullyQualified:false));
         }
@@ -59,7 +58,6 @@ namespace CHC.Consent.Api.Infrastructure.Web
             return TryGet<Type, string>(
                 type,
                 /*Services.GetRequiredService<ITypeRegistry<IPersonIdentifier>>().TryGetName,*/
-                Services.GetRequiredService<ITypeRegistry<CaseIdentifier>>().TryGetName,
                 Services.GetRequiredService<ITypeRegistry<Evidence>>().TryGetName
             );
         }

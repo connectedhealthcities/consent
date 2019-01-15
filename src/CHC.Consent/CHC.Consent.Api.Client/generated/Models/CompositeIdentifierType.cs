@@ -22,7 +22,7 @@ namespace CHC.Consent.Api.Client.Models
         /// <summary>
         /// Initializes a new instance of the CompositeIdentifierType class.
         /// </summary>
-        public CompositeIdentifierType(string systemName = default(string), IDictionary<string, IdentifierDefinition> identifiers = default(IDictionary<string, IdentifierDefinition>))
+        public CompositeIdentifierType(string systemName = default(string), IList<IdentifierDefinition> identifiers = default(IList<IdentifierDefinition>))
             : base(systemName)
         {
             Identifiers = identifiers;
@@ -37,7 +37,7 @@ namespace CHC.Consent.Api.Client.Models
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "identifiers")]
-        public IDictionary<string, IdentifierDefinition> Identifiers { get; private set; }
+        public IList<IdentifierDefinition> Identifiers { get; private set; }
 
     }
 }

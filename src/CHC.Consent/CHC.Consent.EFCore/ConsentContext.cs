@@ -59,7 +59,6 @@ namespace CHC.Consent.EFCore
             modelBuilder.ApplyConfiguration(new StudyConfiguration());
             modelBuilder.ApplyConfiguration(new StudySubjectEntityConfiguration());
             modelBuilder.ApplyConfiguration(new ConsentEntityConfiguration());
-            modelBuilder.ApplyConfiguration(new CaseIdentifierEntityConfiguration());
             var evidenceEntityConfiguration = new EvidenceEntityConfiguration();
             modelBuilder.ApplyConfiguration<EvidenceEntity>(evidenceEntityConfiguration);
             modelBuilder.ApplyConfiguration<GivenEvidenceEntity>(evidenceEntityConfiguration);

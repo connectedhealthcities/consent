@@ -7,7 +7,6 @@ using System.Xml;
 using System.Xml.Linq;
 using CHC.Consent.Api.Client.Models;
 using CHC.Consent.Common.Consent.Evidences;
-using CHC.Consent.Common.Consent.Identifiers;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.DataImporter;
 using CHC.Consent.Testing.Utils;
@@ -63,7 +62,7 @@ namespace CHC.Consent.Tests.DataImporter
             {
                 case CHC.Consent.Common.Identity.Identifiers.CompositeIdentifierType composite:
                     return new CHC.Consent.Api.Client.Models.CompositeIdentifierType(composite.SystemName,
-                        composite.Identifiers.Values.ToDictionary(_ => _.SystemName, ConvertToClientType));
+                        composite.Identifiers.Select(ConvertToClientType).ToList());
                 case CHC.Consent.Common.Identity.Identifiers.DateIdentifierType date:
                     return new CHC.Consent.Api.Client.Models.DateIdentifierType(date.SystemName);
                 case CHC.Consent.Common.Identity.Identifiers.EnumIdentifierType @enum:
@@ -113,11 +112,7 @@ namespace CHC.Consent.Tests.DataImporter
         public void CanParseDateOfBirthIdentifier()
         {
             var parser = new IdentifierValueParser(
-                new Dictionary<string, ClientIdentifierDefinition>
-                {
-                    ["date-of-birth"] =
-                        ConvertToClientType(Identifiers.Definitions.DateOfBirth)
-                });
+                new [] {ConvertToClientType(Identifiers.Definitions.DateOfBirth)});
 
             var identifierValue = parser.Parse(IdentifierElement("date-of-birth", "2016-03-14"));
 
@@ -128,12 +123,11 @@ namespace CHC.Consent.Tests.DataImporter
         [Fact]
         public void CanParseNameIdentifier()
         {
-            var parser = new IdentifierValueParser(
-                new Dictionary<string, ClientIdentifierDefinition>
-                {
-                    ["name"] =
-                        ConvertToClientType(Identifiers.Definitions.Name)
-                });
+            var parser = new IdentifierValueParser(((IDictionary<string, ClientIdentifierDefinition>) new Dictionary<string, ClientIdentifierDefinition>
+            {
+                ["name"] =
+                    ConvertToClientType(Identifiers.Definitions.Name)
+            }).Values.ToList());
 
             var identifierValue = parser.Parse(
                 IdentifierElement("name",
@@ -148,12 +142,11 @@ namespace CHC.Consent.Tests.DataImporter
         [Fact]
         public void CanParsePartialAddress()
         {
-            var parser = new IdentifierValueParser(
-                new Dictionary<string, ClientIdentifierDefinition>
-                {
-                    ["address"] =
-                        ConvertToClientType(Identifiers.Definitions.Address)
-                });
+            var parser = new IdentifierValueParser(((IDictionary<string, ClientIdentifierDefinition>) new Dictionary<string, ClientIdentifierDefinition>
+            {
+                ["address"] =
+                    ConvertToClientType(Identifiers.Definitions.Address)
+            }).Values.ToList());
 
             var identifierValue = parser.Parse(
                 IdentifierElement(
@@ -252,7 +245,6 @@ namespace CHC.Consent.Tests.DataImporter
         private ImportedConsentSpecification ParseConsent(
             string xml,
             IEnumerable<InternalIdentifierDefinition> personIdentifierTypes = null,
-            Dictionary<string, Type> consentTypes = null,
             Dictionary<string, Type> evidenceTypes = null)
         {
 
@@ -261,7 +253,6 @@ namespace CHC.Consent.Tests.DataImporter
                     ConvertToClientType(personIdentifierTypes ?? Enumerable.Empty<InternalIdentifierDefinition>()))
                 .ParseConsent(
                     CreateXDocumentWithLineInfo(xml).Root,
-                    consentTypes ?? EmptyTypeMap,
                     evidenceTypes ?? EmptyTypeMap);
         }
 
@@ -276,7 +267,6 @@ namespace CHC.Consent.Tests.DataImporter
             Assert.Equal(42L, consentSpec.StudyId);
             Assert.Empty(consentSpec.GivenBy);
             Assert.Empty(consentSpec.Evidence);
-            Assert.Empty(consentSpec.CaseId);
         }
         
         [Fact]
@@ -294,28 +284,6 @@ namespace CHC.Consent.Tests.DataImporter
             Assert.Contains("'error'", exception.Message);
             Assert.NotEqual(0, exception.LineNumber);
         }
-        
-        [Fact]
-        public void ReportsErrorWithUnknownCaseIdentifier()
-        {
-            var exception = Assert.Throws<XmlParseException>(
-                () => ParseConsent(
-
-                    @"<consent date-given=""2017-03-12"" study-id=""42"" xmlns:err=""error"" >
-                        <case>
-                            <err:error>45</err:error>
-                        </case>
-                    </consent>",
-                    consentTypes: new Dictionary<string, Type>
-                    {
-                        ["bib4all.pregnancyId"] = typeof(UkNhsBradfordhospitalsBib4allConsentPregnancyNumber)
-                    }
-                ));
-            
-            Assert.Contains("error.error", exception.Message);
-            Assert.NotEqual(0, exception.LineNumber);
-        }
-        
         
         [Fact]
         public void ReportsErrorWithUnknownEvidence()
@@ -349,9 +317,6 @@ namespace CHC.Consent.Tests.DataImporter
                         <match><identifier type=""nhs-number"">8877881</identifier></match>
                         <match><identifier type=""bradford-hospital-number"">1122112</identifier></match>
                     </givenBy>
-                    <case>
-                        <b4acase:pregnancyNumber>3</b4acase:pregnancyNumber>
-                    </case>
                     <evidence>
                         <b4aevidence:medway>
                             <competentStatus>Delegated</competentStatus>
@@ -361,10 +326,7 @@ namespace CHC.Consent.Tests.DataImporter
                     </evidence>
                 </consent>",
                 personIdentifierTypes: Identifiers.Registry.Values,
-                consentTypes: new Dictionary<string, Type>
-                {
-                    [PregnancyNumberIdentifier.TypeName] = typeof(UkNhsBradfordhospitalsBib4allConsentPregnancyNumber)
-                },
+                
                 evidenceTypes: new Dictionary<string, Type>
                 {
                     [MedwayEvidence.TypeName] = typeof(UkNhsBradfordhospitalsBib4allEvidenceMedway)
@@ -377,11 +339,6 @@ namespace CHC.Consent.Tests.DataImporter
                 m => Assert.Collection(m.Identifiers, HospitalNumber("1122112"))
             );
             
-            Assert.Collection(
-                consent.CaseId,
-                id => Assert.Equal("3", Assert.IsType<UkNhsBradfordhospitalsBib4allConsentPregnancyNumber>(id).Value)
-                );
-
             Assert.Collection(
                 consent.Evidence,
                 e =>

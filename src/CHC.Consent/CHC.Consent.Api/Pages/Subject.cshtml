@@ -15,23 +15,6 @@
     {
         <tr>
             <td>@consent.DateGiven.ToLongDateString()</td>
-            <td>
-                @if (consent.CaseIdentifiers.Any())
-                {
-                    <ul class="list-unstyled">
-                        @foreach (var identifier in consent.CaseIdentifiers)
-                        {
-                            <li>
-                                <vc:case-identifier identifier="identifier"/>
-                            </li>
-                        }
-                    </ul>
-                }
-                else
-                {
-                    <text>N/A</text>
-                }
-            </td>
         </tr>
     }
     </tbody>

@@ -180,8 +180,7 @@ namespace CHC.Consent.DataImporter
                                     personId.PersonId, 
                                     consent.DateGiven,
                                     consent.Evidence,
-                                    givenBy.PersonId,
-                                    consent.CaseId));
+                                    givenBy.PersonId));
                         }
                     
                     }

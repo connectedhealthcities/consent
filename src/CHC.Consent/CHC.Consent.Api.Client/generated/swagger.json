@@ -407,13 +407,6 @@
             "$ref": "#/definitions/Evidence"
           }
         },
-        "caseId": {
-          "uniqueItems": false,
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/CaseIdentifier"
-          }
-        },
         "givenBy": {
           "format": "int64",
           "type": "integer"
@@ -430,21 +423,6 @@
           "enum": [
             "uk.nhs.bradfordhospitals.bib4all.evidence.medway",
             "org.connectedhealthcities.import.file-source"
-          ],
-          "type": "string"
-        }
-      },
-      "discriminator": "$type"
-    },
-    "CaseIdentifier": {
-      "required": [
-        "$type"
-      ],
-      "type": "object",
-      "properties": {
-        "$type": {
-          "enum": [
-            "uk.nhs.bradfordhospitals.bib4all.consent.pregnancy-number"
           ],
           "type": "string"
         }
@@ -659,8 +637,9 @@
           "type": "object",
           "properties": {
             "identifiers": {
-              "type": "object",
-              "additionalProperties": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
                 "$ref": "#/definitions/IdentifierDefinition"
               },
               "readOnly": true
@@ -839,23 +818,6 @@
       ],
       "x-ms-client-name": "ImportFileEvidence",
       "x-ms-discriminator-value": "org.connectedhealthcities.import.file-source"
-    },
-    "ukNhsBradfordhospitalsBib4allConsentPregnancyNumber": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/CaseIdentifier"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "value": {
-              "type": "string"
-            }
-          }
-        }
-      ],
-      "x-ms-client-name": "PregnancyNumberIdentifier",
-      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.consent.pregnancy-number"
     }
   },
   "securityDefinitions": {

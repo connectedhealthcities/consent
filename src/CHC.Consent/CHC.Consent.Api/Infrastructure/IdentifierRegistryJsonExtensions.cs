@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
 using Newtonsoft.Json;
@@ -11,7 +10,7 @@ namespace CHC.Consent.Api.Infrastructure
     public static class IdentifierRegistryJsonExtensions
     {
         
-        public static JsonSerializerSettings CreateSerializerSettings(this ITypeRegistry<CaseIdentifier> identifierRegistry)
+        public static JsonSerializerSettings CreateSerializerSettings(this ITypeRegistry identifierRegistry)
         {
             return new JsonSerializerSettings
             {

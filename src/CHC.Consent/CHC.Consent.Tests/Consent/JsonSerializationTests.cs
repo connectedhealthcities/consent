@@ -1,7 +1,6 @@
 ﻿using CHC.Consent.Api.Features.Consent;
 using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Common.Consent;
-using CHC.Consent.Common.Consent.Identifiers;
 using CHC.Consent.Common.Infrastructure;
 using Newtonsoft.Json;
 using Xunit;
@@ -12,15 +11,14 @@ namespace CHC.Consent.Tests.Consent
     public class JsonSerializationTests
     {
         private readonly ITestOutputHelper output;
-        private TypeRegistry<CaseIdentifier, CaseIdentifierAttribute> registry;
+        private TypeRegistry<Evidence, EvidenceAttribute> registry;
         private JsonSerializerSettings serializerSettings;
 
         /// <inheritdoc />
         public JsonSerializationTests(ITestOutputHelper output)
         {
             this.output = output;
-            registry = new TypeRegistry<CaseIdentifier, CaseIdentifierAttribute>();
-            registry.Add<PregnancyNumberIdentifier>();
+            registry = new EvidenceRegistry();
             serializerSettings = registry.CreateSerializerSettings();
         }
 
@@ -30,11 +28,7 @@ namespace CHC.Consent.Tests.Consent
             
             output.WriteLine(
                 JsonConvert.SerializeObject(
-                    new ConsentSpecification
-                    {
-                        CaseId = new CaseIdentifier[] {new PregnancyNumberIdentifier("testing, testing, 1..2..3")}
-
-                    },
+                    new ConsentSpecification(),
                     serializerSettings)
             );
         }
@@ -44,19 +38,13 @@ namespace CHC.Consent.Tests.Consent
         {
             var roundTripped = JsonConvert.DeserializeObject<ConsentSpecification>(
                 JsonConvert.SerializeObject(
-                    new ConsentSpecification
-                    {
-                        CaseId = new CaseIdentifier[] {new PregnancyNumberIdentifier("testing, testing, 1..2..3")}
-
-                    },
+                    new ConsentSpecification(),
                     serializerSettings),
                 serializerSettings
             );
             
             Assert.NotNull(roundTripped);
-            var identifier = Assert.Single(roundTripped.CaseId);
-            var prenancyNumber = Assert.IsType<PregnancyNumberIdentifier>(identifier);
-            Assert.Equal("testing, testing, 1..2..3", prenancyNumber.Value);
+            
         }
     }
 }

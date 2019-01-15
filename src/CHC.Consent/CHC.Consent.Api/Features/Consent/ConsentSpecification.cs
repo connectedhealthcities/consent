@@ -20,8 +20,6 @@ namespace CHC.Consent.Api.Features.Consent
         [Required]
         public Evidence[] Evidence { get; set; }
         
-        public CaseIdentifier[] CaseId { get; set; }
-        
         [Required]
         public long GivenBy { get; set; } 
     }

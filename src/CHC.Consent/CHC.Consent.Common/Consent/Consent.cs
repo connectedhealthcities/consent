@@ -21,16 +21,14 @@ namespace CHC.Consent.Common.Consent
         public DateTime DateGiven { get; }
 
         public IEnumerable<Evidence> GivenEvidence { get;  }
-        public IEnumerable<CaseIdentifier> CaseIdentifiers { get; }
-
+        
         /// <inheritdoc />
-        public Consent(StudySubject studySubject, DateTime dateGiven, long givenByPersonId, IEnumerable<Evidence> givenEvidence, IEnumerable<CaseIdentifier> identifiers)
+        public Consent(StudySubject studySubject, DateTime dateGiven, long givenByPersonId, IEnumerable<Evidence> givenEvidence)
         {
             StudySubject = studySubject;
             GivenByPersonId = givenByPersonId;
             DateGiven = dateGiven;
             GivenEvidence = givenEvidence == null ? Array.Empty<Evidence>() : givenEvidence.ToArray();
-            CaseIdentifiers = identifiers == null ? Array.Empty<CaseIdentifier>() : identifiers.ToArray();
         }
     }
 }

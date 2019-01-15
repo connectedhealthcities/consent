@@ -9,7 +9,6 @@ using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
-using CHC.Consent.Common.Consent.Identifiers;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore;
@@ -109,11 +108,6 @@ namespace CHC.Consent.Api
             });
             
             services.AddTransient<IPersonIdentifierDisplayHandlerProvider, PersonIdentifierHandlerProvider>();
-
-            var consentIdentifierRegistry = new TypeRegistry<CaseIdentifier, CaseIdentifierAttribute>();
-            consentIdentifierRegistry.Add<PregnancyNumberIdentifier>();
-            services.AddSingleton(consentIdentifierRegistry);
-            services.AddSingleton<ITypeRegistry<CaseIdentifier>>(consentIdentifierRegistry);
 
             var evidenceRegistry = new EvidenceRegistry();
             evidenceRegistry.Add<MedwayEvidence>();

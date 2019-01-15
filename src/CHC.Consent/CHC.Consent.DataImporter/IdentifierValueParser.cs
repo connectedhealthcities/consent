@@ -8,11 +8,10 @@ namespace CHC.Consent.DataImporter
 {
     public class IdentifierValueParser
     {
-        public IdentifierValueParser(
-            IDictionary<string, IdentifierDefinition> definitions)
+        public IdentifierValueParser(IList<IdentifierDefinition> definitions)
         {
-            Definitions = definitions;
-            Parsers = definitions.ToDictionary(x => x.Key, x => CreateValueParser(x.Value));
+            Definitions = definitions.ToDictionary(x => x.SystemName);
+            Parsers = definitions.ToDictionary(x => x.SystemName, CreateValueParser);
         }
 
         private delegate IIdentifierValueDto Parser(XElement element);
@@ -38,7 +37,7 @@ namespace CHC.Consent.DataImporter
             switch (definition.Type)
             {
                 case CompositeIdentifierType composite:
-                    var parsers = composite.Identifiers.ToDictionary(e => e.Key, e => CreateValueParser(e.Value));
+                    var parsers = composite.Identifiers.ToDictionary(e => e.SystemName, CreateValueParser);
                     var valueParser = new IdentifierValueParser(composite.Identifiers);
                     return x =>
                         new IdentifierValueDtoIIdentifierValueDto(

@@ -31,8 +31,7 @@ namespace CHC.Consent.DataImporter
             Log = logger;
         
                 
-            identifierValueParser = new IdentifierValueParser(
-                identifierDefinitions.ToDictionary(_ => _.SystemName, StringComparer.InvariantCultureIgnoreCase));
+            identifierValueParser = new IdentifierValueParser(identifierDefinitions);
         }
 
         public IEnumerable<ImportedPersonSpecification> GetPeople(StreamReader source)
@@ -44,10 +43,6 @@ namespace CHC.Consent.DataImporter
 
         public IEnumerable<ImportedPersonSpecification> GetPeople(XmlReader xmlReader)
         {
-            var caseIdentifierTypes = typeof(ConsentSpecification).Assembly.GetExportedTypes()
-                .Where(type => type.IsSubclassOf(typeof(CaseIdentifier)))
-                .ToDictionary(type => type.GetCustomAttribute<JsonObjectAttribute>().Id);
-
             var evidenceIdentityTypes = typeof(ConsentSpecification).Assembly.GetExportedTypes()
                 .Where(type => type.IsSubclassOf(typeof(Evidence)))
                 .ToDictionary(type => type.GetCustomAttribute<JsonObjectAttribute>().Id);
@@ -87,7 +82,7 @@ namespace CHC.Consent.DataImporter
                 };
 
                 var consentSpecifications = personNode.XPathSelectElements("/person/consent")
-                    .Select(_ => ParseConsent(_, caseIdentifierTypes, evidenceIdentityTypes))
+                    .Select(_ => ParseConsent(_, evidenceIdentityTypes))
                     .ToArray();
 
                 //TODO: Catch, record, log, and return details of exceptions 
@@ -102,19 +97,12 @@ namespace CHC.Consent.DataImporter
 
         public ImportedConsentSpecification ParseConsent(
             XElement consentNode,
-            Dictionary<string, Type> consentIdentifiers,
             Dictionary<string, Type> evidenceIdentifiers) 
         {
             var date = (DateTime)consentNode.Attribute("date-given");
             var studyId = (long)consentNode.Attribute("study-id");
 
             //TODO: better error recording and typey stuff here
-
-            var identifiers = consentNode.XPathSelectElements("case/*").Select(
-                    givenForIdentifierNode =>
-                        (CaseIdentifier) ParseObject(givenForIdentifierNode, consentIdentifiers))
-                .ToArray();
-
 
             var evidence = consentNode.XPathSelectElements("evidence/*")
                 .Select(evidenceNode => (Evidence) ParseObject(evidenceNode, evidenceIdentifiers))
@@ -131,7 +119,6 @@ namespace CHC.Consent.DataImporter
             return new ImportedConsentSpecification
             {
                 DateGiven = date,
-                CaseId = identifiers,
                 StudyId = studyId,
                 Evidence = evidence,
                 GivenBy = givenBy
@@ -142,8 +129,8 @@ namespace CHC.Consent.DataImporter
         {
             if(string.IsNullOrEmpty(node.BaseUri)) yield break;
             var evidence = new OrgConnectedhealthcitiesImportFileSource {BaseUri = node.BaseUri};
-            var xmlLineInfo = node as IXmlLineInfo;
-            if (xmlLineInfo?.HasLineInfo() ?? false)
+            var xmlLineInfo = (IXmlLineInfo)node;
+            if (xmlLineInfo.HasLineInfo())
             {
                 evidence.LineNumber = xmlLineInfo.LineNumber;
                 evidence.LinePosition = xmlLineInfo.LinePosition;
