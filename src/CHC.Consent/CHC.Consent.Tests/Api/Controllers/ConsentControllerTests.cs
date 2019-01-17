@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using CHC.Consent.Api.Features.Consent;
+using CHC.Consent.Api.Features.Identity.Dto;
+using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
@@ -49,7 +51,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             }
 
             protected void RecordConsent(
-                IEnumerable<Evidence> evidence,
+                IEnumerable<IIdentifierValueDto> evidence,
                 DateTime dateGiven,
                 long? givenByPersonId = null,
                 IConsentRepository consentRepository = null,
@@ -73,7 +75,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             }
 
             protected void RecordConsent(
-                Evidence evidence,
+                IIdentifierValueDto evidence,
                 DateTime dateGiven,
                 long? givenByPersonId = null,
                 IConsentRepository consentRepository = null,
@@ -92,7 +94,7 @@ namespace CHC.Consent.Tests.Api.Controllers
 
             private static ConsentController CreateConsentController(IConsentRepository consentRepository)
             {
-                return new ConsentController(consentRepository);
+                return new ConsentController(consentRepository, KnownEvidence.Registry);
             }
         }
 
@@ -103,7 +105,9 @@ namespace CHC.Consent.Tests.Api.Controllers
             {
                 A.CallTo(() => ConsentRepository.FindActiveConsent(StudySubject))
                     .Returns(null);
-                RecordConsent(new MedwayEvidence {ConsentTakenBy = "Peter Crowther"}, 2.January(1837));
+                RecordConsent(
+                    Evidences.ServerMedwayDto(takenBy:"Peter Crowther"),
+                    2.January(1837));
             }
 
             [Fact]
@@ -122,7 +126,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 Assert.Equal(StudySubject.PersonId, CreatedConsent.GivenByPersonId);
                 
                 Assert.Equal(2.January(1837), CreatedConsent.DateGiven);
-                Assert.Equal(new MedwayEvidence { ConsentTakenBy = "Peter Crowther"}, CreatedConsent.GivenEvidence.Single());
+                Assert.Equal(Evidences.MedwayEvidence(takenBy:"Peter Crowther"), CreatedConsent.GivenEvidence.Single());
             }
         }
 
@@ -135,7 +139,7 @@ namespace CHC.Consent.Tests.Api.Controllers
 
                 A.CallTo(() => ConsentRepository.GetStudy(nonExistentStudyId)).Returns(null);
                 
-                RecordConsent(A.Dummy<Evidence>(), A.Dummy<DateTime>(), studyId: nonExistentStudyId);
+                RecordConsent(A.Dummy<IIdentifierValueDto>(), A.Dummy<DateTime>(), studyId: nonExistentStudyId);
             }
 
             [Fact]
@@ -169,7 +173,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 A.CallTo(() => ConsentRepository.AddStudySubject(A<StudySubject>._))
                     .Invokes((StudySubject created) => createdStudySubject = created);
                 
-                RecordConsent(A.Dummy<Evidence>(), A.Dummy<DateTime>(), subjectIdentifier: newSubjectIdentifier, personId: newPersonId);
+                RecordConsent(Evidences.ServerMedwayDto(takenBy:"Michael Fish"), A.Dummy<DateTime>(), subjectIdentifier: newSubjectIdentifier, personId: newPersonId);
             }
 
             [Fact]
@@ -207,7 +211,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 A.CallTo(() => ConsentRepository.FindStudySubject(StudyId, newSubjectIdentifier)).Returns(null);
                 
                 
-                RecordConsent(A.Dummy<Evidence>(), A.Dummy<DateTime>(), subjectIdentifier: newSubjectIdentifier);
+                RecordConsent(A.Dummy<IIdentifierValueDto>(), A.Dummy<DateTime>(), subjectIdentifier: newSubjectIdentifier);
             }
 
             [Fact]
@@ -231,7 +235,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             {
                 
                 var dateGiven = 3.November(1472);
-                var givenEvidence = Enumerable.Empty<Evidence>().ToArray();
+                var givenEvidence = Array.Empty<IIdentifierValueDto>();
                 existingConsentId = new ConsentIdentity(43); 
                     
                 A.CallTo(() => ConsentRepository.FindActiveConsent(StudySubject))
@@ -270,7 +274,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                                 StudySubject))
                     .Returns(null);
                 
-                RecordConsent(givenEvidence, dateGiven);
+                RecordConsent(Array.Empty<IIdentifierValueDto>(), dateGiven);
             }
 
             [Fact]

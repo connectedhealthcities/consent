@@ -7,20 +7,20 @@ namespace CHC.Consent.Api.Client.Models
     using Newtonsoft.Json;
     using System.Linq;
 
-    public partial class IdentifierDefinition : IDefinition
+    public partial class EvidenceDefinition : IDefinition
     {
         /// <summary>
-        /// Initializes a new instance of the IdentifierDefinition class.
+        /// Initializes a new instance of the EvidenceDefinition class.
         /// </summary>
-        public IdentifierDefinition()
+        public EvidenceDefinition()
         {
             CustomInit();
         }
 
         /// <summary>
-        /// Initializes a new instance of the IdentifierDefinition class.
+        /// Initializes a new instance of the EvidenceDefinition class.
         /// </summary>
-        public IdentifierDefinition(string systemName = default(string), IIdentifierType type = default(IIdentifierType), string name = default(string))
+        public EvidenceDefinition(string systemName = default(string), IIdentifierType type = default(IIdentifierType), string name = default(string))
             : base(systemName, type)
         {
             Name = name;

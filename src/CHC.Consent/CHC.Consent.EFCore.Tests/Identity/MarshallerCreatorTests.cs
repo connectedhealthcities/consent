@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore.Identity;
 using Xunit;
 
@@ -21,7 +22,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
         {
             var identifierDefinition = new IdentifierDefinition("test", type);
 
-            var creator = new IdentifierXmlMarshallerCreator();
+            var creator = new IdentifierXmlMarshallerCreator<PersonIdentifier, IdentifierDefinition>();
             
             identifierDefinition.Accept(creator);
             
@@ -29,7 +30,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
             
             var marshaller = creator.Marshallers["test"];
 
-            var stringMarshaller = Assert.IsType<IdentifierXmlElementMarshaller>(marshaller);
+            var stringMarshaller = Assert.IsType<IdentifierXmlElementMarshaller<PersonIdentifier, IdentifierDefinition>>(marshaller);
             Assert.Equal(identifierDefinition, stringMarshaller.Definition);
         }
     }

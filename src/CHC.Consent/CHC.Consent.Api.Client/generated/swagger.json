@@ -246,6 +246,37 @@
         }
       }
     },
+    "/consent/meta": {
+      "get": {
+        "tags": [
+          "Meta"
+        ],
+        "operationId": "Consent Store Metadata",
+        "consumes": [
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/EvidenceDefinition"
+              }
+            }
+          }
+        }
+      }
+    },
     "/studies/{studyId}/subjects/byId/{stubjectId}": {
       "get": {
         "tags": [
@@ -404,7 +435,7 @@
           "uniqueItems": false,
           "type": "array",
           "items": {
-            "$ref": "#/definitions/Evidence"
+            "$ref": "#/definitions/IIdentifierValueDto"
           }
         },
         "givenBy": {
@@ -412,22 +443,6 @@
           "type": "integer"
         }
       }
-    },
-    "Evidence": {
-      "required": [
-        "$type"
-      ],
-      "type": "object",
-      "properties": {
-        "$type": {
-          "enum": [
-            "uk.nhs.bradfordhospitals.bib4all.evidence.medway",
-            "org.connectedhealthcities.import.file-source"
-          ],
-          "type": "string"
-        }
-      },
-      "discriminator": "$type"
     },
     "IIdentifierValueDto": {
       "required": [
@@ -589,12 +604,37 @@
       }
     },
     "IdentifierDefinition": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IDefinition"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "readOnly": true
+            },
+            "systemName": {
+              "type": "string",
+              "readOnly": true
+            },
+            "type": {
+              "$ref": "#/definitions/IIdentifierType",
+              "readOnly": true
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "IdentifierDefinition",
+      "x-ms-discriminator-value": "IdentifierDefinition"
+    },
+    "IDefinition": {
+      "required": [
+        "$type"
+      ],
       "type": "object",
       "properties": {
-        "name": {
-          "type": "string",
-          "readOnly": true
-        },
         "systemName": {
           "type": "string",
           "readOnly": true
@@ -602,8 +642,42 @@
         "type": {
           "$ref": "#/definitions/IIdentifierType",
           "readOnly": true
+        },
+        "$type": {
+          "enum": [
+            "IdentifierDefinition",
+            "EvidenceDefinition"
+          ],
+          "type": "string"
         }
-      }
+      },
+      "discriminator": "$type"
+    },
+    "EvidenceDefinition": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IDefinition"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "readOnly": true
+            },
+            "systemName": {
+              "type": "string",
+              "readOnly": true
+            },
+            "type": {
+              "$ref": "#/definitions/IIdentifierType",
+              "readOnly": true
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "EvidenceDefinition",
+      "x-ms-discriminator-value": "EvidenceDefinition"
     },
     "IIdentifierType": {
       "required": [
@@ -640,7 +714,7 @@
               "uniqueItems": false,
               "type": "array",
               "items": {
-                "$ref": "#/definitions/IdentifierDefinition"
+                "$ref": "#/definitions/IDefinition"
               },
               "readOnly": true
             },
@@ -770,54 +844,6 @@
           "readOnly": true
         }
       }
-    },
-    "ukNhsBradfordhospitalsBib4allEvidenceMedway": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/Evidence"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "competentStatus": {
-              "type": "string"
-            },
-            "consentGivenBy": {
-              "type": "string"
-            },
-            "consentTakenBy": {
-              "type": "string"
-            }
-          }
-        }
-      ],
-      "x-ms-client-name": "MedwayEvidence",
-      "x-ms-discriminator-value": "uk.nhs.bradfordhospitals.bib4all.evidence.medway"
-    },
-    "orgConnectedhealthcitiesImportFileSource": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/Evidence"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "baseUri": {
-              "type": "string"
-            },
-            "lineNumber": {
-              "format": "int64",
-              "type": "integer"
-            },
-            "linePosition": {
-              "format": "int64",
-              "type": "integer"
-            }
-          }
-        }
-      ],
-      "x-ms-client-name": "ImportFileEvidence",
-      "x-ms-discriminator-value": "org.connectedhealthcities.import.file-source"
     }
   },
   "securityDefinitions": {

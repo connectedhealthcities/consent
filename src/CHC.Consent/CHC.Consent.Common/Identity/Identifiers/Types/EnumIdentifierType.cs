@@ -14,11 +14,10 @@ namespace CHC.Consent.Common.Identity.Identifiers
             SystemName = $"enum({string.Join(",", Values)})";
         }
 
+
         /// <inheritdoc />
-        public void Accept(IIdentifierDefinitionVisitor visitor, IdentifierDefinition definition)
-        {
+        public void Accept(IDefinitionVisitor visitor, IDefinition definition) =>
             visitor.Visit(definition, this);
-        }
 
         /// <inheritdoc />
         public string SystemName { get; }

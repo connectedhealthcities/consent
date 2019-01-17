@@ -22,45 +22,27 @@ namespace CHC.Consent.Testing.Utils
             public static IdentifierDefinition Enum(string name, params string[] values) =>
                 new IdentifierDefinition(name, new EnumIdentifierType(values));
 
-            public static readonly IdentifierDefinition DateOfBirth = Date("Date of Birth");
+            public static IdentifierDefinition DateOfBirth => KnownIdentifierDefinitions.DateOfBirth;
 
-            public static IdentifierDefinition NhsNumber { get; } = String("NHS Number");
+            public static IdentifierDefinition NhsNumber => KnownIdentifierDefinitions.NhsNumber;
 
-            public static IdentifierDefinition HospitalNumber { get; } = String("Bradford Hospital Number");
+            public static IdentifierDefinition HospitalNumber => KnownIdentifierDefinitions.BradfordHospitalNumber;
 
-            public static readonly IdentifierDefinition AddressLine1 = String("Line 1");
+            public static IdentifierDefinition AddressLine1 => KnownIdentifierDefinitions.AddressParts.Line1;
+            public static IdentifierDefinition AddressLine2 => KnownIdentifierDefinitions.AddressParts.Line2;
+            public static IdentifierDefinition AddressLine3 => KnownIdentifierDefinitions.AddressParts.Line3;
+            public static IdentifierDefinition AddressLine4 => KnownIdentifierDefinitions.AddressParts.Line4;
+            public static IdentifierDefinition AddressLine5 => KnownIdentifierDefinitions.AddressParts.Line5;
 
-            public static readonly IdentifierDefinition AddressLine2 = String("Line 2");
+            public static readonly IdentifierDefinition AddressPostcode = KnownIdentifierDefinitions.AddressParts.Postcode;
 
-            public static readonly IdentifierDefinition AddressLine3 = String("Line 3");
+            public static IdentifierDefinition Address => KnownIdentifierDefinitions.Address;
 
-            public static readonly IdentifierDefinition AddressLine4 = String("Line 4");
+            public static IdentifierDefinition Name => KnownIdentifierDefinitions.Name;
+            public static IdentifierDefinition Sex => KnownIdentifierDefinitions.Sex;
 
-            public static readonly IdentifierDefinition AddressLine5 = String("Line 5");
-
-            public static readonly IdentifierDefinition AddressPostcode = String("Postcode");
-
-            public static IdentifierDefinition Address { get; }
-
-            public static IdentifierDefinition Name { get; }
-            public static readonly IdentifierDefinition Sex = Enum("Sex", "Male", "Female");
-
-            public static readonly IdentifierDefinition FirstName = String("Given");
-            public static readonly IdentifierDefinition LastName = String("Family");
-
-            static Definitions()
-            {
-                Address = Composite(
-                    "Address",
-                    AddressLine1,
-                    AddressLine2,
-                    AddressLine3,
-                    AddressLine4,
-                    AddressLine5,
-                    AddressPostcode
-                );
-                Name = Composite("Name", FirstName, LastName);
-            }
+            public static IdentifierDefinition FirstName => KnownIdentifierDefinitions.NameParts.GivenName;
+            public static IdentifierDefinition LastName => KnownIdentifierDefinitions.NameParts.FamilyName;
         }
 
         public static PersonIdentifier PersonIdentifier<T>(T value, IdentifierDefinition definition) =>
@@ -69,7 +51,7 @@ namespace CHC.Consent.Testing.Utils
         private static PersonIdentifier CompositeIdentifier(
             IdentifierDefinition definition, params PersonIdentifier[] identifiers) =>
             new PersonIdentifier(
-                new CompositeIdentifierValue(
+                new CompositeIdentifierValue<PersonIdentifier>(
                     identifiers.Where(_ => _.Value.Value != null).ToArray()),
                 definition
             );
@@ -108,9 +90,6 @@ namespace CHC.Consent.Testing.Utils
                 Definitions.DateOfBirth,
                 Definitions.Address,
                 Definitions.Name);
-
-        public static IdentifierDefinitionRegistryProvider Provider { get; }
-            = new IdentifierDefinitionRegistryProvider(Registry);
 
         public static PersonIdentifier Name(string given, string family) =>
             CompositeIdentifier(

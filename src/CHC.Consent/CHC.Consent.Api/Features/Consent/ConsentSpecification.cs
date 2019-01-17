@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using CHC.Consent.Api.Features.Identity.Dto;
+using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Identity;
 
@@ -18,7 +20,7 @@ namespace CHC.Consent.Api.Features.Consent
         public DateTime DateGiven { get; set; }
         
         [Required]
-        public Evidence[] Evidence { get; set; }
+        public IIdentifierValueDto[] Evidence { get; set; }
         
         [Required]
         public long GivenBy { get; set; } 

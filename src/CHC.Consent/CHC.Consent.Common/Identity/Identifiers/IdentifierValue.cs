@@ -9,12 +9,12 @@ namespace CHC.Consent.Common.Identity.Identifiers
         object Value { get; }
     }
 
-    public class CompositeIdentifierValue : IIdentifierValue
+    public class CompositeIdentifierValue<TIdentifier> : IIdentifierValue
     {
-        public PersonIdentifier[] Identifiers { get; }
+        public TIdentifier[] Identifiers { get; }
 
         /// <inheritdoc />
-        public CompositeIdentifierValue(PersonIdentifier[] identifiers)
+        public CompositeIdentifierValue(TIdentifier[] identifiers)
         {
             Identifiers = identifiers;
         }
@@ -24,7 +24,7 @@ namespace CHC.Consent.Common.Identity.Identifiers
 
 
         /// <inheritdoc />
-        public bool Equals(CompositeIdentifierValue other)
+        public bool Equals(CompositeIdentifierValue<TIdentifier> other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -37,7 +37,7 @@ namespace CHC.Consent.Common.Identity.Identifiers
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((CompositeIdentifierValue) obj);
+            return Equals((CompositeIdentifierValue<TIdentifier>) obj);
         }
 
         /// <inheritdoc />
@@ -46,12 +46,12 @@ namespace CHC.Consent.Common.Identity.Identifiers
             return (Identifiers != null ? Identifiers.GetHashCode() : 0);
         }
 
-        public static bool operator ==(CompositeIdentifierValue left, CompositeIdentifierValue right)
+        public static bool operator ==(CompositeIdentifierValue<TIdentifier> left, CompositeIdentifierValue<TIdentifier> right)
         {
             return Equals(left, right);
         }
 
-        public static bool operator !=(CompositeIdentifierValue left, CompositeIdentifierValue right)
+        public static bool operator !=(CompositeIdentifierValue<TIdentifier> left, CompositeIdentifierValue<TIdentifier> right)
         {
             return !Equals(left, right);
         }

@@ -58,7 +58,7 @@ namespace CHC.Consent.EFCore.Tests
 
         private static string MarshallValue(IdentifierDefinition identifierDefinition, string value)
         {
-            return new IdentifierXmlElementMarshaller(identifierDefinition)
+            return new IdentifierXmlElementMarshaller<PersonIdentifier, IdentifierDefinition>(identifierDefinition)
                 .MarshallToXml(Identifiers.PersonIdentifier(value, identifierDefinition))
                 .ToString(SaveOptions.DisableFormatting);
         }
@@ -274,9 +274,9 @@ namespace CHC.Consent.EFCore.Tests
                 .ToString(SaveOptions.DisableFormatting);
         }
 
-        public static IIdentifierXmlMarshaller CreateXmlMarshaller(this IdentifierDefinition definition)
+        public static IIdentifierXmlMarhsaller<PersonIdentifier, IdentifierDefinition> CreateXmlMarshaller(this IdentifierDefinition definition)
         {
-            var creator = new IdentifierXmlMarshallerCreator();
+            var creator = new IdentifierXmlMarshallerCreator<PersonIdentifier, IdentifierDefinition>();
             definition.Accept(creator);
             return creator.Marshallers.Values.Single();
         }

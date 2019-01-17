@@ -22,16 +22,61 @@ namespace CHC.Consent.DataImporter
     /// </summary>
     public class XmlParser
     {
+        private class ImportFileEvidenceGenerator
+        {
+            private EvidenceDefinition definition;
+
+            /// <inheritdoc />
+            public ImportFileEvidenceGenerator(IEnumerable<EvidenceDefinition> evidenceDefinitions)
+            {
+                definition = evidenceDefinitions.FirstOrDefault(_ => _.SystemName == "import-file");
+            }
+
+            public IEnumerable<IIdentifierValueDto> GenerateFrom(XElement element)
+            {
+                var lineInfo = (IXmlLineInfo) element;
+
+
+                if(definition == null) yield break;
+                if(!(definition.Type is CompositeIdentifierType compositeIdentifierType)) yield break;
+
+                var innerDefinitions = compositeIdentifierType?.Identifiers;
+
+                var baseUri = innerDefinitions.FirstOrDefault(_ => _.SystemName == "base-uri");
+                var lineNumber = innerDefinitions.FirstOrDefault(_ => _.SystemName == "line-number");
+                var linePosition = innerDefinitions.FirstOrDefault(_ => _.SystemName == "line-position");
+                
+                var innerValues = new List<IIdentifierValueDto>();
+                if (baseUri != null && !string.IsNullOrWhiteSpace(element.BaseUri))
+                    innerValues.Add(new IdentifierValueDtoString("base-uri", element.BaseUri));
+                
+                if (lineInfo.HasLineInfo())
+                {
+                    if(lineNumber != null) innerValues.Add(new IdentifierValueDtoInt64(lineNumber.SystemName, lineInfo.LineNumber));
+                    if(linePosition != null) innerValues.Add(new IdentifierValueDtoInt64(linePosition.SystemName, lineInfo.LinePosition));
+                }
+                
+                yield return new IdentifierValueDtoIIdentifierValueDto(definition.SystemName, innerValues);
+
+            }
+        }
+        
         private ILogger Log { get; } = NullLogger.Instance;
         
         private readonly IdentifierValueParser identifierValueParser;
+        private readonly IdentifierValueParser evidenceValueParser;
+        private ImportFileEvidenceGenerator importFileEvidenceGenerator;
 
-        public XmlParser(ILogger<XmlParser> logger, IList<IdentifierDefinition> identifierDefinitions)
+        public XmlParser(
+            ILogger<XmlParser> logger, 
+            IList<IdentifierDefinition> identifierDefinitions,
+            IList<EvidenceDefinition> evidenceDefinitions)
         {
             Log = logger;
-        
-                
-            identifierValueParser = new IdentifierValueParser(identifierDefinitions);
+
+            importFileEvidenceGenerator = new ImportFileEvidenceGenerator(evidenceDefinitions);
+            evidenceValueParser = IdentifierValueParser.CreateFrom(evidenceDefinitions);
+            identifierValueParser = IdentifierValueParser.CreateFrom(identifierDefinitions);
         }
 
         public IEnumerable<ImportedPersonSpecification> GetPeople(StreamReader source)
@@ -43,10 +88,6 @@ namespace CHC.Consent.DataImporter
 
         public IEnumerable<ImportedPersonSpecification> GetPeople(XmlReader xmlReader)
         {
-            var evidenceIdentityTypes = typeof(ConsentSpecification).Assembly.GetExportedTypes()
-                .Where(type => type.IsSubclassOf(typeof(Evidence)))
-                .ToDictionary(type => type.GetCustomAttribute<JsonObjectAttribute>().Id);
-
             xmlReader = XmlReader.Create(
                 xmlReader,
                 new XmlReaderSettings {IgnoreWhitespace = true, IgnoreComments = true});
@@ -82,7 +123,7 @@ namespace CHC.Consent.DataImporter
                 };
 
                 var consentSpecifications = personNode.XPathSelectElements("/person/consent")
-                    .Select(_ => ParseConsent(_, evidenceIdentityTypes))
+                    .Select(_ => ParseConsent(_))
                     .ToArray();
 
                 //TODO: Catch, record, log, and return details of exceptions 
@@ -96,17 +137,17 @@ namespace CHC.Consent.DataImporter
         }
 
         public ImportedConsentSpecification ParseConsent(
-            XElement consentNode,
-            Dictionary<string, Type> evidenceIdentifiers) 
+            XElement consentNode) 
         {
             var date = (DateTime)consentNode.Attribute("date-given");
             var studyId = (long)consentNode.Attribute("study-id");
 
             //TODO: better error recording and typey stuff here
 
-            var evidence = consentNode.XPathSelectElements("evidence/*")
-                .Select(evidenceNode => (Evidence) ParseObject(evidenceNode, evidenceIdentifiers))
+            var evidence = consentNode.XPathSelectElements("evidence/evidence")
+                .Select(evidenceValueParser.Parse)
                 .ToArray();
+            
             if (evidence.Any())
             {
                 evidence = evidence.Concat(GetImportSourceEvidence(consentNode)).ToArray();
@@ -125,18 +166,10 @@ namespace CHC.Consent.DataImporter
             };
         }
 
-        private static IEnumerable<Evidence> GetImportSourceEvidence(XObject node)
+        private IEnumerable<IIdentifierValueDto> GetImportSourceEvidence(XElement node)
         {
-            if(string.IsNullOrEmpty(node.BaseUri)) yield break;
-            var evidence = new OrgConnectedhealthcitiesImportFileSource {BaseUri = node.BaseUri};
-            var xmlLineInfo = (IXmlLineInfo)node;
-            if (xmlLineInfo.HasLineInfo())
-            {
-                evidence.LineNumber = xmlLineInfo.LineNumber;
-                evidence.LinePosition = xmlLineInfo.LinePosition;
-            }
+            return importFileEvidenceGenerator.GenerateFrom(node);
 
-            yield return evidence;
         }
 
         private MatchSpecification ParseMatchSpecification(XContainer node)
@@ -303,7 +336,6 @@ namespace CHC.Consent.DataImporter
             @"(\p{Ll})(\p{Lu})",
             RegexOptions.Compiled);
 
-        
 
         private static string KebabCase(string name)
         {

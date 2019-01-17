@@ -18,6 +18,12 @@ using InternalIdentifierType = CHC.Consent.Common.Identity.Identifiers.IIdentifi
 using ClientIdentifierDefinition = CHC.Consent.Api.Client.Models.IdentifierDefinition;
 using ClientIdentifierType = CHC.Consent.Api.Client.Models.IIdentifierType;
 
+using InternalEvidenceDefinition = CHC.Consent.Common.Consent.Evidences.EvidenceDefinition;
+using ClientEvidenceDefinition = CHC.Consent.Api.Client.Models.EvidenceDefinition;
+
+using IInternalDefinition = CHC.Consent.Common.Identity.Identifiers.IDefinition;
+using IClientDefinition = CHC.Consent.Api.Client.Models.IDefinition;
+
 namespace CHC.Consent.Tests.DataImporter
 {
     public class XmlParserTests
@@ -37,32 +43,50 @@ namespace CHC.Consent.Tests.DataImporter
         {
             var xDocument = CreateXDocumentWithLineInfo(fullXml);
             
-            var identifier = new XmlParser(Logger, ConvertToClientType(definitions)).ParseIdentifier(xDocument.Root);
+            var identifier = new XmlParser(Logger, ConvertToClientDefinition(definitions), Array.Empty<ClientEvidenceDefinition>()).ParseIdentifier(xDocument.Root);
 
             Assert.NotNull(identifier);
             return identifier;
         }
 
-        private List<ClientIdentifierDefinition> ConvertToClientType(IEnumerable<InternalIdentifierDefinition> definitions)
+        private IList<ClientIdentifierDefinition> ConvertToClientDefinition(IdentifierDefinitionRegistry registry) =>
+            registry.Cast<InternalIdentifierDefinition>().Select(ConvertToClientDefinition).ToList();
+
+        private List<ClientIdentifierDefinition> ConvertToClientDefinition(IEnumerable<InternalIdentifierDefinition> definitions)
         {
-            return definitions.Select(ConvertToClientType).ToList();
+            return definitions.Select(ConvertToClientDefinition).ToList();
         }
 
-        private ClientIdentifierDefinition ConvertToClientType(InternalIdentifierDefinition definition)
+        private ClientIdentifierDefinition ConvertToClientDefinition(InternalIdentifierDefinition definition)
         {
             return new ClientIdentifierDefinition(
-                definition.Name,
                 definition.SystemName,
-                ConvertToClientType(definition.Type));
+                ConvertToClientType<InternalIdentifierDefinition>(definition.Type, ConvertToClientDefinition),
+                definition.Name
+            );
         }
 
-        private ClientIdentifierType ConvertToClientType(InternalIdentifierType internalType)
+        private IList<ClientEvidenceDefinition> ConvertToClientDefinition(EvidenceDefinitionRegistry registry) =>
+            registry.Cast<InternalEvidenceDefinition>().Select(ConvertToClientDefinition).ToList();
+
+        private ClientEvidenceDefinition ConvertToClientDefinition(InternalEvidenceDefinition definition)
+        {
+            return new ClientEvidenceDefinition(
+                definition.SystemName,
+                ConvertToClientType<InternalEvidenceDefinition>(definition.Type, ConvertToClientDefinition),
+                definition.Name
+            );
+        }
+
+        private ClientIdentifierType ConvertToClientType<TInternal>(
+            InternalIdentifierType internalType, 
+            Func<TInternal, IClientDefinition> convertToClientDefinition) where TInternal:IInternalDefinition
         {
             switch (internalType)
             {
                 case CHC.Consent.Common.Identity.Identifiers.CompositeIdentifierType composite:
                     return new CHC.Consent.Api.Client.Models.CompositeIdentifierType(composite.SystemName,
-                        composite.Identifiers.Select(ConvertToClientType).ToList());
+                        composite.Identifiers.Cast<TInternal>().Select(convertToClientDefinition).Cast<IClientDefinition>().ToList());
                 case CHC.Consent.Common.Identity.Identifiers.DateIdentifierType date:
                     return new CHC.Consent.Api.Client.Models.DateIdentifierType(date.SystemName);
                 case CHC.Consent.Common.Identity.Identifiers.EnumIdentifierType @enum:
@@ -90,10 +114,8 @@ namespace CHC.Consent.Tests.DataImporter
         [Fact]
         public void CanParseSexIdentifier()
         {
-            var xml = @"<identifier type=""sex"">Male</identifier>";
-            
             var sexIdentifier = ParseIdentifierString(
-                xml,
+                @"<identifier type=""sex"">Male</identifier>",
                 Identifiers.Definitions.Sex
                 );
 
@@ -108,11 +130,15 @@ namespace CHC.Consent.Tests.DataImporter
             return new XElement("identifier", new XAttribute("type", type), value);
         }
 
+        private IdentifierValueParser CreateParser(
+            params InternalIdentifierDefinition[] definitions)
+            => IdentifierValueParser.CreateFrom(ConvertToClientDefinition(definitions));
+        
+        
         [Fact]
         public void CanParseDateOfBirthIdentifier()
         {
-            var parser = new IdentifierValueParser(
-                new [] {ConvertToClientType(Identifiers.Definitions.DateOfBirth)});
+            var parser = CreateParser(Identifiers.Definitions.DateOfBirth);
 
             var identifierValue = parser.Parse(IdentifierElement("date-of-birth", "2016-03-14"));
 
@@ -123,11 +149,7 @@ namespace CHC.Consent.Tests.DataImporter
         [Fact]
         public void CanParseNameIdentifier()
         {
-            var parser = new IdentifierValueParser(((IDictionary<string, ClientIdentifierDefinition>) new Dictionary<string, ClientIdentifierDefinition>
-            {
-                ["name"] =
-                    ConvertToClientType(Identifiers.Definitions.Name)
-            }).Values.ToList());
+            var parser = CreateParser(Identifiers.Definitions.Name);
 
             var identifierValue = parser.Parse(
                 IdentifierElement("name",
@@ -142,11 +164,7 @@ namespace CHC.Consent.Tests.DataImporter
         [Fact]
         public void CanParsePartialAddress()
         {
-            var parser = new IdentifierValueParser(((IDictionary<string, ClientIdentifierDefinition>) new Dictionary<string, ClientIdentifierDefinition>
-            {
-                ["address"] =
-                    ConvertToClientType(Identifiers.Definitions.Address)
-            }).Values.ToList());
+            var parser = CreateParser(Identifiers.Definitions.Address);
 
             var identifierValue = parser.Parse(
                 IdentifierElement(
@@ -174,7 +192,7 @@ namespace CHC.Consent.Tests.DataImporter
         public void CanParseWholePerson()
         {
             const string personXml = @"<?xml version=""1.0""?>
-<people xmlns:b4acase=""uk.nhs.bradfordhospitals.bib4all.consent"" xmlns:b4aevidence=""uk.nhs.bradfordhospitals.bib4all.evidence"">
+<people>
     <person>
         <identity>
             <identifier type=""nhs-number"">4099999999</identifier>
@@ -198,15 +216,10 @@ namespace CHC.Consent.Tests.DataImporter
 				<match><identifier type=""nhs-number"">4099999999</identifier></match>
 				<match><identifier type=""bradford-hospital-number"">RAE9999999</identifier></match>
 			</given-by>
-            <case>
-                <b4acase:pregnancyNumber>2</b4acase:pregnancyNumber>
-            </case>
             <evidence>
-                <b4aevidence:medway>
-                    <competentStatus></competentStatus>
-                    <consentGivenBy></consentGivenBy>
-                    <consentTakenBy>Betsey Trotwood</consentTakenBy>
-                </b4aevidence:medway>
+                <evidence type=""medway"">
+                    <evidence type=""consent-taken-by"">Betsey Trotwood</evidence>
+                </evidence>
             </evidence>
         </consent>
     </person>
@@ -214,7 +227,12 @@ namespace CHC.Consent.Tests.DataImporter
 
             
             var xmlReader = CreateXmlReader(personXml);
-            var specification = new XmlParser(Logger, ConvertToClientType(Identifiers.Registry.Values)).GetPeople(xmlReader).Single();
+            var specification = new XmlParser(
+                Logger, 
+                ConvertToClientDefinition(Identifiers.Registry),
+                ConvertToClientDefinition(KnownEvidence.Registry))
+                .GetPeople(xmlReader)
+                .Single();
             var person = specification.PersonSpecification;
 
             Action<IIdentifierValueDto> Address(
@@ -244,17 +262,20 @@ namespace CHC.Consent.Tests.DataImporter
 
         private ImportedConsentSpecification ParseConsent(
             string xml,
-            IEnumerable<InternalIdentifierDefinition> personIdentifierTypes = null,
-            Dictionary<string, Type> evidenceTypes = null)
+            IdentifierDefinitionRegistry personIdentifierTypes = null,
+            EvidenceDefinitionRegistry evidenceDefinitions=null)
         {
 
             return new XmlParser(
                     Logger,
-                    ConvertToClientType(personIdentifierTypes ?? Enumerable.Empty<InternalIdentifierDefinition>()))
+                    ConvertToClientDefinition(personIdentifierTypes ?? new IdentifierDefinitionRegistry()),
+                    ConvertToClientDefinition(evidenceDefinitions ?? new EvidenceDefinitionRegistry())
+                    )
                 .ParseConsent(
-                    CreateXDocumentWithLineInfo(xml).Root,
-                    evidenceTypes ?? EmptyTypeMap);
+                    CreateXDocumentWithLineInfo(xml).Root);
         }
+
+        
 
 
         [Fact]
@@ -293,44 +314,35 @@ namespace CHC.Consent.Tests.DataImporter
                     
                         @"<consent date-given=""2017-03-12"" study-id=""42"" xmlns:err=""error"" >
     <evidence>
-        <err:error>45</err:error>
+        <evidence type=""error"">this is an error</evidence>
     </evidence>
 </consent>",
-                    evidenceTypes: new Dictionary<string, Type>
-                    {
-                        ["test"]= typeof(UkNhsBradfordhospitalsBib4allEvidenceMedway) 
-                    }
+                    evidenceDefinitions: KnownEvidence.Registry 
                     ));
             
-            Assert.Contains("error.error", exception.Message);
+            Assert.Contains("'error'", exception.Message);
             Assert.NotEqual(0, exception.LineNumber);
         }
 
-        [Fact]
+        [Fact()]
         public void CorrectlyParsesFullConsent()
         {
-
-
             var consent = ParseConsent(
-                @"<consent date-given=""2017-03-12"" study-id=""42"" xmlns:nhs=""uk.nhs"" xmlns:bfd=""uk.nhs.bradfordhospitals"" xmlns:b4acase=""uk.nhs.bradfordhospitals.bib4all.consent"" xmlns:b4aevidence=""uk.nhs.bradfordhospitals.bib4all.evidence"">
+                @"<consent date-given=""2017-03-12"" study-id=""42"">
                     <givenBy>
                         <match><identifier type=""nhs-number"">8877881</identifier></match>
                         <match><identifier type=""bradford-hospital-number"">1122112</identifier></match>
                     </givenBy>
                     <evidence>
-                        <b4aevidence:medway>
-                            <competentStatus>Delegated</competentStatus>
-                            <consentGivenBy>Mother</consentGivenBy>
-                            <consentTakenBy>Betsey Trotwood</consentTakenBy>
-                        </b4aevidence:medway>
+                        <evidence type=""medway"">
+                            <evidence type=""competent-status"">Delegated</evidence>
+                            <evidence type=""consent-given-by"">Mother</evidence>
+                            <evidence type=""consent-taken-by"">Betsey Trotwood</evidence>
+                        </evidence>
                     </evidence>
                 </consent>",
-                personIdentifierTypes: Identifiers.Registry.Values,
-                
-                evidenceTypes: new Dictionary<string, Type>
-                {
-                    [MedwayEvidence.TypeName] = typeof(UkNhsBradfordhospitalsBib4allEvidenceMedway)
-                }
+                personIdentifierTypes: Identifiers.Registry,
+                KnownEvidence.Registry
             );
 
             Assert.Collection(
@@ -343,17 +355,21 @@ namespace CHC.Consent.Tests.DataImporter
                 consent.Evidence,
                 e =>
                 {
-                    var medway = Assert.IsType<UkNhsBradfordhospitalsBib4allEvidenceMedway>(e);
-                    Assert.Equal("Delegated", medway.CompetentStatus);
-                    Assert.Equal("Mother", medway.ConsentGivenBy);
-                    Assert.Equal("Betsey Trotwood", medway.ConsentTakenBy);
+                    e.Should().BeEquivalentTo(
+                        Evidences.ClientMedwayDto("Delegated", "Mother", "Betsey Trotwood"),
+                        o => o.RespectingRuntimeTypes()
+                        );
                 },
                 e =>
                 {
-                    var fileInfo = Assert.IsType<OrgConnectedhealthcitiesImportFileSource>(e);
-                    Assert.Equal(XmlImportFileBaseUri, fileInfo.BaseUri);
-                    Assert.Equal(1, fileInfo.LineNumber);
-                    Assert.Equal(2, fileInfo.LinePosition);
+                    e.Should().BeEquivalentTo(
+                        KnownEvidence.ImportFile.ClientDto(
+                            KnownEvidence.ImportFileParts.BaseUri.ClientDto(XmlImportFileBaseUri),
+                            KnownEvidence.ImportFileParts.LineNumber.ClientDto(1),
+                            KnownEvidence.ImportFileParts.LinePosition.ClientDto(2)
+                            ),
+                        o => o.RespectingRuntimeTypes()
+                    );
                 }
             );
 

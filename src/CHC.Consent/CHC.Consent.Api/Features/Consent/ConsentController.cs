@@ -1,7 +1,10 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
+using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
+using CHC.Consent.Common.Consent.Evidences;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,19 +13,25 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace CHC.Consent.Api.Features.Consent
 {
-    using Consent = Common.Consent.Consent;
     [Route("/consent")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ConsentController : Controller
     {
+        public EvidenceDefinitionRegistry Registry { get; }
         private ILogger Logger { get; }
+        public EvidenceDtosIdentifierDtoMarshaller IdentifierDtoMarshallers { get; set; }
         private readonly IConsentRepository consentRepository;
 
         
-        public ConsentController(IConsentRepository consentRepository, ILogger<ConsentController> logger=null)
+        public ConsentController(
+            IConsentRepository consentRepository, 
+            EvidenceDefinitionRegistry registry,
+            ILogger<ConsentController> logger=null)
         {
+            Registry = registry;
             Logger = logger ?? NullLogger<ConsentController>.Instance;
             this.consentRepository = consentRepository;
+            IdentifierDtoMarshallers = new EvidenceDtosIdentifierDtoMarshaller(registry);
         }
 
         [HttpPut]
@@ -74,12 +83,14 @@ namespace CHC.Consent.Api.Features.Consent
                 }
             }
 
+            var evidence = IdentifierDtoMarshallers.ConvertToIdentifiers(specification.Evidence);
+            
             var newConsentId = consentRepository.AddConsent(
-                new Consent(
+                new Common.Consent.Consent(
                     studySubject,
                     specification.DateGiven,
                     specification.GivenBy,
-                    specification.Evidence));
+                    evidence));
 
             return CreatedAtAction("Get", new {id = newConsentId.Id }, newConsentId.Id);
         }

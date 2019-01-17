@@ -1,4 +1,5 @@
 using CHC.Consent.Api.Features.Identity.Dto;
+using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Common.Identity.Identifiers;
 
 namespace CHC.Consent.Api.Features.Identity

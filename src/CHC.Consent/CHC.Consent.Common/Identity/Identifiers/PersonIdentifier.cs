@@ -1,11 +1,17 @@
 using System;
+using CHC.Consent.Common.Infrastructure;
 
 namespace CHC.Consent.Common.Identity.Identifiers
 {
-    public class PersonIdentifier : IPersonIdentifier, IEquatable<PersonIdentifier>
+    public class PersonIdentifier : IPersonIdentifier, IEquatable<PersonIdentifier>, IIdentifier<IdentifierDefinition>
     {
-        public IIdentifierValue Value { get; }
-        public IdentifierDefinition Definition { get; }
+        public IIdentifierValue Value { get; set; }
+        public IdentifierDefinition Definition { get; set; }
+
+        /// <inheritdoc />
+        public PersonIdentifier()
+        {
+        }
 
         public PersonIdentifier(IIdentifierValue value, IdentifierDefinition definition)
         {

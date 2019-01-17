@@ -33,7 +33,15 @@ namespace CHC.Consent.Api.Infrastructure.Web
 
                 foreach (var identifierType in SubTypes)
                 {
-                    context.SchemaRegistry.GetOrRegister(identifierType);
+
+                    try
+                    {
+                        context.SchemaRegistry.GetOrRegister(identifierType);
+                    }
+                    catch (ArgumentException e)
+                    {
+                        throw new InvalidOperationException($"Cannot included {identifierType} in schema - see inner exception for details", e);
+                    }
                 }
             }
             else

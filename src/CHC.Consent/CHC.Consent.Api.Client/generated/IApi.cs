@@ -96,6 +96,14 @@ namespace CHC.Consent.Api.Client
         /// </param>
         Task<HttpOperationResponse<IList<IdentifierDefinition>>> IdentityStoreMetadataWithHttpMessagesAsync(Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        Task<HttpOperationResponse<IList<EvidenceDefinition>>> ConsentStoreMetadataWithHttpMessagesAsync(Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+
         /// <param name='studyId'>
         /// </param>
         /// <param name='stubjectId'>

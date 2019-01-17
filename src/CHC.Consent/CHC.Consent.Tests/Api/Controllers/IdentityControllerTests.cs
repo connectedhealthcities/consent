@@ -2,6 +2,7 @@
 using System.Linq;
 using CHC.Consent.Api.Features.Identity;
 using CHC.Consent.Api.Features.Identity.Dto;
+using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
@@ -69,7 +70,7 @@ namespace CHC.Consent.Tests.Api.Controllers
         {
             return new PersonIdentifier(
                 new SimpleIdentifierValue(identifier.Value), 
-                registry[identifier.DefinitionSystemName]);
+                (IdentifierDefinition) registry[identifier.DefinitionSystemName]);
         }
 
         

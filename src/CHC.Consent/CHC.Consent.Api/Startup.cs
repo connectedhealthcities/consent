@@ -99,42 +99,11 @@ namespace CHC.Consent.Api
 
         private void AddConsentSystemTypeRegistrations(IServiceCollection services)
         {
-            services.AddSingleton(new IdentifierDefinitionRegistryProvider());
-            services.AddTransient(c =>
-            {
-                c.GetService<ILoggerProvider>().CreateLogger("Activation")
-                    .LogDebug("Creating IdentifierDefinitionRegistryProvider");
-                return c.GetService<IdentifierDefinitionRegistryProvider>().GetRegistry();
-            });
+            services.AddTransient(provider => KnownIdentifierDefinitions.KnownIdentifiers);
             
             services.AddTransient<IPersonIdentifierDisplayHandlerProvider, PersonIdentifierHandlerProvider>();
 
-            var evidenceRegistry = new EvidenceRegistry();
-            evidenceRegistry.Add<MedwayEvidence>();
-            evidenceRegistry.Add<ImportFileEvidence>();
-            services.AddSingleton(evidenceRegistry);
-            services.AddSingleton<ITypeRegistry<Evidence>>(evidenceRegistry);
-
-
-            //These setup the relevant body binders
-            /*services
-                .AddTransient<
-                    IPostConfigureOptions<MvcOptions>,
-                    IdentityModelBinderProviderConfiguration<ITypeRegistry<IPersonIdentifier>, PersonSpecification>>();*/
-            /*services
-                .AddTransient<
-                    IPostConfigureOptions<MvcOptions>, 
-                    IdentityModelBinderProviderConfiguration<ITypeRegistry<IPersonIdentifier>, MatchSpecification>>();*/
-
-            services
-                .AddTransient<
-                    IPostConfigureOptions<MvcOptions>, 
-                    IdentityModelBinderProviderConfiguration<EvidenceRegistry, ConsentSpecification>>();
-
-
-            /*services.Configure<IdentifierDisplayOptions>(
-                displayOptions => Configuration.Bind("IdentifierDisplay", displayOptions));*/
-
+            services.AddSingleton(KnownEvidence.Registry);
         }
 
         protected virtual void ConfigureDatabaseOptions(IServiceProvider provider, DbContextOptionsBuilder options)

@@ -32,7 +32,7 @@ namespace CHC.Consent.EFCore
         {
             if (PersonIdentifierRegistry.TryGetValue(identifierName, out var identifierType))
             {
-                return identifierType;
+                return (IdentifierDefinition) identifierType;
             }
 
             throw new InvalidOperationException($"Cannot find PersionIdentifier named '{identifierName}'");

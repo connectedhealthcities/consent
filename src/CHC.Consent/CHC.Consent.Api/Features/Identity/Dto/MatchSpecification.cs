@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Common.Identity;
 using Newtonsoft.Json;
 

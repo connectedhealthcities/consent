@@ -6,6 +6,7 @@ using CHC.Consent.Api.Client.Models;
 using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
+using CHC.Consent.Testing.Utils;
 using IdentityServer4.EntityFramework.DbContexts;
 using IdentityServer4.EntityFramework.Mappers;
 using IdentityServer4.EntityFramework.Stores;
@@ -15,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
+using EvidenceDefinition = CHC.Consent.Common.Consent.Evidences.EvidenceDefinition;
 using Random = CHC.Consent.Testing.Utils.Random;
 
 namespace CHC.Consent.Tests.Api.Controllers
@@ -56,13 +58,10 @@ namespace CHC.Consent.Tests.Api.Controllers
                     GivenBy = person.Id,
                     PersonId = person.Id,
                     SubjectIdentifier = Random.String(15),
-                    Evidence = new Evidence[]
+                    Evidence = new []
                     {
-                        new UkNhsBradfordhospitalsBib4allEvidenceMedway
-                        {
-                            CompetentStatus = "Competent"
-                        }
-                    }
+                        Evidences.ClientMedwayDto(status:"Competent", givenBy:"Self", takenBy: "Jackson Pollock"), 
+                    } 
                 });
             
             Assert.NotNull(result);

@@ -24,7 +24,7 @@ namespace CHC.Consent.Api.Features.Identity
         [ProducesResponseType((int)HttpStatusCode.OK, Type=typeof(IEnumerable<IdentifierDefinition>))]
         public IActionResult Get()
         {
-            return Ok(IdentifierDefinitionRegistry.Values.ToArray());
+            return Ok(IdentifierDefinitionRegistry.ToArray());
         }
     }
 }

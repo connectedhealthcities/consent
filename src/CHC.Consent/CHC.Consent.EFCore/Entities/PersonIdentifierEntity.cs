@@ -2,7 +2,7 @@
 
 namespace CHC.Consent.EFCore.Entities
 {
-    public class PersonIdentifierEntity : IEntity
+    public class PersonIdentifierEntity : IEntity, IIdentifierEntity
     {
         public long Id { get; protected set; }
         public PersonEntity Person { get; set; }

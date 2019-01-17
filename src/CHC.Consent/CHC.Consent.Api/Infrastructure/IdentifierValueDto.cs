@@ -1,7 +1,7 @@
 using System;
 using Newtonsoft.Json;
 
-namespace CHC.Consent.Api.Features.Identity.Dto
+namespace CHC.Consent.Api.Infrastructure
 {
     public interface IIdentifierValueDto
     {

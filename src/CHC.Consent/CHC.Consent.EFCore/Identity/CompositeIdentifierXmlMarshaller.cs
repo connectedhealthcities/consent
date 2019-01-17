@@ -3,27 +3,32 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Infrastructure;
 
 namespace CHC.Consent.EFCore.Identity
 {
     //TODO: Add logging and handling of unknown identifiers
-    public class CompositeIdentifierXmlMarshaller : IIdentifierXmlMarshaller
+    public class CompositeIdentifierXmlMarshaller<TIdentifier, TDefinition> :
+        IIdentifierXmlMarhsaller<TIdentifier, TDefinition> 
+        where TIdentifier : IIdentifier<TDefinition>, new()
+        where TDefinition : DefinitionBase
+        
     {
         private readonly CompositeIdentifierType IdentifierType;
-        public IdentifierDefinition Definition { get; }
-        public PersonIdentifierXmlMarshallers Marshallers { get; }
+        public TDefinition Definition { get; }
+        public IdentifierXmlMarshallers<TIdentifier, TDefinition> Marshallers { get; }
 
-        public CompositeIdentifierXmlMarshaller(IdentifierDefinition definition)
+        public CompositeIdentifierXmlMarshaller(TDefinition definition)
         {
             Definition = definition;
             IdentifierType = (CompositeIdentifierType)Definition.Type;
-            Marshallers = new PersonIdentifierXmlMarshallers(IdentifierType.Identifiers);
+            Marshallers = new IdentifierXmlMarshallers<TIdentifier, TDefinition>(IdentifierType.Identifiers);
         }
 
         /// <inheritdoc />
-        public XElement MarshallToXml(PersonIdentifier identifier)
+        public XElement MarshallToXml(TIdentifier identifier)
         {
-            var values = ((CompositeIdentifierValue) identifier.Value).Identifiers
+            var values = ((CompositeIdentifierValue<TIdentifier>) identifier.Value).Identifiers
                 .ToDictionary(_ => _.Definition.SystemName);
             return new XElement(
                 Definition.SystemName,
@@ -34,16 +39,20 @@ namespace CHC.Consent.EFCore.Identity
         }
 
         /// <inheritdoc />
-        public PersonIdentifier MarshallFromXml(XElement xElement)
+        public TIdentifier MarshallFromXml(XElement xElement)
         {
-            return new PersonIdentifier(
-                new CompositeIdentifierValue(
+            return new TIdentifier
+            {
+                Definition = Definition,
+                Value = new CompositeIdentifierValue<TIdentifier>(
                     IdentifierType.Identifiers
-                        .Select(id => ( typeName: id.SystemName, value: xElement.Element(id.SystemName)))
+                        .Select(id => (typeName: id.SystemName, value: xElement.Element(id.SystemName)))
                         .Where(i => i.value != null)
                         .Select(i => Marshallers.MarshallFromXml(i.typeName, i.value))
-                        .ToArray()), 
-                Definition);
+                        .ToArray())
+            };
+
+
         }
     }
 }

@@ -3,10 +3,8 @@ namespace CHC.Consent.Common.Identity.Identifiers
     public class StringIdentifierType : IIdentifierType 
     {
         /// <inheritdoc />
-        public virtual void Accept(IIdentifierDefinitionVisitor visitor, IdentifierDefinition definition)
-        {
-            visitor.Visit( definition,this);
-        }
+        public void Accept(IDefinitionVisitor visitor, IDefinition definition) =>
+            visitor.Visit(definition, this);
 
         /// <inheritdoc />
         public string SystemName => "string";

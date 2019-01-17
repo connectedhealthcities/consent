@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
+using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
+using CHC.Consent.EFCore.Identity;
 using CHC.Consent.Testing.Utils;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -76,16 +80,13 @@ namespace CHC.Consent.EFCore.Tests
 
         private ConsentRepository CreateRepository(
             ConsentContext consentContext, 
-            Type[] evidentTypes=null)
+            params EvidenceDefinition[] evidentTypes)
         {
             var storeProvider = (IStoreProvider) new ContextStoreProvider(consentContext);
-            
-            
-            var evidenceRegsitry = new TypeRegistry<Evidence, EvidenceAttribute>();
-            foreach (var evidenceType in evidentTypes??new [] { typeof(MedwayEvidence) })
-            {
-                evidenceRegsitry.Add(evidenceType);
-            }
+
+
+            var evidenceRegistry =
+                evidentTypes.Any() ? new EvidenceDefinitionRegistry(evidentTypes) : KnownEvidence.Registry;
             
             return new ConsentRepository(
                 storeProvider.Get<StudyEntity>(),
@@ -93,7 +94,7 @@ namespace CHC.Consent.EFCore.Tests
                 storeProvider.Get<PersonEntity>(),
                 storeProvider.Get<ConsentEntity>(),
                 storeProvider.Get<EvidenceEntity>(),
-                evidenceRegsitry
+                evidenceRegistry
                 );
         }
 
@@ -186,7 +187,12 @@ namespace CHC.Consent.EFCore.Tests
             var dateGiven = Random.Date().Date;
 
 
-            var evidence = new MedwayEvidence { CompetentStatus = "alan", ConsentGivenBy = "phil", ConsentTakenBy = "dawn" };
+            var evidence = Evidences.MedwayEvidence(competencyStatus: "Competent", takenBy: "Nurse Randall");
+            var marshalledEvidence =
+                new CompositeIdentifierXmlMarshaller<Evidence, EvidenceDefinition>(KnownEvidence.Medway)
+                    .MarshallToXml(evidence)
+                    .ToString(SaveOptions.DisableFormatting);
+            
             var consent = CreateRepository(updateContext)
                 .AddConsent(
                     new Common.Consent.Consent(studySubject, dateGiven, personId, new [] { evidence })
@@ -205,8 +211,9 @@ namespace CHC.Consent.EFCore.Tests
             var storedEvidence = savedConsent.GivenEvidence.SingleOrDefault();
             storedEvidence.Should().NotBeNull().And.BeOfType<GivenEvidenceEntity>();
             
-            Assert.Equal(MedwayEvidence.TypeName, storedEvidence.Type);
-            Assert.Equal(new XmlMarshaller<MedwayEvidence>(MedwayEvidence.TypeName).MarshalledValue(evidence),
+            Assert.Equal(KnownEvidence.Medway.SystemName, storedEvidence.Type);
+            
+            Assert.Equal(marshalledEvidence,
                 storedEvidence.Value);
             Assert.NotNull(storedEvidence.Consent);
             

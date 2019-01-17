@@ -133,8 +133,9 @@ namespace CHC.Consent.DataImporter
         {
             var client = await CreateApiClient();
             var identifierDefinitions = client.IdentityStoreMetadata();
+            var evidenceDefinitions = client.ConsentStoreMetadata();
             
-            var xmlParser = new XmlParser(loggerProvider.CreateLogger<XmlParser>(), identifierDefinitions);
+            var xmlParser = new XmlParser(loggerProvider.CreateLogger<XmlParser>(), identifierDefinitions, evidenceDefinitions);
             using (var xmlReader = XmlReader.Create(source))
             {
                 foreach (var person in xmlParser.GetPeople(xmlReader))

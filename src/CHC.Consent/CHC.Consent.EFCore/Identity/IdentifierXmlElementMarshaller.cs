@@ -1,36 +1,40 @@
 using System;
 using System.Xml.Linq;
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Infrastructure;
 using JetBrains.Annotations;
 
 namespace CHC.Consent.EFCore.Identity
 {
-    public class IdentifierXmlElementMarshaller : IIdentifierXmlMarshaller
+    public class IdentifierXmlElementMarshaller<TIdentifier, TDefinition> :
+        IIdentifierXmlMarhsaller<TIdentifier, TDefinition> 
+        where TIdentifier : IIdentifier<TDefinition>, new()
+        where TDefinition : DefinitionBase
     {
-        public IdentifierDefinition Definition { get; }
+        public TDefinition Definition { get; }
         private IStringValueParser Parser { get; }
 
         /// <inheritdoc />
-        public IdentifierXmlElementMarshaller(IdentifierDefinition definition) : this(definition, PassThroughParser.Instance)
+        public IdentifierXmlElementMarshaller(TDefinition definition) : this(definition, PassThroughParser.Instance)
         {
         }
 
         /// <inheritdoc />
-        public IdentifierXmlElementMarshaller([NotNull] IdentifierDefinition definition, [NotNull] IStringValueParser parser)
+        public IdentifierXmlElementMarshaller([NotNull] TDefinition definition, [NotNull] IStringValueParser parser)
         {
             Definition = definition ?? throw new ArgumentNullException(nameof(definition));
             Parser = parser ?? throw new ArgumentNullException(nameof(parser));
         }
 
-        public XElement MarshallToXml(PersonIdentifier identifier)
+        public XElement MarshallToXml(TIdentifier identifier)
         {
             return new XElement(Definition.SystemName, identifier.Value.Value);
         }
 
-        public PersonIdentifier MarshallFromXml(XElement xElement)
+        public TIdentifier MarshallFromXml(XElement xElement)
         {
             Parser.TryParse(xElement.Value, out var value);
-            return new PersonIdentifier(new SimpleIdentifierValue(value), Definition);
+            return new TIdentifier {Value = new SimpleIdentifierValue(value), Definition = Definition};
         }
     }
 }

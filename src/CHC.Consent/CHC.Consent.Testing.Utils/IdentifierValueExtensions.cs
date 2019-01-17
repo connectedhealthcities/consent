@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using CHC.Consent.Api.Client.Models;
 using CHC.Consent.Api.Features.Identity.Dto;
+using CHC.Consent.Api.Infrastructure;
+using IIdentifierValueDto = CHC.Consent.Api.Infrastructure.IIdentifierValueDto;
 
 namespace CHC.Consent.Testing.Utils
 {
@@ -44,7 +46,7 @@ namespace CHC.Consent.Testing.Utils
             new IdentifierValueDtoIIdentifierValueDto(definition.SystemName, value.ToArray()); 
         
 
-        public static CHC.Consent.Api.Features.Identity.Dto.IIdentifierValueDto Dto<T>(
+        public static IIdentifierValueDto Dto<T>(
             this Common.Identity.Identifiers.IdentifierDefinition definition,
             T value)
             => new IdentifierValueDto<T>(definition.SystemName, value);

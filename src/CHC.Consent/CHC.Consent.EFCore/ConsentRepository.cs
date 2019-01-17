@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
+using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
@@ -20,7 +22,7 @@ namespace CHC.Consent.EFCore
         private IStore<PersonEntity> People { get; }
         private IStore<ConsentEntity> Consents { get; }
         private IStore<EvidenceEntity> Evidence { get; }
-        private ITypeRegistry<Evidence> EvidenceRegistry { get; }
+        private IdentifierXmlMarshallers<Evidence, EvidenceDefinition> EvidenceRegistry { get; }
 
         public ConsentRepository(
             IStore<StudyEntity> studies, 
@@ -28,14 +30,15 @@ namespace CHC.Consent.EFCore
             IStore<PersonEntity> people, 
             IStore<ConsentEntity> consents,
             IStore<EvidenceEntity> evidence,
-            ITypeRegistry<Evidence> evidenceRegistry)
+            EvidenceDefinitionRegistry evidenceRegistry)
         {
             Studies = studies;
             StudySubjects = studySubjects;
             People = people;
             Consents = consents;
             Evidence = evidence;
-            EvidenceRegistry = evidenceRegistry;
+            EvidenceRegistry = new IdentifierXmlMarshallers<Evidence, EvidenceDefinition>(evidenceRegistry);
+            
         }
 
         public StudyIdentity GetStudy(long studyId) =>
@@ -101,14 +104,11 @@ namespace CHC.Consent.EFCore
 
             foreach (var evidence in consent.GivenEvidence)
             {
-                var typeName = EvidenceRegistry[evidence.GetType()];
-
                 Evidence.Add(
                     new GivenEvidenceEntity
                     {
-                        Value = new XmlMarshaller(evidence.GetType(), typeName)
-                            .MarshalledValue(evidence),
-                        Type = typeName,
+                        Value = EvidenceRegistry.MarshallToXml(evidence).ToString(SaveOptions.DisableFormatting),
+                        Type = evidence.Definition.SystemName,
                         Consent = saved
                     });
             }
@@ -162,7 +162,7 @@ namespace CHC.Consent.EFCore
                     .OfType<GivenEvidenceEntity>()
                     .Where(e => consentIds.Contains(e.Consent.Id))
                     .GroupBy(e => e.Consent.Id)
-                    .ToDictionary(e => e.Key, e => e.Select(Unmarshall));
+                    .ToDictionary(e => e.Key, e => e.Select(s => EvidenceRegistry.MarshallFromXml(s.Type, XElement.Parse(s.Value))));
             
             return consentDetails
                 .Select(
@@ -172,19 +172,7 @@ namespace CHC.Consent.EFCore
                         _.GivenBy,
                         evidences.TryGetValue(_.Id, out var evidence) ? evidence : Array.Empty<Evidence>()));
         }
-
-
-        private Evidence Unmarshall(EvidenceEntity evidenceEntity) =>
-            (Evidence) GetXmlMarshaller(evidenceEntity)
-                .Unmarshall(evidenceEntity.Type, evidenceEntity.Value);
         
-        private XmlMarshaller GetXmlMarshaller(EvidenceEntity evidenceEntity)
-        {
-            var caseIdentifierType = EvidenceRegistry[evidenceEntity.Type];
-            var xmlMarshaller = new XmlMarshaller(caseIdentifierType, evidenceEntity.Type);
-            return xmlMarshaller;
-        }
-
         public StudySubject AddStudySubject(StudySubject studySubject)
         {
             var study = Studies.Get(studySubject.StudyId.Id);

@@ -24,9 +24,9 @@ namespace CHC.Consent.EFCore.Tests.Identity
                 {new IntegerIdentifierType(), 263762L, "263762"}
             };
 
-        private static IIdentifierXmlMarshaller CreateMarshallerFor(IdentifierDefinition identifierDefinition)
+        private static IIdentifierXmlMarhsaller<PersonIdentifier, IdentifierDefinition> CreateMarshallerFor(IdentifierDefinition identifierDefinition)
         {
-            var marshallerCreator = new IdentifierXmlMarshallerCreator();
+            var marshallerCreator = new IdentifierXmlMarshallerCreator<PersonIdentifier, IdentifierDefinition>();
             identifierDefinition.Accept(marshallerCreator);
             return marshallerCreator.Marshallers.Values.Single();
         }
@@ -71,7 +71,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
             var (compositeIdentifierDefinition, stringIdentifierDefinition, dateIdentifierDefinition) = CompositeIdentifierDefinition();
 
             var identifier = new PersonIdentifier(
-                new CompositeIdentifierValue(
+                new CompositeIdentifierValue<PersonIdentifier>(
                     new []
                     {
                         new PersonIdentifier(new SimpleIdentifierValue("A Name"), stringIdentifierDefinition),
@@ -79,7 +79,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
                     }), 
                 compositeIdentifierDefinition);
 
-            var marshaller = new CompositeIdentifierXmlMarshaller(compositeIdentifierDefinition);
+            var marshaller = new CompositeIdentifierXmlMarshaller<PersonIdentifier, IdentifierDefinition>(compositeIdentifierDefinition);
 
             var xml = marshaller.MarshallToXml(identifier);
 
@@ -94,12 +94,11 @@ namespace CHC.Consent.EFCore.Tests.Identity
         {
             var (compositeIdentifierDefinition, stringIdentifierDefinition, dateIdentifierDefinition) = CompositeIdentifierDefinition();
 
-            var marshaller = new CompositeIdentifierXmlMarshaller(compositeIdentifierDefinition);
+            var marshaller = new CompositeIdentifierXmlMarshaller<PersonIdentifier, IdentifierDefinition>(compositeIdentifierDefinition);
 
             var identifier = marshaller.MarshallFromXml(XElement.Parse("<composite><string>A Name</string><date>1872-04-17T00:00:00</date></composite>"));
 
-            identifier.Value.Should().BeOfType<CompositeIdentifierValue>()
-                .And.Subject.As<CompositeIdentifierValue>().Identifiers.Should()
+            identifier.Value.As<CompositeIdentifierValue<PersonIdentifier>>().Identifiers.Should()
                 .Contain(new PersonIdentifier(new SimpleIdentifierValue("A Name"), stringIdentifierDefinition))
                 .And
                 .Contain(new PersonIdentifier(new SimpleIdentifierValue(17.April(1872)), dateIdentifierDefinition))
@@ -113,7 +112,7 @@ namespace CHC.Consent.EFCore.Tests.Identity
         {
             var (composite, _, _) = CompositeIdentifierDefinition();
             
-            var marshaller = new CompositeIdentifierXmlMarshaller(composite);
+            var marshaller = new CompositeIdentifierXmlMarshaller<PersonIdentifier, IdentifierDefinition>(composite);
 
             Assert.Contains("string", marshaller.Marshallers.Marshallers);
             Assert.Contains("date", marshaller.Marshallers.Marshallers);
@@ -129,7 +128,9 @@ namespace CHC.Consent.EFCore.Tests.Identity
             var dateIdentifierDefinition = new IdentifierDefinition("Date", new DateIdentifierType());
             var compositeIdentifierDefinition = new IdentifierDefinition(
                 "Composite",
-                new CompositeIdentifierType(stringIdentifierDefinition, dateIdentifierDefinition));
+                new CompositeIdentifierType(
+                    stringIdentifierDefinition,
+                    dateIdentifierDefinition));
             return (compositeIdentifierDefinition, stringIdentifierDefinition, dateIdentifierDefinition);
         }
     }

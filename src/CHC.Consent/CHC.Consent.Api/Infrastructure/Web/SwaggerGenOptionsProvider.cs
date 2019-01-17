@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Common.Consent;
+using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
@@ -49,29 +50,11 @@ namespace CHC.Consent.Api.Infrastructure.Web
             gen.SchemaFilter<SwaggerSchemaSubtypeFilter<IIdentifierValueDto>>(
                 IdentifierValueDtos.KnownDtoTypes,
                 IdentifierValueDtos.KnownDtoTypes.Select(_ => _.FriendlyId()));
-            gen.SchemaFilter<SwaggerSchemaIdentityTypeProvider<Evidence, ITypeRegistry<Evidence>>>();
-            gen.CustomSchemaIds(type => GetSchemaId(type) ?? type.FriendlyId(fullyQualified:false));
-        }
 
-        private string GetSchemaId(Type type)
-        {
-            return TryGet<Type, string>(
-                type,
-                /*Services.GetRequiredService<ITypeRegistry<IPersonIdentifier>>().TryGetName,*/
-                Services.GetRequiredService<ITypeRegistry<Evidence>>().TryGetName
-            );
-        }
-
-        delegate bool TryGetValue<in TKey, TValue>(TKey key, out TValue value);
-
-        static TValue TryGet<TKey, TValue>(TKey key, params TryGetValue<TKey, TValue>[] getters)
-        {
-            foreach (var tryGetValue in getters)
-            {
-                if (tryGetValue(key, out var value)) return value;
-            }
-
-            return default;
+            var definitionTypes = new [] { typeof(IdentifierDefinition), typeof(EvidenceDefinition) };
+            gen.SchemaFilter<SwaggerSchemaSubtypeFilter<IDefinition>>(
+                definitionTypes,
+                definitionTypes.Select(_ => _.FriendlyId()));
         }
     }
 

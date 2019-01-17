@@ -8,7 +8,10 @@ namespace CHC.Consent.DataImporter
 {
     public class IdentifierValueParser
     {
-        public IdentifierValueParser(IList<IdentifierDefinition> definitions)
+        public static IdentifierValueParser CreateFrom<T>(IEnumerable<T> definitions) where T:IDefinition
+            => new IdentifierValueParser(definitions.Cast<IDefinition>().ToList());
+        
+        public IdentifierValueParser(IList<IDefinition> definitions)
         {
             Definitions = definitions.ToDictionary(x => x.SystemName);
             Parsers = definitions.ToDictionary(x => x.SystemName, CreateValueParser);
@@ -16,7 +19,7 @@ namespace CHC.Consent.DataImporter
 
         private delegate IIdentifierValueDto Parser(XElement element);
         private IReadOnlyDictionary<string, Parser> Parsers { get; }
-        private IDictionary<string, IdentifierDefinition> Definitions { get; set; }
+        private IDictionary<string, IDefinition> Definitions { get; set; }
 
         public IIdentifierValueDto Parse(XElement identifierNode)
         {
@@ -31,7 +34,7 @@ namespace CHC.Consent.DataImporter
 
         }
 
-        private static Parser CreateValueParser(IdentifierDefinition definition)
+        private static Parser CreateValueParser(IDefinition definition)
         {
             var name = definition.SystemName;
             switch (definition.Type)

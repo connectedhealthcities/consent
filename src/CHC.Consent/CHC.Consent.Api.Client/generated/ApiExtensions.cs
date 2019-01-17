@@ -167,6 +167,28 @@ namespace CHC.Consent.Api.Client
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
+            public static IList<EvidenceDefinition> ConsentStoreMetadata(this IApi operations)
+            {
+                return operations.ConsentStoreMetadataAsync().GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<IList<EvidenceDefinition>> ConsentStoreMetadataAsync(this IApi operations, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ConsentStoreMetadataWithHttpMessagesAsync(null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
             /// <param name='studyId'>
             /// </param>
             /// <param name='stubjectId'>

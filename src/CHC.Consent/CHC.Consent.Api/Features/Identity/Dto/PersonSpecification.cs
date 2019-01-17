@@ -1,4 +1,5 @@
 ﻿ using System.Collections.Generic;
+ using CHC.Consent.Api.Infrastructure;
  using CHC.Consent.Common.Identity;
  using CHC.Consent.Common.Identity.Identifiers;
 
