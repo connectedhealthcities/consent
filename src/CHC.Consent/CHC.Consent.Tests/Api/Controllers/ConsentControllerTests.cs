@@ -8,8 +8,10 @@ using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
+using CHC.Consent.EFCore;
 using CHC.Consent.Testing.Utils;
 using FakeItEasy;
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
 using Random = CHC.Consent.Testing.Utils.Random;
@@ -92,7 +94,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                     subjectIdentifier,
                     personId);
 
-            private static ConsentController CreateConsentController(IConsentRepository consentRepository)
+            public static ConsentController CreateConsentController(IConsentRepository consentRepository)
             {
                 return new ConsentController(consentRepository, KnownEvidence.Registry);
             }
@@ -288,6 +290,36 @@ namespace CHC.Consent.Tests.Api.Controllers
             {
                 Assert.NotNull(CreatedConsent);
             }
+        }
+
+        public class WhenGettingConsentedSubjectIdentifiers_ForAKnownStudy_OnlyReturnsSubjectIdentifiers : ConsentControllerTestBase
+        {
+            private string[] subjectIds;
+            private IActionResult result;
+
+            /// <inheritdoc />
+            public WhenGettingConsentedSubjectIdentifiers_ForAKnownStudy_OnlyReturnsSubjectIdentifiers()
+            {
+                subjectIds = Enumerable.Range(0, 100).Select(_ => Random.String(10)).ToArray();
+                var studySubjects =
+                    subjectIds
+                    .Select((subjectId, index) => new StudySubject(StudyId, subjectId, (PersonIdentity) (index + 25)))
+                    .ToArray();
+                
+                A.CallTo(() => ConsentRepository.GetConsentedSubjects(StudyId))
+                    .Returns(studySubjects);
+
+                result = CreateConsentController(ConsentRepository).Get(StudyId);
+            }
+
+            [Fact]
+            public void ReturnsOkResult() => result.Should().BeOfType<OkObjectResult>();
+
+            [Fact]
+            public void ResultContainsAllSubjectIds() => 
+                result.As<OkObjectResult>().Value.As<IEnumerable<string>>()
+                .Should().BeEquivalentTo(subjectIds);
+
         }
 
     }

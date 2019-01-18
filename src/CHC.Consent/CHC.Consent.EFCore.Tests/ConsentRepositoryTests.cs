@@ -12,6 +12,7 @@ using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.Identity;
 using CHC.Consent.Testing.Utils;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 using Xunit.Abstractions;
@@ -31,6 +32,7 @@ namespace CHC.Consent.EFCore.Tests
         private readonly StudyIdentity studyId;
         private readonly PersonIdentity consentedPersonId;
         private readonly PersonIdentity unconsentedPersonId;
+        private readonly PersonIdentity withdrawnPersonId;
 
         /// <inheritdoc />
         public ConsentRepositoryTests(ITestOutputHelper outputHelper, DatabaseFixture fixture) : base(outputHelper, fixture)
@@ -64,12 +66,25 @@ namespace CHC.Consent.EFCore.Tests
             var unconsentedPerson = createContext.People.Add(new PersonEntity()).Entity;
             createContext.Add(
                 new StudySubjectEntity {Study = study, Person = unconsentedPerson, SubjectIdentifier = "Unconsented"});
+
+            var withdrawnConsent = createContext.Add(new PersonEntity()).Entity;
+            var withdrawnSubject = createContext.Add(
+                new StudySubjectEntity {Study = study, Person = withdrawnConsent, SubjectIdentifier = "Withdrawn"}).Entity;
+            createContext.Add(new ConsentEntity
+            {
+                StudySubject = withdrawnSubject,
+                DateProvided = 1.December(2017),
+                DateWithdrawn = 5.January(2018),
+                GivenBy = withdrawnConsent
+            });
+            
             
             createContext.SaveChanges();
             
             studyId = new StudyIdentity(study.Id);
             consentedPersonId = consentedPerson;
             unconsentedPersonId = unconsentedPerson;
+            withdrawnPersonId = withdrawnConsent;
             
             repository = CreateRepository(readContext);
 
@@ -109,39 +124,35 @@ namespace CHC.Consent.EFCore.Tests
             var addedSubject = CreateRepository(updateContext).AddStudySubject(
                 new StudySubject(studyId, subjectIdentifier, personId));
             updateContext.SaveChanges();
-            
-            
-            Assert.NotNull(addedSubject);
-            Assert.Equal(studyId, addedSubject.StudyId);
-            Assert.Equal(personId, addedSubject.PersonId);
-            Assert.Equal(subjectIdentifier, addedSubject.SubjectIdentifier);
+
+            using (new AssertionScope())
+            {
+                addedSubject.Should().NotBeNull();
+                addedSubject.StudyId.Should().Be(studyId);
+                addedSubject.PersonId.Should().Be(personId);
+                addedSubject.SubjectIdentifier.Should().Be(subjectIdentifier);
+            }
 
             var studySubjectEntity = readContext.Set<StudySubjectEntity>()
                 .Include(_ => _.Study)
                 .Include(_ => _.Person)
                 .SingleOrDefault(
                 _ => _.Study.Id == addedSubject.StudyId && _.Person.Id == addedSubject.PersonId);
-            Assert.Equal(subjectIdentifier, studySubjectEntity.SubjectIdentifier);
-            Assert.Equal(studyId.Id, studySubjectEntity.Study.Id);
-            Assert.Equal(personId.Id, studySubjectEntity.Person.Id);
+
+            using (new AssertionScope())
+            {
+                studySubjectEntity.Should().NotBeNull();
+                studySubjectEntity.SubjectIdentifier.Should().Be(subjectIdentifier);
+                studySubjectEntity.Study.Id.Should().Be(studyId.Id);
+                studySubjectEntity.Person.Id.Should().Be(personId.Id);
+            }
         }
 
         [Fact]
         public void StoresConsentHeaderWhenAddingConsent()
         {
             var subjectIdentifier = Random.String();
-            var person = createContext.Add(new PersonEntity()).Entity;
-            var studySubjectEntity = createContext.Add(
-                new StudySubjectEntity
-                {
-                    Person = person,
-                    Study = createContext.Find<StudyEntity>(study.Id),
-                    SubjectIdentifier = subjectIdentifier
-                }).Entity;
-            createContext.SaveChanges();
-            
-            var personId = new PersonIdentity(person.Id);
-            var studySubject = new StudySubject(studyId, subjectIdentifier, personId);
+            var (personId, studySubjectEntity, studySubject) = CreateStudySubject(subjectIdentifier);
 
             var dateGiven = Random.Date().Date;
 
@@ -165,12 +176,10 @@ namespace CHC.Consent.EFCore.Tests
             Assert.Equal(dateGiven, consentEntity.DateProvided);
             Assert.Null(consentEntity.DateWithdrawn);
         }
-        
-        
-        [Fact]
-        public void StoresConsentGivenEvidenceWhenAddingConsent()
+
+        private (PersonIdentity personId, StudySubjectEntity studySubjectEntity, StudySubject studySubject) 
+            CreateStudySubject(string subjectIdentifier)
         {
-            var subjectIdentifier = Random.String();
             var person = createContext.Add(new PersonEntity()).Entity;
             var studySubjectEntity = createContext.Add(
                 new StudySubjectEntity
@@ -180,9 +189,18 @@ namespace CHC.Consent.EFCore.Tests
                     SubjectIdentifier = subjectIdentifier
                 }).Entity;
             createContext.SaveChanges();
-            
+
             var personId = new PersonIdentity(person.Id);
             var studySubject = new StudySubject(studyId, subjectIdentifier, personId);
+            return (personId, studySubjectEntity, studySubject);
+        }
+
+
+        [Fact]
+        public void StoresConsentGivenEvidenceWhenAddingConsent()
+        {
+            var subjectIdentifier = Random.String();
+            var (personId, _, studySubject) = CreateStudySubject(subjectIdentifier);
 
             var dateGiven = Random.Date().Date;
 
@@ -240,7 +258,7 @@ namespace CHC.Consent.EFCore.Tests
         [Fact]
         public void ReturnsNullStudySubjectForNonExistantStudyAndSubjectIdentifier()
         {
-            Assert.Null(repository.FindStudySubject(studyId, "nope"));
+            repository.FindStudySubject(studyId, "nope").Should().BeNull();
         }
 
         [Fact]
@@ -250,7 +268,7 @@ namespace CHC.Consent.EFCore.Tests
         }
 
         [Fact]
-        public void ReturnsNullStudySubjectForNonexistantStudyAndPersonId()
+        public void ReturnsNullStudySubjectForNonExistantStudyAndPersonId()
         {
             Assert.Null(repository.FindStudySubject(studyId, new PersonIdentity(-consentedStudySubject.Person.Id)));
         }
@@ -282,11 +300,22 @@ namespace CHC.Consent.EFCore.Tests
                 new StudySubject(studyId, "Unknown", new PersonIdentity(67))));
         }
 
-        private void AssertStudySubject(StudySubjectEntity expected, StudySubject actual)
+        [Fact]
+        public void OnlyGetsConsentedSubjectsForStudy()
         {
-            Assert.Equal(expected.Study.Id, actual.StudyId);
-            Assert.Equal(expected.Person.Id, actual.PersonId.Id);
-            Assert.Equal(expected.SubjectIdentifier, actual.SubjectIdentifier);
+            repository.GetConsentedSubjects(studyId)
+                .Should()
+                .OnlyContain(_ => _.StudyId == studyId && _.PersonId == consentedPersonId && _.SubjectIdentifier == "Consented");
+        }
+
+        private static void AssertStudySubject(StudySubjectEntity expected, StudySubject actual)
+        {
+            using (new AssertionScope())
+            {
+                actual.StudyId.Id.Should().Be(expected.Study.Id);
+                actual.PersonId.Id.Should().Be(expected.Person.Id);
+                actual.SubjectIdentifier.Should().Be(expected.SubjectIdentifier);    
+            }
         }
     }
     

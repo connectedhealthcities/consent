@@ -10,5 +10,7 @@ namespace CHC.Consent.Common
         public PersonIdentity(long id) : base(id)
         {
         }
+        
+        public static explicit operator PersonIdentity(long id) => new PersonIdentity(id);
     }
 }

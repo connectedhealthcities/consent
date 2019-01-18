@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure.Web;
@@ -95,10 +97,11 @@ namespace CHC.Consent.Api.Features.Consent
             return CreatedAtAction("Get", new {id = newConsentId.Id }, newConsentId.Id);
         }
 
-        [HttpGet, Route("{id}")]
-        public IActionResult Get(long id)
+        [HttpGet,Route("{studyId}")]
+        [ProducesResponseType((int) HttpStatusCode.OK, Type = typeof(IEnumerator<string>))]
+        public IActionResult Get(long studyId)
         {
-            throw new System.NotImplementedException();
+            return Ok(consentRepository.GetConsentedSubjects(new StudyIdentity(studyId)).Select(_ => _.SubjectIdentifier));
         }
     }
 }
