@@ -5,14 +5,20 @@ using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Identity.Identifiers;
+using EnumIdentifierType = CHC.Consent.Common.Identity.Identifiers.EnumIdentifierType;
 using EvidenceDefinition = CHC.Consent.Common.Consent.Evidences.EvidenceDefinition;
 using IIdentifierValueDto = CHC.Consent.Api.Client.Models.IIdentifierValueDto;
 using ServerDto = CHC.Consent.Api.Infrastructure.IIdentifierValueDto;
+using StringIdentifierType = CHC.Consent.Common.Identity.Identifiers.StringIdentifierType;
 
 namespace CHC.Consent.Testing.Utils
 {
     public static class Evidences
     {
+        public static EvidenceDefinition String(string name) => new EvidenceDefinition(name, new StringIdentifierType());
+        public static EvidenceDefinition Enum(string name, params string[] values) => 
+        new EvidenceDefinition(name, new EnumIdentifierType(values));
+        
         public static Evidence MedwayEvidence(
             string competencyStatus = null, string givenBy = null, string takenBy = null)
         {
@@ -50,6 +56,15 @@ namespace CHC.Consent.Testing.Utils
             return KnownEvidence.Medway.ClientDto(dtos);
         }
         
+        public static IIdentifierValueDto ClientImportFileDto(string baseUri=null, long? line=null, long? offset=null)
+        {
+            var dtos = new List<IIdentifierValueDto>();
+            if(baseUri != null) dtos.Add(KnownEvidence.ImportFileParts.BaseUri.ClientDto(baseUri));
+            if(line != null) dtos.Add(KnownEvidence.ImportFileParts.LineNumber.ClientDto((long)line));
+            if(offset != null) dtos.Add(KnownEvidence.MedwayParts.ConsentTakenBy.ClientDto((long)offset));
+            return KnownEvidence.ImportFile.ClientDto(dtos);
+        }
+        
         public static ServerDto ServerDto<T>(this EvidenceDefinition definition, T value)
             => new IdentifierValueDto<T>(definition.SystemName, value);
         
@@ -61,5 +76,22 @@ namespace CHC.Consent.Testing.Utils
             if(takenBy != null) dtos.Add(KnownEvidence.MedwayParts.ConsentTakenBy.ServerDto(takenBy));
             return KnownEvidence.Medway.ServerDto(dtos.ToArray());
         }
+        
+        public static ServerDto ServerImportFileDto(string baseUri=null, long? line=null, long? offset=null)
+        {
+            var dtos = new List<ServerDto>();
+            if(baseUri != null) dtos.Add(KnownEvidence.ImportFileParts.BaseUri.ServerDto(baseUri));
+            if(line != null) dtos.Add(KnownEvidence.ImportFileParts.LineNumber.ServerDto((long)line));
+            if(offset != null) dtos.Add(KnownEvidence.MedwayParts.ConsentTakenBy.ServerDto((long)offset));
+            return KnownEvidence.ImportFile.ServerDto(dtos.ToArray());
+        }
+
+        public static Evidence ImportFile(string testXml, int line, int offset)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        
+        
     }
 }

@@ -78,15 +78,15 @@ namespace CHC.Consent.Tests.DataImporter
             );
         }
 
-        private ClientIdentifierType ConvertToClientType<TInternal>(
+        private ClientIdentifierType ConvertToClientType<TInternalDefinition>(
             InternalIdentifierType internalType, 
-            Func<TInternal, IClientDefinition> convertToClientDefinition) where TInternal:IInternalDefinition
+            Func<TInternalDefinition, IClientDefinition> convertToClientDefinition) where TInternalDefinition:IInternalDefinition
         {
             switch (internalType)
             {
                 case CHC.Consent.Common.Identity.Identifiers.CompositeIdentifierType composite:
                     return new CHC.Consent.Api.Client.Models.CompositeIdentifierType(composite.SystemName,
-                        composite.Identifiers.Cast<TInternal>().Select(convertToClientDefinition).Cast<IClientDefinition>().ToList());
+                        composite.Identifiers.Cast<TInternalDefinition>().Select(convertToClientDefinition).ToList());
                 case CHC.Consent.Common.Identity.Identifiers.DateIdentifierType date:
                     return new CHC.Consent.Api.Client.Models.DateIdentifierType(date.SystemName);
                 case CHC.Consent.Common.Identity.Identifiers.EnumIdentifierType @enum:
@@ -120,8 +120,7 @@ namespace CHC.Consent.Tests.DataImporter
                 );
 
             sexIdentifier.Should().BeOfType<IdentifierValueDtoString>()
-                .Subject.Value
-                .Should().Be("Male");
+                .Which.Should().Be("Male");
         }
 
 

@@ -186,8 +186,8 @@ namespace CHC.Consent.Tests.Api.Controllers
             var result = controller.GetPerson(34);
 
             result.Should().BeOfType<OkObjectResult>()
-                .Subject.Value.Should().BeAssignableTo<IEnumerable<IIdentifierValueDto>>()
-                .Subject
+                .Which.Should().BeAssignableTo<IEnumerable<IIdentifierValueDto>>()
+                .Which
                 .Should().BeEquivalentTo(
                     Identifiers.NhsNumber.Dto("1234"),
                     Identifiers.Name.Dto(
