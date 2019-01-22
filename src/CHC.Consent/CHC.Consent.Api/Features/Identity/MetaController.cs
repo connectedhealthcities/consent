@@ -20,7 +20,7 @@ namespace CHC.Consent.Api.Features.Identity
             IdentifierDefinitionRegistry = identifierDefinitionRegistry;
         }
 
-        [HttpGet]
+        [HttpGet(Name = "GetIdentityStoreMetadata")]
         [ProducesResponseType((int)HttpStatusCode.OK, Type=typeof(IEnumerable<IdentifierDefinition>))]
         public IActionResult Get()
         {

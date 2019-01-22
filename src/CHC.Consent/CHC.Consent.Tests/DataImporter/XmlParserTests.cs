@@ -121,7 +121,7 @@ namespace CHC.Consent.Tests.DataImporter
                 );
 
             sexIdentifier.Should().BeOfType<IdentifierValueDtoString>()
-                .Which.Should().Be("Male");
+                .Which.Value.Should().Be("Male");
         }
 
 

@@ -127,6 +127,7 @@ namespace CHC.Consent.Api
                 ui.SwaggerEndpoint("/swagger/v1/swagger.json", "Api");
                 ui.OAuthClientId("ApiExplorer");
                 ui.OAuthAppName("API Explorer");
+                ui.DisplayOperationId();
             });
         }
     }

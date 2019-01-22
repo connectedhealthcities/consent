@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using CHC.Consent.Api.Features.Consent;
-using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
-using CHC.Consent.EFCore;
 using CHC.Consent.Testing.Utils;
 using FakeItEasy;
 using FluentAssertions;
@@ -294,22 +292,22 @@ namespace CHC.Consent.Tests.Api.Controllers
 
         public class WhenGettingConsentedSubjectIdentifiers_ForAKnownStudy_OnlyReturnsSubjectIdentifiers : ConsentControllerTestBase
         {
-            private string[] subjectIds;
+            private StudySubject[] studySubjects;
             private IActionResult result;
 
             /// <inheritdoc />
             public WhenGettingConsentedSubjectIdentifiers_ForAKnownStudy_OnlyReturnsSubjectIdentifiers()
             {
-                subjectIds = Enumerable.Range(0, 100).Select(_ => Random.String(10)).ToArray();
-                var studySubjects =
-                    subjectIds
-                    .Select((subjectId, index) => new StudySubject(StudyId, subjectId, (PersonIdentity) (index + 25)))
+                studySubjects = Enumerable.Range(0, 100)
+                    .Select((_, index) => 
+                        new StudySubject(StudyId, Random.String(10), (PersonIdentity) (index + 25)))
                     .ToArray();
+                
                 
                 A.CallTo(() => ConsentRepository.GetConsentedSubjects(StudyId))
                     .Returns(studySubjects);
 
-                result = CreateConsentController(ConsentRepository).Get(StudyId);
+                result = CreateConsentController(ConsentRepository).GetConsentedSubjectsForStudy(StudyId);
             }
 
             [Fact]
@@ -317,8 +315,8 @@ namespace CHC.Consent.Tests.Api.Controllers
 
             [Fact]
             public void ResultContainsAllSubjectIds() => 
-                result.As<OkObjectResult>().Value.As<IEnumerable<string>>()
-                .Should().BeEquivalentTo(subjectIds);
+                result.Should().BeOfType<OkObjectResult>()
+                    .Which.Value.Should().BeEquivalentTo(studySubjects);
 
         }
 
