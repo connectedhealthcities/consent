@@ -1,6 +1,7 @@
 using System;
 using CHC.Consent.Api.Client;
 using CHC.Consent.DataImporter;
+using CHC.Consent.DataImporter.Features.ImportData;
 using CHC.Consent.Testing.Utils;
 using FluentAssertions;
 using Xunit;

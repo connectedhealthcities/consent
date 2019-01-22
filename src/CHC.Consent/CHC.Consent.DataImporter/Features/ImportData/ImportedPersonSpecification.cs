@@ -1,6 +1,6 @@
-﻿using CHC.Consent.Api.Client.Models;
+using CHC.Consent.Api.Client.Models;
 
-namespace CHC.Consent.DataImporter
+namespace CHC.Consent.DataImporter.Features.ImportData
 {
     public class ImportedPersonSpecification
     {

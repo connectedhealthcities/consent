@@ -4,7 +4,7 @@ using System.Linq;
 using System.Xml.Linq;
 using CHC.Consent.Api.Client.Models;
 
-namespace CHC.Consent.DataImporter
+namespace CHC.Consent.DataImporter.Features.ImportData
 {
     public class IdentifierValueParser
     {
@@ -40,7 +40,6 @@ namespace CHC.Consent.DataImporter
             switch (definition.Type)
             {
                 case CompositeIdentifierType composite:
-                    var parsers = composite.Identifiers.ToDictionary(e => e.SystemName, CreateValueParser);
                     var valueParser = new IdentifierValueParser(composite.Identifiers);
                     return x =>
                         new IdentifierValueDtoIIdentifierValueDto(
@@ -48,7 +47,7 @@ namespace CHC.Consent.DataImporter
                             x.Elements()
                                 .Select(valueParser.Parse)
                                 .ToArray());
-                case DateIdentifierType date:
+                case DateIdentifierType _:
                     return x => new IdentifierValueDtoDateTime(name, (DateTime)x);
                 case EnumIdentifierType @enum:
                     return x =>
@@ -57,14 +56,14 @@ namespace CHC.Consent.DataImporter
                             v => v.Equals(x.Value, StringComparison.InvariantCultureIgnoreCase)) ??
                         throw new NotImplementedException($"Don't know what to do with enum value of {x.Value}")
                         );
-                case IntegerIdentifierType integer:
+                case IntegerIdentifierType _:
                     return x => new IdentifierValueDtoInt64(name, (long) x);
-                case StringIdentifierType @string:
+                case StringIdentifierType _:
                     return x => new IdentifierValueDtoString(name, x.Value); 
             }
 
             throw new NotImplementedException(
-                $"Don't know how to handle Identifiers of type {definition.Type.SystemName}");
+                $"Don't know how to handle Identifiers of type {definition.Type.GetType()} in Definition {name}");
         }
     }
 }

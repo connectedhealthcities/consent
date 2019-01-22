@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace CHC.Consent.DataImporter
+namespace CHC.Consent.DataImporter.Features.ImportData
 {
     public class XmlParseException : Exception
     {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,9 +9,8 @@ using System.Xml.XPath;
 using CHC.Consent.Api.Client.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Newtonsoft.Json;
 
-namespace CHC.Consent.DataImporter
+namespace CHC.Consent.DataImporter.Features.ImportData
 {
     /// <summary>
     /// <para>Simple XML parser that tries to match element names against constructor arguments.</para>

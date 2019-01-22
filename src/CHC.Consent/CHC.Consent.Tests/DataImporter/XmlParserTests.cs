@@ -9,6 +9,7 @@ using CHC.Consent.Api.Client.Models;
 using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.DataImporter;
+using CHC.Consent.DataImporter.Features.ImportData;
 using CHC.Consent.Testing.Utils;
 using FluentAssertions;
 using Xunit;

@@ -1,8 +1,7 @@
-﻿using System;
-using System.Text.RegularExpressions;
+using System;
 using CHC.Consent.Api.Client.Models;
 
-namespace CHC.Consent.DataImporter
+namespace CHC.Consent.DataImporter.Features.ImportData
 {
     public class ImportedConsentSpecification
     {
