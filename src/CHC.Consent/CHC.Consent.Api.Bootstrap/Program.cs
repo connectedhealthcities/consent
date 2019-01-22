@@ -111,7 +111,7 @@ namespace CHC.Consent.Api.Bootstrap
                 ClientId = "ApiExplorer",
                 ClientName = "Api User Interface",
 
-                AllowedGrantTypes = GrantTypes.Implicit,
+                AllowedGrantTypes = GrantTypes.ImplicitAndClientCredentials,
                 ClientSecrets = {new Secret("20672b51-679f-4de7-b6f8-810794afa6ca".Sha256())},
                 RequireClientSecret = false,
                 AllowAccessTokensViaBrowser = true,
