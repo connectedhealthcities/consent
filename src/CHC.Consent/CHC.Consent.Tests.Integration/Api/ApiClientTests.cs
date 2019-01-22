@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using CHC.Consent.Api.Client;
 using CHC.Consent.Api.Client.Models;
 using CHC.Consent.Testing.Utils;
+using CHC.Consent.Tests.Api.Controllers;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -15,25 +16,20 @@ namespace CHC.Consent.Tests.Integration.Api
 {
     using Random = Testing.Utils.Random;
 
-    [Collection(WebServerCollection.Name)]
-    public class ApiClientTests
+    public class ApiClientTests : WebIntegrationTest
     {
-        private ITestOutputHelper Output { get; }
-        private WebServerFixture Fixture { get; }
 
         /// <inheritdoc />
-        public ApiClientTests(ITestOutputHelper output, WebServerFixture fixture)
+        public ApiClientTests(ITestOutputHelper output, WebServerFixture fixture) : base(fixture, output)
         {
-            Output = output;
-            Fixture = fixture;
-            Fixture.Output = output;
+     
         }
 
         [Theory, MemberData(nameof(IdentityTestData))]
         public void CanSendIdentitiesToServer(IIdentifierValueDto identifier, Action<IIdentifierValueDto> checkResult)
         {
             PersonCreatedResult response=null;
-            Fixture.ApiClient.Invoking(
+            ApiClient.Invoking(
                     _ => response  = _.PutPerson(
                         new PersonSpecification(
                             new List<IIdentifierValueDto> {identifier},
@@ -46,7 +42,7 @@ namespace CHC.Consent.Tests.Integration.Api
                 
             Assert.NotNull(response);
             
-            var identities = Fixture.ApiClient.GetPerson(response.PersonId);
+            var identities = ApiClient.GetPerson(response.PersonId);
 
             Output.WriteLine(string.Join("\n", identities.Select(_ => _.ToString())));
 
@@ -70,7 +66,7 @@ namespace CHC.Consent.Tests.Integration.Api
                 i =>
                 {
                     i.Should().BeOfType<IdentifierValueDtoIIdentifierValueDto>()
-                        .Subject.Value.Should()
+                        .Which.Value.Should()
                         .Contain(Identifier(firstNameValue))
                         .And
                         .Contain(Identifier(lastNameValue))
@@ -118,16 +114,21 @@ namespace CHC.Consent.Tests.Integration.Api
             {
                 var (value, test) = tuple;
                 yield return value;
-                yield return test ?? (i =>
-                                 i.Should().BeOfType(value.GetType()).And.Subject.Should()
-                                     .BeEquivalentTo(
-                                     value,
-                                     options => options.RespectingRuntimeTypes()));
+                yield return test ?? IsEquivalentTo(value);
             }
 
             return tests.Select(ToEnumerable).Select(Enumerable.ToArray);
         }
-        
+
+        private static Action<IIdentifierValueDto> IsEquivalentTo(IIdentifierValueDto value)
+        {
+            return i =>
+                i.Should().BeOfType(value.GetType())
+                    .And.Should().BeEquivalentTo(
+                        value,
+                        options => options.RespectingRuntimeTypes());
+        }
+
         private static (IIdentifierValueDto, Action<IIdentifierValueDto>) NhsNumberTestData()
         {
             var value = NhsNumber(Random.String());
@@ -164,14 +165,11 @@ namespace CHC.Consent.Tests.Integration.Api
         [Fact]
         public void CanSendMultipleIdentitiesToServer()
         {
-            
-            var api = Fixture.ApiClient;
-
             var nhsNumber = NhsNumber("4334443434");
             var (name, _, _) = Name(Random.String(), Random.String());
             
             
-            var response = api.PutPerson(
+            var response = ApiClient.PutPerson(
                 new PersonSpecification(
                     new List<IIdentifierValueDto> {nhsNumber, name},
                     new List<MatchSpecification>
@@ -181,7 +179,7 @@ namespace CHC.Consent.Tests.Integration.Api
 
             Assert.NotNull(response);
             
-            var identities = api.GetPerson(response.PersonId);
+            var identities = ApiClient.GetPerson(response.PersonId);
 
             identities.Should().Contain(Identifier(nhsNumber));
             

@@ -7,11 +7,12 @@ using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.Testing.Utils;
+using FluentAssertions;
+using FluentAssertions.Execution;
 using IdentityServer4.EntityFramework.DbContexts;
 using IdentityServer4.EntityFramework.Mappers;
 using IdentityServer4.EntityFramework.Stores;
 using IdentityServer4.Models;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -21,25 +22,12 @@ using Random = CHC.Consent.Testing.Utils.Random;
 
 namespace CHC.Consent.Tests.Api.Controllers
 {
-    [Collection(WebServerCollection.Name),Trait("Category", "Integration")]
-    public class ConsentControllerIntegrationTests
+    public class ConsentControllerIntegrationTests : WebIntegrationTest
     {
-        public ITestOutputHelper Output { get; }
-        private HttpClient Client { get; }
-        public TestServer Server { get; set; }
-
-
         /// <inheritdoc />
-        public ConsentControllerIntegrationTests(WebServerFixture fixture, ITestOutputHelper output)
+        public ConsentControllerIntegrationTests(WebServerFixture fixture, ITestOutputHelper output) : base(fixture, output)
         {
-            Output = output;
-            fixture.Output = output;
-            Client = fixture.Client;
-            Server = fixture.Server;
-            ApiClient = fixture.ApiClient;
         }
-
-        public Consent.Api.Client.Api ApiClient { get; set; }
 
         [Fact()]
         public void SavesConsent()
@@ -74,7 +62,15 @@ namespace CHC.Consent.Tests.Api.Controllers
                 .Include(_ => _.GivenBy)
                 .Single(_ => _.Id == newConsentId);
             Assert.NotNull(consentEntity);
-            Assert.Equal(1, consentContext.Set<GivenEvidenceEntity>().Count(_ => _.Consent.Id == newConsentId));
+
+            var evidence = consentContext.Set<GivenEvidenceEntity>().SingleOrDefault(_ => _.Consent.Id == newConsentId);
+            using (new AssertionScope())
+            {
+                evidence.Should().NotBeNull();
+                evidence.Value.Should().Be(
+                    "<medway><competent-status>Competent</competent-status><consent-given-by>Self</consent-given-by><consent-taken-by>Jackson Pollock</consent-taken-by></medway>");
+                evidence.Type.Should().Be("medway");
+            }
         }
     }
 }
