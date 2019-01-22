@@ -1,3 +1,4 @@
+using System;
 using CHC.Consent.Common.Identity.Identifiers;
 
 namespace CHC.Consent.Common.Identity
@@ -63,6 +64,14 @@ namespace CHC.Consent.Common.Identity
             type: new CompositeIdentifierType(
                 NameParts.GivenName,
                 NameParts.FamilyName));
+        
+        public static readonly IdentifierDefinition ContactNumber = new IdentifierDefinition(
+            name: "Contact Number",
+            type: new CompositeIdentifierType(
+                new IdentifierDefinition(name: "Type", new StringIdentifierType()),
+                new IdentifierDefinition(name: "Number", new StringIdentifierType())
+                )
+            );
 
         public static readonly IdentifierDefinitionRegistry KnownIdentifiers = new IdentifierDefinitionRegistry
         {
@@ -72,7 +81,8 @@ namespace CHC.Consent.Common.Identity
             BradfordHospitalNumber,
             Address,
             BirthOrder,
-            Name
+            Name,
+            ContactNumber
         };
     }
 }
