@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using CHC.Consent.DataImporter.Features.ExportData;
 using CHC.Consent.DataImporter.Features.ImportData;
 using McMaster.Extensions.CommandLineUtils;
 using McMaster.Extensions.Hosting.CommandLine;
@@ -13,7 +14,7 @@ using Serilog.Events;
 
 namespace CHC.Consent.DataImporter
 {
-    [Command("chc-consent"), Subcommand(typeof(ImportCommand)), HelpOption]
+    [Command("chc-consent"), Subcommand(typeof(ImportCommand), typeof(ExportCommand)), HelpOption]
     public class Program
     {
         public static Task<int> Main(string[] args)

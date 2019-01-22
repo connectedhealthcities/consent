@@ -25,8 +25,8 @@ namespace CHC.Consent.Tests
         [Fact]
         public void CanCreateXmlParserFromMetaData()
         {
-            var identityStoreMetadata = Fixture.ApiClient.IdentityStoreMetadata();
-            var consentStoreMetadata = Fixture.ApiClient.ConsentStoreMetadata();
+            var identityStoreMetadata = Fixture.ApiClient.GetIdentityStoreMetadata();
+            var consentStoreMetadata = Fixture.ApiClient.GetConsentStoreMetadata();
             
             Action createParser = () => new XmlParser(
                 new XunitLogger<XmlParser>(Output, "Parser"),

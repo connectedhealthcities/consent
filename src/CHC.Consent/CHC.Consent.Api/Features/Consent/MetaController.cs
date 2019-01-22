@@ -21,7 +21,7 @@ namespace CHC.Consent.Api.Features.Consent
             Registry = registry;
         }
 
-        [HttpGet(Name="GetConsentStoreMetaData")]
+        [HttpGet(Name="GetConsentStoreMetadata")]
         [ProducesResponseType((int)HttpStatusCode.OK, Type=typeof(IEnumerable<EvidenceDefinition>))]
         public IActionResult Get()
         {

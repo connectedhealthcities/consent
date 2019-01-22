@@ -27,8 +27,8 @@ namespace CHC.Consent.DataImporter.Features.ImportData
         public async Task Import(string source)
         {
             var client = await ApiClientProvider.CreateApiClient();
-            var identifierDefinitions = client.IdentityStoreMetadata();
-            var evidenceDefinitions = client.ConsentStoreMetadata();
+            var identifierDefinitions = client.GetIdentityStoreMetadata();
+            var evidenceDefinitions = client.GetConsentStoreMetadata();
             
             var xmlParser = new XmlParser(LoggerProvider.CreateLogger<XmlParser>(), identifierDefinitions, evidenceDefinitions);
             using (var xmlReader = XmlReader.Create(source))

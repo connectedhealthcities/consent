@@ -104,7 +104,7 @@ namespace CHC.Consent.Api.Features.Consent
         }
 
         [HttpGet("{studyId}", Name="GetConsentedSubjectsForStudy")]
-        [ProducesResponseType((int) HttpStatusCode.OK, Type = typeof(IEnumerator<StudySubject>))]
+        [ProducesResponseType((int) HttpStatusCode.OK, Type = typeof(IEnumerable<StudySubject>))]
         [ProducesResponseType((int) HttpStatusCode.NotFound)]
         public IActionResult GetConsentedSubjectsForStudy([BindRequired]long studyId)
         {
