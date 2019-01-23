@@ -109,7 +109,7 @@ namespace CHC.Consent.Api.Features.Identity
                 if (registry.IsValidIdentifierType(identifier)) continue;
                 ModelState.AddModelError(
                     modelStateName,
-                    $"'{identifier.DefinitionSystemName}' is not a valid identifier type");
+                    $"'{identifier.SystemName}' is not a valid identifier type");
             }
         }
     }

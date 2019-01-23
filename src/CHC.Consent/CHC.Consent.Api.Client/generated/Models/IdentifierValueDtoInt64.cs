@@ -22,8 +22,8 @@ namespace CHC.Consent.Api.Client.Models
         /// Initializes a new instance of the IdentifierValueDtoInt64 class.
         /// </summary>
         public IdentifierValueDtoInt64(string name = default(string), long? value = default(long?))
+            : base(name)
         {
-            Name = name;
             Value = value;
             CustomInit();
         }
@@ -32,11 +32,6 @@ namespace CHC.Consent.Api.Client.Models
         /// An initialization method that performs custom operations like setting defaults
         /// </summary>
         partial void CustomInit();
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "name")]
-        public string Name { get; set; }
 
         /// <summary>
         /// </summary>

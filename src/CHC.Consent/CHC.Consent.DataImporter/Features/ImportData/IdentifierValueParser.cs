@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 using CHC.Consent.Api.Client.Models;
@@ -8,13 +9,17 @@ namespace CHC.Consent.DataImporter.Features.ImportData
 {
     public class IdentifierValueParser
     {
-        public static IdentifierValueParser CreateFrom<T>(IEnumerable<T> definitions) where T:IDefinition
-            => new IdentifierValueParser(definitions.Cast<IDefinition>().ToList());
-        
-        public IdentifierValueParser(IList<IDefinition> definitions)
+        public static IdentifierValueParser CreateFrom<T>(IEnumerable<T> definitions) where T:IDefinition, IAcceptDefinitionVisitor<T>
+        {
+            var parsers = new ValueParserCreator<T>().VisitAll(definitions).Parsers;
+            
+            return new IdentifierValueParser(definitions, parsers);
+        }
+
+        private IdentifierValueParser(IEnumerable<IDefinition> definitions, IDictionary<string, Parser> parsers)
         {
             Definitions = definitions.ToDictionary(x => x.SystemName);
-            Parsers = definitions.ToDictionary(x => x.SystemName, CreateValueParser);
+            Parsers = parsers.ToImmutableDictionary();
         }
 
         private delegate IIdentifierValueDto Parser(XElement element);
@@ -29,41 +34,63 @@ namespace CHC.Consent.DataImporter.Features.ImportData
                 throw new XmlParseException(identifierNode, $"Cannot parse identifier of Type '{typeName}'");
             }
 
-
             return Parsers[typeName](identifierNode);
-
         }
-
-        private static Parser CreateValueParser(IDefinition definition)
+        
+        private class ValueParserCreator<TDefinition> : IDefinitionVisitor<TDefinition> 
+            where TDefinition : IDefinition, IAcceptDefinitionVisitor<TDefinition>
         {
-            var name = definition.SystemName;
-            switch (definition.Type)
+            public IDictionary<string, Parser> Parsers { get; } = new Dictionary<string, Parser>();
+            
+            private delegate IIdentifierValueDto UnnamedParser(string name, XElement element);
+            private void SetParser(TDefinition definition, UnnamedParser parser) =>
+                Parsers[definition.SystemName] = x =>  parser(definition.SystemName, x);
+            
+            /// <inheritdoc />
+            public void Visit(TDefinition definition, CompositeIdentifierType type)
             {
-                case CompositeIdentifierType composite:
-                    var valueParser = new IdentifierValueParser(composite.Identifiers);
-                    return x =>
+                var valueParser = CreateFrom(type.Identifiers.Cast<TDefinition>());
+                SetParser(
+                    definition,
+                    (name, x) =>
                         new IdentifierValueDtoIIdentifierValueDto(
                             name,
                             x.Elements()
                                 .Select(valueParser.Parse)
-                                .ToArray());
-                case DateIdentifierType _:
-                    return x => new IdentifierValueDtoDateTime(name, (DateTime)x);
-                case EnumIdentifierType @enum:
-                    return x =>
-                        new IdentifierValueDtoString(name, 
-                        @enum.Values.FirstOrDefault(
-                            v => v.Equals(x.Value, StringComparison.InvariantCultureIgnoreCase)) ??
-                        throw new NotImplementedException($"Don't know what to do with enum value of {x.Value}")
-                        );
-                case IntegerIdentifierType _:
-                    return x => new IdentifierValueDtoInt64(name, (long) x);
-                case StringIdentifierType _:
-                    return x => new IdentifierValueDtoString(name, x.Value); 
+                                .ToArray()));
             }
 
-            throw new NotImplementedException(
-                $"Don't know how to handle Identifiers of type {definition.Type.GetType()} in Definition {name}");
+            /// <inheritdoc />
+            public void Visit(TDefinition definition, DateIdentifierType type)
+            {
+                SetParser(definition, (name, x) => new IdentifierValueDtoDateTime(name, (DateTime)x));
+            }
+
+            /// <inheritdoc />
+            public void Visit(TDefinition definition, EnumIdentifierType type)
+            {
+                SetParser(
+                    definition,
+                    (name, x) =>
+                        new IdentifierValueDtoString(
+                            name,
+                            @type.Values.FirstOrDefault(
+                                v => v.Equals(x.Value, StringComparison.InvariantCultureIgnoreCase)) ??
+                            throw new NotImplementedException($"Don't know what to do with enum value of {x.Value}")
+                        ));
+            }
+
+            /// <inheritdoc />
+            public void Visit(TDefinition definition, IntegerIdentifierType type)
+            {
+                SetParser(definition, (name,x) => new IdentifierValueDtoInt64(name, (long) x));
+            }
+
+            /// <inheritdoc />
+            public void Visit(TDefinition definition, StringIdentifierType type)
+            {
+                SetParser(definition, (name, x) => new IdentifierValueDtoString(name, x.Value));
+            }
         }
     }
 }

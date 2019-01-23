@@ -5,8 +5,8 @@ namespace CHC.Consent.Api.Infrastructure
 {
     public interface IIdentifierValueDto
     {
-        [JsonIgnore]
-        string DefinitionSystemName { get; }
+        [JsonProperty("name")]
+        string SystemName { get; set; }
         [JsonIgnore]
         object Value { get;  }
     }
@@ -32,12 +32,16 @@ namespace CHC.Consent.Api.Infrastructure
         }
 
         /// <inheritdoc />
-        string IIdentifierValueDto.DefinitionSystemName => Name;
+        string IIdentifierValueDto.SystemName
+        {
+            get => Name;
+            set => Name = value;
+        }
 
         /// <inheritdoc />
         object IIdentifierValueDto.Value => Value;
 
-        [JsonProperty]
+        [JsonIgnore]
         public string Name { get; set; }
 
         public T Value { get; set; }

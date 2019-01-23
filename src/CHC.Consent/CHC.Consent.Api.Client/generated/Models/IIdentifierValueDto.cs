@@ -4,6 +4,7 @@
 
 namespace CHC.Consent.Api.Client.Models
 {
+    using Newtonsoft.Json;
     using System.Linq;
 
     public partial class IIdentifierValueDto
@@ -16,11 +17,24 @@ namespace CHC.Consent.Api.Client.Models
             CustomInit();
         }
 
+        /// <summary>
+        /// Initializes a new instance of the IIdentifierValueDto class.
+        /// </summary>
+        public IIdentifierValueDto(string name = default(string))
+        {
+            Name = name;
+            CustomInit();
+        }
 
         /// <summary>
         /// An initialization method that performs custom operations like setting defaults
         /// </summary>
         partial void CustomInit();
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "name")]
+        public string Name { get; set; }
 
     }
 }

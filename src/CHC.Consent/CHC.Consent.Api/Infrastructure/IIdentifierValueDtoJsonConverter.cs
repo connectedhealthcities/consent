@@ -29,7 +29,7 @@ namespace CHC.Consent.Api.Infrastructure
             writer.WritePropertyName("$type");
             writer.WriteValue(value.GetType().FriendlyId());
             writer.WritePropertyName("name");
-            writer.WriteValue(dto.DefinitionSystemName);
+            writer.WriteValue(dto.SystemName);
             writer.WritePropertyName("value");
             serializer.Serialize(writer, innerValue);
             writer.WriteEndObject();

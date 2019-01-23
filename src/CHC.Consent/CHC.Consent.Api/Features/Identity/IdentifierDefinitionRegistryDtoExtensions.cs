@@ -10,7 +10,7 @@ namespace CHC.Consent.Api.Features.Identity
             this IdentifierDefinitionRegistry identifierDefinitionRegistry,
             IIdentifierValueDto identifier)
         {
-            return identifierDefinitionRegistry.ContainsKey(identifier.DefinitionSystemName);
+            return identifierDefinitionRegistry.ContainsKey(identifier.SystemName);
         }
     }
 }

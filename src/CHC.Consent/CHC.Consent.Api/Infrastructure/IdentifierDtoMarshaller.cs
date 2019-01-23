@@ -34,7 +34,7 @@ namespace CHC.Consent.Api.Infrastructure
 
         private TIdentifier MarshallToIdentifier(IIdentifierValueDto dto)
         {
-            return Marshallers[dto.DefinitionSystemName].MarshallToIdentifier(dto);
+            return Marshallers[dto.SystemName].MarshallToIdentifier(dto);
         }
 
         public delegate TIdentifier CreateIdentifier(TDefinition definition, IIdentifierValue value);

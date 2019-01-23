@@ -44,13 +44,10 @@ namespace CHC.Consent.Api.Infrastructure
         /// <inheritdoc />
         public override void BindToName(Type serializedType, out string assemblyName, out string typeName)
         {
-            if (NamesByType.TryGetValue(serializedType, out typeName))
+            assemblyName = null;
+            if (!NamesByType.TryGetValue(serializedType, out typeName))
             {
-                assemblyName = null;
-            }
-            else
-            {
-                base.BindToName(serializedType, out assemblyName, out typeName);
+                typeName = serializedType.FriendlyId();
             }
         }
     }

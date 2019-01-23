@@ -22,8 +22,8 @@ namespace CHC.Consent.Api.Client.Models
         /// Initializes a new instance of the IdentifierValueDtoString class.
         /// </summary>
         public IdentifierValueDtoString(string name = default(string), string value = default(string))
+            : base(name)
         {
-            Name = name;
             Value = value;
             CustomInit();
         }
@@ -32,11 +32,6 @@ namespace CHC.Consent.Api.Client.Models
         /// An initialization method that performs custom operations like setting defaults
         /// </summary>
         partial void CustomInit();
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "name")]
-        public string Name { get; set; }
 
         /// <summary>
         /// </summary>

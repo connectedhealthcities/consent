@@ -498,6 +498,9 @@
       ],
       "type": "object",
       "properties": {
+        "name": {
+          "type": "string"
+        },
         "$type": {
           "enum": [
             "IdentifierValueDto[String]",
@@ -518,9 +521,6 @@
         {
           "type": "object",
           "properties": {
-            "name": {
-              "type": "string"
-            },
             "value": {
               "type": "string"
             }
@@ -538,9 +538,6 @@
         {
           "type": "object",
           "properties": {
-            "name": {
-              "type": "string"
-            },
             "value": {
               "format": "date-time",
               "type": "string"
@@ -559,9 +556,6 @@
         {
           "type": "object",
           "properties": {
-            "name": {
-              "type": "string"
-            },
             "value": {
               "format": "int64",
               "type": "integer"
@@ -580,9 +574,6 @@
         {
           "type": "object",
           "properties": {
-            "name": {
-              "type": "string"
-            },
             "value": {
               "uniqueItems": false,
               "type": "array",

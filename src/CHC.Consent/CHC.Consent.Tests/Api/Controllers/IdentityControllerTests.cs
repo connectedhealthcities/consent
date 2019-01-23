@@ -70,7 +70,7 @@ namespace CHC.Consent.Tests.Api.Controllers
         {
             return new PersonIdentifier(
                 new SimpleIdentifierValue(identifier.Value), 
-                (IdentifierDefinition) registry[identifier.DefinitionSystemName]);
+                (IdentifierDefinition) registry[identifier.SystemName]);
         }
 
         
