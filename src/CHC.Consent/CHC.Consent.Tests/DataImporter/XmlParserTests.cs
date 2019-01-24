@@ -44,61 +44,10 @@ namespace CHC.Consent.Tests.DataImporter
         {
             var xDocument = CreateXDocumentWithLineInfo(fullXml);
             
-            var identifier = new XmlParser(Logger, ConvertToClientDefinition(definitions), Array.Empty<ClientEvidenceDefinition>()).ParseIdentifier(xDocument.Root);
+            var identifier = new XmlParser(Logger, definitions.ConvertToClientDefinitions(), Array.Empty<ClientEvidenceDefinition>()).ParseIdentifier(xDocument.Root);
 
             Assert.NotNull(identifier);
             return identifier;
-        }
-
-        private IList<ClientIdentifierDefinition> ConvertToClientDefinition(IdentifierDefinitionRegistry registry) =>
-            registry.Cast<InternalIdentifierDefinition>().Select(ConvertToClientDefinition).ToList();
-
-        private List<ClientIdentifierDefinition> ConvertToClientDefinition(IEnumerable<InternalIdentifierDefinition> definitions)
-        {
-            return definitions.Select(ConvertToClientDefinition).ToList();
-        }
-
-        private ClientIdentifierDefinition ConvertToClientDefinition(InternalIdentifierDefinition definition)
-        {
-            return new ClientIdentifierDefinition(
-                definition.SystemName,
-                ConvertToClientType<InternalIdentifierDefinition>(definition.Type, ConvertToClientDefinition),
-                definition.Name
-            );
-        }
-
-        private IList<ClientEvidenceDefinition> ConvertToClientDefinition(EvidenceDefinitionRegistry registry) =>
-            registry.Cast<InternalEvidenceDefinition>().Select(ConvertToClientDefinition).ToList();
-
-        private ClientEvidenceDefinition ConvertToClientDefinition(InternalEvidenceDefinition definition)
-        {
-            return new ClientEvidenceDefinition(
-                definition.SystemName,
-                ConvertToClientType<InternalEvidenceDefinition>(definition.Type, ConvertToClientDefinition),
-                definition.Name
-            );
-        }
-
-        private ClientIdentifierType ConvertToClientType<TInternalDefinition>(
-            InternalIdentifierType internalType, 
-            Func<TInternalDefinition, IClientDefinition> convertToClientDefinition) where TInternalDefinition:IInternalDefinition
-        {
-            switch (internalType)
-            {
-                case CHC.Consent.Common.Identity.Identifiers.CompositeIdentifierType composite:
-                    return new CHC.Consent.Api.Client.Models.CompositeIdentifierType(composite.SystemName,
-                        composite.Identifiers.Cast<TInternalDefinition>().Select(convertToClientDefinition).ToList());
-                case CHC.Consent.Common.Identity.Identifiers.DateIdentifierType date:
-                    return new CHC.Consent.Api.Client.Models.DateIdentifierType(date.SystemName);
-                case CHC.Consent.Common.Identity.Identifiers.EnumIdentifierType @enum:
-                    return new CHC.Consent.Api.Client.Models.EnumIdentifierType(systemName:@enum.SystemName, values:@enum.Values.ToList());
-                case CHC.Consent.Common.Identity.Identifiers.IntegerIdentifierType integer:
-                    return new CHC.Consent.Api.Client.Models.IntegerIdentifierType(integer.SystemName);
-                case CHC.Consent.Common.Identity.Identifiers.StringIdentifierType @string:
-                    return new CHC.Consent.Api.Client.Models.StringIdentifierType(@string.SystemName);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(internalType));
-            }
         }
 
         private static XDocument CreateXDocumentWithLineInfo(string fullXml) =>
@@ -132,7 +81,7 @@ namespace CHC.Consent.Tests.DataImporter
 
         private IdentifierValueParser CreateParser(
             params InternalIdentifierDefinition[] definitions)
-            => IdentifierValueParser.CreateFrom(ConvertToClientDefinition(definitions));
+            => IdentifierValueParser.CreateFrom(definitions.ConvertToClientDefinitions());
         
         
         [Fact]
@@ -228,9 +177,9 @@ namespace CHC.Consent.Tests.DataImporter
             
             var xmlReader = CreateXmlReader(personXml);
             var specification = new XmlParser(
-                Logger, 
-                ConvertToClientDefinition(Identifiers.Registry),
-                ConvertToClientDefinition(KnownEvidence.Registry))
+                Logger,
+                Identifiers.Registry.ConvertToClientDefinitions(),
+                Identifiers.ConvertToClientDefinitions(KnownEvidence.Registry))
                 .GetPeople(xmlReader)
                 .Single();
             var person = specification.PersonSpecification;
@@ -268,8 +217,8 @@ namespace CHC.Consent.Tests.DataImporter
 
             return new XmlParser(
                     Logger,
-                    ConvertToClientDefinition(personIdentifierTypes ?? new IdentifierDefinitionRegistry()),
-                    ConvertToClientDefinition(evidenceDefinitions ?? new EvidenceDefinitionRegistry())
+                    (personIdentifierTypes ?? new IdentifierDefinitionRegistry()).ConvertToClientDefinitions(),
+                    Identifiers.ConvertToClientDefinitions(evidenceDefinitions ?? new EvidenceDefinitionRegistry())
                     )
                 .ParseConsent(
                     CreateXDocumentWithLineInfo(xml).Root);

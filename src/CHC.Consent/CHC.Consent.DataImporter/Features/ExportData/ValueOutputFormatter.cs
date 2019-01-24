@@ -42,7 +42,7 @@ namespace CHC.Consent.DataImporter.Features.ExportData
         }
 
         private static Writer WriteDate { get; } =
-            (dto, writer) => writer.WriteField(((IdentifierValueDtoDateTime) dto)?.Value);
+            (dto, writer) => writer.WriteField(((IdentifierValueDtoDateTime) dto)?.Value?.ToString("yyyy-MM-dd"));
 
         /// <inheritdoc />
         public void Visit(IdentifierDefinition definition, EnumIdentifierType type)
@@ -75,13 +75,13 @@ namespace CHC.Consent.DataImporter.Features.ExportData
 
         public void Write(
             IEnumerable<IIdentifierValueDto> identifiers,
-            IWriterRow output)
+            IWriterRow destination)
         {
             var valuesByName = identifiers.ToDictionary(_ => _.Name);
             foreach (var identifierDefinition in IdentifierDefinitions)
             {
                 valuesByName.TryGetValue(identifierDefinition.SystemName, out var identifier);
-                Writers[identifierDefinition.SystemName](identifier, output);
+                Writers[identifierDefinition.SystemName](identifier, destination);
             }
         }
     }

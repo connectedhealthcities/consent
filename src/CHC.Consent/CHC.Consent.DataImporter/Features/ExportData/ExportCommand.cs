@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
@@ -12,6 +13,82 @@ using McMaster.Extensions.CommandLineUtils;
 
 namespace CHC.Consent.DataImporter.Features.ExportData
 {
+    public class StudySubjectWithIdentifiers
+    {
+        public string subjectIdentifier { get; set; }
+        public IList<IIdentifierValueDto> identifiers { get; set; }
+    }
+
+    public class CsvExporter
+    {
+        public CsvExporter(IApi apiClient)
+        {
+            ApiClient = apiClient;
+        }
+
+        private IApi ApiClient { get; set; }
+
+        public async Task Export(long studyId, StreamWriter outputWriter)
+        {
+            var definitions = await ApiClient.GetIdentityStoreMetadataAsync();
+            var studySubjects = ApiClient
+                .GetConsentedSubjectsForStudy(studyId)
+                .Select(
+                    studySubject =>
+                        new StudySubjectWithIdentifiers
+                        {
+                            subjectIdentifier = studySubject.SubjectIdentifier,
+                            identifiers = ApiClient.GetPerson(studySubject.PersonId.Id.Value)
+                        })
+                .ToArray();
+
+
+            Write(definitions, studySubjects, outputWriter);
+        }
+
+        public virtual void Write(
+            ICollection<IdentifierDefinition> definitions, 
+            IEnumerable<StudySubjectWithIdentifiers> studySubjects,
+            TextWriter outputWriter)
+        {
+            var outputFormatter = new ValueOutputFormatter(definitions);
+            using (var csv = new CsvWriter(outputWriter))
+            {
+                WriteHeader(csv, definitions);
+
+                foreach (var subject in studySubjects)
+                {
+                    WriteRecord(csv, outputFormatter, subject.subjectIdentifier, subject.identifiers);
+                }
+            }
+        }
+
+        private static void WriteRecord(
+            IWriter output,
+            ValueOutputFormatter outputFormatter,
+            string subjectIdentifier,
+            IEnumerable<IIdentifierValueDto> identifiers)
+        {
+            output.WriteField(subjectIdentifier);
+            outputFormatter.Write(identifiers, output);
+            output.NextRecord();
+        }
+
+        private static void WriteHeader(IWriter output, IEnumerable<IdentifierDefinition> definitions)
+        {
+            output.WriteField("id");
+            foreach (var name in FieldNames(definitions))
+            {
+                output.WriteField(name);
+            }
+
+            output.NextRecord();
+        }
+
+        private static IEnumerable<string> FieldNames(IEnumerable<IdentifierDefinition> definitions) =>
+            new GatherOutputNames(definitions);
+    }
+
     [Command("export")]
     public class ExportCommand
     {
@@ -34,52 +111,9 @@ namespace CHC.Consent.DataImporter.Features.ExportData
         protected async Task OnExecuteAsync()
         {
             IApi apiClient = await apiClientProvider.CreateApiClient();
-            var definitions = await apiClient.GetIdentityStoreMetadataAsync();
-            var studySubjects = apiClient
-                .GetConsentedSubjectsForStudy(StudyId)
-                .Select(
-                    studySubject =>
-                        (subjectIdentifier: studySubject.SubjectIdentifier,
-                            identifiers: apiClient.GetPerson(studySubject.PersonId.Id.Value)))
-                .ToArray();
-
-            var outputFormatter = new ValueOutputFormatter(definitions);
+            var outputWriter = System.IO.File.CreateText(File);
             
-            using (var output = new CsvWriter(System.IO.File.CreateText(File)))
-            {
-                WriteHeader(output, definitions);
-
-
-                foreach (var (subjectIdentifier, identifierValues) in studySubjects)
-                {
-                    WriteRecord(output, outputFormatter, subjectIdentifier, identifierValues);
-                }
-            }
+            await new CsvExporter(apiClient).Export(StudyId, outputWriter);
         }
-
-        private static void WriteRecord(
-            CsvWriter output,
-            ValueOutputFormatter outputFormatter,
-            string subjectIdentifier,
-            IEnumerable<IIdentifierValueDto> identifiers)
-        {
-            output.WriteField(subjectIdentifier);
-            outputFormatter.Write(identifiers, output);
-            output.NextRecord();
-        }
-
-        private static void WriteHeader(IWriter output, IEnumerable<IdentifierDefinition> definitions)
-        {
-            output.WriteField("Id");
-            foreach (var name in FieldNames(definitions))
-            {
-                output.WriteField(name);
-            }
-
-            output.NextRecord();
-        }
-
-        private static IEnumerable<string> FieldNames(IEnumerable<IdentifierDefinition> definitions) =>
-            new GatherOutputNames(definitions);
     }
 }
