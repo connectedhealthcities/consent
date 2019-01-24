@@ -7,12 +7,14 @@ namespace CHC.Consent.DataImporter.Features.ExportData
 {
     internal class ValueOutputFormatter : IDefinitionVisitor<IdentifierDefinition>
     {
+        private ILookup<string, string[]> fieldNames;
         private IEnumerable<IdentifierDefinition> IdentifierDefinitions { get; }
 
         /// <inheritdoc />
-        public ValueOutputFormatter(IEnumerable<IdentifierDefinition> identifierDefinitions)
+        public ValueOutputFormatter(IEnumerable<IdentifierDefinition> identifierDefinitions, IEnumerable<string[]> fieldNames)
         {
             IdentifierDefinitions = identifierDefinitions.ToArray();
+            this.fieldNames = fieldNames.ToLookup(_ => _.First(), _ => _.Skip(1).ToArray());
             this.VisitAll(IdentifierDefinitions);
         }
 
@@ -23,8 +25,14 @@ namespace CHC.Consent.DataImporter.Features.ExportData
         /// <inheritdoc />
         public void Visit(IdentifierDefinition definition, CompositeIdentifierType type)
         {
-            var compositeDefinitions = type.Identifiers.Cast<IdentifierDefinition>().ToArray();
-            var subWriters = new ValueOutputFormatter(compositeDefinitions);
+            var subfieldNames = fieldNames[definition.SystemName].ToArray();
+            var compositeLevelFieldNames = subfieldNames.Select(_ => _.First()).ToArray();
+            var compositeDefinitions = 
+                type.Identifiers.Cast<IdentifierDefinition>()
+                    .Where(d => compositeLevelFieldNames.Contains(d.SystemName))
+                    .ToArray();
+
+            var subWriters = new ValueOutputFormatter(compositeDefinitions, subfieldNames);
             Writers[definition.SystemName] = delegate(IIdentifierValueDto dto, IWriterRow writer)
             {
                 var compositeDtos =
