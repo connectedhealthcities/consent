@@ -445,7 +445,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/StudySubjectValue"
             }
           }
         }
@@ -883,6 +883,14 @@
       ],
       "x-ms-client-name": "StringIdentifierType",
       "x-ms-discriminator-value": "StringIdentifierType"
+    },
+    "StudySubjectValue": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
     }
   },
   "securityDefinitions": {

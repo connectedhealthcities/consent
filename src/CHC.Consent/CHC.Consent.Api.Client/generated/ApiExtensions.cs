@@ -285,7 +285,7 @@ namespace CHC.Consent.Api.Client
             /// </param>
             /// <param name='studyId'>
             /// </param>
-            public static string Generate(this IApi operations, long studyId)
+            public static StudySubjectValue Generate(this IApi operations, long studyId)
             {
                 return operations.GenerateAsync(studyId).GetAwaiter().GetResult();
             }
@@ -298,7 +298,7 @@ namespace CHC.Consent.Api.Client
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<string> GenerateAsync(this IApi operations, long studyId, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<StudySubjectValue> GenerateAsync(this IApi operations, long studyId, CancellationToken cancellationToken = default(CancellationToken))
             {
                 using (var _result = await operations.GenerateWithHttpMessagesAsync(studyId, null, cancellationToken).ConfigureAwait(false))
                 {

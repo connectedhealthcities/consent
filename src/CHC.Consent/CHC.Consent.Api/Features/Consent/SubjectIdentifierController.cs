@@ -17,11 +17,22 @@ namespace CHC.Consent.Api.Features.Consent
         }
 
         [HttpPost("{studyId:long}")]
-        [Produces(typeof(string))]
+        [Produces(typeof(StudySubjectValue))]
         [AutoCommit]
         public IActionResult Generate(long studyId)
         {
-            return Ok(SubjectIdentifierRepository.GenerateIdentifier(new StudyIdentity(studyId)));
+            return Ok(
+                new StudySubjectValue
+                {
+                    Value = SubjectIdentifierRepository.GenerateIdentifier(new StudyIdentity(studyId))
+                });
         }
+
+        
+    }
+
+    public class StudySubjectValue
+    {
+        public string Value { get; set; }
     }
 }

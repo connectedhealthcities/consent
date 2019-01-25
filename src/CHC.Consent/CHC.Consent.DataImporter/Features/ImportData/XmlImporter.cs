@@ -66,7 +66,7 @@ namespace CHC.Consent.DataImporter.Features.ImportData
 
                             var subjectIdentifier =
                                 existingSubject == null
-                                    ? api.Generate(consent.StudyId)
+                                    ? api.Generate(consent.StudyId).Value
                                     : existingSubject.SubjectIdentifier;
                         
                             api.PutConsent(
