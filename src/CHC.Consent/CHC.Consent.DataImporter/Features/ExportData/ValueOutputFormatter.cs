@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using CHC.Consent.Api.Client.Models;
@@ -7,15 +8,36 @@ namespace CHC.Consent.DataImporter.Features.ExportData
 {
     internal class ValueOutputFormatter : IDefinitionVisitor<IdentifierDefinition>
     {
-        private ILookup<string, string[]> fieldNames;
+        private ILookup<string, string[]> FieldNames { get; }
         private IEnumerable<IdentifierDefinition> IdentifierDefinitions { get; }
 
         /// <inheritdoc />
-        public ValueOutputFormatter(IEnumerable<IdentifierDefinition> identifierDefinitions, IEnumerable<string[]> fieldNames)
+        public ValueOutputFormatter(IEnumerable<IdentifierDefinition> definitions, IEnumerable<string[]> fieldNames)
         {
-            IdentifierDefinitions = identifierDefinitions.ToArray();
-            this.fieldNames = fieldNames.ToLookup(_ => _.First(), _ => _.Skip(1).ToArray());
+            FieldNames = fieldNames.ToLookup(_ => _.First(), _ => _.Skip(1).ToArray());
+            var directFieldNames = FieldNames.Select(_ => _.Key).ToArray();
+
+            IdentifierDefinitions = GetDefinitionsInOutputOrder(definitions, directFieldNames);
             this.VisitAll(IdentifierDefinitions);
+        }
+
+        private static IEnumerable<IdentifierDefinition> GetDefinitionsInOutputOrder(
+            IEnumerable<IdentifierDefinition> definitions, 
+            IEnumerable<string> directFieldNames)
+        {
+            IdentifierDefinition GetDefinition(string fieldName)
+            {
+                try
+                {
+                    return definitions.Single(d => d.SystemName == fieldName);
+                }
+                catch (InvalidOperationException e)
+                {
+                    throw new InvalidOperationException($"Cannot find field called '{fieldName}' ", e);
+                }
+            }
+
+            return directFieldNames.Select(GetDefinition).ToArray();
         }
 
         private delegate void Writer(IIdentifierValueDto dto, IWriterRow writer);
@@ -25,14 +47,11 @@ namespace CHC.Consent.DataImporter.Features.ExportData
         /// <inheritdoc />
         public void Visit(IdentifierDefinition definition, CompositeIdentifierType type)
         {
-            var subfieldNames = fieldNames[definition.SystemName].ToArray();
-            var compositeLevelFieldNames = subfieldNames.Select(_ => _.First()).ToArray();
-            var compositeDefinitions = 
-                type.Identifiers.Cast<IdentifierDefinition>()
-                    .Where(d => compositeLevelFieldNames.Contains(d.SystemName))
-                    .ToArray();
-
-            var subWriters = new ValueOutputFormatter(compositeDefinitions, subfieldNames);
+            var subWriters = new ValueOutputFormatter(
+                type.Identifiers.Cast<IdentifierDefinition>(),
+                FieldNames[definition.SystemName].ToArray()
+            );
+            
             Writers[definition.SystemName] = delegate(IIdentifierValueDto dto, IWriterRow writer)
             {
                 var compositeDtos =
@@ -85,7 +104,8 @@ namespace CHC.Consent.DataImporter.Features.ExportData
             IEnumerable<IIdentifierValueDto> identifiers,
             IWriterRow destination)
         {
-            var valuesByName = identifiers.ToDictionary(_ => _.Name);
+            //TODO: Handle multiple values
+            var valuesByName = identifiers.ToLookup(_ => _.Name).ToDictionary(_ => _.Key, _ => _.First());
             foreach (var identifierDefinition in IdentifierDefinitions)
             {
                 valuesByName.TryGetValue(identifierDefinition.SystemName, out var identifier);

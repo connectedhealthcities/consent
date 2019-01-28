@@ -105,6 +105,28 @@ namespace CHC.Consent.Tests.DataImporter
                 .Should()
                 .BeEquivalentTo("id,name::family", "001,Surname", "");
         }
+        
+        [Fact]
+        public void WhenExportingFields_FieldsAreWrittenInCorrectOrder()
+        {
+            Export(
+                    new[] {KnownIdentifiers.Address, KnownIdentifiers.DateOfBirth, KnownIdentifiers.Name,},
+                    fieldNames: new[] {"name::given", "name::family", "address::postcode"},
+                    Person(
+                        "001",
+                        "First name",
+                        "Surname",
+                        27.April(2014),
+                        ClientIdentifierValues.Address(postcode: "SN13 7HG")
+                    )
+                )
+                .Should()
+                .BeEquivalentTo(
+                    "id,name::given,name::family,address::postcode",
+                    "001,First name,Surname,SN13 7HG",
+                    ""
+                );
+        }
 
         private static string[] Export(
             IEnumerable<CHC.Consent.Common.Identity.Identifiers.IdentifierDefinition> identifiers, 
@@ -126,22 +148,22 @@ namespace CHC.Consent.Tests.DataImporter
             var strings = result.Split(new[] {"\n", "\r\n"}, StringSplitOptions.None);
             return strings;
         }
+        
+        
 
         private static StudySubjectWithIdentifiers Person(
             string subjectIdentifier,
             string firstName = null,
             string lastname = null,
-            DateTime? dateOfBirth = null)
+            DateTime? dateOfBirth = null,
+            params IIdentifierValueDto[] otherIdentifiers
+            )
         {
-            var identifiers = new List<IIdentifierValueDto>();
+            var identifiers = new List<IIdentifierValueDto>(otherIdentifiers);
 
             if (firstName != null || lastname != null)
             {
-                var nameParts = new List<IIdentifierValueDto>();
-                if(firstName != null) nameParts.Add(KnownIdentifiers.FirstName.Value(firstName));
-                if(lastname != null) nameParts.Add(KnownIdentifiers.LastName.Value(lastname));
-
-                identifiers.Add(KnownIdentifiers.Name.Value(nameParts));
+                identifiers.Add(ClientIdentifierValues.Name(firstName, lastname));
             }
 
             if(dateOfBirth != null) identifiers.Add(KnownIdentifiers.DateOfBirth.Value(dateOfBirth.Value));

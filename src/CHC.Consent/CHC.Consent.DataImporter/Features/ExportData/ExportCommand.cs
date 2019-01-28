@@ -1,6 +1,5 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
 using CHC.Consent.Api.Client;
 using JetBrains.Annotations;
@@ -20,6 +19,9 @@ namespace CHC.Consent.DataImporter.Features.ExportData
         [Required, LegalFilePath, Argument(1, "output-file", "file to output")]
         // ReSharper disable once MemberCanBePrivate.Global
         public string File { get; [UsedImplicitly]set; }
+        
+        [Option( ShortName = "f", LongName = "fields", Description = "comma separated list of fields to output")]
+        public string FieldNames { get; [UsedImplicitly] set; }
 
         /// <inheritdoc />
         public ExportCommand(ApiClientProvider apiClientProvider)
@@ -31,8 +33,9 @@ namespace CHC.Consent.DataImporter.Features.ExportData
         {
             IApi apiClient = await apiClientProvider.CreateApiClient();
             var outputWriter = System.IO.File.CreateText(File);
-            
-            await new CsvExporter(apiClient, Array.Empty<string>()).Export(StudyId, outputWriter);
+
+            await new CsvExporter(apiClient, FieldNames?.Split(',') ?? Array.Empty<string>())
+                .Export(StudyId,outputWriter);
         }
     }
 }

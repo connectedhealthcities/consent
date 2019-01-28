@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,28 +15,59 @@ namespace CHC.Consent.DataImporter.Features.ExportData
 
         public CsvExporter(IApi apiClient, string[] fieldNames)
         {
-            this.fieldNames = fieldNames.Select(_ => _.Split("::")).ToArray();
+            this.fieldNames = fieldNames.Select(_ => _.Split(FieldNames.Separator)).ToArray();
             ApiClient = apiClient;
         }
 
         private IApi ApiClient { get; set; }
 
-        public async Task Export(long studyId, StreamWriter outputWriter)
+        public async Task Export(long studyId, StreamWriter outputStream)
         {
-            var definitions = await ApiClient.GetIdentityStoreMetadataAsync();
-            var studySubjects = ApiClient
-                .GetConsentedSubjectsForStudy(studyId)
-                .Select(
-                    studySubject =>
-                        new StudySubjectWithIdentifiers
-                        {
-                            subjectIdentifier = studySubject.SubjectIdentifier,
-                            identifiers = ApiClient.GetPerson(studySubject.PersonId.Id.Value)
-                        })
-                .ToArray();
+            var definitions = await GetIdentifierDefinitions();
 
+            CheckFieldNames(definitions);
 
-            Write(definitions, studySubjects, outputWriter);
+            var studySubjects = await GetSubjectIdentifiersAndIdentityValues(studyId);
+
+            Write(definitions, studySubjects, outputStream);
+        }
+
+        private Task<IList<IdentifierDefinition>> GetIdentifierDefinitions() =>
+            ApiClient.GetIdentityStoreMetadataAsync();
+
+        private async Task<IEnumerable<StudySubjectWithIdentifiers>> GetSubjectIdentifiersAndIdentityValues(
+            long studyId)
+        {
+            var consentedSubjectsForStudyAsync = await ApiClient.GetConsentedSubjectsForStudyAsync(studyId);
+            return
+                await Task.WhenAll(
+                    consentedSubjectsForStudyAsync
+                        .Select(
+                            async studySubject =>
+                                new StudySubjectWithIdentifiers
+                                {
+                                    subjectIdentifier = studySubject.SubjectIdentifier,
+                                    identifiers = await GetIdentifiers(studySubject)
+                                })
+                );
+        }
+
+        private async Task<IList<IIdentifierValueDto>> GetIdentifiers(StudySubject studySubject)
+        {
+            return fieldNames.Any()
+                ? await ApiClient.GetPersonAsync(studySubject.PersonId.Id.Value)
+                : Array.Empty<IIdentifierValueDto>();
+        }
+
+        private void CheckFieldNames(IList<IdentifierDefinition> definitions)
+        {
+            var definitionNames = new FieldNames(definitions);
+            var fullFieldNames = fieldNames.Select(FieldNames.Join);
+            var invalidFieldNames = fullFieldNames.Where(n => !definitionNames.Contains(n)).ToArray();
+            if (invalidFieldNames.Any())
+            {
+                throw new InvalidOperationException($"Invalid field names: '{string.Join("', '", invalidFieldNames)}'");
+            }
         }
 
         public virtual void Write(
@@ -43,12 +75,11 @@ namespace CHC.Consent.DataImporter.Features.ExportData
             IEnumerable<StudySubjectWithIdentifiers> studySubjects,
             TextWriter outputWriter)
         {
-            var topLevel = new HashSet<string>(fieldNames.Select(_ => _.First()));
-            var selectedFields = definitions.Where(_ => topLevel.Contains(_.SystemName)).ToArray();
-            var outputFormatter = new ValueOutputFormatter(selectedFields, fieldNames);
+            
+            var outputFormatter = new ValueOutputFormatter(definitions, fieldNames);
             using (var csv = new CsvWriter(outputWriter))
             {
-                WriteHeader(csv, selectedFields);
+                WriteHeader(csv, definitions);
 
                 foreach (var subject in studySubjects)
                 {
@@ -78,8 +109,5 @@ namespace CHC.Consent.DataImporter.Features.ExportData
 
             output.NextRecord();
         }
-
-        private IEnumerable<string> FieldNames(IEnumerable<IdentifierDefinition> definitions) =>
-            new GatherOutputNames(definitions);
     }
 }

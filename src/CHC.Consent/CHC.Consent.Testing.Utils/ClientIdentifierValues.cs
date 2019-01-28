@@ -6,7 +6,7 @@ namespace CHC.Consent.Testing.Utils
 {
     public static class ClientIdentifierValues
     {
-        public static CHC.Consent.Api.Client.Models.IdentifierValueDtoIIdentifierValueDto Address(
+        public static IdentifierValueDtoIIdentifierValueDto Address(
             string line1 = null,
             string line2 = null,
             string line3 = null,
@@ -36,7 +36,7 @@ namespace CHC.Consent.Testing.Utils
 
         
 
-        public static CHC.Consent.Api.Client.Models.IdentifierValueDtoIIdentifierValueDto Name(
+        public static IdentifierValueDtoIIdentifierValueDto Name(
             string firstName=null,
             string lastName=null
         )
