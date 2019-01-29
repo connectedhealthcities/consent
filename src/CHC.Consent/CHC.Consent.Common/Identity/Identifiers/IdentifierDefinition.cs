@@ -6,6 +6,9 @@ namespace CHC.Consent.Common.Identity.Identifiers
         {
         }
 
+        public static IdentifierDefinition Create(string name, IIdentifierType type)
+            => new IdentifierDefinition(name, type);
+            
         
     }
 }

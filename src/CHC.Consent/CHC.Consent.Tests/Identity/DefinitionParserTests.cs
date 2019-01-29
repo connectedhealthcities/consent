@@ -1,3 +1,5 @@
+using CHC.Consent.Common.Consent;
+using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Parsing;
 using CHC.Consent.Testing.Utils;
@@ -8,6 +10,9 @@ namespace CHC.Consent.Tests.Identity
 {
     public class DefinitionParserTests
     {
+        private readonly DefinitionParser<IdentifierDefinition> parser = 
+            new DefinitionParser<IdentifierDefinition>(IdentifierDefinition.Create);
+
         public static TheoryData<string, IdentifierDefinition> Definitions =>
             new TheoryData<string, IdentifierDefinition>
             {
@@ -32,9 +37,34 @@ namespace CHC.Consent.Tests.Identity
         [MemberData(nameof(Definitions))]
         public void CorrectlyParsesIdentifiers(string definitionString, IdentifierDefinition expected)
         {
-            var definition = new DefinitionParser().ParseString(definitionString);
+            var definition = parser.ParseString(definitionString);
 
             definition.Should().BeEquivalentTo(expected);
+        }
+
+        [Fact]
+        public void CanParseEvidence()
+        {
+            var evidenceParser = new DefinitionParser<EvidenceDefinition>(EvidenceDefinition.Create);
+
+            var definition =  evidenceParser.ParseString(
+                @"    
+                medway: composite (
+                    competent-status : enum ( 'Yes', 'No' ),
+                    consent-given-by : string,
+                    consent-taken-by : string
+                )
+            ");
+
+            definition.Should().BeEquivalentTo(
+                EvidenceDefinition.Create(
+                    "medway",
+                    new CompositeIdentifierType(
+                        EvidenceDefinition.Create("competent-status", new EnumIdentifierType("Yes", "No")),
+                        EvidenceDefinition.Create("consent-given-by", new StringIdentifierType()),
+                        EvidenceDefinition.Create("consent-taken-by", new StringIdentifierType())
+                    ))
+            );
         }
         
     }

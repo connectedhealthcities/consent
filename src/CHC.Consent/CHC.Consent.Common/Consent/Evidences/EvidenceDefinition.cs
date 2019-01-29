@@ -8,5 +8,10 @@ namespace CHC.Consent.Common.Consent.Evidences
         {
             
         }
+
+        public static EvidenceDefinition Create(string name, IIdentifierType type)
+        {
+            return new EvidenceDefinition(name, type);
+        }
     }
 }
