@@ -21,13 +21,14 @@ namespace CHC.Consent.Testing.Utils
             public static IdentifierDefinition String(string name) =>
                 new IdentifierDefinition(name, new StringIdentifierType());
 
-            public static IdentifierDefinition Date(string name) => 
+            public static IdentifierDefinition Date(string name) =>
                 new IdentifierDefinition(name, new DateIdentifierType());
-            
+
             public static IdentifierDefinition Composite(string name, params IdentifierDefinition[] fields) =>
-                new IdentifierDefinition(name,
+                new IdentifierDefinition(
+                    name,
                     new CompositeIdentifierType(fields));
-            
+
             public static IdentifierDefinition Enum(string name, params string[] values) =>
                 new IdentifierDefinition(name, new EnumIdentifierType(values));
 
@@ -43,7 +44,8 @@ namespace CHC.Consent.Testing.Utils
             public static IdentifierDefinition AddressLine4 => KnownIdentifierDefinitions.AddressParts.Line4;
             public static IdentifierDefinition AddressLine5 => KnownIdentifierDefinitions.AddressParts.Line5;
 
-            public static readonly IdentifierDefinition AddressPostcode = KnownIdentifierDefinitions.AddressParts.Postcode;
+            public static readonly IdentifierDefinition AddressPostcode =
+                KnownIdentifierDefinitions.AddressParts.Postcode;
 
             public static IdentifierDefinition Address => KnownIdentifierDefinitions.Address;
 
@@ -52,6 +54,9 @@ namespace CHC.Consent.Testing.Utils
 
             public static IdentifierDefinition FirstName => KnownIdentifierDefinitions.NameParts.GivenName;
             public static IdentifierDefinition LastName => KnownIdentifierDefinitions.NameParts.FamilyName;
+
+            public static IdentifierDefinition Integer(string name) =>
+                new IdentifierDefinition(name, new IntegerIdentifierType());
         }
 
         public static PersonIdentifier PersonIdentifier<T>(T value, IdentifierDefinition definition) =>

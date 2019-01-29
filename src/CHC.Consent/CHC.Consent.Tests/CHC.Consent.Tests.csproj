@@ -26,6 +26,7 @@
       <Name>CHC.Consent.Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\CHC.Consent.DataImporter\CHC.Consent.DataImporter.csproj" />
+    <ProjectReference Include="..\CHC.Consent.Parsing\CHC.Consent.Parsing.csproj" />
     <ProjectReference Include="..\CHC.Consent.Testing.Utils\CHC.Consent.Testing.Utils.csproj">
       <Project>{7D1EFE71-9C0B-4F6A-8D17-DF15D18F5AA3}</Project>
       <Name>CHC.Consent.Testing.Utils</Name>

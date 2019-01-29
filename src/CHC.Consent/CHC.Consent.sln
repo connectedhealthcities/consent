@@ -20,10 +20,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHC.Consent.Api.Bootstrap",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHC.Consent.Tests.Integration", "CHC.Consent.Tests.Integration\CHC.Consent.Tests.Integration.csproj", "{D7CD6C78-5E22-4474-8FE3-6433E1D5F90E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Config", "Config", "{E31A558A-83DA-45AC-A748-BFD33E58489E}"
-ProjectSection(SolutionItems) = preProject
-	Config\Identifiers.json = Config\Identifiers.json
-EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHC.Consent.Parsing", "CHC.Consent.Parsing\CHC.Consent.Parsing.csproj", "{DE2F537B-DAD5-4A62-A88F-737E0D22F915}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,5 +68,9 @@ Global
 		{D7CD6C78-5E22-4474-8FE3-6433E1D5F90E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D7CD6C78-5E22-4474-8FE3-6433E1D5F90E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D7CD6C78-5E22-4474-8FE3-6433E1D5F90E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE2F537B-DAD5-4A62-A88F-737E0D22F915}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE2F537B-DAD5-4A62-A88F-737E0D22F915}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE2F537B-DAD5-4A62-A88F-737E0D22F915}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE2F537B-DAD5-4A62-A88F-737E0D22F915}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
