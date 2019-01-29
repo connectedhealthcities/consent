@@ -45,7 +45,7 @@ namespace CHC.Consent.DataImporter.Features.ExportData
         private IDictionary<string, Writer> Writers { get; } = new Dictionary<string, Writer>();
 
         /// <inheritdoc />
-        public void Visit(IdentifierDefinition definition, CompositeIdentifierType type)
+        public void Visit(IdentifierDefinition definition, CompositeDefinitionType type)
         {
             var subWriters = new ValueOutputFormatter(
                 type.Identifiers.Cast<IdentifierDefinition>(),
@@ -63,7 +63,7 @@ namespace CHC.Consent.DataImporter.Features.ExportData
         }
 
         /// <inheritdoc />
-        public void Visit(IdentifierDefinition definition, DateIdentifierType type)
+        public void Visit(IdentifierDefinition definition, DateDefinitionType type)
         {
             Writers[definition.SystemName] = WriteDate;
         }
@@ -72,7 +72,7 @@ namespace CHC.Consent.DataImporter.Features.ExportData
             (dto, writer) => writer.WriteField(((IdentifierValueDtoDateTime) dto)?.Value?.ToString("yyyy-MM-dd"));
 
         /// <inheritdoc />
-        public void Visit(IdentifierDefinition definition, EnumIdentifierType type)
+        public void Visit(IdentifierDefinition definition, EnumDefinitionType type)
         {
             Writers[definition.SystemName] =
                 WriteEnum;
@@ -83,7 +83,7 @@ namespace CHC.Consent.DataImporter.Features.ExportData
 
 
         /// <inheritdoc />
-        public void Visit(IdentifierDefinition definition, IntegerIdentifierType type)
+        public void Visit(IdentifierDefinition definition, IntegerDefinitionType type)
         {
             Writers[definition.SystemName] = WriteInteger;
         }
@@ -92,7 +92,7 @@ namespace CHC.Consent.DataImporter.Features.ExportData
             (dto, writer) => writer.WriteField(((IdentifierValueDtoInt64) dto)?.Value);
 
         /// <inheritdoc />
-        public void Visit(IdentifierDefinition definition, StringIdentifierType type)
+        public void Visit(IdentifierDefinition definition, StringDefinitionType type)
         {
             Writers[definition.SystemName] = WriteString;
         }

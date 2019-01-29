@@ -696,7 +696,7 @@
               "readOnly": true
             },
             "type": {
-              "$ref": "#/definitions/IIdentifierType",
+              "$ref": "#/definitions/IDefinitionType",
               "readOnly": true
             }
           }
@@ -716,7 +716,7 @@
           "readOnly": true
         },
         "type": {
-          "$ref": "#/definitions/IIdentifierType",
+          "$ref": "#/definitions/IDefinitionType",
           "readOnly": true
         },
         "$type": {
@@ -746,7 +746,7 @@
               "readOnly": true
             },
             "type": {
-              "$ref": "#/definitions/IIdentifierType",
+              "$ref": "#/definitions/IDefinitionType",
               "readOnly": true
             }
           }
@@ -755,7 +755,7 @@
       "x-ms-client-name": "EvidenceDefinition",
       "x-ms-discriminator-value": "EvidenceDefinition"
     },
-    "IIdentifierType": {
+    "IDefinitionType": {
       "required": [
         "$type"
       ],
@@ -767,21 +767,21 @@
         },
         "$type": {
           "enum": [
-            "CompositeIdentifierType",
-            "DateIdentifierType",
-            "EnumIdentifierType",
-            "IntegerIdentifierType",
-            "StringIdentifierType"
+            "CompositeDefinitionType",
+            "DateDefinitionType",
+            "EnumDefinitionType",
+            "IntegerDefinitionType",
+            "StringDefinitionType"
           ],
           "type": "string"
         }
       },
       "discriminator": "$type"
     },
-    "CompositeIdentifierType": {
+    "CompositeDefinitionType": {
       "allOf": [
         {
-          "$ref": "#/definitions/IIdentifierType"
+          "$ref": "#/definitions/IDefinitionType"
         },
         {
           "type": "object",
@@ -801,13 +801,13 @@
           }
         }
       ],
-      "x-ms-client-name": "CompositeIdentifierType",
-      "x-ms-discriminator-value": "CompositeIdentifierType"
+      "x-ms-client-name": "CompositeDefinitionType",
+      "x-ms-discriminator-value": "CompositeDefinitionType"
     },
-    "DateIdentifierType": {
+    "DateDefinitionType": {
       "allOf": [
         {
-          "$ref": "#/definitions/IIdentifierType"
+          "$ref": "#/definitions/IDefinitionType"
         },
         {
           "type": "object",
@@ -819,13 +819,13 @@
           }
         }
       ],
-      "x-ms-client-name": "DateIdentifierType",
-      "x-ms-discriminator-value": "DateIdentifierType"
+      "x-ms-client-name": "DateDefinitionType",
+      "x-ms-discriminator-value": "DateDefinitionType"
     },
-    "EnumIdentifierType": {
+    "EnumDefinitionType": {
       "allOf": [
         {
-          "$ref": "#/definitions/IIdentifierType"
+          "$ref": "#/definitions/IDefinitionType"
         },
         {
           "type": "object",
@@ -845,13 +845,13 @@
           }
         }
       ],
-      "x-ms-client-name": "EnumIdentifierType",
-      "x-ms-discriminator-value": "EnumIdentifierType"
+      "x-ms-client-name": "EnumDefinitionType",
+      "x-ms-discriminator-value": "EnumDefinitionType"
     },
-    "IntegerIdentifierType": {
+    "IntegerDefinitionType": {
       "allOf": [
         {
-          "$ref": "#/definitions/IIdentifierType"
+          "$ref": "#/definitions/IDefinitionType"
         },
         {
           "type": "object",
@@ -863,13 +863,13 @@
           }
         }
       ],
-      "x-ms-client-name": "IntegerIdentifierType",
-      "x-ms-discriminator-value": "IntegerIdentifierType"
+      "x-ms-client-name": "IntegerDefinitionType",
+      "x-ms-discriminator-value": "IntegerDefinitionType"
     },
-    "StringIdentifierType": {
+    "StringDefinitionType": {
       "allOf": [
         {
-          "$ref": "#/definitions/IIdentifierType"
+          "$ref": "#/definitions/IDefinitionType"
         },
         {
           "type": "object",
@@ -881,8 +881,8 @@
           }
         }
       ],
-      "x-ms-client-name": "StringIdentifierType",
-      "x-ms-discriminator-value": "StringIdentifierType"
+      "x-ms-client-name": "StringDefinitionType",
+      "x-ms-discriminator-value": "StringDefinitionType"
     },
     "StudySubjectValue": {
       "type": "object",

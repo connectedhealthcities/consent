@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Infrastructure.Definitions;
 
 namespace CHC.Consent.Common.Consent.Evidences
 {

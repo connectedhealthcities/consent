@@ -306,8 +306,8 @@ namespace CHC.Consent.Api.Client
             };
             SerializationSettings.Converters.Add(new PolymorphicSerializeJsonConverter<IIdentifierValueDto>("$type"));
             DeserializationSettings.Converters.Add(new  PolymorphicDeserializeJsonConverter<IIdentifierValueDto>("$type"));
-            SerializationSettings.Converters.Add(new PolymorphicSerializeJsonConverter<IIdentifierType>("$type"));
-            DeserializationSettings.Converters.Add(new  PolymorphicDeserializeJsonConverter<IIdentifierType>("$type"));
+            SerializationSettings.Converters.Add(new PolymorphicSerializeJsonConverter<IDefinitionType>("$type"));
+            DeserializationSettings.Converters.Add(new  PolymorphicDeserializeJsonConverter<IDefinitionType>("$type"));
             SerializationSettings.Converters.Add(new PolymorphicSerializeJsonConverter<IDefinition>("$type"));
             DeserializationSettings.Converters.Add(new  PolymorphicDeserializeJsonConverter<IDefinition>("$type"));
             CustomInitialize();

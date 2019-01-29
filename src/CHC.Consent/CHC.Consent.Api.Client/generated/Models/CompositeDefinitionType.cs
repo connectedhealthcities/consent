@@ -9,20 +9,20 @@ namespace CHC.Consent.Api.Client.Models
     using System.Collections.Generic;
     using System.Linq;
 
-    public partial class CompositeIdentifierType : IIdentifierType
+    public partial class CompositeDefinitionType : IDefinitionType
     {
         /// <summary>
-        /// Initializes a new instance of the CompositeIdentifierType class.
+        /// Initializes a new instance of the CompositeDefinitionType class.
         /// </summary>
-        public CompositeIdentifierType()
+        public CompositeDefinitionType()
         {
             CustomInit();
         }
 
         /// <summary>
-        /// Initializes a new instance of the CompositeIdentifierType class.
+        /// Initializes a new instance of the CompositeDefinitionType class.
         /// </summary>
-        public CompositeIdentifierType(string systemName = default(string), IList<IDefinition> identifiers = default(IList<IDefinition>))
+        public CompositeDefinitionType(string systemName = default(string), IList<IDefinition> identifiers = default(IList<IDefinition>))
             : base(systemName)
         {
             Identifiers = identifiers;

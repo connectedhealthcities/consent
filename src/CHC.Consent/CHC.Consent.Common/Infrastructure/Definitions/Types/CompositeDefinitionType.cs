@@ -1,9 +1,8 @@
-using System.Collections.Generic;
 using System.Linq;
 
-namespace CHC.Consent.Common.Identity.Identifiers
+namespace CHC.Consent.Common.Infrastructure.Definitions.Types
 {
-    public class CompositeIdentifierType : IIdentifierType 
+    public class CompositeDefinitionType : IDefinitionType 
     {
         public DefinitionRegistry Identifiers { get; }
 
@@ -15,7 +14,7 @@ namespace CHC.Consent.Common.Identity.Identifiers
 
         public string SystemName { get; }
 
-        public CompositeIdentifierType(params IDefinition[] identifiers) 
+        public CompositeDefinitionType(params IDefinition[] identifiers) 
         {
             Identifiers = new DefinitionRegistry(identifiers);   
             SystemName = $"composite({string.Join(",", identifiers.Select(_ => _.Type.SystemName))})";

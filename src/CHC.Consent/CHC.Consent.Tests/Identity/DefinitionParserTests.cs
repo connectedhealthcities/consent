@@ -1,6 +1,6 @@
-using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Infrastructure.Definitions.Types;
 using CHC.Consent.Parsing;
 using CHC.Consent.Testing.Utils;
 using FluentAssertions;
@@ -59,10 +59,10 @@ namespace CHC.Consent.Tests.Identity
             definition.Should().BeEquivalentTo(
                 EvidenceDefinition.Create(
                     "medway",
-                    new CompositeIdentifierType(
-                        EvidenceDefinition.Create("competent-status", new EnumIdentifierType("Yes", "No")),
-                        EvidenceDefinition.Create("consent-given-by", new StringIdentifierType()),
-                        EvidenceDefinition.Create("consent-taken-by", new StringIdentifierType())
+                    new CompositeDefinitionType(
+                        EvidenceDefinition.Create("competent-status", new EnumDefinitionType("Yes", "No")),
+                        EvidenceDefinition.Create("consent-given-by", new StringDefinitionType()),
+                        EvidenceDefinition.Create("consent-taken-by", new StringDefinitionType())
                     ))
             );
         }

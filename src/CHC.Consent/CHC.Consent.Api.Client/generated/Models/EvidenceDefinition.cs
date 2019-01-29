@@ -20,7 +20,7 @@ namespace CHC.Consent.Api.Client.Models
         /// <summary>
         /// Initializes a new instance of the EvidenceDefinition class.
         /// </summary>
-        public EvidenceDefinition(string systemName = default(string), IIdentifierType type = default(IIdentifierType), string name = default(string))
+        public EvidenceDefinition(string systemName = default(string), IDefinitionType type = default(IDefinitionType), string name = default(string))
             : base(systemName, type)
         {
             Name = name;

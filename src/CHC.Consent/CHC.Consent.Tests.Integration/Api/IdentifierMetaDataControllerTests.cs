@@ -23,16 +23,16 @@ namespace CHC.Consent.Tests.Integration.Api
             identityStoreMetadata.Should()
                 .Contain(_ => _.SystemName == Identifiers.Definitions.Name.SystemName)
                 .Subject.Type.Should().BeEquivalentTo(
-                    new CompositeIdentifierType(
+                    new CompositeDefinitionType(
                         Identifiers.Definitions.Name.Type.SystemName,
                         new IDefinition[]
                         {
                             new EvidenceDefinition(
                                 Identifiers.Definitions.FirstName.SystemName,
-                                new StringIdentifierType("string")),
+                                new StringDefinitionType("string")),
                             new EvidenceDefinition(
                                 Identifiers.Definitions.LastName.SystemName,
-                                new StringIdentifierType("string")),
+                                new StringDefinitionType("string")),
                         })
                 );
         }

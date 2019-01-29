@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
+using CHC.Consent.Common.Infrastructure.Definitions;
+using CHC.Consent.Common.Infrastructure.Definitions.Types;
 
 namespace CHC.Consent.Api.Infrastructure
 {
@@ -62,31 +64,31 @@ namespace CHC.Consent.Api.Infrastructure
             }
 
             /// <inheritdoc />
-            public void Visit(IDefinition definition, DateIdentifierType type)
+            public void Visit(IDefinition definition, DateDefinitionType type)
             {
                 UseSimpleMarshaller<DateTime>(definition);
             }
 
             /// <inheritdoc />
-            public void Visit(IDefinition definition, EnumIdentifierType type)
+            public void Visit(IDefinition definition, EnumDefinitionType type)
             {
                 UseSimpleMarshaller<string>(definition);
             }
 
             /// <inheritdoc />
-            public void Visit(IDefinition definition, CompositeIdentifierType type)
+            public void Visit(IDefinition definition, CompositeDefinitionType type)
             {
                 UseMarshaller(definition, new CompositeMarshaller(type, (TDefinition) definition, IdentifierCreator));
             }
 
             /// <inheritdoc />
-            public void Visit(IDefinition definition, IntegerIdentifierType type)
+            public void Visit(IDefinition definition, IntegerDefinitionType type)
             {
                 UseSimpleMarshaller<long>(definition);
             }
 
             /// <inheritdoc />
-            public void Visit(IDefinition definition, StringIdentifierType type)
+            public void Visit(IDefinition definition, StringDefinitionType type)
             {
                 UseSimpleMarshaller<string>(definition);
             }
@@ -135,7 +137,7 @@ namespace CHC.Consent.Api.Infrastructure
 
             /// <inheritdoc />
             public CompositeMarshaller(
-                CompositeIdentifierType type, TDefinition definition, CreateIdentifier createIdentifier)
+                CompositeDefinitionType type, TDefinition definition, CreateIdentifier createIdentifier)
             {
                 Definition = definition;
                 CreateIdentifier = createIdentifier;

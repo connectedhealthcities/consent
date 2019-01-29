@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using CHC.Consent.Common.Identity.Identifiers;
-using CHC.Consent.Common.Infrastructure;
+using CHC.Consent.Common.Infrastructure.Definitions;
+using CHC.Consent.Common.Infrastructure.Definitions.Types;
 using CHC.Consent.EFCore.Identity;
 using Xunit;
 
@@ -10,15 +11,15 @@ namespace CHC.Consent.EFCore.Tests.Identity
     {
         public static IEnumerable<object[]> StringMarshalledIdentifierTypes()
         {
-            yield return new object[] {new DateIdentifierType()};
-            yield return new object[] {new EnumIdentifierType() };
-            yield return new object[] {new IntegerIdentifierType() };
-            yield return new object[] {new StringIdentifierType() };
+            yield return new object[] {new DateDefinitionType()};
+            yield return new object[] {new EnumDefinitionType() };
+            yield return new object[] {new IntegerDefinitionType() };
+            yield return new object[] {new StringDefinitionType() };
         }
         
         [Theory]
         [MemberData(nameof(StringMarshalledIdentifierTypes))]
-        public void CreatesStringIdentifierMarshaller(IIdentifierType type)
+        public void CreatesStringIdentifierMarshaller(IDefinitionType type)
         {
             var identifierDefinition = new IdentifierDefinition("test", type);
 

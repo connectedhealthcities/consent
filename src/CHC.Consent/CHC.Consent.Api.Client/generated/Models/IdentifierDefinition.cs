@@ -20,7 +20,7 @@ namespace CHC.Consent.Api.Client.Models
         /// <summary>
         /// Initializes a new instance of the IdentifierDefinition class.
         /// </summary>
-        public IdentifierDefinition(string systemName = default(string), IIdentifierType type = default(IIdentifierType), string name = default(string))
+        public IdentifierDefinition(string systemName = default(string), IDefinitionType type = default(IDefinitionType), string name = default(string))
             : base(systemName, type)
         {
             Name = name;

@@ -24,19 +24,19 @@ namespace CHC.Consent.Tests.Integration.Api
             consentStoreMetadata.Should()
                 .Contain(_ => _.SystemName == KnownEvidence.ImportFile.SystemName)
                 .Subject.Type.Should().BeEquivalentTo(
-                    new CompositeIdentifierType(
+                    new CompositeDefinitionType(
                         KnownEvidence.ImportFile.Type.SystemName,
                         new IDefinition[]
                         {
                             new EvidenceDefinition(
                                 KnownEvidence.ImportFileParts.BaseUri.SystemName,
-                                new StringIdentifierType("string")),
+                                new StringDefinitionType("string")),
                             new EvidenceDefinition(
                                 KnownEvidence.ImportFileParts.LineNumber.SystemName,
-                                new IntegerIdentifierType("integer")),
+                                new IntegerDefinitionType("integer")),
                             new EvidenceDefinition(
                                 KnownEvidence.ImportFileParts.LinePosition.SystemName,
-                                new IntegerIdentifierType("integer")),
+                                new IntegerDefinitionType("integer")),
                         })
                 );
         }

@@ -1,8 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Infrastructure.Definitions;
 using JetBrains.Annotations;
 
 namespace CHC.Consent.Api.Infrastructure.Web
@@ -13,7 +12,7 @@ namespace CHC.Consent.Api.Infrastructure.Web
     /// </summary>
     /// <remarks>OpenAPI 3.0 seems to change the way this works</remarks>
     [UsedImplicitly]
-    public class SwaggerSchemaIdentityTypeProvider : SwaggerSchemaSubtypeFilter<IIdentifierType>
+    public class SwaggerSchemaIdentityTypeProvider : SwaggerSchemaSubtypeFilter<IDefinitionType>
     {
         private static readonly Lazy<Type[]> subtypes;
 
@@ -23,7 +22,7 @@ namespace CHC.Consent.Api.Infrastructure.Web
                 .Select(Assembly.Load)
                 .SelectMany(a => a.ExportedTypes)
                 .Where(IsBaseOrSubtype)
-                .Where(type => type != typeof(IIdentifierType))
+                .Where(type => type != typeof(IDefinitionType))
                 .ToArray());
         }
 

@@ -21,7 +21,7 @@ namespace CHC.Consent.DataImporter.Features.ExportData
         }
 
         /// <inheritdoc />
-        public void Visit(IdentifierDefinition definition, CompositeIdentifierType type)
+        public void Visit(IdentifierDefinition definition, CompositeDefinitionType type)
         {
             var compositeNames = new FieldNames(type.Identifiers.Cast<IdentifierDefinition>());
             foreach (var compositeName in compositeNames)
@@ -35,16 +35,16 @@ namespace CHC.Consent.DataImporter.Features.ExportData
         private void AddName(IdentifierDefinition definition) => Names.Add($"{definition.SystemName}");
 
         /// <inheritdoc />
-        public void Visit(IdentifierDefinition definition, DateIdentifierType type) => AddName(definition);
+        public void Visit(IdentifierDefinition definition, DateDefinitionType type) => AddName(definition);
 
         /// <inheritdoc />
-        public void Visit(IdentifierDefinition definition, EnumIdentifierType type) => AddName(definition);
+        public void Visit(IdentifierDefinition definition, EnumDefinitionType type) => AddName(definition);
         
         /// <inheritdoc />
-        public void Visit(IdentifierDefinition definition, IntegerIdentifierType type) => AddName(definition);
+        public void Visit(IdentifierDefinition definition, IntegerDefinitionType type) => AddName(definition);
         
         /// <inheritdoc />
-        public void Visit(IdentifierDefinition definition, StringIdentifierType type) => AddName(definition);
+        public void Visit(IdentifierDefinition definition, StringDefinitionType type) => AddName(definition);
         
         /// <inheritdoc />
         public IEnumerator<string> GetEnumerator() => Names.GetEnumerator();

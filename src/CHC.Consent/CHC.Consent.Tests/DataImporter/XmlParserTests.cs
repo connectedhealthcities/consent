@@ -8,21 +8,17 @@ using System.Xml.Linq;
 using CHC.Consent.Api.Client.Models;
 using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Identity.Identifiers;
-using CHC.Consent.DataImporter;
 using CHC.Consent.DataImporter.Features.ImportData;
 using CHC.Consent.Testing.Utils;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 using InternalIdentifierDefinition = CHC.Consent.Common.Identity.Identifiers.IdentifierDefinition;
-using InternalIdentifierType = CHC.Consent.Common.Identity.Identifiers.IIdentifierType;
 using ClientIdentifierDefinition = CHC.Consent.Api.Client.Models.IdentifierDefinition;
-using ClientIdentifierType = CHC.Consent.Api.Client.Models.IIdentifierType;
-
 using InternalEvidenceDefinition = CHC.Consent.Common.Consent.Evidences.EvidenceDefinition;
 using ClientEvidenceDefinition = CHC.Consent.Api.Client.Models.EvidenceDefinition;
 
-using IInternalDefinition = CHC.Consent.Common.Identity.Identifiers.IDefinition;
+using IInternalDefinition = CHC.Consent.Common.Infrastructure.Definitions.IDefinition;
 using IClientDefinition = CHC.Consent.Api.Client.Models.IDefinition;
 
 namespace CHC.Consent.Tests.DataImporter

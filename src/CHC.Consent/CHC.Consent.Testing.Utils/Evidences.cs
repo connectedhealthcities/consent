@@ -4,20 +4,20 @@ using CHC.Consent.Api.Client.Models;
 using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
-using CHC.Consent.Common.Identity.Identifiers;
-using EnumIdentifierType = CHC.Consent.Common.Identity.Identifiers.EnumIdentifierType;
+using CHC.Consent.Common.Infrastructure;
+using EnumDefinitionType = CHC.Consent.Common.Infrastructure.Definitions.Types.EnumDefinitionType;
 using EvidenceDefinition = CHC.Consent.Common.Consent.Evidences.EvidenceDefinition;
 using IIdentifierValueDto = CHC.Consent.Api.Client.Models.IIdentifierValueDto;
 using ServerDto = CHC.Consent.Api.Infrastructure.IIdentifierValueDto;
-using StringIdentifierType = CHC.Consent.Common.Identity.Identifiers.StringIdentifierType;
+using StringDefinitionType = CHC.Consent.Common.Infrastructure.Definitions.Types.StringDefinitionType;
 
 namespace CHC.Consent.Testing.Utils
 {
     public static class Evidences
     {
-        public static EvidenceDefinition String(string name) => new EvidenceDefinition(name, new StringIdentifierType());
+        public static EvidenceDefinition String(string name) => new EvidenceDefinition(name, new StringDefinitionType());
         public static EvidenceDefinition Enum(string name, params string[] values) => 
-        new EvidenceDefinition(name, new EnumIdentifierType(values));
+        new EvidenceDefinition(name, new EnumDefinitionType(values));
         
         public static Evidence MedwayEvidence(
             string competencyStatus = null, string givenBy = null, string takenBy = null)
@@ -85,13 +85,5 @@ namespace CHC.Consent.Testing.Utils
             if(offset != null) dtos.Add(KnownEvidence.MedwayParts.ConsentTakenBy.ServerDto((long)offset));
             return KnownEvidence.ImportFile.ServerDto(dtos.ToArray());
         }
-
-        public static Evidence ImportFile(string testXml, int line, int offset)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        
-        
     }
 }

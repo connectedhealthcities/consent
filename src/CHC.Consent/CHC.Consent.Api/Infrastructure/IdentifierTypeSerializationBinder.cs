@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Infrastructure.Definitions;
 using Newtonsoft.Json.Serialization;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -30,8 +30,8 @@ namespace CHC.Consent.Api.Infrastructure
             var entryAssembly = GetType().Assembly;
             return entryAssembly.GetReferencedAssemblies()
                 .Select(Assembly.Load)
-                .SelectMany(a => a.ExportedTypes.Where(t => typeof(IIdentifierType).IsAssignableFrom(t)))
-                .Where(t => t != typeof(IIdentifierType))
+                .SelectMany(a => a.ExportedTypes.Where(t => typeof(IDefinitionType).IsAssignableFrom(t)))
+                .Where(t => t != typeof(IDefinitionType))
                 .ToDictionary(t => t.FriendlyId());
         }
 

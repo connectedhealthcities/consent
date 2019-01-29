@@ -1,7 +1,8 @@
 using System;
-using CHC.Consent.Common.Identity.Identifiers;
 using Sprache;
 using System.Linq;
+using CHC.Consent.Common.Infrastructure.Definitions;
+using CHC.Consent.Common.Infrastructure.Definitions.Types;
 
 namespace CHC.Consent.Parsing
 {
@@ -24,20 +25,20 @@ namespace CHC.Consent.Parsing
                 start => HyphenPrefixedIdentifierPart.Many()
                         .Select(rest => String.Concat(start, String.Join("", rest))));
 
-        public static readonly Parser<IIdentifierType> SimpleTypes = 
-            Parse.String("string").Return((IIdentifierType)new StringIdentifierType())
-                .XOr(Parse.String("date").Return((IIdentifierType)new DateIdentifierType()))
-                .XOr(Parse.String("integer").Return((IIdentifierType)new IntegerIdentifierType()));
+        public static readonly Parser<IDefinitionType> SimpleTypes = 
+            Parse.String("string").Return(new StringDefinitionType())
+                .XOr(Parse.String("date").Return((IDefinitionType)new DateDefinitionType()))
+                .XOr(Parse.String("integer").Return((IDefinitionType)new IntegerDefinitionType()));
 
         private static readonly Parser<char> Quote = Parse.Char('\'').Named("a Single Quote");
 
         private static readonly Parser<string> QuotedString = 
             Parse.AnyChar.Except(Quote).XAtLeastOnce().Text().Contained(Quote, Quote);
 
-        public static readonly Parser<IIdentifierType> EnumType = 
+        public static readonly Parser<IDefinitionType> EnumType = 
             from _ in Parse.String("enum").Token().Text()
             from values in QuotedString.Token().DelimitedBy(Comma).Contained(OpenBracket, CloseBracket)
-            select new EnumIdentifierType(values.ToArray());
+            select new EnumDefinitionType(values.ToArray());
     }
     
     

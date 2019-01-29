@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
-using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Infrastructure.Definitions;
+using CHC.Consent.Common.Infrastructure.Definitions.Types;
 using Sprache;
 
 namespace CHC.Consent.Parsing
@@ -19,7 +20,7 @@ namespace CHC.Consent.Parsing
     /// </remarks>
     public class DefinitionParser<TDefinition> where TDefinition:IDefinition
     {
-        public delegate TDefinition DefinitionCreator(string name, IIdentifierType type);
+        public delegate TDefinition DefinitionCreator(string name, IDefinitionType type);
 
         private DefinitionCreator CreateDefinition { get; }
 
@@ -28,12 +29,12 @@ namespace CHC.Consent.Parsing
             CreateDefinition = createDefinition;
         }
 
-        private Parser<IIdentifierType> Composite =>
+        private Parser<IDefinitionType> Composite =>
             from _ in Parse.String("composite").Text()
             from parts in Parse.Ref(
                 () => DefinitionList.Contained(DefinitionParser.OpenBracket, DefinitionParser.CloseBracket)
             ).Named("a Definition List").Token()
-            select new CompositeIdentifierType(parts.Cast<IDefinition>().ToArray());
+            select new CompositeDefinitionType(parts.Cast<IDefinition>().ToArray());
 
         private Parser<TDefinition> Definition => 
             from name in DefinitionParser.Identifier.Named("a Name").Token()
@@ -41,7 +42,7 @@ namespace CHC.Consent.Parsing
             from type in TypeParser
             select CreateDefinition(name, type);
 
-        private Parser<IIdentifierType> TypeParser =>
+        private Parser<IDefinitionType> TypeParser =>
             DefinitionParser.SimpleTypes
                 .XOr(DefinitionParser.EnumType)
                 .XOr(Composite)

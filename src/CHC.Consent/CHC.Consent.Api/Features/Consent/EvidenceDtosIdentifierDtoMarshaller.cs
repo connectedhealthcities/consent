@@ -2,6 +2,8 @@ using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Infrastructure;
+using CHC.Consent.Common.Infrastructure.Definitions;
 
 namespace CHC.Consent.Api.Features.Consent
 {

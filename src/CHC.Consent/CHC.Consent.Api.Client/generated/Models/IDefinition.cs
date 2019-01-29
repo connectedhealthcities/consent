@@ -20,7 +20,7 @@ namespace CHC.Consent.Api.Client.Models
         /// <summary>
         /// Initializes a new instance of the IDefinition class.
         /// </summary>
-        public IDefinition(string systemName = default(string), IIdentifierType type = default(IIdentifierType))
+        public IDefinition(string systemName = default(string), IDefinitionType type = default(IDefinitionType))
         {
             SystemName = systemName;
             Type = type;
@@ -40,7 +40,7 @@ namespace CHC.Consent.Api.Client.Models
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "type")]
-        public IIdentifierType Type { get; private set; }
+        public IDefinitionType Type { get; private set; }
 
     }
 }

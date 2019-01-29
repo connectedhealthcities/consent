@@ -4,6 +4,9 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Infrastructure;
+using CHC.Consent.Common.Infrastructure.Definitions;
+using CHC.Consent.Common.Infrastructure.Definitions.Types;
 using CHC.Consent.EFCore.Identity;
 using CHC.Consent.Testing.Utils;
 using FluentAssertions;
@@ -15,13 +18,13 @@ namespace CHC.Consent.EFCore.Tests.Identity
 {
     public class XmlMarshallerTests
     {
-        public static TheoryData<IIdentifierType, object, string> TestData =>
-            new TheoryData<IIdentifierType, object, string>
+        public static TheoryData<IDefinitionType, object, string> TestData =>
+            new TheoryData<IDefinitionType, object, string>
             {
-                {new StringIdentifierType(), "Some Value", "Some Value"},
-                {new EnumIdentifierType("One", "Two"), "One", "One"},
-                {new DateIdentifierType(), 15.July(2041), "2041-07-15T00:00:00"},
-                {new IntegerIdentifierType(), 263762L, "263762"}
+                {new StringDefinitionType(), "Some Value", "Some Value"},
+                {new EnumDefinitionType("One", "Two"), "One", "One"},
+                {new DateDefinitionType(), 15.July(2041), "2041-07-15T00:00:00"},
+                {new IntegerDefinitionType(), 263762L, "263762"}
             };
 
         private static IIdentifierXmlMarhsaller<PersonIdentifier, IdentifierDefinition> CreateMarshallerFor(IdentifierDefinition identifierDefinition)
@@ -34,12 +37,12 @@ namespace CHC.Consent.EFCore.Tests.Identity
         [Theory]
         [MemberData(nameof(TestData))]
         public void StringMarshaller_CorrectlyMarshalsValue(
-            IIdentifierType identifierType, object value, string expectedText)
+            IDefinitionType definitionType, object value, string expectedText)
         {
             
             var identifier = new PersonIdentifier(
                 new SimpleIdentifierValue(value),
-                new IdentifierDefinition("Identifier", identifierType));
+                new IdentifierDefinition("Identifier", definitionType));
 
             var marshaller = CreateMarshallerFor(identifier.Definition);
 
@@ -53,9 +56,9 @@ namespace CHC.Consent.EFCore.Tests.Identity
         [Theory]
         [MemberData(nameof(TestData))]
         public void StringMarshaller_CorrectlyMarshalsFromXml(
-            IIdentifierType identifierType, object expected, string innerXml)
+            IDefinitionType definitionType, object expected, string innerXml)
         {
-            var definition = new IdentifierDefinition("Identifier", identifierType);
+            var definition = new IdentifierDefinition("Identifier", definitionType);
 
             var marshaller = CreateMarshallerFor(definition);
 
@@ -124,11 +127,11 @@ namespace CHC.Consent.EFCore.Tests.Identity
             IdentifierDefinition dateIdentifierDefinition
             ) CompositeIdentifierDefinition()
         {
-            var stringIdentifierDefinition = new IdentifierDefinition("String", new StringIdentifierType());
-            var dateIdentifierDefinition = new IdentifierDefinition("Date", new DateIdentifierType());
+            var stringIdentifierDefinition = new IdentifierDefinition("String", new StringDefinitionType());
+            var dateIdentifierDefinition = new IdentifierDefinition("Date", new DateDefinitionType());
             var compositeIdentifierDefinition = new IdentifierDefinition(
                 "Composite",
-                new CompositeIdentifierType(
+                new CompositeDefinitionType(
                     stringIdentifierDefinition,
                     dateIdentifierDefinition));
             return (compositeIdentifierDefinition, stringIdentifierDefinition, dateIdentifierDefinition);

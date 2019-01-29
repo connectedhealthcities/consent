@@ -4,24 +4,25 @@
 
 namespace CHC.Consent.Api.Client.Models
 {
+    using Newtonsoft.Json;
     using System.Linq;
 
-    public partial class StringIdentifierType : IIdentifierType
+    public partial class IDefinitionType
     {
         /// <summary>
-        /// Initializes a new instance of the StringIdentifierType class.
+        /// Initializes a new instance of the IDefinitionType class.
         /// </summary>
-        public StringIdentifierType()
+        public IDefinitionType()
         {
             CustomInit();
         }
 
         /// <summary>
-        /// Initializes a new instance of the StringIdentifierType class.
+        /// Initializes a new instance of the IDefinitionType class.
         /// </summary>
-        public StringIdentifierType(string systemName = default(string))
-            : base(systemName)
+        public IDefinitionType(string systemName = default(string))
         {
+            SystemName = systemName;
             CustomInit();
         }
 
@@ -29,6 +30,11 @@ namespace CHC.Consent.Api.Client.Models
         /// An initialization method that performs custom operations like setting defaults
         /// </summary>
         partial void CustomInit();
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "systemName")]
+        public string SystemName { get; private set; }
 
     }
 }

@@ -21,7 +21,7 @@ namespace CHC.Consent.DataImporter.Features.ImportData
     {
         private class ImportFileEvidenceGenerator
         {
-            private EvidenceDefinition definition;
+            private readonly EvidenceDefinition definition;
 
             /// <inheritdoc />
             public ImportFileEvidenceGenerator(IEnumerable<EvidenceDefinition> evidenceDefinitions)
@@ -35,13 +35,13 @@ namespace CHC.Consent.DataImporter.Features.ImportData
 
 
                 if(definition == null) yield break;
-                if(!(definition.Type is CompositeIdentifierType compositeIdentifierType)) yield break;
+                if(!(definition.Type is CompositeDefinitionType composite)) yield break;
 
-                var innerDefinitions = compositeIdentifierType?.Identifiers;
+                var fields = composite.Identifiers;
 
-                var baseUri = innerDefinitions.FirstOrDefault(_ => _.SystemName == "base-uri");
-                var lineNumber = innerDefinitions.FirstOrDefault(_ => _.SystemName == "line-number");
-                var linePosition = innerDefinitions.FirstOrDefault(_ => _.SystemName == "line-position");
+                var baseUri = fields.FirstOrDefault(_ => _.SystemName == "base-uri");
+                var lineNumber = fields.FirstOrDefault(_ => _.SystemName == "line-number");
+                var linePosition = fields.FirstOrDefault(_ => _.SystemName == "line-position");
                 
                 var innerValues = new List<IIdentifierValueDto>();
                 if (baseUri != null && !string.IsNullOrWhiteSpace(element.BaseUri))

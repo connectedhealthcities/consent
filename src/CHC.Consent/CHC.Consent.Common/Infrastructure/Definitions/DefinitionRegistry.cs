@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-namespace CHC.Consent.Common.Identity.Identifiers
+namespace CHC.Consent.Common.Infrastructure.Definitions
 {
     public class DefinitionRegistry : KeyedCollection<string, IDefinition>
     {

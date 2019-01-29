@@ -6,20 +6,20 @@ namespace CHC.Consent.Api.Client.Models
 {
     using System.Linq;
 
-    public partial class IntegerIdentifierType : IIdentifierType
+    public partial class DateDefinitionType : IDefinitionType
     {
         /// <summary>
-        /// Initializes a new instance of the IntegerIdentifierType class.
+        /// Initializes a new instance of the DateDefinitionType class.
         /// </summary>
-        public IntegerIdentifierType()
+        public DateDefinitionType()
         {
             CustomInit();
         }
 
         /// <summary>
-        /// Initializes a new instance of the IntegerIdentifierType class.
+        /// Initializes a new instance of the DateDefinitionType class.
         /// </summary>
-        public IntegerIdentifierType(string systemName = default(string))
+        public DateDefinitionType(string systemName = default(string))
             : base(systemName)
         {
             CustomInit();

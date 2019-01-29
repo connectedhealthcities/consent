@@ -1,9 +1,8 @@
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Xml.Linq;
-using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
+using CHC.Consent.Common.Infrastructure.Definitions;
+using CHC.Consent.Common.Infrastructure.Definitions.Types;
 
 namespace CHC.Consent.EFCore.Identity
 {
@@ -14,15 +13,15 @@ namespace CHC.Consent.EFCore.Identity
         where TDefinition : DefinitionBase
         
     {
-        private readonly CompositeIdentifierType IdentifierType;
+        private readonly CompositeDefinitionType definitionType;
         public TDefinition Definition { get; }
         public IdentifierXmlMarshallers<TIdentifier, TDefinition> Marshallers { get; }
 
         public CompositeIdentifierXmlMarshaller(TDefinition definition)
         {
             Definition = definition;
-            IdentifierType = (CompositeIdentifierType)Definition.Type;
-            Marshallers = new IdentifierXmlMarshallers<TIdentifier, TDefinition>(IdentifierType.Identifiers);
+            definitionType = (CompositeDefinitionType)Definition.Type;
+            Marshallers = new IdentifierXmlMarshallers<TIdentifier, TDefinition>(definitionType.Identifiers);
         }
 
         /// <inheritdoc />
@@ -32,7 +31,7 @@ namespace CHC.Consent.EFCore.Identity
                 .ToDictionary(_ => _.Definition.SystemName);
             return new XElement(
                 Definition.SystemName,
-                IdentifierType.Identifiers
+                definitionType.Identifiers
                     .Where(id => values.ContainsKey(id.SystemName))
                     .Select(id => Marshallers.MarshallToXml(values[id.SystemName])));
 
@@ -45,7 +44,7 @@ namespace CHC.Consent.EFCore.Identity
             {
                 Definition = Definition,
                 Value = new CompositeIdentifierValue<TIdentifier>(
-                    IdentifierType.Identifiers
+                    definitionType.Identifiers
                         .Select(id => (typeName: id.SystemName, value: xElement.Element(id.SystemName)))
                         .Where(i => i.value != null)
                         .Select(i => Marshallers.MarshallFromXml(i.typeName, i.value))

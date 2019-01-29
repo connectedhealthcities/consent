@@ -47,7 +47,7 @@ namespace CHC.Consent.DataImporter.Features.ImportData
                 Parsers[definition.SystemName] = x =>  parser(definition.SystemName, x);
             
             /// <inheritdoc />
-            public void Visit(TDefinition definition, CompositeIdentifierType type)
+            public void Visit(TDefinition definition, CompositeDefinitionType type)
             {
                 var valueParser = CreateFrom(type.Identifiers.Cast<TDefinition>());
                 SetParser(
@@ -61,13 +61,13 @@ namespace CHC.Consent.DataImporter.Features.ImportData
             }
 
             /// <inheritdoc />
-            public void Visit(TDefinition definition, DateIdentifierType type)
+            public void Visit(TDefinition definition, DateDefinitionType type)
             {
                 SetParser(definition, (name, x) => new IdentifierValueDtoDateTime(name, (DateTime)x));
             }
 
             /// <inheritdoc />
-            public void Visit(TDefinition definition, EnumIdentifierType type)
+            public void Visit(TDefinition definition, EnumDefinitionType type)
             {
                 SetParser(
                     definition,
@@ -81,13 +81,13 @@ namespace CHC.Consent.DataImporter.Features.ImportData
             }
 
             /// <inheritdoc />
-            public void Visit(TDefinition definition, IntegerIdentifierType type)
+            public void Visit(TDefinition definition, IntegerDefinitionType type)
             {
                 SetParser(definition, (name,x) => new IdentifierValueDtoInt64(name, (long) x));
             }
 
             /// <inheritdoc />
-            public void Visit(TDefinition definition, StringIdentifierType type)
+            public void Visit(TDefinition definition, StringDefinitionType type)
             {
                 SetParser(definition, (name, x) => new IdentifierValueDtoString(name, x.Value));
             }

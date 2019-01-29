@@ -1,8 +1,5 @@
-﻿using System;
-using CHC.Consent.Common.Identity.Identifiers;
-using CHC.Consent.Common.Infrastructure;
-using CHC.Consent.EFCore;
-using FakeItEasy;
+﻿using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Infrastructure.Definitions.Types;
 using Xunit;
 
 namespace CHC.Consent.Tests.Identity
@@ -14,7 +11,7 @@ namespace CHC.Consent.Tests.Identity
         [Fact]
         public void WhenRegisteringAnIdentifier_ItIsRegisteredByKebabCase()
         {
-            var definition = new IdentifierDefinition("Test Me", new StringIdentifierType());
+            var definition = new IdentifierDefinition("Test Me", new StringDefinitionType());
             
             registry.Add(definition);
             

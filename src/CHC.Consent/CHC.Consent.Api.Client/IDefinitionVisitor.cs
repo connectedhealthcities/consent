@@ -9,17 +9,12 @@ namespace CHC.Consent.Api.Client.Models
 
     public interface IDefinitionVisitor<in TDefinition> where TDefinition: IDefinition
     {
-        void Visit(TDefinition definition, CompositeIdentifierType type);
-        void Visit(TDefinition definition, DateIdentifierType type);
-        void Visit(TDefinition definition, EnumIdentifierType type);
-        void Visit(TDefinition definition, IntegerIdentifierType type);
-        void Visit(TDefinition definition, StringIdentifierType type);
+        void Visit(TDefinition definition, CompositeDefinitionType type);
+        void Visit(TDefinition definition, DateDefinitionType type);
+        void Visit(TDefinition definition, EnumDefinitionType type);
+        void Visit(TDefinition definition, IntegerDefinitionType type);
+        void Visit(TDefinition definition, StringDefinitionType type);
     }
-
-    public partial class IDefinition 
-    {
-    }
-
 
     public partial class IdentifierDefinition : IAcceptDefinitionVisitor<IdentifierDefinition>
     {
@@ -38,13 +33,14 @@ namespace CHC.Consent.Api.Client.Models
             Type.Accept(visitor, this);
         }
     }
+/*
 
-    public interface IIdentifierTypeVisitorAcceptor
+    public interface IDefinitionTypeVisitorAcceptor
     {
         void Accept<TDefinition>(IDefinitionVisitor<TDefinition> visitor, TDefinition definition) where TDefinition : IDefinition;
-    }
+    }*/
     
-    public partial class IIdentifierType : IIdentifierTypeVisitorAcceptor
+    public partial class IDefinitionType /*: IDefinitionTypeVisitorAcceptor*/
     {
         /// <inheritdoc />
         public virtual void
@@ -53,7 +49,7 @@ namespace CHC.Consent.Api.Client.Models
             throw new System.NotImplementedException("Sub types should implement this");
     }
 
-    public partial class CompositeIdentifierType
+    public partial class CompositeDefinitionType
     {
         /// <inheritdoc />
         public override void Accept<TDefinition>(IDefinitionVisitor<TDefinition> visitor, TDefinition definition)
@@ -62,7 +58,7 @@ namespace CHC.Consent.Api.Client.Models
         }
     }
 
-    public partial class DateIdentifierType
+    public partial class DateDefinitionType
     {
         /// <inheritdoc />
         public override void Accept<TDefinition>(IDefinitionVisitor<TDefinition> visitor, TDefinition definition)
@@ -71,7 +67,7 @@ namespace CHC.Consent.Api.Client.Models
         }
     }
 
-    public partial class EnumIdentifierType
+    public partial class EnumDefinitionType
     {
         /// <inheritdoc />
         public override void Accept<TDefinition>(IDefinitionVisitor<TDefinition> visitor, TDefinition definition)
@@ -80,7 +76,7 @@ namespace CHC.Consent.Api.Client.Models
         }
     }
 
-    public partial class IntegerIdentifierType
+    public partial class IntegerDefinitionType
     {
         /// <inheritdoc />
         public override void Accept<TDefinition>(IDefinitionVisitor<TDefinition> visitor, TDefinition definition)
@@ -89,7 +85,7 @@ namespace CHC.Consent.Api.Client.Models
         }
     }
 
-    public partial class StringIdentifierType
+    public partial class StringDefinitionType
     {
         /// <inheritdoc />
         public override void Accept<TDefinition>(IDefinitionVisitor<TDefinition> visitor, TDefinition definition)

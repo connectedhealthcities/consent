@@ -10,20 +10,20 @@ namespace CHC.Consent.Api.Client.Models
     using System.Collections.Generic;
     using System.Linq;
 
-    public partial class EnumIdentifierType : IIdentifierType
+    public partial class EnumDefinitionType : IDefinitionType
     {
         /// <summary>
-        /// Initializes a new instance of the EnumIdentifierType class.
+        /// Initializes a new instance of the EnumDefinitionType class.
         /// </summary>
-        public EnumIdentifierType()
+        public EnumDefinitionType()
         {
             CustomInit();
         }
 
         /// <summary>
-        /// Initializes a new instance of the EnumIdentifierType class.
+        /// Initializes a new instance of the EnumDefinitionType class.
         /// </summary>
-        public EnumIdentifierType(string systemName = default(string), IList<string> values = default(IList<string>))
+        public EnumDefinitionType(string systemName = default(string), IList<string> values = default(IList<string>))
             : base(systemName)
         {
             Values = values;

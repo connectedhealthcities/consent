@@ -31,6 +31,8 @@ namespace CHC.Consent.EFCore
         public virtual DbSet<StudyEntity> Studies { get; set; }
         public virtual DbSet<SubjectIdentifierEntity> SubjectIdentifiers { get; set; }
         public virtual DbSet<PersonIdentifierEntity> PersonIdentifiers { get; set; }
+        
+        public virtual DbSet<EvidenceDefinitionEntity> EvidenceDefinitions { get; set; }
 
         /// <inheritdoc />
         public override int SaveChanges(bool acceptAllChangesOnSuccess)
@@ -98,6 +100,12 @@ namespace CHC.Consent.EFCore
                     .HasPrincipalKey(typeof(AccessControlList), nameof(AccessControlList.Id))
                     .HasForeignKey(type, "AccessControlListId")
                     .IsRequired();
+
+                modelBuilder.Entity<EvidenceDefinitionEntity>()
+                    .Property(_ => _.Name).IsRequired().HasMaxLength(256);
+                modelBuilder.Entity<EvidenceDefinitionEntity>()
+                    .Property(_ => _.Definition).IsRequired().HasMaxLength(int.MaxValue);
+
             }
         }
     }

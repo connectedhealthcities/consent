@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 
-namespace CHC.Consent.Common.Identity.Identifiers
+namespace CHC.Consent.Common.Infrastructure.Definitions.Types
 {
-    public class EnumIdentifierType : IIdentifierType
+    public class EnumDefinitionType : IDefinitionType
     {
         public ISet<string> Values { get; }
 
         /// <inheritdoc />
-        public EnumIdentifierType(params string[] values)
+        public EnumDefinitionType(params string[] values)
         {
             Values = new HashSet<string>(values, StringComparer.InvariantCultureIgnoreCase);
             SystemName = $"enum({string.Join(",", Values)})";
@@ -21,9 +21,5 @@ namespace CHC.Consent.Common.Identity.Identifiers
 
         /// <inheritdoc />
         public string SystemName { get; }
-
-        /// <inheritdoc />
-        public IdentifierParseResult Parse(string value) => IdentifierParseResult.Success(value);
-        
     }
 }

@@ -1,6 +1,6 @@
-namespace CHC.Consent.Common.Identity.Identifiers
+namespace CHC.Consent.Common.Infrastructure.Definitions
 {
-    public interface IIdentifierType
+    public interface IDefinitionType
     {
         void Accept(IDefinitionVisitor visitor, IDefinition definition);
         /// <summary>

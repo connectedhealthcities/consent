@@ -6,7 +6,6 @@ using CHC.Consent.Common.Infrastructure;
 namespace CHC.Consent.EFCore
 {
     /// <summary>
-    /// Helper class to marry up <see cref="ITypeRegistry{TBaseType}"/>
     /// </summary>
     public class PersonIdentifierHandlerProvider : IPersonIdentifierDisplayHandlerProvider
     {

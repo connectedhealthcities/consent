@@ -1,16 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CHC.Consent.Api.Client.Models;
 using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
-using CompositeIdentifierType = CHC.Consent.Common.Identity.Identifiers.CompositeIdentifierType;
-using DateIdentifierType = CHC.Consent.Common.Identity.Identifiers.DateIdentifierType;
-using EnumIdentifierType = CHC.Consent.Common.Identity.Identifiers.EnumIdentifierType;
+using CHC.Consent.Common.Infrastructure;
+using CompositeDefinitionType = CHC.Consent.Common.Infrastructure.Definitions.Types.CompositeDefinitionType;
+using DateDefinitionType = CHC.Consent.Common.Infrastructure.Definitions.Types.DateDefinitionType;
+using EnumDefinitionType = CHC.Consent.Common.Infrastructure.Definitions.Types.EnumDefinitionType;
 using EvidenceDefinition = CHC.Consent.Api.Client.Models.EvidenceDefinition;
 using IdentifierDefinition = CHC.Consent.Common.Identity.Identifiers.IdentifierDefinition;
-using IIdentifierType = CHC.Consent.Api.Client.Models.IIdentifierType;
-using StringIdentifierType = CHC.Consent.Common.Identity.Identifiers.StringIdentifierType;
+using IDefinition = CHC.Consent.Common.Infrastructure.Definitions.IDefinition;
+using IDefinitionType = CHC.Consent.Common.Infrastructure.Definitions.IDefinitionType;
+using IntegerDefinitionType = CHC.Consent.Common.Infrastructure.Definitions.Types.IntegerDefinitionType;
+using StringDefinitionType = CHC.Consent.Common.Infrastructure.Definitions.Types.StringDefinitionType;
 
 namespace CHC.Consent.Testing.Utils
 {
@@ -19,18 +23,18 @@ namespace CHC.Consent.Testing.Utils
         public static class Definitions
         {
             public static IdentifierDefinition String(string name) =>
-                new IdentifierDefinition(name, new StringIdentifierType());
+                new IdentifierDefinition(name, new StringDefinitionType());
 
             public static IdentifierDefinition Date(string name) =>
-                new IdentifierDefinition(name, new DateIdentifierType());
+                new IdentifierDefinition(name, new DateDefinitionType());
 
             public static IdentifierDefinition Composite(string name, params IdentifierDefinition[] fields) =>
                 new IdentifierDefinition(
                     name,
-                    new CompositeIdentifierType(fields));
+                    new CompositeDefinitionType(fields));
 
             public static IdentifierDefinition Enum(string name, params string[] values) =>
-                new IdentifierDefinition(name, new EnumIdentifierType(values));
+                new IdentifierDefinition(name, new EnumDefinitionType(values));
 
             public static IdentifierDefinition DateOfBirth => KnownIdentifierDefinitions.DateOfBirth;
 
@@ -56,7 +60,7 @@ namespace CHC.Consent.Testing.Utils
             public static IdentifierDefinition LastName => KnownIdentifierDefinitions.NameParts.FamilyName;
 
             public static IdentifierDefinition Integer(string name) =>
-                new IdentifierDefinition(name, new IntegerIdentifierType());
+                new IdentifierDefinition(name, new IntegerDefinitionType());
         }
 
         public static PersonIdentifier PersonIdentifier<T>(T value, IdentifierDefinition definition) =>
@@ -144,26 +148,26 @@ namespace CHC.Consent.Testing.Utils
             );
         }
 
-        private static IIdentifierType ConvertToClientType<TInternalDefinition>(
-            Common.Identity.Identifiers.IIdentifierType internalType, 
+        private static Api.Client.Models.IDefinitionType ConvertToClientType<TInternalDefinition>(
+            IDefinitionType internalType, 
             Func<TInternalDefinition, Api.Client.Models.IDefinition> convertToClientDefinition) 
             where TInternalDefinition:IDefinition
         {
             switch (internalType)
             {
-                case CompositeIdentifierType composite:
-                    return new Api.Client.Models.CompositeIdentifierType(composite.SystemName,
+                case CompositeDefinitionType composite:
+                    return new Api.Client.Models.CompositeDefinitionType(composite.SystemName,
                         composite.Identifiers.Cast<TInternalDefinition>().Select(convertToClientDefinition).ToList());
-                case DateIdentifierType date:
-                    return new Api.Client.Models.DateIdentifierType(date.SystemName);
-                case EnumIdentifierType @enum:
-                    return new Api.Client.Models.EnumIdentifierType(
+                case DateDefinitionType date:
+                    return new Api.Client.Models.DateDefinitionType(date.SystemName);
+                case EnumDefinitionType @enum:
+                    return new Api.Client.Models.EnumDefinitionType(
                         systemName: @enum.SystemName,
                         values: @enum.Values.ToList());
-                case IntegerIdentifierType integer:
-                    return new Api.Client.Models.IntegerIdentifierType(integer.SystemName);
-                case StringIdentifierType @string:
-                    return new Api.Client.Models.StringIdentifierType(@string.SystemName);
+                case IntegerDefinitionType integer:
+                    return new Api.Client.Models.IntegerDefinitionType(integer.SystemName);
+                case StringDefinitionType @string:
+                    return new Api.Client.Models.StringDefinitionType(@string.SystemName);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(internalType));
             }

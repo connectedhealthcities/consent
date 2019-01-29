@@ -1,7 +1,7 @@
 using System;
 using System.Xml.Linq;
-using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
+using CHC.Consent.Common.Infrastructure.Definitions;
 using JetBrains.Annotations;
 
 namespace CHC.Consent.EFCore.Identity

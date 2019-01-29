@@ -1,12 +1,12 @@
-namespace CHC.Consent.Common.Identity.Identifiers
+namespace CHC.Consent.Common.Infrastructure.Definitions.Types
 {
-    public class IntegerIdentifierType : IIdentifierType
+    public class StringDefinitionType : IDefinitionType 
     {
         /// <inheritdoc />
         public void Accept(IDefinitionVisitor visitor, IDefinition definition) =>
             visitor.Visit(definition, this);
 
         /// <inheritdoc />
-        public string SystemName => "integer";
+        public string SystemName => "string";
     }
 }

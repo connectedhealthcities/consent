@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
-using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
+using CHC.Consent.Common.Infrastructure.Definitions;
+using CHC.Consent.Common.Infrastructure.Definitions.Types;
+
 
 namespace CHC.Consent.EFCore.Identity
 {
@@ -37,31 +39,31 @@ namespace CHC.Consent.EFCore.Identity
         }
 
         /// <inheritdoc />
-        public void Visit(IDefinition definition, DateIdentifierType type)
+        public void Visit(IDefinition definition, DateDefinitionType type)
         {
             SetMarshaller<DateTime>(definition, DateTime.TryParse);
         }
 
         /// <inheritdoc />
-        public void Visit(IDefinition definition, EnumIdentifierType type)
+        public void Visit(IDefinition definition, EnumDefinitionType type)
         {
             SetMarshaller(definition);
         }
 
         /// <inheritdoc />
-        public void Visit(IDefinition definition, CompositeIdentifierType type)
+        public void Visit(IDefinition definition, CompositeDefinitionType type)
         {
             SetMarshaller(definition, new CompositeIdentifierXmlMarshaller<TIdentifier, TDefinition>((TDefinition)definition));
         }
 
         /// <inheritdoc />
-        public void Visit(IDefinition definition, IntegerIdentifierType type)
+        public void Visit(IDefinition definition, IntegerDefinitionType type)
         {
             SetMarshaller<long>(definition, long.TryParse);
         }
 
         /// <inheritdoc />
-        public void Visit(IDefinition definition, StringIdentifierType type)
+        public void Visit(IDefinition definition, StringDefinitionType type)
         {
             SetMarshaller(definition);
         }

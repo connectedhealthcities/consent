@@ -1,4 +1,5 @@
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Infrastructure.Definitions.Types;
 
 namespace CHC.Consent.Common.Consent.Evidences
 {
@@ -6,12 +7,12 @@ namespace CHC.Consent.Common.Consent.Evidences
     {
         public static class ImportFileParts
         {
-            public static EvidenceDefinition BaseUri { get; } = new EvidenceDefinition("Base Uri", new StringIdentifierType());
-            public static EvidenceDefinition LineNumber { get; } = new EvidenceDefinition("Line Number", new IntegerIdentifierType());
-            public static EvidenceDefinition LinePosition { get; } = new EvidenceDefinition("Line Position", new IntegerIdentifierType());
+            public static EvidenceDefinition BaseUri { get; } = new EvidenceDefinition("Base Uri", new StringDefinitionType());
+            public static EvidenceDefinition LineNumber { get; } = new EvidenceDefinition("Line Number", new IntegerDefinitionType());
+            public static EvidenceDefinition LinePosition { get; } = new EvidenceDefinition("Line Position", new IntegerDefinitionType());
         }
         
-        public static EvidenceDefinition ImportFile { get; } = new EvidenceDefinition("Import File", new CompositeIdentifierType(
+        public static EvidenceDefinition ImportFile { get; } = new EvidenceDefinition("Import File", new CompositeDefinitionType(
             ImportFileParts.BaseUri,
             ImportFileParts.LineNumber,
             ImportFileParts.LinePosition
@@ -19,14 +20,14 @@ namespace CHC.Consent.Common.Consent.Evidences
 
         public static class MedwayParts
         {
-            public static EvidenceDefinition CompetentStatus { get; } = new EvidenceDefinition("Competent Status", new StringIdentifierType());
-            public static EvidenceDefinition ConsentGivenBy { get; } = new EvidenceDefinition("Consent Given By", new StringIdentifierType());
-            public static EvidenceDefinition ConsentTakenBy { get; } = new EvidenceDefinition("Consent Taken By", new StringIdentifierType());
+            public static EvidenceDefinition CompetentStatus { get; } = new EvidenceDefinition("Competent Status", new StringDefinitionType());
+            public static EvidenceDefinition ConsentGivenBy { get; } = new EvidenceDefinition("Consent Given By", new StringDefinitionType());
+            public static EvidenceDefinition ConsentTakenBy { get; } = new EvidenceDefinition("Consent Taken By", new StringDefinitionType());
         }
 
         public static EvidenceDefinition Medway { get; } = new EvidenceDefinition(
             "Medway",
-            new CompositeIdentifierType(
+            new CompositeDefinitionType(
                 MedwayParts.CompetentStatus,
                 MedwayParts.ConsentGivenBy,
                 MedwayParts.ConsentTakenBy
