@@ -6,7 +6,7 @@ namespace CHC.Consent.Common.Infrastructure.Definitions
     public class DefinitionRegistry : KeyedCollection<string, IDefinition>
     {
         /// <inheritdoc />
-        public DefinitionRegistry()
+        protected DefinitionRegistry()
         {
         }
 
@@ -22,7 +22,7 @@ namespace CHC.Consent.Common.Infrastructure.Definitions
         protected override string GetKeyForItem(IDefinition item) => item.SystemName;
 
         /// <inheritdoc />
-        public bool ContainsKey(string key) => Dictionary.ContainsKey(key);
+        public bool ContainsKey(string key) => Contains(key);
 
 
         /// <inheritdoc />

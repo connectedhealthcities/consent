@@ -90,9 +90,7 @@ namespace CHC.Consent.EFCore.Tests
                 Identifiers.Definitions.Name
             );
 
-            IStoreProvider storeProvider = new ContextStoreProvider(context);
-
-            return new IdentityRepository(registry,storeProvider);
+            return new IdentityRepository(registry,context);
         }
 
         [Fact]
@@ -174,6 +172,7 @@ namespace CHC.Consent.EFCore.Tests
                     Identifiers.PersonIdentifier(testValue, testIdentifierDefinition)
                 }
             );
+            createContext.SaveChanges();
 
             var newPerson = readContext.People.Find(newPersonIdentity.Id);
             newPerson.Should().NotBeNull();

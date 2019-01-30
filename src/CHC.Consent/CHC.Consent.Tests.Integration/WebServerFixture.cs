@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using CHC.Consent.Api;
+using CHC.Consent.Common.Identity;
 using CHC.Consent.Testing.Utils;
 using CHC.Consent.Tests.Api.Client;
 using IdentityModel.Client;
@@ -20,6 +21,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Rest;
@@ -73,11 +75,10 @@ namespace CHC.Consent.Tests
             
             var identityServer = new TestServer(
                 new WebHostBuilder()
-                .ConfigureLogging(_ => _.AddProvider(LoggerProvider))
+                //.ConfigureLogging(_ => _.AddProvider(new TestOutputLoggerProvider()))
                 .Configure(app =>
                     {
                         app.UseIdentityServer();
-                        app.UseMvc();
                     })
                 .ConfigureServices(
                         (context, services) =>
@@ -119,7 +120,6 @@ namespace CHC.Consent.Tests
                                     })
                                 .AddTestUsers(new List<TestUser>());
                                 
-                            services.AddMvc();
                         } )
                 );
 
@@ -147,13 +147,15 @@ namespace CHC.Consent.Tests
                                     
                                     options.Validate();
                                 });
+
+                            services.Replace(ServiceDescriptor.Scoped(s => Identifiers.Registry));
                         })
             );
-            
-            
+
             
             
             Client = Server.CreateClient();
+            Client.GetAsync("/");
 
             var discoveryClient = new DiscoveryClient(identityServer.BaseAddress.ToString(), identityServer.CreateHandler());
             var discoveryResponse = discoveryClient.GetAsync().GetAwaiter().GetResult();
@@ -196,11 +198,6 @@ namespace CHC.Consent.Tests
                         LoggerQueue.DumpTo(output.WriteLine);
                     }
                 }
-            }
-
-            public TestOutputLoggerProvider()
-            {
-                
             }
 
             /// <inheritdoc />

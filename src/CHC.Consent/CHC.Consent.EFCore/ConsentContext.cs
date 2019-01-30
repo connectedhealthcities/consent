@@ -2,6 +2,7 @@
 using CHC.Consent.EFCore.Configuration;
 using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
+using CHC.Consent.EFCore.Identity;
 using CHC.Consent.EFCore.Security;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +33,8 @@ namespace CHC.Consent.EFCore
         public virtual DbSet<SubjectIdentifierEntity> SubjectIdentifiers { get; set; }
         public virtual DbSet<PersonIdentifierEntity> PersonIdentifiers { get; set; }
         
-        public virtual DbSet<EvidenceDefinitionEntity> EvidenceDefinitions { get; set; }
+        public virtual DbSet<EvidenceDefinitionEntity> EvidenceDefinition { get; set; }
+        public virtual DbSet<IdentifierDefinitionEntity> IdentifierDefinition { get; set; }
 
         /// <inheritdoc />
         public override int SaveChanges(bool acceptAllChangesOnSuccess)
@@ -100,13 +102,25 @@ namespace CHC.Consent.EFCore
                     .HasPrincipalKey(typeof(AccessControlList), nameof(AccessControlList.Id))
                     .HasForeignKey(type, "AccessControlListId")
                     .IsRequired();
-
-                modelBuilder.Entity<EvidenceDefinitionEntity>()
-                    .Property(_ => _.Name).IsRequired().HasMaxLength(256);
-                modelBuilder.Entity<EvidenceDefinitionEntity>()
-                    .Property(_ => _.Definition).IsRequired().HasMaxLength(int.MaxValue);
-
             }
+            
+            AddDefinitionEntity<EvidenceDefinitionEntity>(modelBuilder);
+            AddDefinitionEntity<IdentifierDefinitionEntity>(modelBuilder);
+            
+        }
+
+        private static void AddDefinitionEntity<TDefinition>(ModelBuilder modelBuilder) where TDefinition : class, IDefinitionEntity
+        {
+            modelBuilder.Entity<TDefinition>()
+                .HasIndex(_ => _.Name).IsUnique();
+                
+            modelBuilder.Entity<TDefinition>()
+                .Property(_ => _.Name)
+                .IsRequired()
+                .HasMaxLength(255);
+                
+            modelBuilder.Entity<TDefinition>()
+                .Property(_ => _.Definition).IsRequired().HasMaxLength(int.MaxValue);
         }
     }
 }

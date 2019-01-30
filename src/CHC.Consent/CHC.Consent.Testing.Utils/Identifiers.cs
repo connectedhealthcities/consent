@@ -107,7 +107,8 @@ namespace CHC.Consent.Testing.Utils
                 Definitions.HospitalNumber,
                 Definitions.DateOfBirth,
                 Definitions.Address,
-                Definitions.Name);
+                Definitions.Name,
+                Definitions.Sex);
 
         public static PersonIdentifier Name(string given, string family) =>
             CompositeIdentifier(

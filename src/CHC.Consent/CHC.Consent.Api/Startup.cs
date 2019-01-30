@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using CHC.Consent.Api.Features.Consent;
 using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure;
@@ -8,9 +9,11 @@ using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Identity;
+using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.Identity;
+using CHC.Consent.Parsing;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -18,6 +21,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -47,7 +51,8 @@ namespace CHC.Consent.Api
                         options.RespectBrowserAcceptHeader = true;
                     })
                 .AddFeatureFolders()
-                
+                .AddApplicationPart(typeof(ConsentController).Assembly)
+                .AddControllersAsServices()
                 .AddRazorPagesOptions(o => o.Conventions.AuthorizeFolder("/"));
 
             services.AddTransient<IConfigureOptions<MvcJsonOptions>, ConfigureJsonOptions>();
@@ -92,7 +97,19 @@ namespace CHC.Consent.Api
 
         private void AddConsentSystemTypeRegistrations(IServiceCollection services)
         {
-            services.AddTransient(provider => KnownIdentifierDefinitions.KnownIdentifiers);
+            services.TryAddTransient<IdentifierDefinitionRegistry>(
+                provider =>
+                {
+                    var definitionParser = new DefinitionParser<IdentifierDefinition>(IdentifierDefinition.Create);
+
+                    return new IdentifierDefinitionRegistry(
+                        provider.GetService<ConsentContext>().Set<IdentifierDefinitionEntity>()
+                            .Select(
+                                e =>
+                                    definitionParser.ParseString(e.Definition)));
+                }
+            );
+            //services.AddTransient(provider => KnownIdentifierDefinitions.KnownIdentifiers);
             
             services.AddTransient<IPersonIdentifierDisplayHandlerProvider, PersonIdentifierHandlerProvider>();
 

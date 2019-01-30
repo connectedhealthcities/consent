@@ -17,7 +17,7 @@ namespace CHC.Consent.Common.Infrastructure.Definitions.Types
         public CompositeDefinitionType(params IDefinition[] identifiers) 
         {
             Identifiers = new DefinitionRegistry(identifiers);   
-            SystemName = $"composite({string.Join(",", identifiers.Select(_ => _.Type.SystemName))})";
+            SystemName = $"composite({string.Join(",", identifiers.Select(_ => _.AsString))})";
         }
     }
 }

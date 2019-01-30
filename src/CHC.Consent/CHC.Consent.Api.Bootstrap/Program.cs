@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CHC.Consent.EFCore;
+using CHC.Consent.EFCore.Identity;
 using CHC.Consent.EFCore.Security;
 using IdentityServer4.EntityFramework.DbContexts;
 using IdentityServer4.EntityFramework.Mappers;
@@ -19,14 +21,16 @@ namespace CHC.Consent.Api.Bootstrap
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
             var host = BuildWebHost(args);
 
-            using (var serviceScope = host.Services.CreateScope())
+            var services = host.Services;
+            using (var serviceScope = services.CreateScope())
             {
                 var db = serviceScope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
 
                 foreach (var client in Clients())
                 {
-                    
-                    var existingId = db.Clients.Where(_ => _.ClientId == client.ClientId).Select(_ => (int?)_.Id).FirstOrDefault();
+
+                    var existingId = db.Clients.Where(_ => _.ClientId == client.ClientId).Select(_ => (int?) _.Id)
+                        .FirstOrDefault();
                     if (existingId == null)
                     {
                         db.Clients.Add(client.ToEntity());
@@ -50,7 +54,7 @@ namespace CHC.Consent.Api.Bootstrap
 
                 }
 
-                db.SaveChanges();
+
 
 
                 var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<ConsentRole>>();
@@ -63,6 +67,22 @@ namespace CHC.Consent.Api.Bootstrap
                 await userManager.AddToRoleAsync(consentUser, "BiB4All Study Manager");
                 await userManager.CreateAsync(new ConsentUser {UserName = "bob"}, "Pass123$");
             }
+
+            using(var scope = services.CreateScope())
+            using (var consent = scope.ServiceProvider.GetService<ConsentContext>())
+                {
+                    foreach (var identifier in Identifiers)
+                    {
+                        var entities = consent.IdentifierDefinition;
+                        if (entities.All(_ => _.Name != identifier.Name))
+                        {
+                            entities.Add(identifier);
+                        }
+                    }
+
+                    consent.SaveChanges();
+                }
+            
         }
 
         static IEnumerable<ApiResource> Apis()
@@ -86,7 +106,6 @@ namespace CHC.Consent.Api.Bootstrap
             };
         }
         
-
         static IEnumerable<Client> Clients()
         {
             yield return new Client
@@ -125,6 +144,21 @@ namespace CHC.Consent.Api.Bootstrap
             };
             
         }
+        
+        static readonly IEnumerable<IdentifierDefinitionEntity> Identifiers = new []
+        {
+            new IdentifierDefinitionEntity ( "NHS Number", "nhs-number:string"),
+            new IdentifierDefinitionEntity ( "Sex", "sex:enum('Female','Male')"),
+            new IdentifierDefinitionEntity ( "Date of Birth", "date-of-birth:date"),
+            new IdentifierDefinitionEntity ( "Bradford Hospital Number", "bradford-hospital-number:string"),
+            new IdentifierDefinitionEntity(
+                "Address", 
+                @"address:composite(line-1:string,line-2:string,line-3:string,line-4:string,line-5:string,postcode:string)"),
+            new IdentifierDefinitionEntity("Birth Order", "birth-order:composite(pregnancy-number:integer,birth-order:string)"),
+            new IdentifierDefinitionEntity("Name", "name:composite(given:string,family:string)"),
+            new IdentifierDefinitionEntity("Contact Number", "contact-number:composite(type:string,number:string)"),
+            
+        };
 
         private static IWebHost BuildWebHost(string[] args) => Api.Program.BuildWebHost(args);
     }

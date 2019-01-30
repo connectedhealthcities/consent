@@ -11,7 +11,7 @@ namespace CHC.Consent.Common.Infrastructure.Definitions.Types
         public EnumDefinitionType(params string[] values)
         {
             Values = new HashSet<string>(values, StringComparer.InvariantCultureIgnoreCase);
-            SystemName = $"enum({string.Join(",", Values)})";
+            SystemName = $"enum('{string.Join("','", Values)}')";
         }
 
 
