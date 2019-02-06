@@ -140,7 +140,7 @@ namespace CHC.Consent.Tests.DataImporter
                     .Write(
                     identifiers.Select(_ => _.ConvertToClientDefinition()).ToImmutableArray(),
                     people,
-                    output);
+                    () => output);
 
                 result = output.ToString();
             }

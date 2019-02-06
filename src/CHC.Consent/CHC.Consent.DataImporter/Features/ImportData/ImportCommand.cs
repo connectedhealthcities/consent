@@ -11,7 +11,6 @@ namespace CHC.Consent.DataImporter.Features.ImportData
     [Command("import")]
     class ImportCommand
     {
-        private readonly ILoggerFactory loggerFactory;
         private readonly XmlImporter xmlImporter;
 
         [Required, LegalFilePath, Argument(0, "file", "file to import")]
@@ -20,17 +19,14 @@ namespace CHC.Consent.DataImporter.Features.ImportData
         
         
         /// <inheritdoc />
-        public ImportCommand(ILoggerFactory loggerFactory, ApiClientProvider apiClientProvider)
+        public ImportCommand(Serilog.ILogger logger, ApiClientProvider apiClientProvider)
         {
-            this.loggerFactory = loggerFactory;
-            xmlImporter = new XmlImporter(loggerFactory, apiClientProvider, loggerFactory.CreateLogger<XmlImporter>());
+            xmlImporter = new XmlImporter(logger, apiClientProvider);
         }
 
         [UsedImplicitly]
         private async Task<int> OnExecuteAsync()
         {
-            
-            
             await Import(File);
 
             return 0;

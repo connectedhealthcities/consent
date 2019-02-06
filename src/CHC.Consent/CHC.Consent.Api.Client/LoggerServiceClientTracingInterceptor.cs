@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Internal;
 using Microsoft.Rest;
+using Serilog.Events;
 
 namespace CHC.Consent.Api.Client
 {
+    using ILogger = Serilog.ILogger;
+    using LogLevel = LogEventLevel;
+    
     public class LoggerServiceClientTracingInterceptor : IServiceClientTracingInterceptor
     {
         private ILogger Logger { get; }
@@ -21,29 +23,14 @@ namespace CHC.Consent.Api.Client
 
         void Log(string message, params object[] args)
         {
-            Logger.Log(
-                Level,
-                0,
-                new FormattedLogValues(message, args),
-                null,
-                MessageFormatter);
+            Logger.Write(Level, message, args);
         }
 
         void LogError(Exception exception, string message, params object[] args)
         {
-            Logger.Log(
-                LogLevel.Error,
-                0,
-                new FormattedLogValues(message, args),
-                exception,
-                MessageFormatter);
+            Logger.Error(exception, message, args);
+            
         }
-
-        private static string MessageFormatter(FormattedLogValues values, Exception exception)
-        {
-            return values.ToString();
-        }
-
 
         /// <inheritdoc />
         public void Configuration(string source, string name, string value)

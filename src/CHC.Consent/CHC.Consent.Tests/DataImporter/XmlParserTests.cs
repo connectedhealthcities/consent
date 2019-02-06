@@ -40,7 +40,7 @@ namespace CHC.Consent.Tests.DataImporter
         {
             var xDocument = CreateXDocumentWithLineInfo(fullXml);
             
-            var identifier = new XmlParser(Logger, definitions.ConvertToClientDefinitions(), Array.Empty<ClientEvidenceDefinition>()).ParseIdentifier(xDocument.Root);
+            var identifier = new XmlParser(definitions.ConvertToClientDefinitions(), Array.Empty<ClientEvidenceDefinition>()).ParseIdentifier(xDocument.Root);
 
             Assert.NotNull(identifier);
             return identifier;
@@ -173,8 +173,7 @@ namespace CHC.Consent.Tests.DataImporter
             
             var xmlReader = CreateXmlReader(personXml);
             var specification = new XmlParser(
-                Logger,
-                Identifiers.Registry.ConvertToClientDefinitions(),
+                    Identifiers.Registry.ConvertToClientDefinitions(),
                 Identifiers.ConvertToClientDefinitions(KnownEvidence.Registry))
                 .GetPeople(xmlReader)
                 .Single();
@@ -212,7 +211,6 @@ namespace CHC.Consent.Tests.DataImporter
         {
 
             return new XmlParser(
-                    Logger,
                     (personIdentifierTypes ?? new IdentifierDefinitionRegistry()).ConvertToClientDefinitions(),
                     Identifiers.ConvertToClientDefinitions(evidenceDefinitions ?? new EvidenceDefinitionRegistry())
                     )

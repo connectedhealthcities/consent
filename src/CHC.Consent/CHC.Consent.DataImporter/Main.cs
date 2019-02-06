@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading.Tasks;
+using System.Xml;
+using CHC.Consent.Api.Client.Models;
 using CHC.Consent.DataImporter.Features.ExportData;
 using CHC.Consent.DataImporter.Features.ImportData;
 using McMaster.Extensions.CommandLineUtils;
@@ -11,6 +14,8 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
+using Serilog.Formatting.Json;
+using Serilog.Sinks.SystemConsole.Themes;
 
 namespace CHC.Consent.DataImporter
 {
@@ -19,9 +24,12 @@ namespace CHC.Consent.DataImporter
     {
         public static Task<int> Main(string[] args)
         {
-            Serilog.Log.Logger = new LoggerConfiguration()
-                .WriteTo.Console()
-                .MinimumLevel.Is(LogEventLevel.Verbose)
+            Log.Logger = new LoggerConfiguration()
+                /*.WriteTo.Console(formatter:new JsonFormatter(renderMessage:true))*/
+                .WriteTo.Console(outputTemplate:"[{Level:u}] {Message:lj} {Exception} {Properties:j}{NewLine}",theme: AnsiConsoleTheme.Literate)
+                .Enrich.FromLogContext()
+                .Destructure.With<DefinitionDestructor>()
+                .MinimumLevel.Is(LogEventLevel.Debug)
                 .CreateLogger();
 
             return new HostBuilder()
@@ -38,14 +46,20 @@ namespace CHC.Consent.DataImporter
                                     ["-secret"] = "Api_ClientSecret"
                                 })
                 )
-                .ConfigureLogging((c, l) =>  l.AddSerilog().SetMinimumLevel(LogLevel.Trace))
+                
                 .ConfigureServices(
                     (context, services) =>
                         services
                             .AddSingleton(context.Configuration.GetSection("Api").Get<ApiConfiguration>())
                             .AddSingleton<ApiClientProvider>()
+                            .AddSingleton(Log.Logger)
+                            .AddSingleton<IUnhandledExceptionHandler,ExceptionLogger>()
                         )
+                
+                .UseSerilog()
                 .RunCommandLineApplicationAsync<Program>(args);
+            
+            
         }
 
         private int OnExecuteAsync(CommandLineApplication app)
@@ -55,5 +69,17 @@ namespace CHC.Consent.DataImporter
             return 1;
         }
 
+    }
+
+    public class DefinitionDestructor : IDestructuringPolicy
+    {
+        /// <inheritdoc />
+        public bool TryDestructure(object value, ILogEventPropertyValueFactory propertyValueFactory, out LogEventPropertyValue result)
+        {
+            result = null;
+            if (!(value is IDefinition definition)) return false;
+            result = propertyValueFactory.CreatePropertyValue($"{definition.SystemName}:{definition.Type?.SystemName}");
+            return true;
+        }
     }
 }

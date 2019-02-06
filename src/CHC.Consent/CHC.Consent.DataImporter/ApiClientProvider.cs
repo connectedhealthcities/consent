@@ -4,8 +4,9 @@ using System.Threading.Tasks;
 using CHC.Consent.Api.Client;
 using IdentityModel;
 using IdentityModel.Client;
-using Microsoft.Extensions.Logging;
+using Serilog;
 using Microsoft.Rest;
+using Serilog.Events;
 
 namespace CHC.Consent.DataImporter
 {
@@ -13,17 +14,17 @@ namespace CHC.Consent.DataImporter
     {
         private DiscoveryResponse discoveryDocument;
         private ApiConfiguration Configuration { get; }
-        private ILogger<HttpClient> Logger { get; }
+        private ILogger Logger { get; }
 
         /// <inheritdoc />
-        public ApiClientProvider(ApiConfiguration configuration, ILogger<HttpClient> logger)
+        public ApiClientProvider(ApiConfiguration configuration, ILogger logger)
         {
             Configuration = configuration;
-            Logger = logger;
+            Logger = logger.ForContext<ApiClientProvider>();
             
             ServiceClientTracing.IsEnabled = true;
             ServiceClientTracing.AddTracingInterceptor(
-                new LoggerServiceClientTracingInterceptor(Logger, LogLevel.Trace));
+                new LoggerServiceClientTracingInterceptor(Logger, LogEventLevel.Verbose));
         }
 
         public async Task<Api.Client.Api> CreateApiClient()
@@ -40,14 +41,12 @@ namespace CHC.Consent.DataImporter
         {
             
             var tokenEndpoint = await GetTokenEndpoint();
-            Logger.LogDebug(
+            Logger.Debug(
                 "Getting OAuth2 access token for client {client} from {tokenEndPoint}",
                 Configuration.ClientId,
                 tokenEndpoint);
-            Logger.LogTrace(
-                "OAuth2 credentials are {clientId}:{clientSecret}",
-                Configuration.ClientId,
-                Configuration.ClientSecret);
+            Logger.Verbose(
+                "OAuth2 configuration is are {@configuration}", Configuration );
             
             using (var tokenHttpClient = CreateTokenHttpClient())
             {
@@ -78,7 +77,7 @@ namespace CHC.Consent.DataImporter
 
         private async Task<DiscoveryResponse> GetRemoteDiscoveryDocument()
         {
-            Logger.LogDebug("Getting oauth2 discovery document from {baseUrl}", Configuration.BaseUrl);
+            Logger.Debug("Getting oauth2 discovery document from {baseUrl}", Configuration.BaseUrl);
             using (var httpClient = CreateTokenHttpClient())
             {
                 var document = await httpClient.GetDiscoveryDocumentAsync();

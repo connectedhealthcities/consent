@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Threading.Tasks;
 using CHC.Consent.Api.Client;
 using JetBrains.Annotations;
@@ -29,13 +30,14 @@ namespace CHC.Consent.DataImporter.Features.ExportData
             this.apiClientProvider = apiClientProvider;
         }
 
+        [UsedImplicitly]
         protected async Task OnExecuteAsync()
         {
             IApi apiClient = await apiClientProvider.CreateApiClient();
-            var outputWriter = System.IO.File.CreateText(File);
+            TextWriter CreateOutput() => System.IO.File.CreateText(File);
 
             await new CsvExporter(apiClient, FieldNames?.Split(',') ?? Array.Empty<string>())
-                .Export(StudyId,outputWriter);
+                .Export(StudyId, CreateOutput);
         }
     }
 }

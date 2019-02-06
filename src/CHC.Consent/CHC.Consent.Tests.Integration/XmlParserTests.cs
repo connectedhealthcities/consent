@@ -2,7 +2,6 @@ using System;
 using CHC.Consent.Api.Client;
 using CHC.Consent.DataImporter;
 using CHC.Consent.DataImporter.Features.ImportData;
-using CHC.Consent.Testing.Utils;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -29,7 +28,6 @@ namespace CHC.Consent.Tests
             var consentStoreMetadata = Fixture.ApiClient.GetConsentStoreMetadata();
             
             Action createParser = () => new XmlParser(
-                new XunitLogger<XmlParser>(Output, "Parser"),
                 identityStoreMetadata,
                 consentStoreMetadata);
             

@@ -2,13 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using CHC.Consent.Api.Client.Models;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
+using Serilog;
+using Serilog.Context;
 
 namespace CHC.Consent.DataImporter.Features.ImportData
 {
@@ -57,20 +56,16 @@ namespace CHC.Consent.DataImporter.Features.ImportData
 
             }
         }
-        
-        private ILogger Log { get; } = NullLogger.Instance;
-        
+
         private readonly IdentifierValueParser identifierValueParser;
         private readonly IdentifierValueParser evidenceValueParser;
-        private ImportFileEvidenceGenerator importFileEvidenceGenerator;
+        private readonly ImportFileEvidenceGenerator importFileEvidenceGenerator;
+        private ILogger Log { get; } = Serilog.Log.ForContext<XmlParser>();
 
         public XmlParser(
-            ILogger<XmlParser> logger, 
             IList<IdentifierDefinition> identifierDefinitions,
             IList<EvidenceDefinition> evidenceDefinitions)
         {
-            Log = logger;
-
             importFileEvidenceGenerator = new ImportFileEvidenceGenerator(evidenceDefinitions);
             evidenceValueParser = IdentifierValueParser.CreateFrom(evidenceDefinitions);
             identifierValueParser = IdentifierValueParser.CreateFrom(identifierDefinitions);
@@ -93,44 +88,77 @@ namespace CHC.Consent.DataImporter.Features.ImportData
 
             if (xmlReader.LocalName != "people")
             {
+                Log.Fatal(
+                    "Expected people element but found {@element} at {@lineInfo}",
+                    new {xmlReader.Name, xmlReader.NodeType},
+                    LineInfo(xmlReader));
                 //TODO: Record errors
                 throw new NotImplementedException();
             }
 
             while (xmlReader.Read())
             {
-                if (xmlReader.NodeType != XmlNodeType.Element || xmlReader.LocalName != "person")
+                if (IsEndOfPeople(xmlReader)) break;
+                var lineInfo = LineInfo(xmlReader);
+                using(LogContext.PushProperty("FileLocation",lineInfo))
                 {
-                    //TODO: record errors
-                    continue;
+                    foreach (var importedPersonSpecification in ParsePeople(xmlReader))
+                        yield return importedPersonSpecification;
                 }
-
-
-                var personNode = XDocument.Load(xmlReader.ReadSubtree(), LoadOptions.SetLineInfo|LoadOptions.SetBaseUri);
-
-                var person = new PersonSpecification
-                {
-                    Identifiers = personNode.XPathSelectElements("/person/identity/identifier")
-                        .Select(ParseIdentifier)
-                        .ToArray(),
-                    MatchSpecifications =
-                        personNode.XPathSelectElements("/person/lookup/match")
-                            .Select(ParseMatchSpecification)
-                            .ToArray()
-                };
-
-                var consentSpecifications = personNode.XPathSelectElements("/person/consent")
-                    .Select(_ => ParseConsent(_))
-                    .ToArray();
-
-                //TODO: Catch, record, log, and return details of exceptions 
-
-                yield return new ImportedPersonSpecification
-                {
-                    PersonSpecification = person,
-                    ConsentSpecifications = consentSpecifications
-                };
             }
+        }
+
+        private static object LineInfo(XmlReader xmlReader)
+        {
+            var xmlLineInfo = (IXmlLineInfo) xmlReader;
+            return new {xmlLineInfo.LineNumber, xmlLineInfo.LinePosition};
+        }
+
+        private bool IsEndOfPeople(XmlReader xmlReader)
+        {
+            return xmlReader.NodeType == XmlNodeType.EndElement && xmlReader.LocalName == "people";
+        }
+
+        private IEnumerable<ImportedPersonSpecification> ParsePeople(XmlReader xmlReader)
+        {
+            if (xmlReader.NodeType != XmlNodeType.Element)
+            {
+                Log.Error("Don't know how to handle {name} {type}", xmlReader.Name, xmlReader.NodeType);
+                throw new NotImplementedException();
+            }
+            if (xmlReader.LocalName != "person")
+            {
+                Log.Error("Don't know how to handle {name} {type}", xmlReader.Name, xmlReader.NodeType);
+                //skip this element and subtree
+                xmlReader.ReadSubtree().Dispose();
+                yield break;
+            }
+
+
+            var personNode = XDocument.Load(xmlReader.ReadSubtree(), LoadOptions.SetLineInfo | LoadOptions.SetBaseUri);
+
+            var person = new PersonSpecification
+            {
+                Identifiers = personNode.XPathSelectElements("/person/identity/identifier")
+                    .Select(ParseIdentifier)
+                    .ToArray(),
+                MatchSpecifications =
+                    personNode.XPathSelectElements("/person/lookup/match")
+                        .Select(ParseMatchSpecification)
+                        .ToArray()
+            };
+
+            var consentSpecifications = personNode.XPathSelectElements("/person/consent")
+                .Select(ParseConsent)
+                .ToArray();
+
+            //TODO: Catch, record, log, and return details of exceptions 
+
+            yield return new ImportedPersonSpecification
+            {
+                PersonSpecification = person,
+                ConsentSpecifications = consentSpecifications
+            };
         }
 
         public ImportedConsentSpecification ParseConsent(
@@ -141,10 +169,8 @@ namespace CHC.Consent.DataImporter.Features.ImportData
 
             //TODO: better error recording and typey stuff here
 
-            var evidence = consentNode.XPathSelectElements("evidence/evidence")
-                .Select(evidenceValueParser.Parse)
-                .ToArray();
-            
+            var evidence = ParseEvidence(consentNode);
+
             if (evidence.Any())
             {
                 evidence = evidence.Concat(GetImportSourceEvidence(consentNode)).ToArray();
@@ -163,6 +189,18 @@ namespace CHC.Consent.DataImporter.Features.ImportData
             };
         }
 
+        private IIdentifierValueDto[] ParseEvidence(XElement consentNode)
+        {
+            using (LogContext.PushProperty("DefinitionType", "Evidence"))
+            {
+               return consentNode.XPathSelectElements("evidence/evidence")
+                    .Select(evidenceValueParser.Parse)
+                    .ToArray();
+            }
+
+            
+        }
+
         private IEnumerable<IIdentifierValueDto> GetImportSourceEvidence(XElement node)
         {
             return importFileEvidenceGenerator.GenerateFrom(node);
@@ -177,17 +215,10 @@ namespace CHC.Consent.DataImporter.Features.ImportData
 
         public IIdentifierValueDto ParseIdentifier(XElement identifierNode)
         {
-            return identifierValueParser.Parse(identifierNode);
+            using (LogContext.PushProperty("DefinitionType", "Identifier"))
+            {
+                return identifierValueParser.Parse(identifierNode);
+            }
         }
-
-
-        private static object ChangeType(string stringValue, Type type) => 
-            type.IsEnum
-            ? Enum.Parse(type, stringValue)
-            : Convert.ChangeType(stringValue, type);
-
-        private static readonly Regex LowerCaseFollowedByUpperCase = new Regex(
-            @"(\p{Ll})(\p{Lu})",
-            RegexOptions.Compiled);
     }
 }

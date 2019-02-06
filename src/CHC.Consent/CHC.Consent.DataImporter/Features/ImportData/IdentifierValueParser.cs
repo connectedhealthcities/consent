@@ -4,11 +4,14 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 using CHC.Consent.Api.Client.Models;
+using Serilog;
 
 namespace CHC.Consent.DataImporter.Features.ImportData
 {
     public class IdentifierValueParser
     {
+        private ILogger Log { get; } = Serilog.Log.ForContext<IdentifierValueParser>();
+        
         public static IdentifierValueParser CreateFrom<T>(IEnumerable<T> definitions) where T:IDefinition, IAcceptDefinitionVisitor<T>
         {
             var parsers = new ValueParserCreator<T>().VisitAll(definitions).Parsers;
@@ -20,23 +23,43 @@ namespace CHC.Consent.DataImporter.Features.ImportData
         {
             Definitions = definitions.ToDictionary(x => x.SystemName);
             Parsers = parsers.ToImmutableDictionary();
+            Log = Log.ForContext("Definitions", definitions, destructureObjects:true);
         }
 
         private delegate IIdentifierValueDto Parser(XElement element);
         private IReadOnlyDictionary<string, Parser> Parsers { get; }
         private IDictionary<string, IDefinition> Definitions { get; set; }
 
-        public IIdentifierValueDto Parse(XElement identifierNode)
+        public IIdentifierValueDto Parse(XElement element)
         {
-            var typeName = identifierNode.Attribute("type")?.Value;
+            var typeName = element.Attribute("type")?.Value;
+            Log.Debug("Create value for {type}", typeName);
             if (!Definitions.ContainsKey(typeName))
             {
-                throw new XmlParseException(identifierNode, $"Cannot parse identifier of Type '{typeName}'");
+                Log.Warning("{type} is not valid in {@definitions}", Definitions);
+                throw new XmlParseException(element, $"Cannot parse identifier of Type '{typeName}'");
             }
 
-            return Parsers[typeName](identifierNode);
+            Log.Debug("Converting to {@definition}", Definitions[typeName]);
+            Log.Verbose("Converting {$node} to {@definition}", element, Definitions[typeName]);
+            return Parse(element, typeName);
         }
-        
+
+        private IIdentifierValueDto Parse(XElement element, string typeName)
+        {
+
+            try
+            {
+                return Parsers[typeName](element);
+            }
+            catch (Exception e)
+            {
+                Log.Verbose(e, "Error parsing {typeName} from {$node}", typeName, element);
+                Log.Error("Cannot parse value of {typeName} - {definition} - error was {exception}", typeName, Definitions[typeName], e.GetType());
+                throw new XmlParseException(element, $"Cannot covert value to {typeName} - {Definitions[typeName]}");
+            }
+        }
+
         private class ValueParserCreator<TDefinition> : IDefinitionVisitor<TDefinition> 
             where TDefinition : IDefinition, IAcceptDefinitionVisitor<TDefinition>
         {

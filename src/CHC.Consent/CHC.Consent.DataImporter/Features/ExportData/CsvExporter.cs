@@ -21,7 +21,7 @@ namespace CHC.Consent.DataImporter.Features.ExportData
 
         private IApi ApiClient { get; set; }
 
-        public async Task Export(long studyId, StreamWriter outputStream)
+        public async Task Export(long studyId, Func<TextWriter> outputStream)
         {
             var definitions = await GetIdentifierDefinitions();
 
@@ -73,11 +73,11 @@ namespace CHC.Consent.DataImporter.Features.ExportData
         public virtual void Write(
             ICollection<IdentifierDefinition> definitions, 
             IEnumerable<StudySubjectWithIdentifiers> studySubjects,
-            TextWriter outputWriter)
+            Func<TextWriter> createOutputWriter)
         {
             
             var outputFormatter = new ValueOutputFormatter(definitions, fieldNames);
-            using (var csv = new CsvWriter(outputWriter))
+            using (var csv = new CsvWriter(createOutputWriter()))
             {
                 WriteHeader(csv, definitions);
 

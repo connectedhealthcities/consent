@@ -1,8 +1,9 @@
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Microsoft.Rest;
+using Serilog;
+using Serilog.Context;
 
 namespace CHC.Consent.DataImporter
 {
@@ -18,13 +19,16 @@ namespace CHC.Consent.DataImporter
         /// <inheritdoc />
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            Logger.LogTrace("Request {request}", request.AsFormattedString());
-            
-            var response = await base.SendAsync(request, cancellationToken);
+            using (LogContext.PushProperty("Request", request))
+            {
+                Logger.Verbose("Start Request", request);
 
-            Logger.LogTrace("Response {response}", response.AsFormattedString());
-            
-            return response;
+                var response = await base.SendAsync(request, cancellationToken);
+
+                Logger.Verbose("Response {response}", response.AsFormattedString());
+
+                return response;
+            }
         }
     }
 }
