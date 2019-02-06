@@ -12,19 +12,35 @@ namespace CHC.Consent.EFCore.Security
         {
             static CompiledLambdas()
             {
-                GrantsPermission = SecurableQueryExtensions.GrantsPermission<T>().Compile();
+                GrantsPermissionToUser = GrantsPermissionToUser<T>().Compile();
+                GrantsPermissionToRole = GrantsPermissionToRole<T>().Compile();
             }
 
-            public static Func<T, IUserProvider, string[], bool> GrantsPermission { get; }
+            public static Func<T, IUserProvider, string[], bool> GrantsPermissionToUser { get; }
+            public static Func<T, ConsentRole, string[], bool> GrantsPermissionToRole { get; }
         }
 
+
         [InjectLambda]
-        public static bool GrantsPermission<T>(this T securable, IUserProvider user, params string[] permissions)
+        public static bool GrantsPermissionToRole<T>(this T securable, ConsentRole role, params string[] permissions)
+            where T : ISecurable
+            => CompiledLambdas<T>.GrantsPermissionToRole(securable, role, permissions);
+
+        public static Expression<Func<T, ConsentRole, string[], bool>> GrantsPermissionToRole<T>() where T : ISecurable
+            =>
+                (securable, role, permissions) =>
+                    securable.ACL.Entries.Any(acl =>
+                        permissions.Contains(acl.Permission.Access) && 
+                        ((RoleSecurityPrincipal)acl.Prinicipal).Role == role);
+        
+
+        [InjectLambda]
+        public static bool GrantsPermissionToUser<T>(this T securable, IUserProvider user, params string[] permissions)
             where T : ISecurable 
             => 
-                CompiledLambdas<T>.GrantsPermission(securable, user, permissions);
+                CompiledLambdas<T>.GrantsPermissionToUser(securable, user, permissions);
 
-        public static Expression<Func<T, IUserProvider, string[], bool>> GrantsPermission<T>() where T : ISecurable
+        public static Expression<Func<T, IUserProvider, string[], bool>> GrantsPermissionToUser<T>() where T : ISecurable
             =>
                 (securable, user, permissions) => securable.ACL.Entries.Any(
                     acl => permissions.Contains(acl.Permission.Access) && (
@@ -35,7 +51,6 @@ namespace CHC.Consent.EFCore.Security
         public static IQueryable<T> WithReadPermissionGrantedTo<T>(this IQueryable<T> securables, IUserProvider user)
             where T : ISecurable
             =>
-                securables.Where(s => s.GrantsPermission(user, "read"));
-
+                securables.Where(s => s.GrantsPermissionToUser(user, PermissionNames.Read));
     }
 }

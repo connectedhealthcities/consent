@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using CHC.Consent.EFCore;
+using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Identity;
 using CHC.Consent.EFCore.Security;
 using IdentityServer4.EntityFramework.DbContexts;
@@ -10,6 +12,7 @@ using IdentityServer4.EntityFramework.Mappers;
 using IdentityServer4.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CHC.Consent.Api.Bootstrap
@@ -60,17 +63,34 @@ namespace CHC.Consent.Api.Bootstrap
                 var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<ConsentRole>>();
                 var userManager = serviceScope.ServiceProvider.GetRequiredService<UserManager<ConsentUser>>();
 
-                await roleManager.CreateAsync(new ConsentRole {Name = "BiB4All Study Manager"});
+                var bib4allStudyManager = "BiB4All Study Manager";
+                await roleManager.CreateAsync(new ConsentRole {Name = bib4allStudyManager});
 
                 await userManager.CreateAsync(new ConsentUser {UserName = "alice"}, "Pass123$");
                 var consentUser = await userManager.FindByNameAsync("alice");
-                await userManager.AddToRoleAsync(consentUser, "BiB4All Study Manager");
+                await userManager.AddToRoleAsync(consentUser, bib4allStudyManager);
                 await userManager.CreateAsync(new ConsentUser {UserName = "bob"}, "Pass123$");
-            }
 
-            using(var scope = services.CreateScope())
-            using (var consent = scope.ServiceProvider.GetService<ConsentContext>())
+                using (var consent = serviceScope.ServiceProvider.GetService<ConsentContext>())
                 {
+                    var bib4All =
+                        consent.Studies.Include(_ => _.ACL).SingleOrDefault(_ => _.Name == "BiB4All")
+                        ?? consent.Studies.Add(new StudyEntity {Name = "BiB4All"}).Entity;
+                    
+                    var permissionEntities = consent.Set<PermissionEntity>();
+                    foreach (var permission in Permissions)
+                    {
+                        if (!permissionEntities.Any(_ => _.Access == permission))
+                            permissionEntities.Add(new PermissionEntity {Access = permission});
+                    }
+                    
+                    consent.SaveChanges();
+
+                    foreach (var role in consent.Roles.Where(_ => _.Name == bib4allStudyManager))
+                    {
+                        consent.GrantPermission(bib4All, role, PermissionNames.Read);
+                    }
+
                     foreach (var identifier in Identifiers)
                     {
                         var entities = consent.IdentifierDefinition;
@@ -82,8 +102,15 @@ namespace CHC.Consent.Api.Bootstrap
 
                     consent.SaveChanges();
                 }
-            
+            }
+
         }
+
+        private static IEnumerable<string> Permissions { get; } =
+            typeof(PermissionNames)
+                .GetFields(BindingFlags.Public | BindingFlags.Static)
+                .Where(_ => _.FieldType == typeof(string))
+                .Select(f => (string) f.GetValue(null));
 
         static IEnumerable<ApiResource> Apis()
         {
