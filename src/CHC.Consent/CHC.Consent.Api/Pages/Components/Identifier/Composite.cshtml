@@ -1,0 +1,9 @@
+@model CompositeIdentifierValue<PersonIdentifier>
+@using CHC.Consent.Common.Identity.Identifiers
+@using CHC.Consent.Common.Infrastructure;
+<ul class="list-inline">
+    @{
+        var registry = new IdentifierDefinitionRegistry(Model.Identifiers.Select(_ => _.Definition));
+    }
+    @foreach (var id in Model.Identifiers){<li class="list-inline-item"><vc:identifier identifier="id" registry="@registry"></vc:identifier></li>}
+</ul>

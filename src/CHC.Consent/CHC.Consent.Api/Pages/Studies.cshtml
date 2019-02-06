@@ -9,7 +9,7 @@
     @foreach (var identifierType in Model.IdentifierNames)
     {
     
-        <th>@Model.DisplayNames[identifierType]</th>
+        <th>@identifierType</th>
 
     }
     </thead>
@@ -23,9 +23,10 @@
                 {
                     <td>
                         @{
-                            foreach (var identifier in identifiers[identifierType])
+                            foreach (var identifier in identifiers.Where(_ => _.Definition.SystemName == identifierType))
                             {
-                                <span><vc:identifier identifier="identifier"/></span>
+                                <span>
+                                    @await Component.InvokeAsync("Identifier", new { identifier })</span>
                             }
                         } 
                     </td>

@@ -34,7 +34,7 @@ namespace CHC.Consent.EFCore
                 return (IdentifierDefinition) identifierType;
             }
 
-            throw new InvalidOperationException($"Cannot find PersionIdentifier named '{identifierName}'");
+            throw new InvalidOperationException($"Cannot find PersonIdentifier named '{identifierName}'");
         }
     }
 }

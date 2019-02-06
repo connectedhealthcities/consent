@@ -79,6 +79,7 @@ namespace CHC.Consent.Api
 
             services.AddTransient<IConfigureOptions<SwaggerGenOptions>, SwaggerGenOptionsProvider>();
             services.AddSwaggerGen();
+            services.Configure<IdentifierDisplayOptions>(Configuration.GetSection("IdentifierDisplay"));
             AddDataServices(services);
         }
 
@@ -97,7 +98,7 @@ namespace CHC.Consent.Api
 
         private void AddConsentSystemTypeRegistrations(IServiceCollection services)
         {
-            services.TryAddTransient<IdentifierDefinitionRegistry>(
+            services.TryAddScoped<IdentifierDefinitionRegistry>(
                 provider =>
                 {
                     var definitionParser = new DefinitionParser<IdentifierDefinition>(IdentifierDefinition.Create);

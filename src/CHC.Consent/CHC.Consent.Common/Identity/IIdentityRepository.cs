@@ -11,10 +11,9 @@ namespace CHC.Consent.Common.Identity
         PersonIdentity CreatePerson(IEnumerable<PersonIdentifier> identifiers);
         void UpdatePerson(PersonIdentity personIdentity, IEnumerable<PersonIdentifier> specificationIdentifiers);
 
-        IDictionary<PersonIdentity, IDictionary<string, IEnumerable<PersonIdentifier>>> GetPeopleWithIdentifiers(
+        IDictionary<PersonIdentity, IEnumerable<PersonIdentifier>> GetPeopleWithIdentifiers(
             IEnumerable<PersonIdentity> personIds,
             IEnumerable<string> identifierNames,
-            IUserProvider user
-        );
+            IUserProvider user);
     }
 }

@@ -17,15 +17,13 @@ namespace CHC.Consent.Api.Pages
     {
         private ILogger<StudiesModel> Logger { get; }
         private readonly IUserProvider user;
-        private readonly IPersonIdentifierDisplayHandlerProvider displayHandlerProvider;
         private readonly IConsentRepository consent;
         private readonly IIdentityRepository identifiers;
         private readonly IOptions<IdentifierDisplayOptions> displayOptions;
 
-        public Dictionary<StudySubject, IDictionary<string, IEnumerable<PersonIdentifier>>> People { get; private set; }
+        public Dictionary<StudySubject, IEnumerable<PersonIdentifier>> People { get; private set; }
         public IEnumerable<string> IdentifierNames { get; private set; }
-        public Dictionary<string, string> DisplayNames { get; private set; }
-
+        
         public Study Study { get; private set; }
 
         /// <inheritdoc />
@@ -33,14 +31,12 @@ namespace CHC.Consent.Api.Pages
             IConsentRepository consent,
             IIdentityRepository identifiers,
             IUserProvider user, 
-            IPersonIdentifierDisplayHandlerProvider displayHandlerProvider,
             IOptions<IdentifierDisplayOptions> displayOptions,
             ILogger<StudiesModel> logger
             )
         {
             Logger = logger;
             this.user = user;
-            this.displayHandlerProvider = displayHandlerProvider;
             this.consent = consent;
             this.identifiers = identifiers;
             this.displayOptions = displayOptions;
@@ -52,10 +48,7 @@ namespace CHC.Consent.Api.Pages
             if (Study == null) return NotFound();
 
             IdentifierNames = displayOptions.Value.Default;
-            DisplayNames = IdentifierNames.ToDictionary(
-                name => name,
-                name => displayHandlerProvider.GetDisplayHandler(name).DisplayName);
-
+        
             var studyIdentity = Study.Id;
             var consentedSubjects = consent.GetConsentedSubjects(studyIdentity);
             Logger.LogDebug(
