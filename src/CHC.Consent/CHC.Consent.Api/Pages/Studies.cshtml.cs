@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using CHC.Consent.Api.Infrastructure.IdentifierDisplay;
 using CHC.Consent.Common.Consent;
@@ -19,11 +21,32 @@ namespace CHC.Consent.Api.Pages
         private readonly IUserProvider user;
         private readonly IConsentRepository consent;
         private readonly IIdentityRepository identifiers;
-        private readonly IOptions<IdentifierDisplayOptions> displayOptions;
+        private readonly IdentifierDisplayOptions displayOptions;
 
-        public Dictionary<StudySubject, IEnumerable<PersonIdentifier>> People { get; private set; }
+        public IList<PersonDetails> People { get; private set; } = Array.Empty<PersonDetails>();
         public IEnumerable<string> IdentifierNames { get; private set; }
         
+        [BindProperty]
+        public IList<SearchField> SearchFields { get; set; } = new List<SearchField>();
+
+        public class SearchField
+        {
+            public string FieldName { get; set; }
+            public string Value { get; set; }
+        }
+
+        public class PersonDetails
+        {
+            public StudySubject Subject { get; set; }
+            public IEnumerable<PersonIdentifier> Identifiers { get; set; }
+
+            public void Deconstruct(out StudySubject subject, out IEnumerable<PersonIdentifier> identifiers)
+            {
+                subject = Subject;
+                identifiers = Identifiers;
+            }
+        }
+
         public Study Study { get; private set; }
 
         /// <inheritdoc />
@@ -31,7 +54,7 @@ namespace CHC.Consent.Api.Pages
             IConsentRepository consent,
             IIdentityRepository identifiers,
             IUserProvider user, 
-            IOptions<IdentifierDisplayOptions> displayOptions,
+            IOptions<IdentifierDisplayOptions> displayOptionsProvider,
             ILogger<StudiesModel> logger
             )
         {
@@ -39,7 +62,7 @@ namespace CHC.Consent.Api.Pages
             this.user = user;
             this.consent = consent;
             this.identifiers = identifiers;
-            this.displayOptions = displayOptions;
+            this.displayOptions = displayOptionsProvider.Value;
         }
 
         public ActionResult OnGet(long id)
@@ -47,7 +70,12 @@ namespace CHC.Consent.Api.Pages
             Study = consent.GetStudies(user).SingleOrDefault(_ => _.Id == id);
             if (Study == null) return NotFound();
 
-            IdentifierNames = displayOptions.Value.Default;
+            IdentifierNames = displayOptions.Default;
+
+            foreach (var fieldName in displayOptions.Search)
+            {
+                SearchFields.Add(new SearchField{FieldName = fieldName});
+            }
         
             var studyIdentity = Study.Id;
             var consentedSubjects = consent.GetConsentedSubjects(studyIdentity);
@@ -61,10 +89,46 @@ namespace CHC.Consent.Api.Pages
             People =
                 (from s in consentedSubjects
                     join p in peopleDetails on s.PersonId equals p.Key
-                    select new {s, p}
-                ).ToDictionary(o => o.s, o => o.p.Value);
+                    select new PersonDetails {Subject = s, Identifiers = p.Value}
+                ).ToImmutableList();
                     
             return Page();
-        }       
+        }
+
+        public ActionResult OnPost(long id)
+        {
+            Study = consent.GetStudies(user).SingleOrDefault(_ => _.Id == id);
+            if (Study == null) return NotFound();
+
+            IdentifierNames = displayOptions.Default;
+
+            var searches = SearchFields.Where(_ => !string.IsNullOrWhiteSpace(_.Value)).Select(_ => new IdentifierSearch{ IdentifierName = _.FieldName, Value = _.Value})
+                .ToArray();
+
+            if (!searches.Any())
+            {
+                ModelState.AddModelError("", "Please enter a search criteria");
+            }
+
+            if (!ModelState.IsValid) return Page();
+
+
+            var studyIdentity = Study.Id;
+            var consentedSubjects = consent.GetConsentedSubjects(studyIdentity);
+            Logger.LogDebug(
+                "Found {count} consentedPeople - {consentedPeopleIds}",
+                consentedSubjects.Count(),
+                consentedSubjects);
+
+            var peopleDetails = identifiers.GetPeopleWithIdentifiers(consentedSubjects.Select(_ => _.PersonId), IdentifierNames, user, searches);
+
+            People =
+                (from p in peopleDetails
+                    join s in consentedSubjects on p.Key equals s.PersonId
+                    select new PersonDetails {Subject = s, Identifiers = p.Value}
+                ).ToImmutableList();
+
+            return Page();
+        }
     }
 }

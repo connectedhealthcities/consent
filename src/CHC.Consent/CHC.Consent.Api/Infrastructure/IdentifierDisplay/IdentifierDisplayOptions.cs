@@ -6,5 +6,6 @@ namespace CHC.Consent.Api.Infrastructure.IdentifierDisplay
     public class IdentifierDisplayOptions
     {
         public List<string> Default { get; set; } = new List<string>();
+        public List<string> Search { get; set; } = new List<string>();
     }
 }

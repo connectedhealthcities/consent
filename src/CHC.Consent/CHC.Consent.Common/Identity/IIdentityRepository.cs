@@ -15,5 +15,14 @@ namespace CHC.Consent.Common.Identity
             IEnumerable<PersonIdentity> personIds,
             IEnumerable<string> identifierNames,
             IUserProvider user);
+
+        IDictionary<PersonIdentity, IEnumerable<PersonIdentifier>>
+            GetPeopleWithIdentifiers(
+                IEnumerable<PersonIdentity> personIds,
+                IEnumerable<string> identifierNames,
+                IUserProvider user,
+                IEnumerable<IdentifierSearch> search
+            );
+
     }
 }

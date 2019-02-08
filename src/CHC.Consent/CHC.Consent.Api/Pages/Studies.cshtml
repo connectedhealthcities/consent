@@ -1,9 +1,28 @@
 ﻿@page "{id:long}"
 @model StudiesModel
 
+
+
 @section title {@Model.Study.Name}
+
 <h1>@Model.Study.Name</h1>
-<table class="table">
+
+<div class="bg-danger" asp-validation-summary="ModelOnly"></div>
+
+<form method="post">
+        @for (var index = 0; index < Model.SearchFields.Count; index++)
+        {
+            <div class="form-group">
+                <input type="hidden" asp-for="SearchFields[index].FieldName"/>
+                <label asp-for="SearchFields[index].Value">@Model.SearchFields[index].FieldName</label>    
+                <input class="form-control" type="text" asp-for="SearchFields[index].Value"/>
+                <span asp-validation-for="SearchFields[index].Value"></span>
+            </div>
+        }
+        <button type="submit" class="btn btn-sm">Search</button>
+</form>
+
+<table class="table" condition="Model.People.Any()">
     <thead>
     <th>Subject Identifier</th>
     @foreach (var identifierType in Model.IdentifierNames)
@@ -14,10 +33,10 @@
     }
     </thead>
     <tbody>
-    @foreach (var (person, identifiers) in Model.People)
+    @foreach (var (subject, identifiers) in Model.People)
     {
         <tr>
-            <td><a asp-page="Subject"  asp-route-studyId="@person.StudyId.Id" asp-route-subjectIdentifier="@person.SubjectIdentifier">@person.SubjectIdentifier</a> </td>
+            <td><a asp-page="Subject"  asp-route-studyId="@subject.StudyId.Id" asp-route-subjectIdentifier="@subject.SubjectIdentifier">@subject.SubjectIdentifier</a> </td>
             @{
                 foreach (var identifierType in Model.IdentifierNames)
                 {
@@ -25,8 +44,7 @@
                         @{
                             foreach (var identifier in identifiers.Where(_ => _.Definition.SystemName == identifierType))
                             {
-                                <span>
-                                    @await Component.InvokeAsync("Identifier", new { identifier })</span>
+                                <span>@await Component.InvokeAsync("Identifier", new { identifier })</span>
                             }
                         } 
                     </td>

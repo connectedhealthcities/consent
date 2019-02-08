@@ -6,7 +6,9 @@ using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
+using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
+using CHC.Consent.EFCore.Identity;
 using CHC.Consent.EFCore.Security;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +21,7 @@ namespace CHC.Consent.EFCore
         private readonly ConsentContext context;
         private DbSet<PersonIdentifierEntity> IdentifierEntities => context.PersonIdentifiers;
         private DbSet<PersonEntity> People => context.People;
+        private DbSet<ConsentEntity> Consent => context.Set<ConsentEntity>();
         
         private readonly PersonIdentifierXmlMarshallers marshallers;
 
@@ -90,30 +93,35 @@ namespace CHC.Consent.EFCore
                 IEnumerable<string> identifierNames,
                 IUserProvider user)
         {
-            var peopleIdValues = personIds.Select(_ => _.Id).ToArray();
             identifierNames = identifierNames.Distinct().ToArray();
+            return PeopleWithIdentifiers(identifierNames, new HasIdCriteria(personIds));
+        }
 
-
-            var people =
-                People/*.WithReadPermissionGrantedTo(user)*/
-                    .AsNoTracking()
-                    .Where(p => peopleIdValues.Contains(p.Id));
-            var identifiers = IdentifierEntities.Where(_ => identifierNames.Contains(_.TypeName))
-                .Include(_ => _.Person);
-
-            var identifiersWithPeopleId = from person in people
-                join i in identifiers
-                    on person.Id equals (long)i.Person.Id into allIdentifiers
-                from identifier in allIdentifiers.DefaultIfEmpty()
-                select new {PersonId = new PersonIdentity(person.Id), identifier};
-            
+        private IDictionary<PersonIdentity, IEnumerable<PersonIdentifier>> PeopleWithIdentifiers(IEnumerable<string> identifierNames,
+            params ICriteria<PersonEntity>[] search)
+        {
             return
-                identifiersWithPeopleId
-                .AsEnumerable()
-                .GroupBy(_ => _.PersonId, _ => _.identifier == null ? null : marshallers.MarshallFromXml(_.identifier))
-                .ToDictionary(_ => _.Key, _ => _.Where(i => i != null).ToArray().AsEnumerable());
+                People.AsNoTracking().Search(context, search)
+                    .Select(
+                        _ => new {_.Id, Identifiers = _.Identifiers.Where(i => identifierNames.Contains(i.TypeName))})
+                    .ToDictionary(
+                        _ => new PersonIdentity(_.Id),
+                        _ => _.Identifiers.Select(marshallers.MarshallFromXml).ToArray().AsEnumerable());
+        }
 
 
+        public IDictionary<PersonIdentity, IEnumerable<PersonIdentifier>>
+            GetPeopleWithIdentifiers(
+                IEnumerable<PersonIdentity> personIds,
+                IEnumerable<string> identifierNames,
+                IUserProvider user,
+                IEnumerable<IdentifierSearch> search
+            )
+        {
+            return PeopleWithIdentifiers(
+                identifierNames,
+                new HasIdentifiersCriteria(search),
+                new HasIdCriteria(personIds.Select(_ => _.Id)));
         }
 
         private void Update(PersonEntity person, IEnumerable<PersonIdentifier> identifiers)

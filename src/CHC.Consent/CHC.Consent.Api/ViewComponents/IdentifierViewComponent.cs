@@ -6,13 +6,14 @@ using CHC.Consent.Common.Infrastructure.Definitions;
 using CHC.Consent.Common.Infrastructure.Definitions.Types;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewComponents;
+using Microsoft.AspNetCore.Mvc.ViewEngines;
 
 namespace CHC.Consent.Api.ViewComponents
 {
     [ViewComponent(Name = "Identifier")]
     public class IdentifierViewComponent : ViewComponent
     {
-        private IdentifierTypeToView viewNames;
+        private IdentifierTypeToView ViewNames { get; }
 
         private class EmptyViewComponentResult : IViewComponentResult
         {
@@ -30,7 +31,7 @@ namespace CHC.Consent.Api.ViewComponents
         /// <inheritdoc />
         public IdentifierViewComponent(IdentifierDefinitionRegistry identifiers)
         {
-            viewNames = identifiers.Accept(new IdentifierTypeToView());
+            ViewNames = identifiers.Accept(new IdentifierTypeToView());
         }
         
         private class IdentifierTypeToView : IDefinitionVisitor
@@ -42,9 +43,8 @@ namespace CHC.Consent.Api.ViewComponents
                 DefinitionsToViewNames[definition.SystemName] = viewName;
             }
 
-            public string this[IDefinition definition] => GetViewName(definition);
+            public string this[IDefinition definition] => DefinitionsToViewNames[definition.SystemName];
 
-            public string GetViewName(IDefinition definition) => DefinitionsToViewNames[definition.SystemName];
             /// <inheritdoc />
             public void Visit(IDefinition definition, DateDefinitionType type)
             {
@@ -76,11 +76,23 @@ namespace CHC.Consent.Api.ViewComponents
             }
         }
 
-        public Task<IViewComponentResult> InvokeAsync(PersonIdentifier identifier, IdentifierDefinitionRegistry registry)
+        public IViewComponentResult Invoke(PersonIdentifier identifier, IdentifierDefinitionRegistry registry)
         {
-            if (identifier == null) return Task.FromResult(Empty());
-            var v = (registry == null ? viewNames : registry.Accept(new IdentifierTypeToView()))[identifier.Definition];
-            return Task.FromResult<IViewComponentResult>(View(v, identifier.Value));
+            if (identifier == null) return Empty();
+            return View(GetViewName(registry, identifier.Definition), identifier.Value);
+        }
+
+        private string GetViewName(IdentifierDefinitionRegistry registry, IdentifierDefinition definition)
+        {
+            var definitionSystemName = definition.SystemName;
+            if (ViewEngine.FindView(ViewContext, definitionSystemName, false).Success)
+                return definitionSystemName;
+            return GetDefaultViewName(registry, definition);
+        }
+
+        private string GetDefaultViewName(IdentifierDefinitionRegistry registry, IdentifierDefinition definition)
+        {
+            return (registry == null ? ViewNames : registry.Accept(new IdentifierTypeToView()))[definition];
         }
     }
 }

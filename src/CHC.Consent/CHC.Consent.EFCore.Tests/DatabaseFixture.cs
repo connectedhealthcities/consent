@@ -1,6 +1,4 @@
 ﻿using System.Data.Common;
-using System.IO;
-using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Xunit.Abstractions;
 
@@ -10,11 +8,6 @@ namespace CHC.Consent.EFCore.Tests
     {
         private bool initialised = false;
         private static readonly object Sync = new object();
-
-
-        private static readonly string DbFileLocation = Path.Combine(
-            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-            "CHC.Consent.Tests.mdf");
 
         private static void Initialise(ITestOutputHelper output)
         {
@@ -30,7 +23,9 @@ namespace CHC.Consent.EFCore.Tests
 
         private static ConsentContext CreateContext(ITestOutputHelper output, DbContextOptionsBuilder<ConsentContext> sqlOptions)
         {
-            var options = sqlOptions.UseLoggerFactory(new XunitLoggerProvider(output));
+            var options = sqlOptions
+                .UseLoggerFactory(new XunitLoggerProvider(output))
+                .EnableSensitiveDataLogging();
             return new ConsentContext(options.Options);
         }
 

@@ -4,14 +4,19 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using CHC.Consent.Common;
+using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure.Definitions;
+using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.Identity;
+using CHC.Consent.EFCore.Security;
 using CHC.Consent.Testing.Utils;
 using FluentAssertions;
 using FluentAssertions.Collections;
 using FluentAssertions.Formatting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using Xunit;
 using Xunit.Abstractions;
 using Random = CHC.Consent.Testing.Utils.Random;
@@ -203,7 +208,74 @@ namespace CHC.Consent.EFCore.Tests
                 .And.Contain(nhsNumber)
                 .And.HaveCount(2)
                 .And.OnlyHaveUniqueItems();
+        }
+
+        [Fact]
+        public void BringsBackCorrectIdentifiers()
+        {
+            var personIdentity = new PersonIdentity(personOne.Id);
+            var foundDetails = CreateRepository(readContext)
+                .GetPeopleWithIdentifiers(
+                    new[] {personIdentity},
+                    new[] {testIdentifierDefinition.SystemName},
+                    null
+                );
+
+            foundDetails.Should().ContainKey(personIdentity)
+                .WhichValue.Should()
+                .OnlyContain(identifier => identifier.Definition == testIdentifierDefinition);
+        }
+
+        [Fact]
+        public void CanSearchForSimpleIdentifiers()
+        {
+            var nhsNumber = Random.String();
+            var nhsNumberIdentifier = Identifiers.NhsNumber(nhsNumber);
             
+            var createRepository = CreateRepository(createContext);
+            var person = createRepository.CreatePerson(new[]{ nhsNumberIdentifier });
+            createContext.SaveChanges();
+
+
+            var found = People(readContext)
+                    .Search(
+                        readContext,
+                        new HasIdentifiersCriteria(
+                            new IdentifierSearch
+                                {IdentifierName = nhsNumberIdentifier.Definition.SystemName, Value = nhsNumber}))
+                    .ToArray()
+                ;
+
+            found.Should().OnlyContain(_ => _.Id == person.Id);
+        }
+
+        private IIncludableQueryable<PersonEntity, AccessControlList> People(ConsentContext context)
+        {
+                return context.People.AsNoTracking()
+                    .Include(_ => _.Identifiers)
+                    .Include(_ => _.ACL);
+        }
+
+        [Fact]
+        public void CanSearchForMultipleCriteria()
+        {
+            var found =
+                People(readContext).Search(
+                        readContext,
+                        new HasIdentifiersCriteria(
+                            new IdentifierSearch
+                                {IdentifierName = testIdentifierDefinition.SystemName, Value = personTwoNhsNumber},
+                            new IdentifierSearch
+                            {
+                                IdentifierName = Identifiers.Definitions.NhsNumber.SystemName,
+                                Value = personOneNhsNumber
+                            }
+                        )
+                    )
+                    .ToArray();
+
+            found.Should().BeEquivalentTo(personOne);
+
         }
     }
 

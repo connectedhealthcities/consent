@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using CHC.Consent.Common;
 using CHC.Consent.EFCore.Security;
@@ -17,6 +18,8 @@ namespace CHC.Consent.EFCore.Entities
         }
 
         public virtual long Id { get; set; }
+        public virtual ICollection<PersonIdentifierEntity> Identifiers { get; set; } 
+            = new List<PersonIdentifierEntity>();
         
         public static implicit operator PersonIdentity(PersonEntity entity)
         {
