@@ -51,11 +51,11 @@ namespace CHC.Consent.EFCore.Identity
                     }
 
                     query.AppendFormat(
-                        " cast([Value] as xml).exist('{0}/text()[ contains( ., sql:variable(\"@var{1}\") ) ]') = 1 ",
+                        " cast([Value] as xml).exist('{0}/text()[ contains( lower-case(.), sql:variable(\"@var{1}\") ) ]') = 1 ",
                         identifierSearch.IdentifierName.Replace(IdentifierSearch.Separator, "/"),
                         ++counter
                     );
-                    vars.Add(new SqlParameter($"@var{counter}", identifierSearch.Value));
+                    vars.Add(new SqlParameter($"@var{counter}", identifierSearch.Value?.ToLowerInvariant()));
 
                 }
                 query.Append(") ");
