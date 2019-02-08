@@ -33,6 +33,7 @@ namespace CHC.Consent.Api.Pages
         {
             public string FieldName { get; set; }
             public string Value { get; set; }
+            public string Label { get; set; }
         }
 
         public class PersonDetails
@@ -72,9 +73,9 @@ namespace CHC.Consent.Api.Pages
 
             IdentifierNames = displayOptions.Default;
 
-            foreach (var fieldName in displayOptions.Search)
+            foreach (var field in displayOptions.Search)
             {
-                SearchFields.Add(new SearchField{FieldName = fieldName});
+                SearchFields.Add(new SearchField{FieldName = field.Name, Label = field.Label});
             }
         
             var studyIdentity = Study.Id;

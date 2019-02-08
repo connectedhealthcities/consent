@@ -9,17 +9,20 @@
 
 <div class="bg-danger" asp-validation-summary="ModelOnly"></div>
 
-<form method="post">
-        @for (var index = 0; index < Model.SearchFields.Count; index++)
-        {
-            <div class="form-group">
-                <input type="hidden" asp-for="SearchFields[index].FieldName"/>
-                <label asp-for="SearchFields[index].Value">@Model.SearchFields[index].FieldName</label>    
-                <input class="form-control" type="text" asp-for="SearchFields[index].Value"/>
-                <span asp-validation-for="SearchFields[index].Value"></span>
-            </div>
-        }
-        <button type="submit" class="btn btn-sm">Search</button>
+<form method="post" >
+    <div class="form-row">
+    @for (var index = 0; index < Model.SearchFields.Count; index++)
+    {
+        <div class="form-group col-md-4">
+            <input type="hidden" asp-for="SearchFields[index].FieldName"/>
+            <input type="hidden" asp-for="SearchFields[index].Label"/>
+            <label asp-for="SearchFields[index].Value">@Model.SearchFields[index].Label</label>
+            <input class="form-control form-control-sm" type="text" asp-for="SearchFields[index].Value"/>
+            <span asp-validation-for="SearchFields[index].Value"></span>
+        </div>
+    }
+    </div>
+    <button type="submit" class="btn btn-primary btn-sm">Search</button>
 </form>
 
 <table class="table" condition="Model.People.Any()">
