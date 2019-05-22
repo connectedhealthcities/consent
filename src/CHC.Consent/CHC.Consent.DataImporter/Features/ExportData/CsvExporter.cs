@@ -15,7 +15,7 @@ namespace CHC.Consent.DataImporter.Features.ExportData
 
         public CsvExporter(IApi apiClient, string[] fieldNames)
         {
-            this.fieldNames = fieldNames.Select(_ => _.Split(FieldNames.Separator)).ToArray();
+            this.fieldNames = fieldNames.Select(_ => _.Split(FieldNameList.Separator)).ToArray();
             ApiClient = apiClient;
         }
 
@@ -61,13 +61,17 @@ namespace CHC.Consent.DataImporter.Features.ExportData
 
         private void CheckFieldNames(IList<IdentifierDefinition> definitions)
         {
-            var definitionNames = new FieldNames(definitions);
-            var fullFieldNames = fieldNames.Select(FieldNames.Join);
-            var invalidFieldNames = fullFieldNames.Where(n => !definitionNames.Contains(n)).ToArray();
+            var definitionNames = FieldNameList.CreateFromDefinitions(definitions);
+            var invalidFieldNames = definitionNames.Except(FullFieldNames()).ToArray();
             if (invalidFieldNames.Any())
             {
                 throw new InvalidOperationException($"Invalid field names: '{string.Join("', '", invalidFieldNames)}'");
             }
+        }
+
+        private IEnumerable<string> FullFieldNames()
+        {
+            return fieldNames.Select(FieldNameList.Join);
         }
 
         public virtual void Write(
@@ -102,7 +106,7 @@ namespace CHC.Consent.DataImporter.Features.ExportData
         private void WriteHeader(IWriter output, IEnumerable<IdentifierDefinition> definitions)
         {
             output.WriteField("id");
-            foreach (var name in fieldNames.Select(n => string.Join("::", n)))
+            foreach (var name in FullFieldNames())
             {
                 output.WriteField(name);
             }

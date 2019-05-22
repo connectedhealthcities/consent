@@ -5,8 +5,13 @@ using CHC.Consent.Api.Client.Models;
 
 namespace CHC.Consent.DataImporter.Features.ExportData
 {
-    internal class FieldNames : IDefinitionVisitor<IdentifierDefinition>, IEnumerable<string>
+    internal class FieldNameList : IDefinitionVisitor<IdentifierDefinition>, IEnumerable<string>
     {
+        public static FieldNameList CreateFromDefinitions(IEnumerable<IdentifierDefinition> definitions)
+        {
+            return new FieldNameList(definitions);
+        }
+
         public const string Separator = "::";
 
         public static string Join(IdentifierDefinition definition, string compositeName) =>
@@ -15,22 +20,22 @@ namespace CHC.Consent.DataImporter.Features.ExportData
         public static string Join(params string[] parts) => string.Join(Separator, parts);
 
         /// <inheritdoc />
-        public FieldNames(IEnumerable<IdentifierDefinition> definitions)
+        private FieldNameList(IEnumerable<IdentifierDefinition> definitions)
         {
             this.VisitAll(definitions);
         }
 
+        private ICollection<string> Names { get;  } = new HashSet<string>();
+
         /// <inheritdoc />
         public void Visit(IdentifierDefinition definition, CompositeDefinitionType type)
         {
-            var compositeNames = new FieldNames(type.Identifiers.Cast<IdentifierDefinition>());
+            var compositeNames = CreateFromDefinitions(type.Identifiers.Cast<IdentifierDefinition>());
             foreach (var compositeName in compositeNames)
             {
                 Names.Add(Join(definition, compositeName));
             }
         }
-
-        public ICollection<string> Names { get;  } = new HashSet<string>();
 
         private void AddName(IdentifierDefinition definition) => Names.Add($"{definition.SystemName}");
 
@@ -51,5 +56,10 @@ namespace CHC.Consent.DataImporter.Features.ExportData
 
         /// <inheritdoc />
         IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) Names).GetEnumerator();
+
+        public IEnumerable<string> Except(IEnumerable<string> fullFieldNames)
+        {
+            return fullFieldNames.Except(Names);
+        }
     }
 }
