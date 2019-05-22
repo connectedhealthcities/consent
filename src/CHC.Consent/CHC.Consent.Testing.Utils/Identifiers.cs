@@ -139,7 +139,7 @@ namespace CHC.Consent.Testing.Utils
             );
         }
 
-        public static IList<EvidenceDefinition> ConvertToClientDefinitions(EvidenceDefinitionRegistry registry) =>
+        public static IList<EvidenceDefinition> ConvertToClientDefinitions(this EvidenceDefinitionRegistry registry) =>
             registry.Cast<Common.Consent.Evidences.EvidenceDefinition>().Select(ConvertToClientDefinition).ToList();
 
         public static EvidenceDefinition ConvertToClientDefinition(

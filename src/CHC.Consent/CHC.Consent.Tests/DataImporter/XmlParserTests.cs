@@ -57,6 +57,18 @@ namespace CHC.Consent.Tests.DataImporter
             return new XmlParser(definitions.ConvertToClientDefinitions(), Array.Empty<ClientEvidenceDefinition>());
         }
 
+        private ImportedConsentSpecification ParseConsent(
+            string xml,
+            IdentifierDefinitionRegistry personIdentifierTypes = null,
+            EvidenceDefinitionRegistry evidenceDefinitions=null)
+        {
+            return new XmlParser(
+                    personIdentifierTypes?.ConvertToClientDefinitions() ?? Array.Empty<ClientIdentifierDefinition>(),
+                    evidenceDefinitions?.ConvertToClientDefinitions() ?? Array.Empty<ClientEvidenceDefinition>()
+                )
+                .ParseConsent(CreateXDocumentWithLineInfo(xml).Root);
+        }
+
         private static XDocument CreateXDocumentWithLineInfo(string fullXml) =>
             XDocument.Load(
                 CreateXmlReader(fullXml),
@@ -67,6 +79,15 @@ namespace CHC.Consent.Tests.DataImporter
             return XmlReader.Create(new StringReader(fullXml), new XmlReaderSettings{IgnoreWhitespace = true, IgnoreComments = true},
                 new XmlParserContext(null, null, null, null, null, null, baseURI:XmlImportFileBaseUri, null, XmlSpace.Default));
         }
+
+        private static XElement IdentifierElement(string type, params object[] value)
+        {
+            return new XElement("identifier", new XAttribute("type", type), value);
+        }
+
+        private static IdentifierValueParser CreateParser(
+            params InternalIdentifierDefinition[] definitions)
+            => IdentifierValueParser.CreateFrom(definitions.ConvertToClientDefinitions());
 
         [Fact]
         public void CanParseSexIdentifier()
@@ -80,17 +101,6 @@ namespace CHC.Consent.Tests.DataImporter
                 .Which.Value.Should().Be("Male");
         }
 
-
-        private static XElement IdentifierElement(string type, params object[] value)
-        {
-            return new XElement("identifier", new XAttribute("type", type), value);
-        }
-
-        private IdentifierValueParser CreateParser(
-            params InternalIdentifierDefinition[] definitions)
-            => IdentifierValueParser.CreateFrom(definitions.ConvertToClientDefinitions());
-        
-        
         [Fact]
         public void CanParseDateOfBirthIdentifier()
         {
@@ -101,7 +111,7 @@ namespace CHC.Consent.Tests.DataImporter
             identifierValue.Should().BeEquivalentTo(Identifiers.Definitions.DateOfBirth.Value(14.March(2016)));
             
         }
-        
+
         [Fact]
         public void CanParseNameIdentifier()
         {
@@ -195,51 +205,26 @@ namespace CHC.Consent.Tests.DataImporter
             var xmlReader = CreateXmlReader(personXml);
             var specification = new XmlParser(
                     Identifiers.Registry.ConvertToClientDefinitions(),
-                Identifiers.ConvertToClientDefinitions(KnownEvidence.Registry))
+                KnownEvidence.Registry.ConvertToClientDefinitions())
                 .GetPeople(xmlReader)
                 .Single();
             var person = specification.PersonSpecification;
 
-            Action<IIdentifierValueDto> Address(
-                string line1 = null,
-                string line2 = null,
-                string line3 = null,
-                string line4 = null,
-                string line5 = null,
-                string postcode = null) =>
-                _ => AssertAddress(_, line1, line2, line3, line4, line5, postcode);
-            
 
             Assert.DoesNotContain(person.Identifiers, identifier => identifier == null);
             Assert.Collection(person.Identifiers,
-                NhsNumber("4099999999"),
-                HospitalNumber("RAE9999999"),
-                Name("Jo", "Bloggs"),
-                DateOfBirth(16.June(1990)),
-                Address("22 Love Street", "Holmestown", "Bradtopia", "West Yorkshire", postcode: "BD92 4FX")
+                Matches.NhsNumber("4099999999"),
+                Matches.HospitalNumber("RAE9999999"),
+                Matches.Name("Jo", "Bloggs"),
+                Matches.DateOfBirth(16.June(1990)),
+                Matches.Address("22 Love Street", "Holmestown", "Bradtopia", "West Yorkshire", postcode: "BD92 4FX")
                 );
             
             Assert.Collection(person.MatchSpecifications,
-                m => Assert.Collection(m.Identifiers, NhsNumber("4099999999")),
-                m => Assert.Collection(m.Identifiers, HospitalNumber("RAE9999999"))
+                m => Assert.Collection(m.Identifiers, Matches.NhsNumber("4099999999")),
+                m => Assert.Collection(m.Identifiers, Matches.HospitalNumber("RAE9999999"))
             );
         }
-
-        private ImportedConsentSpecification ParseConsent(
-            string xml,
-            IdentifierDefinitionRegistry personIdentifierTypes = null,
-            EvidenceDefinitionRegistry evidenceDefinitions=null)
-        {
-
-            return new XmlParser(
-                    (personIdentifierTypes ?? new IdentifierDefinitionRegistry()).ConvertToClientDefinitions(),
-                    Identifiers.ConvertToClientDefinitions(evidenceDefinitions ?? new EvidenceDefinitionRegistry())
-                    )
-                .ParseConsent(
-                    CreateXDocumentWithLineInfo(xml).Root);
-        }
-
-        
 
 
         [Fact]
@@ -253,7 +238,7 @@ namespace CHC.Consent.Tests.DataImporter
             Assert.Empty(consentSpec.GivenBy);
             Assert.Empty(consentSpec.Evidence);
         }
-        
+
         [Fact]
         public async void ReportsErrorWithUnknownMatchIdentifier()
         {
@@ -269,7 +254,7 @@ namespace CHC.Consent.Tests.DataImporter
             Assert.Contains("'error'", exception.Message);
             Assert.NotEqual(0, exception.LineNumber);
         }
-        
+
         [Fact]
         public void ReportsErrorWithUnknownEvidence()
         {
@@ -311,8 +296,8 @@ namespace CHC.Consent.Tests.DataImporter
 
             Assert.Collection(
                 consent.GivenBy,
-                m => Assert.Collection(m.Identifiers, NhsNumber("8877881")),
-                m => Assert.Collection(m.Identifiers, HospitalNumber("1122112"))
+                m => Assert.Collection(m.Identifiers, Matches.NhsNumber("8877881")),
+                m => Assert.Collection(m.Identifiers, Matches.HospitalNumber("1122112"))
             );
             
             Assert.Collection(
@@ -337,48 +322,6 @@ namespace CHC.Consent.Tests.DataImporter
                 }
             );
 
-        }
-
-        private static Action<IIdentifierValueDto> NhsNumber(string expectedValue) =>
-            v => v.Should().BeEquivalentTo(Identifiers.Definitions.NhsNumber.Value(expectedValue));
-
-        private static Action<IIdentifierValueDto> HospitalNumber(string expectedValue) =>
-            v => v.Should().BeEquivalentTo(Identifiers.Definitions.HospitalNumber.Value( expectedValue));
-            
-        
-        
-        
-
-
-        private static Action<IIdentifierValueDto> DateOfBirth(DateTime dateofBirth) =>
-            v => v.Should().BeEquivalentTo(Identifiers.Definitions.DateOfBirth.Value( dateofBirth.Date));
-
-        private static Action<IIdentifierValueDto> Name(string firstName, string lastName) => 
-            v => v.Should().BeEquivalentTo(Identifiers.Definitions.Name.Value( new []
-            {
-                Identifiers.Definitions.FirstName.Value(firstName),
-                Identifiers.Definitions.LastName.Value(lastName)
-            }));
-
-
-        private static void AssertAddress(
-            IIdentifierValueDto address,
-            string line1 = null,
-            string line2 = null,
-            string line3 = null,
-            string line4 = null,
-            string line5 = null,
-            string postcode = null)
-        {
-            address.Should().BeEquivalentTo(
-                ClientIdentifierValues.Address(
-                    line1,
-                    line2,
-                    line3,
-                    line4,
-                    line5,
-                    postcode)
-            );
         }
     }
 }
