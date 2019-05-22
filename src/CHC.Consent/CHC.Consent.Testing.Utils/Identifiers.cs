@@ -61,6 +61,11 @@ namespace CHC.Consent.Testing.Utils
 
             public static IdentifierDefinition Integer(string name) =>
                 new IdentifierDefinition(name, new IntegerDefinitionType());
+
+            public static readonly IdentifierDefinition[] KnownIdentifiers =
+            {
+                DateOfBirth, NhsNumber, HospitalNumber, Address, Name, Sex
+            };
         }
 
         public static PersonIdentifier PersonIdentifier<T>(T value, IdentifierDefinition definition) =>

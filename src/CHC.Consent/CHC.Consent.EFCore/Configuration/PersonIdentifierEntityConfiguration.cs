@@ -13,6 +13,9 @@ namespace CHC.Consent.EFCore.Configuration
             builder.Property(_ => _.Value).HasMaxLength(int.MaxValue);
             builder.Property(_ => _.ValueType).IsRequired();
             builder.Property(_ => _.TypeName).IsRequired();
+            builder
+                .HasOne(_ => _.Authority).WithMany().IsRequired().HasForeignKey("AuthorityId")
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 

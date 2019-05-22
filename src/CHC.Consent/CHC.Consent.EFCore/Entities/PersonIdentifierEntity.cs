@@ -11,5 +11,6 @@ namespace CHC.Consent.EFCore.Entities
         public string ValueType { get; set; }
         public DateTime Created { get; protected set; } = DateTime.UtcNow;
         public DateTime? Deleted { get; set; }
+        public AuthorityEntity Authority { get; set; }
     }
 }

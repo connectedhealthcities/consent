@@ -22,6 +22,7 @@ namespace CHC.Consent.EFCore
         private DbSet<PersonIdentifierEntity> IdentifierEntities => context.PersonIdentifiers;
         private DbSet<PersonEntity> People => context.People;
         private DbSet<ConsentEntity> Consent => context.Set<ConsentEntity>();
+        private DbSet<AuthorityEntity> Authorities => context.Set<AuthorityEntity>();
         
         private readonly PersonIdentifierXmlMarshallers marshallers;
 
@@ -69,21 +70,22 @@ namespace CHC.Consent.EFCore
         }
 
         /// <inheritdoc />
-        public PersonIdentity CreatePerson(IEnumerable<PersonIdentifier> identifiers)
+        public PersonIdentity CreatePerson(IEnumerable<PersonIdentifier> identifiers, Authority authority)
         {
             var person = new PersonEntity();
             
             People.Add(person);
-            UpdatePerson(person, identifiers);
+            UpdatePerson(person, identifiers, authority);
             context.SaveChanges(acceptAllChangesOnSuccess:true);
             
             return person;
         }
 
         /// <inheritdoc />
-        public void UpdatePerson(PersonIdentity personIdentity, IEnumerable<PersonIdentifier> identifiers)
+        public void UpdatePerson(
+            PersonIdentity personIdentity, IEnumerable<PersonIdentifier> identifiers, Authority authority)
         {
-            Update(People.Find(personIdentity.Id), identifiers);
+            Update(People.Find(personIdentity.Id), identifiers, authority);
         }
 
         /// <inheritdoc />
@@ -124,16 +126,23 @@ namespace CHC.Consent.EFCore
                 new HasIdCriteria(personIds.Select(_ => _.Id)));
         }
 
-        private void Update(PersonEntity person, IEnumerable<PersonIdentifier> identifiers)
+        /// <inheritdoc />
+        public Authority GetAuthority(string systemName)
         {
-            var existing = ExistingIdentifierEntities(person).ToList();
+            return Authorities.SingleOrDefault(_ => _.SystemName == systemName)?.ToAuthority();
+        }
+
+        private void Update(PersonEntity person, IEnumerable<PersonIdentifier> identifiers, Authority authority)
+        {
+            var authorityEntity = Authorities.Find((long)authority.Id);
+            var storedIdentifiers = ExistingIdentifierEntities(person).ToList();
             foreach (var identifierGroup in identifiers.GroupBy(_ => _.Definition))
             {
                 var definition = identifierGroup.Key;
 
-                foreach (var existingId in existing.Where(_ => _.TypeName == definition.SystemName))
+                foreach (var existingId in storedIdentifiers.Where(_ => _.TypeName == definition.SystemName))
                 {
-                    if (identifierGroup.All(_ => existingId.Value != MarshalledValue(_)))
+                    if (identifierGroup.All(_ => existingId.Value != MarshalledValue(_) && existingId.Authority.Priority >= authority.Priority))
                         existingId.Deleted = DateTime.Now;
                 }
 
@@ -141,16 +150,17 @@ namespace CHC.Consent.EFCore
                 {
                     var marshalledValue = MarshalledValue(identifier);
 
-                    if (existing.Any(_ => _.Value == marshalledValue)) continue;
+                    if (storedIdentifiers.Any(_ => _.Value == marshalledValue)) continue;
 
-                    existing.Add(
+                    storedIdentifiers.Add(
                         IdentifierEntities.Add(
                             new PersonIdentifierEntity
                             {
                                 Person = person,
                                 TypeName = definition.SystemName,
                                 Value = marshalledValue,
-                                ValueType = definition.Type.SystemName
+                                ValueType = definition.Type.SystemName,
+                                Authority = authorityEntity
                             }).Entity);
                 }
             }
@@ -158,7 +168,7 @@ namespace CHC.Consent.EFCore
 
         private IEnumerable<PersonIdentifierEntity> ExistingIdentifierEntities(PersonEntity person)
         {
-            return IdentifierEntities.Where(_ => _.Person == person && _.Deleted == null);
+            return IdentifierEntities.Where(_ => _.Person == person && _.Deleted == null).Include(_ => _.Authority);
         }
     }
 }

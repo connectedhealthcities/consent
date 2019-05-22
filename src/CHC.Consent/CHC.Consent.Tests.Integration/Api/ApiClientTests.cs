@@ -4,12 +4,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using CHC.Consent.Api.Client;
 using CHC.Consent.Api.Client.Models;
+using CHC.Consent.EFCore;
+using CHC.Consent.EFCore.Entities;
 using CHC.Consent.Testing.Utils;
 using CHC.Consent.Tests.Api.Controllers;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
-using IdentifierDefinition = CHC.Consent.Common.Identity.Identifiers.IdentifierDefinition;
 
 
 namespace CHC.Consent.Tests.Integration.Api
@@ -18,11 +20,23 @@ namespace CHC.Consent.Tests.Integration.Api
 
     public class ApiClientTests : WebIntegrationTest
     {
+        private static readonly object sync = new object();
 
         /// <inheritdoc />
         public ApiClientTests(ITestOutputHelper output, WebServerFixture fixture) : base(fixture, output)
         {
-     
+            using (var scope = Server.Host.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetService<ConsentContext>();
+                if (context.Set<AuthorityEntity>().Any(_ => _.SystemName == "medway")) return;
+                lock (sync)
+                {
+                    if (context.Set<AuthorityEntity>().Any(_ => _.SystemName == "medway")) return;
+                    output.WriteLine($"Creating Medway Authority");
+                    context.Add(new AuthorityEntity("Medway", 150, "medway"));
+                    context.SaveChanges();
+                }
+            }
         }
 
         [Theory, MemberData(nameof(IdentityTestData))]
@@ -33,6 +47,7 @@ namespace CHC.Consent.Tests.Integration.Api
                     _ => response  = _.PutPerson(
                         new PersonSpecification(
                             new List<IIdentifierValueDto> {identifier},
+                            "medway",
                             new List<MatchSpecification>
                             {
                                 new MatchSpecification {Identifiers = new List<IIdentifierValueDto> {identifier}}
@@ -172,6 +187,7 @@ namespace CHC.Consent.Tests.Integration.Api
             var response = ApiClient.PutPerson(
                 new PersonSpecification(
                     new List<IIdentifierValueDto> {nhsNumber, name},
+                    "medway",
                     new List<MatchSpecification>
                     {
                         new MatchSpecification {Identifiers = new List<IIdentifierValueDto> {nhsNumber}}

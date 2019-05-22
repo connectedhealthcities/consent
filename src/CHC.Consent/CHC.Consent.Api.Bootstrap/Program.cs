@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.Consent;
+using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.Identity;
 using CHC.Consent.EFCore.Security;
 using IdentityServer4.EntityFramework.DbContexts;
@@ -57,7 +58,7 @@ namespace CHC.Consent.Api.Bootstrap
 
                 }
 
-
+                db.SaveChanges();
 
 
                 var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<ConsentRole>>();
@@ -100,11 +101,29 @@ namespace CHC.Consent.Api.Bootstrap
                         }
                     }
 
+                    foreach (var authority in Authorities)
+                    {
+                        if(!consent.Set<AuthorityEntity>().Any(_ => _.SystemName == authority.SystemName))
+                        {
+                            consent.Add(authority);
+                        }
+                    }
+
                     consent.SaveChanges();
                 }
             }
 
         }
+
+        private static IEnumerable<AuthorityEntity> Authorities
+        {
+            get
+            {
+                yield return new AuthorityEntity("Medway", 150, "medway");
+                yield return new AuthorityEntity("Bradford PDS", 10, "bradford-pds");
+            }
+        }
+
 
         private static IEnumerable<string> Permissions { get; } =
             typeof(PermissionNames)

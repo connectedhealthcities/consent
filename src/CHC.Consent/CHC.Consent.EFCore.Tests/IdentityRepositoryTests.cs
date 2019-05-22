@@ -12,6 +12,7 @@ using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.Identity;
 using CHC.Consent.EFCore.Security;
 using CHC.Consent.Testing.Utils;
+using FakeItEasy.Sdk;
 using FluentAssertions;
 using FluentAssertions.Collections;
 using FluentAssertions.Formatting;
@@ -31,26 +32,28 @@ namespace CHC.Consent.EFCore.Tests
         private readonly PersonEntity personTwo;
         private readonly IdentityRepository repository;
         private readonly IdentifierDefinition testIdentifierDefinition;
+        private readonly AuthorityEntity defaultAuthority;
 
         private PersonIdentity FindPersonByNhsNumber(string nhsNumber)
         {
             return repository.FindPersonBy(Identifiers.NhsNumber(nhsNumber));
         }
 
-        private PersonIdentifierEntity NhsNumberEntity(PersonEntity personEntity, string nhsNumber)
+        private PersonIdentifierEntity NhsNumberEntity(PersonEntity personEntity, string nhsNumber, AuthorityEntity authority=null)
         {
-            return IdentifierEntity(personEntity, Identifiers.Definitions.NhsNumber, nhsNumber);
+            return IdentifierEntity(personEntity, Identifiers.Definitions.NhsNumber, nhsNumber, authority);
         }
 
-        private static PersonIdentifierEntity IdentifierEntity(
-            PersonEntity personEntity, IdentifierDefinition identifierDefinition, string value)
+        private PersonIdentifierEntity IdentifierEntity(
+            PersonEntity personEntity, IdentifierDefinition identifierDefinition, string value, AuthorityEntity authority)
         {
             return new PersonIdentifierEntity
             {
                 Person = personEntity,
                 TypeName = identifierDefinition.SystemName,
                 Value = MarshallValue(identifierDefinition, value),
-                ValueType = identifierDefinition.Type.SystemName
+                ValueType = identifierDefinition.Type.SystemName,
+                Authority = authority ?? defaultAuthority
             };
         }
 
@@ -69,13 +72,16 @@ namespace CHC.Consent.EFCore.Tests
             
             personOne = new PersonEntity();
             personTwo = new PersonEntity();
+            defaultAuthority = new AuthorityEntity("Default " + Random.String(), 1000, Random.String());
             
             Context.AddRange(personOne, personTwo);
+            Context.Add(defaultAuthority);
+            
             testIdentifierDefinition = Identifiers.Definitions.String("Test");
             Context.AddRange(
                 NhsNumberEntity(personOne, personOneNhsNumber), 
                 NhsNumberEntity(personTwo, personTwoNhsNumber),
-                IdentifierEntity(personOne, testIdentifierDefinition, personTwoNhsNumber)
+                IdentifierEntity(personOne, testIdentifierDefinition, personTwoNhsNumber, defaultAuthority)
                 );
             Context.SaveChanges();
             
@@ -89,13 +95,12 @@ namespace CHC.Consent.EFCore.Tests
 
         private IdentityRepository CreateRepository(ConsentContext context)
         {
-            var registry = new IdentifierDefinitionRegistry(
-                Identifiers.Definitions.NhsNumber,
-                testIdentifierDefinition,
-                Identifiers.Definitions.Name
-            );
+            var registry = new IdentifierDefinitionRegistry(Identifiers.Definitions.KnownIdentifiers)
+            {
+                testIdentifierDefinition
+            };
 
-            return new IdentityRepository(registry,context);
+            return new IdentityRepository(registry, context);
         }
 
         [Fact]
@@ -124,7 +129,8 @@ namespace CHC.Consent.EFCore.Tests
                     Identifiers.PersonIdentifier(newTestValue, testIdentifierDefinition),
                     Identifiers.NhsNumber(personOneNhsNumber)
                     
-                });
+                },
+                defaultAuthority.ToAuthority());
             updateContext.SaveChanges();
             
 
@@ -149,7 +155,8 @@ namespace CHC.Consent.EFCore.Tests
                 new[]
                 {
                     Identifiers.PersonIdentifier(newTestValue, testIdentifierDefinition)
-                });
+                },
+                defaultAuthority.ToAuthority());
             updateContext.SaveChanges();
 
             var personIdentifiers = CreateRepository(readContext).GetPersonIdentifiers(personOne.Id).ToArray();
@@ -175,7 +182,8 @@ namespace CHC.Consent.EFCore.Tests
                 {
                     Identifiers.NhsNumber(nhsNumber),
                     Identifiers.PersonIdentifier(testValue, testIdentifierDefinition)
-                }
+                },
+                defaultAuthority.ToAuthority()
             );
             createContext.SaveChanges();
 
@@ -195,11 +203,49 @@ namespace CHC.Consent.EFCore.Tests
         }
 
         [Fact]
+        public void AuthorityPriorityIsRespected()
+        {
+            var higherAuthority =
+                createContext.Add(new AuthorityEntity("Higher", defaultAuthority.Priority - 1, "higher")).Entity
+                    .ToAuthority();
+            
+            var thePerson = CreateRepository(createContext).CreatePerson(
+                new[]
+                {
+                    Identifiers.NhsNumber("1234567890"),
+                    Identifiers.Address("22 Medway Street", postcode: "Will Be Replaced")
+                },
+                defaultAuthority.ToAuthority());
+            createContext.SaveChanges();
+
+            var updatedAddress = Identifiers.Address("21 Spine Road", postcode: "Has Replaced");
+            CreateRepository(updateContext).UpdatePerson(
+                (PersonIdentity)thePerson.Id,
+                new [] { updatedAddress },
+                higherAuthority);
+            updateContext.SaveChanges();
+
+            var newContext = CreateNewContextInSameTransaction();
+            CreateRepository(newContext).UpdatePerson(
+                (PersonIdentity)thePerson.Id,
+                new [] { Identifiers.Address(postcode:"Should Ignore This")},
+                defaultAuthority.ToAuthority()
+                );
+            newContext.SaveChanges();
+
+            var identifiers = readContext.PersonIdentifiers.Where(_ => _.Person == thePerson && _.Deleted == null).ToArray();
+
+            identifiers.Should().ContainSingleIdentifierValue(Identifiers.Definitions.NhsNumber, "1234567890")
+                .And
+                .ContainSingleIdentifierValue(updatedAddress);
+        }
+
+        [Fact]
         public void CanPersistCompositeIdentifiers()
         {
             var name = Identifiers.Name("Francis", "Drake");
             var nhsNumber = Identifiers.NhsNumber(Random.String());
-            var person = CreateRepository(createContext).CreatePerson(new[]{ name, nhsNumber });
+            var person = CreateRepository(createContext).CreatePerson(new[]{ name, nhsNumber }, defaultAuthority.ToAuthority());
             createContext.SaveChanges();
 
             var personIdentifiers = CreateRepository(readContext).GetPersonIdentifiers(person);
@@ -233,7 +279,7 @@ namespace CHC.Consent.EFCore.Tests
             var nhsNumberIdentifier = Identifiers.NhsNumber(nhsNumber);
             
             var createRepository = CreateRepository(createContext);
-            var person = createRepository.CreatePerson(new[]{ nhsNumberIdentifier });
+            var person = createRepository.CreatePerson(new[]{ nhsNumberIdentifier }, defaultAuthority.ToAuthority());
             createContext.SaveChanges();
 
 
@@ -329,7 +375,19 @@ namespace CHC.Consent.EFCore.Tests
                 IdentifierDefinition definition,
                 string value,
                 bool deleted = false
-            ) => assertions.ContainSingle(_ => _.Value == MarshallValue(definition, value) && _.TypeName == definition.SystemName && (deleted?_.Deleted != null:_.Deleted == null));
+            ) => assertions.ContainSingleMarshalledIdentifierValue(definition, MarshallValue(definition, value), deleted);
+
+        private static AndWhichConstraint<GenericCollectionAssertions<PersonIdentifierEntity>, PersonIdentifierEntity>
+            ContainSingleMarshalledIdentifierValue(
+                this GenericCollectionAssertions<PersonIdentifierEntity> assertions, 
+                IDefinition definition,
+                string marshalledValue, 
+                bool deleted)
+        {
+            return assertions.ContainSingle(
+                _ => _.Value == marshalledValue && _.TypeName == definition.SystemName &&
+                     (deleted ? _.Deleted != null : _.Deleted == null));
+        }
 
         private static string MarshallValue(IdentifierDefinition definition, string value)
         {
@@ -343,6 +401,20 @@ namespace CHC.Consent.EFCore.Tests
             var creator = new IdentifierXmlMarshallerCreator<PersonIdentifier, IdentifierDefinition>();
             definition.Accept(creator);
             return creator.Marshallers.Values.Single();
+        }
+
+        public static AndWhichConstraint<GenericCollectionAssertions<PersonIdentifierEntity>, PersonIdentifierEntity>
+            ContainSingleIdentifierValue(
+                this GenericCollectionAssertions<PersonIdentifierEntity> assertions,
+                PersonIdentifier identifier,
+                bool deleted = false
+            )
+        {
+            return assertions.ContainSingleMarshalledIdentifierValue(
+                identifier.Definition,
+                identifier.Definition.CreateXmlMarshaller().MarshallToXml(identifier)
+                    .ToString(SaveOptions.DisableFormatting),
+                deleted);
         }
     }
 }

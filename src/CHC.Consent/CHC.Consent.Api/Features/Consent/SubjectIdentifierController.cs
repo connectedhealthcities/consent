@@ -1,4 +1,5 @@
-﻿using CHC.Consent.Api.Infrastructure.Web;
+﻿using System.Net;
+using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +18,7 @@ namespace CHC.Consent.Api.Features.Consent
         }
 
         [HttpPost("{studyId:long}")]
-        [Produces(typeof(StudySubjectValue))]
+        [ProducesResponseType(typeof(StudySubjectValue), (int)HttpStatusCode.OK)]
         [AutoCommit]
         public IActionResult Generate(long studyId)
         {

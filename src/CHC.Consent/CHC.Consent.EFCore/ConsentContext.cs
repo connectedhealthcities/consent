@@ -77,6 +77,8 @@ namespace CHC.Consent.EFCore
             modelBuilder.ApplyConfiguration(new AccessControlEntityConfiguration());
             modelBuilder.ApplyConfiguration(new PermissionEntityConfiguration());
             modelBuilder.ApplyConfiguration(new AccessControlListConfiguration());
+
+            modelBuilder.ApplyConfiguration(new AuthorityEntityConfiguration());
             
             modelBuilder.Entity<SecurityPrinicipal>();
             

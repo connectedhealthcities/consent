@@ -49,7 +49,8 @@ namespace CHC.Consent.Api.Features.Identity
         }
 
         [HttpPost("search")]
-        [Produces(typeof(SearchResult))]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type=typeof(SearchResult))]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
         public IActionResult FindPerson([FromBody, Required] MatchSpecification[] match)
         {
             if(!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
@@ -74,6 +75,9 @@ namespace CHC.Consent.Api.Features.Identity
         public IActionResult PutPerson([FromBody, Required]PersonSpecification specification)
         {
             if(!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
+            var authority = IdentityRepository.GetAuthority(specification.Authority);
+            if(authority == null)
+                ModelState.AddModelError(nameof(specification.Authority), $"Authority '{specification.Authority}' does not exist");
             ValidateIdentifierTypes(specification.Identifiers, nameof(specification.Identifiers));
             ValidateIdentifierTypes(
                 specification.MatchSpecifications.SelectMany(_ => _.Identifiers),
@@ -88,12 +92,12 @@ namespace CHC.Consent.Api.Features.Identity
 
             if (person == null)
             {
-                person = IdentityRepository.CreatePerson(identifiers);
+                person = IdentityRepository.CreatePerson(identifiers, authority);
                 return CreatedAtAction("GetPerson", new {id = person.Id}, new PersonCreatedResult {PersonId = person});
             }
             else
             {
-                IdentityRepository.UpdatePerson(person, identifiers);
+                IdentityRepository.UpdatePerson(person, identifiers, authority);
 
                 return new SeeOtherOjectActionResult(
                     "GetPerson",

@@ -36,14 +36,25 @@ namespace CHC.Consent.Tests.DataImporter
         private static readonly Dictionary<string, Type> EmptyTypeMap = new Dictionary<string, Type>();
         private XunitLogger<XmlParser> Logger { get; }
 
-        private IIdentifierValueDto ParseIdentifierString(string fullXml, params InternalIdentifierDefinition[] definitions)
+        private static IIdentifierValueDto ParseIdentifierString(string fullXml, params InternalIdentifierDefinition[] definitions)
         {
+            var parser = CreateXmlParser(definitions);
             var xDocument = CreateXDocumentWithLineInfo(fullXml);
-            
-            var identifier = new XmlParser(definitions.ConvertToClientDefinitions(), Array.Empty<ClientEvidenceDefinition>()).ParseIdentifier(xDocument.Root);
+            var identifier = parser.ParseIdentifier(xDocument.Root);
 
             Assert.NotNull(identifier);
             return identifier;
+        }
+
+        private static ImportedPersonSpecification[] ParsePeople(string fullXml, params InternalIdentifierDefinition[] definitions)
+        {
+            var parse = CreateXmlParser(definitions);
+            return parse.GetPeople(CreateXmlReader(fullXml)).ToArray();
+        }
+
+        private static XmlParser CreateXmlParser(IEnumerable<InternalIdentifierDefinition> definitions)
+        {
+            return new XmlParser(definitions.ConvertToClientDefinitions(), Array.Empty<ClientEvidenceDefinition>());
         }
 
         private static XDocument CreateXDocumentWithLineInfo(string fullXml) =>
@@ -131,6 +142,16 @@ namespace CHC.Consent.Tests.DataImporter
             Assert.Equal(1, parseException.LineNumber);
             Assert.Equal(2, parseException.LinePosition);
             
+        }
+
+        [Fact]
+        public void PeopleCollectionShouldHaveAuthorityAttribute()
+        {
+            Assert.ThrowsAny<Exception>(
+                    () => ParsePeople("<people></people>")
+            ).Message.Should().Contain("authority");
+
+            ParsePeople("<people authority=\"none\"></people>");
         }
 
         [Fact]

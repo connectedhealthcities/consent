@@ -56,6 +56,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                             nhsNumber,
                             ClientIdentifierValues.Address("3 Sheaf Street", "Leeds", postcode:"LS10 1HD")
                         },
+                    "medway",
                         new []
                         {
                             new CHC.Consent.Api.Client.Models.MatchSpecification {Identifiers = new [] {nhsNumber}}
@@ -90,12 +91,17 @@ namespace CHC.Consent.Tests.Api.Controllers
                     _ => _.All(i => i.Definition == Testing.Utils.Identifiers.Definitions.NhsNumber))))
                 .Returns(existingPerson);
 
+            var authority = new Authority {SystemName = "shabba-ranks"};
+            A.CallTo(() => identityRepository.GetAuthority("shabba-ranks"))
+                .Returns(authority);
+
 
             var controller = CreateController(identityRepository);
             
             var result = controller.PutPerson(
                 new PersonSpecification
                 {
+                    Authority = "shabba-ranks",
                     Identifiers =
                     {
                         nhsNumberIdentifier,
@@ -113,10 +119,13 @@ namespace CHC.Consent.Tests.Api.Controllers
             );
 
             A.CallTo(
-                    () => identityRepository.UpdatePerson(existingPerson,
+                    () => identityRepository.UpdatePerson(
+                        existingPerson,
                         A<IEnumerable<PersonIdentifier>>.That.IsSameSequenceAs(
-                            Identifier(nhsNumberIdentifier), 
-                            Identifier(bradfordHospitalNumberIdentifier))))
+                            Identifier(nhsNumberIdentifier),
+                            Identifier(bradfordHospitalNumberIdentifier)),
+                        authority)
+                )
                 .MustHaveHappenedOnceExactly();
             Assert.IsType<SeeOtherOjectActionResult>(result);
         }
@@ -128,21 +137,24 @@ namespace CHC.Consent.Tests.Api.Controllers
             var nhsNumberIdentifier = Identifiers.NhsNumber.Dto("New NHS Number");
             var bradfordHospitalNumberIdentifier = Identifiers.HospitalNumber.Dto("New HospitalNumber");
 
+            const string authorityName = "grissly-bear";
             var identityRepository = A.Fake<IIdentityRepository>();
+            var authority = new Authority {SystemName = authorityName};
             A.CallTo(
                     () => identityRepository.FindPersonBy(
                         A<IEnumerable<PersonIdentifier>>.That.IsSameSequenceAs(
                             Identifier(nhsNumberIdentifier))))
                 .Returns(null);
+            A.CallTo(() => identityRepository.GetAuthority(authorityName)).Returns(authority);
 
 
             var controller = CreateController(identityRepository);
 
 
-            
             var result = controller.PutPerson(
                 new PersonSpecification
                 {
+                    Authority = authorityName,
                     Identifiers =
                     {
                         
@@ -163,10 +175,12 @@ namespace CHC.Consent.Tests.Api.Controllers
             Assert.IsAssignableFrom<CreatedAtActionResult>(result);
 
             A.CallTo(
-                    () => identityRepository.CreatePerson(
-                        A<IEnumerable<PersonIdentifier>>.That.IsSameSequenceAs(
-                            Identifier(nhsNumberIdentifier),
-                            Identifier(bradfordHospitalNumberIdentifier))))
+                    () =>
+                        identityRepository.CreatePerson(
+                            A<IEnumerable<PersonIdentifier>>.That.IsSameSequenceAs(
+                                Identifier(nhsNumberIdentifier),
+                                Identifier(bradfordHospitalNumberIdentifier)),
+                            authority))
                 .MustHaveHappenedOnceExactly();
         }
 

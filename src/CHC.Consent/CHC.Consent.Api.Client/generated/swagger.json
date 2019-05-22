@@ -192,7 +192,11 @@
           "application/xml",
           "application/xml"
         ],
-        "produces": [],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
         "parameters": [
           {
             "name": "match",
@@ -213,6 +217,9 @@
             "schema": {
               "$ref": "#/definitions/SearchResult"
             }
+          },
+          "404": {
+            "description": "Not Found"
           }
         }
       }
@@ -431,7 +438,11 @@
           "application/xml",
           "application/xml"
         ],
-        "produces": [],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
         "parameters": [
           {
             "name": "studyId",
@@ -657,6 +668,9 @@
           "items": {
             "$ref": "#/definitions/IIdentifierValueDto"
           }
+        },
+        "authority": {
+          "type": "string"
         },
         "matchSpecifications": {
           "uniqueItems": false,

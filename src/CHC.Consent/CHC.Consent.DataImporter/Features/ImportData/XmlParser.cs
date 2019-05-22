@@ -96,6 +96,14 @@ namespace CHC.Consent.DataImporter.Features.ImportData
                 throw new NotImplementedException();
             }
 
+            
+            Authority = xmlReader["authority"];
+            if (Authority == null)
+            {
+                Log.Fatal("people element has no authority attribute at {@lineInfo}", LineInfo(xmlReader));
+                throw new NotImplementedException($"people element has no authority attribute");
+            }
+
             while (xmlReader.Read())
             {
                 if (IsEndOfPeople(xmlReader)) break;
@@ -107,6 +115,8 @@ namespace CHC.Consent.DataImporter.Features.ImportData
                 }
             }
         }
+
+        public string Authority { get; private set; }
 
         private static object LineInfo(XmlReader xmlReader)
         {
@@ -142,6 +152,7 @@ namespace CHC.Consent.DataImporter.Features.ImportData
                 Identifiers = personNode.XPathSelectElements("/person/identity/identifier")
                     .Select(ParseIdentifier)
                     .ToArray(),
+                Authority = Authority,
                 MatchSpecifications =
                     personNode.XPathSelectElements("/person/lookup/match")
                         .Select(ParseMatchSpecification)

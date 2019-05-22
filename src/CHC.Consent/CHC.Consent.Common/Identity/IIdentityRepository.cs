@@ -8,8 +8,8 @@ namespace CHC.Consent.Common.Identity
     {
         PersonIdentity FindPersonBy(IEnumerable<PersonIdentifier> identifiers);
         IEnumerable<PersonIdentifier> GetPersonIdentifiers(long personId);
-        PersonIdentity CreatePerson(IEnumerable<PersonIdentifier> identifiers);
-        void UpdatePerson(PersonIdentity personIdentity, IEnumerable<PersonIdentifier> specificationIdentifiers);
+        PersonIdentity CreatePerson(IEnumerable<PersonIdentifier> identifiers, Authority authority);
+        void UpdatePerson(PersonIdentity personIdentity, IEnumerable<PersonIdentifier> identifiers, Authority authority);
 
         IDictionary<PersonIdentity, IEnumerable<PersonIdentifier>> GetPeopleWithIdentifiers(
             IEnumerable<PersonIdentity> personIds,
@@ -24,5 +24,6 @@ namespace CHC.Consent.Common.Identity
                 IEnumerable<IdentifierSearch> search
             );
 
+        Authority GetAuthority(string systemName);
     }
 }

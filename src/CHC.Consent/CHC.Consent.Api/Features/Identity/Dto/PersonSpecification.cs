@@ -9,6 +9,9 @@
     {
         public List<IIdentifierValueDto> Identifiers { get; set; } = new List<IIdentifierValueDto>();
 
+        
+        public string Authority { get; set; }
+
         public List<MatchSpecification> MatchSpecifications { get; set; } = new List<MatchSpecification>();
     }
 }
