@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure.Definitions;
 using CHC.Consent.Common.Infrastructure.Definitions.Types;
 using Sprache;
@@ -55,6 +56,14 @@ namespace CHC.Consent.Parsing
         public TDefinition ParseString(string definition)
         {
             return Definition.Parse(definition);
+        }
+    }
+
+    public class IdentifierDefinitionParser : DefinitionParser<IdentifierDefinition>
+    {
+        /// <inheritdoc />
+        public IdentifierDefinitionParser() : base(IdentifierDefinition.Create)
+        {
         }
     }
 }

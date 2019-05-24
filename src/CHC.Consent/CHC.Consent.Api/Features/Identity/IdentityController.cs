@@ -27,7 +27,7 @@ namespace CHC.Consent.Api.Features.Identity
     public class IdentityController : Controller
     {
         private readonly IdentifierDefinitionRegistry registry;
-        private PersonIdentifiersDtosIdentifierDtoMarshaller IdentifierIdentifierDtoMarshaller { get; }
+        private PersonIdentifiersDtosIdentifierDtoMarshaller IdentifierDtoMarshaller { get; }
         private IIdentityRepository IdentityRepository { get; }
 
         public IdentityController(
@@ -35,7 +35,7 @@ namespace CHC.Consent.Api.Features.Identity
         {
             IdentityRepository = identityRepository;
             this.registry = registry;
-            IdentifierIdentifierDtoMarshaller = new PersonIdentifiersDtosIdentifierDtoMarshaller(this.registry);
+            IdentifierDtoMarshaller = new PersonIdentifiersDtosIdentifierDtoMarshaller(this.registry);
         }
 
 
@@ -45,7 +45,7 @@ namespace CHC.Consent.Api.Features.Identity
         [AutoCommit]
         public IActionResult GetPerson(long id)
         {
-            return Ok(IdentifierIdentifierDtoMarshaller.MarshallToDtos(IdentityRepository.GetPersonIdentifiers(id)));
+            return Ok(IdentifierDtoMarshaller.MarshallToDtos(IdentityRepository.GetPersonIdentifiers(id)));
         }
 
         [HttpPost("search")]
@@ -65,7 +65,7 @@ namespace CHC.Consent.Api.Features.Identity
 
         private PersonIdentity FindMatchingPerson(IEnumerable<MatchSpecification> match)
         {
-            return IdentityRepository.FindPerson(match.Select(_ => IdentifierIdentifierDtoMarshaller.ConvertToIdentifiers(_.Identifiers)));
+            return IdentityRepository.FindPerson(match.Select(_ => IdentifierDtoMarshaller.ConvertToIdentifiers(_.Identifiers)));
         }
 
         [HttpPut]
@@ -85,7 +85,7 @@ namespace CHC.Consent.Api.Features.Identity
             if(!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
             //identifierChecker.EnsureHasNoInvalidDuplicates(specification.Identifiers);
 
-            var identifiers = IdentifierIdentifierDtoMarshaller.ConvertToIdentifiers(specification.Identifiers);
+            var identifiers = IdentifierDtoMarshaller.ConvertToIdentifiers(specification.Identifiers);
             
 
             var person = FindMatchingPerson(specification.MatchSpecifications);

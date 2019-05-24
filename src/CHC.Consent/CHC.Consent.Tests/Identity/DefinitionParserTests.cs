@@ -11,7 +11,7 @@ namespace CHC.Consent.Tests.Identity
     public class DefinitionParserTests
     {
         private readonly DefinitionParser<IdentifierDefinition> parser = 
-            new DefinitionParser<IdentifierDefinition>(IdentifierDefinition.Create);
+            new IdentifierDefinitionParser();
 
         public static TheoryData<string, IdentifierDefinition> Definitions =>
             new TheoryData<string, IdentifierDefinition>

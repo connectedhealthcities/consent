@@ -23,6 +23,7 @@ namespace CHC.Consent.EFCore
         private DbSet<PersonEntity> People => context.People;
         private DbSet<ConsentEntity> Consent => context.Set<ConsentEntity>();
         private DbSet<AuthorityEntity> Authorities => context.Set<AuthorityEntity>();
+        private DbSet<AgencyEntity> Agencies => context.Set<AgencyEntity>();
         
         private readonly PersonIdentifierXmlMarshallers marshallers;
 
@@ -170,5 +171,12 @@ namespace CHC.Consent.EFCore
         {
             return IdentifierEntities.Where(_ => _.Person == person && _.Deleted == null).Include(_ => _.Authority);
         }
+
+        public Agency GetAgency(string systemName)
+            =>
+                Agencies
+                    .Include(_ => _.Fields)
+                    .ThenInclude(_ => _.Identifier)
+                    .SingleOrDefault(_ => _.SystemName == systemName);
     }
 }

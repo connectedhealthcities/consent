@@ -1,20 +1,14 @@
-using System;
-using System.Collections;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
-using CHC.Consent.Common.Infrastructure.Definitions;
-using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.Identity;
 using CHC.Consent.EFCore.Security;
 using CHC.Consent.Testing.Utils;
-using FakeItEasy.Sdk;
 using FluentAssertions;
-using FluentAssertions.Collections;
+using FluentAssertions.Execution;
 using FluentAssertions.Formatting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
@@ -323,98 +317,60 @@ namespace CHC.Consent.EFCore.Tests
             found.Should().BeEquivalentTo(personOne);
 
         }
-    }
 
-    public class PersonIdentifierFormatter : IValueFormatter
-    {
-        /// <inheritdoc />
-        public bool CanHandle(object value) => value is PersonIdentifier;
-
-        /// <inheritdoc />
-        public string Format(object value, FormattingContext context, FormatChild formatChild)
-        {            
-            var personIdentifier = (PersonIdentifier)value;
-            return $"{personIdentifier.Definition.SystemName}: {formatChild("Value", personIdentifier.Value.Value)}";
-        }
-        
-        public static IValueFormatter Instance { get; } = new PersonIdentifierFormatter();
-    }
-
-    public class DictionaryIdentifierFormatter : IValueFormatter
-    {
-        public bool CanHandle(object value) => value is IDictionary;
-
-        /// <inheritdoc />
-        public string Format(object value, FormattingContext context, FormatChild formatChild)
+        [Fact]
+        public void CanGetAgencies()
         {
-            var newline = context.UseLineBreaks ? Environment.NewLine : "";
-            var padding = new string('\t', context.Depth);
+            
+            var aField = createContext.Add(new IdentifierDefinitionEntity("A Field", "a-field:string" )).Entity;
+            createContext.Add(
+                new AgencyEntity("External Agency", "external")
+                {
+                    Fields = {new AgencyFieldEntity {Identifier = aField}}
+                }
+            );
+                
+            createContext.SaveChanges();
 
-            var result = new StringBuilder($"{newline}{padding}{{");
-            foreach (DictionaryEntry entry in (IDictionary)value)
+            var agency = repository.GetAgency("external");
+
+            using (new AssertionScope())
             {
-                result.AppendFormat(
-                    "[{0}]: {{{1}}},",
-                    formatChild("Key", entry.Key),
-                    formatChild("Value", entry.Value));
+                agency.Name.Should().Be("External Agency");
+                agency.SystemName.Should().Be("external");
+                agency.Fields.Should().Contain(new []{"a-field"});
             }
 
-            result.Append($"{newline}{padding}}}");
-
-            return result.ToString();
         }
         
-        public static IValueFormatter Instance { get; } = new DictionaryIdentifierFormatter(); 
-    }
-    
-    public static class PersonIdentifierCollectionAssertions
-    {
-        public static AndWhichConstraint<GenericCollectionAssertions<PersonIdentifierEntity>, PersonIdentifierEntity>
-            ContainSingleIdentifierValue(
-                this GenericCollectionAssertions<PersonIdentifierEntity> assertions,
-                IdentifierDefinition definition,
-                string value,
-                bool deleted = false
-            ) => assertions.ContainSingleMarshalledIdentifierValue(definition, MarshallValue(definition, value), deleted);
-
-        private static AndWhichConstraint<GenericCollectionAssertions<PersonIdentifierEntity>, PersonIdentifierEntity>
-            ContainSingleMarshalledIdentifierValue(
-                this GenericCollectionAssertions<PersonIdentifierEntity> assertions, 
-                IDefinition definition,
-                string marshalledValue, 
-                bool deleted)
+        [Fact]
+        public void GetsAgencyFieldInOrder()
         {
-            return assertions.ContainSingle(
-                _ => _.Value == marshalledValue && _.TypeName == definition.SystemName &&
-                     (deleted ? _.Deleted != null : _.Deleted == null));
-        }
+            
+            var field1 = createContext.Add(new IdentifierDefinitionEntity("first field", "field-1:string" )).Entity;
+            var field2 = createContext.Add(new IdentifierDefinitionEntity("Second Field", "field-2:string" )).Entity;
+            var agencyEntity = new AgencyEntity("External Agency", "external")
+            {
+                Fields = { new AgencyFieldEntity { Identifier = field2, Order = 1}
+                }
+            };
+            createContext.Add( agencyEntity );
+            createContext.SaveChanges();
 
-        private static string MarshallValue(IdentifierDefinition definition, string value)
-        {
-            return definition.CreateXmlMarshaller()
-                .MarshallToXml(Identifiers.PersonIdentifier(value, definition))
-                .ToString(SaveOptions.DisableFormatting);
-        }
+            agencyEntity = updateContext.Set<AgencyEntity>().Find(agencyEntity.Id);
+            agencyEntity.Fields.Add(
+                new AgencyFieldEntity {Identifier = updateContext.IdentifierDefinition.Find(field1.Id), Order = 0});
+            updateContext.SaveChanges();
 
-        public static IIdentifierXmlMarhsaller<PersonIdentifier, IdentifierDefinition> CreateXmlMarshaller(this IdentifierDefinition definition)
-        {
-            var creator = new IdentifierXmlMarshallerCreator<PersonIdentifier, IdentifierDefinition>();
-            definition.Accept(creator);
-            return creator.Marshallers.Values.Single();
-        }
+            var agency = repository.GetAgency("external");
 
-        public static AndWhichConstraint<GenericCollectionAssertions<PersonIdentifierEntity>, PersonIdentifierEntity>
-            ContainSingleIdentifierValue(
-                this GenericCollectionAssertions<PersonIdentifierEntity> assertions,
-                PersonIdentifier identifier,
-                bool deleted = false
-            )
-        {
-            return assertions.ContainSingleMarshalledIdentifierValue(
-                identifier.Definition,
-                identifier.Definition.CreateXmlMarshaller().MarshallToXml(identifier)
-                    .ToString(SaveOptions.DisableFormatting),
-                deleted);
+            using (new AssertionScope())
+            {
+                agency.Name.Should().Be("External Agency");
+                agency.SystemName.Should().Be("external");
+                agency.Fields.Should().ContainInOrder("field-1", "field-2");
+            }
+
         }
     }
 }

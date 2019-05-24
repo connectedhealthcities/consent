@@ -168,7 +168,7 @@ namespace CHC.Consent.Tests.DataImporter
         public void CanParseWholePerson()
         {
             const string personXml = @"<?xml version=""1.0""?>
-<people>
+<people authority=""test"">
     <person>
         <identity>
             <identifier type=""nhs-number"">4099999999</identifier>

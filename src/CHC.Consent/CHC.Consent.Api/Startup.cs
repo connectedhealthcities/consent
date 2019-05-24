@@ -101,7 +101,7 @@ namespace CHC.Consent.Api
             services.TryAddScoped<IdentifierDefinitionRegistry>(
                 provider =>
                 {
-                    var definitionParser = new DefinitionParser<IdentifierDefinition>(IdentifierDefinition.Create);
+                    var definitionParser = new IdentifierDefinitionParser();
 
                     return new IdentifierDefinitionRegistry(
                         provider.GetService<ConsentContext>().Set<IdentifierDefinitionEntity>()

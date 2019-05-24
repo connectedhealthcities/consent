@@ -4,14 +4,16 @@ using CHC.Consent.EFCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CHC.Consent.EFCore.Migrations
 {
     [DbContext(typeof(ConsentContext))]
-    partial class ConsentContextModelSnapshot : ModelSnapshot
+    [Migration("20190523105526_Agencies")]
+    partial class Agencies
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -168,20 +170,18 @@ namespace CHC.Consent.EFCore.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<long>("AgencyId");
+                    b.Property<long?>("AgencyId")
+                        .IsRequired();
 
                     b.Property<long>("IdentifierDefinitionId");
-
-                    b.Property<int>("Order");
 
                     b.Property<string>("Subfields");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IdentifierDefinitionId");
+                    b.HasIndex("AgencyId");
 
-                    b.HasIndex("AgencyId", "Order")
-                        .IsUnique();
+                    b.HasIndex("IdentifierDefinitionId");
 
                     b.ToTable("AgencyField");
                 });

@@ -130,17 +130,17 @@ namespace CHC.Consent.Tests.DataImporter
 
         private static string[] Export(
             IEnumerable<CHC.Consent.Common.Identity.Identifiers.IdentifierDefinition> identifiers, 
-            string[] fieldNames = default,
+            IEnumerable<string> fieldNames,
             params StudySubjectWithIdentifiers[] people)
         {
             string result;
             using (var output = new StringWriter())
             {
-                new CsvExporter(null, fieldNames)
+                new StudySubjectCsvWriter(() => output)
                     .Write(
-                    identifiers.Select(_ => _.ConvertToClientDefinition()).ToImmutableArray(),
-                    people,
-                    () => output);
+                        identifiers.Select(_ => _.ConvertToClientDefinition()).ToImmutableArray(),
+                        FieldNameList.Split(fieldNames),
+                        people);
 
                 result = output.ToString();
             }

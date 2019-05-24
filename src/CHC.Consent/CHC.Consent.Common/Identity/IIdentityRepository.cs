@@ -25,5 +25,6 @@ namespace CHC.Consent.Common.Identity
             );
 
         Authority GetAuthority(string systemName);
+        Agency GetAgency(string systemName);
     }
 }

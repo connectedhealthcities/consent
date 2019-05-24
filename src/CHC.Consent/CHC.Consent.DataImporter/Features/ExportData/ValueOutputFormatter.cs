@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using CHC.Consent.Api.Client.Models;
@@ -12,32 +11,20 @@ namespace CHC.Consent.DataImporter.Features.ExportData
         private IEnumerable<IdentifierDefinition> IdentifierDefinitions { get; }
 
         /// <inheritdoc />
-        public ValueOutputFormatter(IEnumerable<IdentifierDefinition> definitions, IEnumerable<string[]> fieldNames)
+        public ValueOutputFormatter(IList<IdentifierDefinition> definitions, IEnumerable<string[]> fieldNames)
         {
             FieldNames = fieldNames.ToLookup(_ => _.First(), _ => _.Skip(1).ToArray());
-            var directFieldNames = FieldNames.Select(_ => _.Key).ToArray();
+            var topLevelFieldNames = FieldNames.Select(_ => _.Key).ToArray();
 
-            IdentifierDefinitions = GetDefinitionsInOutputOrder(definitions, directFieldNames);
+            IdentifierDefinitions = GetDefinitionsInOutputOrder(definitions, topLevelFieldNames);
             this.VisitAll(IdentifierDefinitions);
         }
 
         private static IEnumerable<IdentifierDefinition> GetDefinitionsInOutputOrder(
             IEnumerable<IdentifierDefinition> definitions, 
-            IEnumerable<string> directFieldNames)
+            IEnumerable<string> topLevelFieldNames)
         {
-            IdentifierDefinition GetDefinition(string fieldName)
-            {
-                try
-                {
-                    return definitions.Single(d => d.SystemName == fieldName);
-                }
-                catch (InvalidOperationException e)
-                {
-                    throw new InvalidOperationException($"Cannot find field called '{fieldName}' ", e);
-                }
-            }
-
-            return directFieldNames.Select(GetDefinition).ToArray();
+            return topLevelFieldNames.Select(definitions.GetDefinition).ToArray();
         }
 
         private delegate void Writer(IIdentifierValueDto dto, IWriterRow writer);
@@ -48,18 +35,19 @@ namespace CHC.Consent.DataImporter.Features.ExportData
         public void Visit(IdentifierDefinition definition, CompositeDefinitionType type)
         {
             var subWriters = new ValueOutputFormatter(
-                type.Identifiers.Cast<IdentifierDefinition>(),
+                type.Identifiers.Cast<IdentifierDefinition>().ToArray(),
                 FieldNames[definition.SystemName].ToArray()
             );
-            
-            Writers[definition.SystemName] = delegate(IIdentifierValueDto dto, IWriterRow writer)
-            {
-                var compositeDtos =
-                    ((IdentifierValueDtoIIdentifierValueDto) dto)?.Value ??
-                    Enumerable.Empty<IIdentifierValueDto>();
 
-                subWriters.Write(compositeDtos, writer);
-            };
+            Writers[definition.SystemName] = subWriters.WriteCompositeValue;
+        }
+
+        private void WriteCompositeValue(IIdentifierValueDto dto, IWriterRow writer)
+        {
+            var compositeDto = (IdentifierValueDtoIIdentifierValueDto) dto;
+            var subValues = compositeDto?.Value ?? Enumerable.Empty<IIdentifierValueDto>();
+
+            Write(subValues, writer);
         }
 
         /// <inheritdoc />
@@ -74,8 +62,7 @@ namespace CHC.Consent.DataImporter.Features.ExportData
         /// <inheritdoc />
         public void Visit(IdentifierDefinition definition, EnumDefinitionType type)
         {
-            Writers[definition.SystemName] =
-                WriteEnum;
+            Writers[definition.SystemName] = WriteEnum;
         }
 
         private static Writer WriteEnum { get; } =

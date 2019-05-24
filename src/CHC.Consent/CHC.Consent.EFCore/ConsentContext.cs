@@ -58,7 +58,6 @@ namespace CHC.Consent.EFCore
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {            
             base.OnModelCreating(modelBuilder);
-            //TODO: Do we need to get (some of) these from somewhere else configurable
             
             modelBuilder.ApplyConfiguration(new StudyConfiguration());
             modelBuilder.ApplyConfiguration(new StudySubjectEntityConfiguration());
@@ -79,7 +78,8 @@ namespace CHC.Consent.EFCore
             modelBuilder.ApplyConfiguration(new AccessControlListConfiguration());
 
             modelBuilder.ApplyConfiguration(new AuthorityEntityConfiguration());
-            
+            modelBuilder.ApplyConfiguration<AgencyEntityConfiguration>();
+
             modelBuilder.Entity<SecurityPrinicipal>();
             
             modelBuilder.Entity<UserSecurityPrincipal>().Property<long>("ConsentUserId");
@@ -93,6 +93,9 @@ namespace CHC.Consent.EFCore
                 .HasPrincipalKey<ConsentRole>()
                 .HasForeignKey<RoleSecurityPrincipal>("ConsentRoleId");
 
+            AddDefinitionEntity<EvidenceDefinitionEntity>(modelBuilder);
+            AddDefinitionEntity<IdentifierDefinitionEntity>(modelBuilder);
+            
             foreach (var securableEntity in modelBuilder.Model.GetEntityTypes()
                 .Where(_ => _.BaseType == null)
                 .Where(_ => typeof(ISecurable).IsAssignableFrom(_.ClrType)))
@@ -105,10 +108,15 @@ namespace CHC.Consent.EFCore
                     .HasForeignKey(type, "AccessControlListId")
                     .IsRequired();
             }
-            
-            AddDefinitionEntity<EvidenceDefinitionEntity>(modelBuilder);
-            AddDefinitionEntity<IdentifierDefinitionEntity>(modelBuilder);
-            
+
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes()
+                .Where(_ => _.BaseType == null)
+                .Where(_ => typeof(IEntity).IsAssignableFrom(_.ClrType)))
+            {
+                var entity = modelBuilder.Entity(entityType.ClrType);
+                entity.Property<long>(nameof(IEntity.Id)).UseSqlServerIdentityColumn();
+                entity.HasKey(nameof(IEntity.Id));
+            }
         }
 
         private static void AddDefinitionEntity<TDefinition>(ModelBuilder modelBuilder) where TDefinition : class, IDefinitionEntity

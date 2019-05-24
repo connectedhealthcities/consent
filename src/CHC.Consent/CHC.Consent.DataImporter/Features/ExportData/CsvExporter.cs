@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using CHC.Consent.Api.Client;
 using CHC.Consent.Api.Client.Models;
-using CsvHelper;
 
 namespace CHC.Consent.DataImporter.Features.ExportData
 {
@@ -15,7 +14,7 @@ namespace CHC.Consent.DataImporter.Features.ExportData
 
         public CsvExporter(IApi apiClient, string[] fieldNames)
         {
-            this.fieldNames = fieldNames.Select(_ => _.Split(FieldNameList.Separator)).ToArray();
+            this.fieldNames = FieldNameList.Split(fieldNames);
             ApiClient = apiClient;
         }
 
@@ -29,7 +28,7 @@ namespace CHC.Consent.DataImporter.Features.ExportData
 
             var studySubjects = await GetSubjectIdentifiersAndIdentityValues(studyId);
 
-            Write(definitions, studySubjects, outputStream);
+            new StudySubjectCsvWriter(outputStream).Write(definitions, fieldNames, studySubjects);
         }
 
         private Task<IList<IdentifierDefinition>> GetIdentifierDefinitions() =>
@@ -62,56 +61,12 @@ namespace CHC.Consent.DataImporter.Features.ExportData
         private void CheckFieldNames(IList<IdentifierDefinition> definitions)
         {
             var definitionNames = FieldNameList.CreateFromDefinitions(definitions);
-            var invalidFieldNames = definitionNames.Except(FullFieldNames()).ToArray();
+            var invalidFieldNames = definitionNames.Except(FieldNameList.FullFieldNames(fieldNames)).ToArray();
             if (invalidFieldNames.Any())
             {
                 throw new InvalidOperationException($"Invalid field names: '{string.Join("', '", invalidFieldNames)}'");
             }
         }
-
-        private IEnumerable<string> FullFieldNames()
-        {
-            return fieldNames.Select(FieldNameList.Join);
-        }
-
-        public virtual void Write(
-            ICollection<IdentifierDefinition> definitions, 
-            IEnumerable<StudySubjectWithIdentifiers> studySubjects,
-            Func<TextWriter> createOutputWriter)
-        {
-            
-            var outputFormatter = new ValueOutputFormatter(definitions, fieldNames);
-            using (var csv = new CsvWriter(createOutputWriter()))
-            {
-                WriteHeader(csv, definitions);
-
-                foreach (var subject in studySubjects)
-                {
-                    WriteRecord(csv, outputFormatter, subject.subjectIdentifier, subject.identifiers);
-                }
-            }
-        }
-
-        private void WriteRecord(
-            IWriter output,
-            ValueOutputFormatter outputFormatter,
-            string subjectIdentifier,
-            IEnumerable<IIdentifierValueDto> values)
-        {
-            output.WriteField(subjectIdentifier);
-            outputFormatter.Write(values, output);
-            output.NextRecord();
-        }
-
-        private void WriteHeader(IWriter output, IEnumerable<IdentifierDefinition> definitions)
-        {
-            output.WriteField("id");
-            foreach (var name in FullFieldNames())
-            {
-                output.WriteField(name);
-            }
-
-            output.NextRecord();
-        }
     }
+
 }

@@ -5,19 +5,19 @@ using CHC.Consent.Api.Client.Models;
 
 namespace CHC.Consent.DataImporter.Features.ExportData
 {
-    internal class FieldNameList : IDefinitionVisitor<IdentifierDefinition>, IEnumerable<string>
+    public class FieldNameList : IDefinitionVisitor<IdentifierDefinition>, IEnumerable<string>
     {
         public static FieldNameList CreateFromDefinitions(IEnumerable<IdentifierDefinition> definitions)
         {
             return new FieldNameList(definitions);
         }
 
-        public const string Separator = "::";
+        private const string Separator = "::";
 
-        public static string Join(IdentifierDefinition definition, string compositeName) =>
+        private static string Join(IDefinition definition, string compositeName) =>
             Join(definition.SystemName, compositeName);
 
-        public static string Join(params string[] parts) => string.Join(Separator, parts);
+        private static string Join(params string[] parts) => string.Join(Separator, parts);
 
         /// <inheritdoc />
         private FieldNameList(IEnumerable<IdentifierDefinition> definitions)
@@ -60,6 +60,16 @@ namespace CHC.Consent.DataImporter.Features.ExportData
         public IEnumerable<string> Except(IEnumerable<string> fullFieldNames)
         {
             return fullFieldNames.Except(Names);
+        }
+
+        public static IEnumerable<string> FullFieldNames(string[][] strings)
+        {
+            return strings.Select(Join);
+        }
+
+        public static string[][] Split(IEnumerable<string> fieldNames)
+        {
+            return fieldNames.Select(_ => _.Split(Separator)).ToArray();
         }
     }
 }

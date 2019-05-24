@@ -20,6 +20,7 @@
       <Project>{5CF2CE95-0242-4068-B31A-116171037E8B}</Project>
       <Name>CHC.Consent.Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\CHC.Consent.Parsing\CHC.Consent.Parsing.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Migrations" />
