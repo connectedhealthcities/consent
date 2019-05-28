@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CHC.Consent.Api.Features.Consent
 {
+    using ProducesResponseTypeAttribute = Infrastructure.Web.ProducesResponseTypeAttribute;
     [Route("subject-identifiers")]
     public class SubjectIdentifierController : Controller
     {

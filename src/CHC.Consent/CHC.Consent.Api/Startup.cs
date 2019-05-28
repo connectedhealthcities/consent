@@ -17,6 +17,7 @@ using CHC.Consent.Parsing;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -75,6 +76,7 @@ namespace CHC.Consent.Api
                         options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                         options.GetClaimsFromUserInfoEndpoint = true;                        
                     });
+            services.AddHttpContextAccessor();
             services.AddTransient<IUserProvider, HttpContextUserProvider>();
 
             services.AddTransient<IConfigureOptions<SwaggerGenOptions>, SwaggerGenOptionsProvider>();

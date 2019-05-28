@@ -4,8 +4,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using CHC.Consent.Api.Client;
 using CHC.Consent.Api.Client.Models;
+using CHC.Consent.Common.Identity;
 using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.Entities;
+using CHC.Consent.EFCore.Identity;
 using CHC.Consent.Testing.Utils;
 using CHC.Consent.Tests.Api.Controllers;
 using FluentAssertions;
@@ -20,23 +22,23 @@ namespace CHC.Consent.Tests.Integration.Api
 
     public class ApiClientTests : WebIntegrationTest
     {
-        private static readonly object sync = new object();
+        private static readonly object Sync = new object();
 
         /// <inheritdoc />
         public ApiClientTests(ITestOutputHelper output, WebServerFixture fixture) : base(fixture, output)
         {
-            using (var scope = Server.Host.Services.CreateScope())
-            {
-                var context = scope.ServiceProvider.GetService<ConsentContext>();
-                if (context.Set<AuthorityEntity>().Any(_ => _.SystemName == "medway")) return;
-                lock (sync)
+            AddData(
+                context =>
                 {
-                    if (context.Set<AuthorityEntity>().Any(_ => _.SystemName == "medway")) return;
-                    output.WriteLine($"Creating Medway Authority");
-                    context.Add(new AuthorityEntity("Medway", 150, "medway"));
-                    context.SaveChanges();
+                    if (context.Set<AuthorityEntity>().Any(_ => _.SystemName == "medway")) return null;
+                    lock (Sync)
+                    {
+                        if (context.Set<AuthorityEntity>().Any(_ => _.SystemName == "medway")) return null;
+                        output.WriteLine($"Creating Medway Authority");
+                        return context.Add(new AuthorityEntity("Medway", 150, "medway"));
+                    }
                 }
-            }
+            );
         }
 
         [Theory, MemberData(nameof(IdentityTestData))]
@@ -198,8 +200,43 @@ namespace CHC.Consent.Tests.Integration.Api
             var identities = ApiClient.GetPerson(response.PersonId);
 
             identities.Should().Contain(Identifier(nhsNumber));
-            
-            
+        }
+
+        [Fact]
+        public void ReturnsCorrectIdentifiersForAgency()
+        {
+            var agency = AddData(
+                ctx =>
+                    ctx.Add(
+                        new AgencyEntity("Test", Random.String())
+                        {
+                            Fields =
+                            {
+                                new AgencyFieldEntity
+                                {
+                                    Identifier = ctx.Set<IdentifierDefinitionEntity>().Single(
+                                        _ => _.Name == KnownIdentifierDefinitions.NhsNumber.Name)
+                                }
+                            }
+                        }).Entity
+                );
+            var nhsNumber = NhsNumber(Random.String(10));
+            var (name, _, _) = Name(Random.String(), Random.String());
+
+            var response = ApiClient.PutPerson(
+                new PersonSpecification(
+                    new[] {name, nhsNumber,},
+                    "medway",
+                    new[]
+                    {
+                        new MatchSpecification {Identifiers = new IIdentifierValueDto[] {nhsNumber}},
+                    }
+                )
+            );
+
+            var results = ApiClient.GetPersonForAgency(agency.SystemName, response.PersonId);
+
+            results.Should().OnlyContain(Identifier(nhsNumber));
         }
     }
 }

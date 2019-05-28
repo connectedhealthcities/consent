@@ -1,10 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using CHC.Consent.Api.Client.Models;
 using CHC.Consent.Api.Features.Identity;
-using CHC.Consent.Api.Features.Identity.Dto;
-using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.Api.Infrastructure.Web;
-using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
@@ -15,31 +13,35 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
-
+using IdentifierDefinition = CHC.Consent.Common.Identity.Identifiers.IdentifierDefinition;
+using IIdentifierValueDto = CHC.Consent.Api.Infrastructure.IIdentifierValueDto;
+using PersonIdentity = CHC.Consent.Common.PersonIdentity;
 
 namespace CHC.Consent.Tests.Api.Controllers
 {
-    using Random = Testing.Utils.Random;
     using Identifiers = Identifiers.Definitions;
-    using static Testing.Utils.IdentifierValueExtensions;
+    using static IdentifierValueExtensions;
 
     public class IdentityControllerTests
     {
         private readonly ITestOutputHelper output;
-        private readonly IdentifierDefinitionRegistry registry;
-
 
         /// <inheritdoc />
         public IdentityControllerTests(ITestOutputHelper output)
         {
             this.output = output;
-            registry = Testing.Utils.Identifiers.Registry;
         }
 
 
-        private IdentityController CreateController(IIdentityRepository identityRepository)
+        private IdentityController CreateController(
+            IIdentityRepository identityRepository, params IdentifierDefinition[] identifiers)
         {
-            return new IdentityController(identityRepository, registry);
+            var registry = new IdentifierDefinitionRegistry(identifiers);
+            return new IdentityController(identityRepository, registry, null);
+        }
+        private IdentityController CreateController(IIdentityRepository identityRepository, IdentifierDefinitionRegistry registry=null)
+        {
+            return new IdentityController(identityRepository, registry??Testing.Utils.Identifiers.Registry, null);
         }
 
         [Fact]
@@ -48,7 +50,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             var nhsNumber = Identifiers.NhsNumber.Value("32222");
             output.WriteLine(
                 JsonConvert.SerializeObject(
-                    new CHC.Consent.Api.Client.Models.PersonSpecification(
+                    new PersonSpecification(
                     new CHC.Consent.Api.Client.Models.IIdentifierValueDto[]
                         {
                             Identifiers.DateOfBirth.Value(1.December(2018)),
@@ -59,7 +61,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                     "medway",
                         new []
                         {
-                            new CHC.Consent.Api.Client.Models.MatchSpecification {Identifiers = new [] {nhsNumber}}
+                            new MatchSpecification {Identifiers = new CHC.Consent.Api.Client.Models.IIdentifierValueDto[] {nhsNumber}}
                         }
                     ),
                     Formatting.Indented
@@ -67,12 +69,12 @@ namespace CHC.Consent.Tests.Api.Controllers
             );
         }
 
-        
-        public PersonIdentifier Identifier(IIdentifierValueDto identifier)
+
+        private PersonIdentifier Identifier(IIdentifierValueDto identifier)
         {
             return new PersonIdentifier(
                 new SimpleIdentifierValue(identifier.Value), 
-                (IdentifierDefinition) registry[identifier.SystemName]);
+                (IdentifierDefinition) Testing.Utils.Identifiers.Registry[identifier.SystemName]);
         }
 
         
@@ -88,7 +90,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             var identityRepository = A.Fake<IIdentityRepository>();
             A.CallTo(() => identityRepository.FindPersonBy(
                 A<IEnumerable<PersonIdentifier>>.That.Matches(
-                    _ => _.All(i => i.Definition == Testing.Utils.Identifiers.Definitions.NhsNumber))))
+                    _ => _.All(i => i.Definition == Identifiers.NhsNumber))))
                 .Returns(existingPerson);
 
             var authority = new Authority {SystemName = "shabba-ranks"};
@@ -99,17 +101,17 @@ namespace CHC.Consent.Tests.Api.Controllers
             var controller = CreateController(identityRepository);
             
             var result = controller.PutPerson(
-                new PersonSpecification
+                new CHC.Consent.Api.Features.Identity.Dto.PersonSpecification
                 {
                     Authority = "shabba-ranks",
                     Identifiers =
                     {
                         nhsNumberIdentifier,
-                        bradfordHospitalNumberIdentifier,
+                        bradfordHospitalNumberIdentifier
                     },
                     MatchSpecifications =
                     {
-                        new MatchSpecification
+                        new CHC.Consent.Api.Features.Identity.Dto.MatchSpecification
                         {
                             Identifiers = new [] {nhsNumberIdentifier}
                         }
@@ -152,7 +154,7 @@ namespace CHC.Consent.Tests.Api.Controllers
 
 
             var result = controller.PutPerson(
-                new PersonSpecification
+                new CHC.Consent.Api.Features.Identity.Dto.PersonSpecification
                 {
                     Authority = authorityName,
                     Identifiers =
@@ -163,7 +165,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                     },
                     MatchSpecifications =
                     {
-                        new MatchSpecification
+                        new CHC.Consent.Api.Features.Identity.Dto.MatchSpecification
                         {
                             Identifiers = new []{nhsNumberIdentifier}
                         }
@@ -209,9 +211,64 @@ namespace CHC.Consent.Tests.Api.Controllers
                         new[]
                         {
                             Identifiers.FirstName.Dto("Peng"),
-                            Identifiers.LastName.Dto("Chips"),
+                            Identifiers.LastName.Dto("Chips")
                         }
                     ));
         }
+
+        [Fact]
+        public void GetCorrectPersonIdentifiersForAgency()
+        {
+            const string field1Name = "f-1";
+            const string field2Name = "f-2";
+            const string agencyName = "testing";
+
+            var personId = (PersonIdentity)1625L;
+            var field1 = Identifiers.String(field1Name);
+            var field2 = Identifiers.String(field2Name);
+            
+
+            var identityRepository = A.Fake<IIdentityRepository>(_ => _.Strict());
+
+            A.CallTo(() => identityRepository.GetAgency(agencyName))
+                .Returns(new Agency {Name = "Testing", Fields = new[] {field1Name, field2Name}});
+
+
+            var getPeopleWithIdentifiersCall = A.CallTo(
+                () => identityRepository.GetPeopleWithIdentifiers(
+                    A<IEnumerable<PersonIdentity>>.That.IsSameSequenceAs(personId),
+                     A<IEnumerable<string>>.That.IsSameSequenceAs(field1Name, field2Name),
+                    A<IUserProvider>.Ignored)
+            );
+            
+            getPeopleWithIdentifiersCall
+                .Returns(
+                    new Dictionary<PersonIdentity, IEnumerable<PersonIdentifier>>
+                    {
+                        [personId] = new[]
+                        {
+                            PersonIdentifier("cs", field1),
+                            PersonIdentifier("dt", field2)
+                        }
+                    });
+            
+            
+            var controller = CreateController(identityRepository, field1, field2);
+
+            var result = controller.GetPersonForAgency(personId, agencyName);
+
+            
+            getPeopleWithIdentifiersCall.MustHaveHappenedOnceExactly();
+
+            result.Should().BeOfType<OkObjectResult>()
+                .Which.Value.Should().BeAssignableTo<IEnumerable<IIdentifierValueDto>>()
+                .Which.Should().BeEquivalentTo(
+                    field1.Dto("cs"),
+                    field2.Dto("dt")
+                );
+        }
+
+        private static PersonIdentifier PersonIdentifier<T>(T value, IdentifierDefinition definition)
+            => Testing.Utils.Identifiers.PersonIdentifier(value, definition);
     }
 }

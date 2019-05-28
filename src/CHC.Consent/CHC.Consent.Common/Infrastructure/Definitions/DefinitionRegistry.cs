@@ -28,7 +28,6 @@ namespace CHC.Consent.Common.Infrastructure.Definitions
         /// <inheritdoc />
         public bool TryGetValue(string key, out IDefinition value) => Dictionary.TryGetValue(key, out value);
 
-        public TVisitor Accept<TVisitor>() where TVisitor : IDefinitionVisitor, new() => Accept(new TVisitor());
         public TVisitor Accept<TVisitor>(TVisitor visitor) where TVisitor:IDefinitionVisitor
         {
             foreach (var definition in this)

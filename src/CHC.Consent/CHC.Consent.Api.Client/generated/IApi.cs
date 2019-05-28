@@ -90,6 +90,18 @@ namespace CHC.Consent.Api.Client
         /// </param>
         Task<HttpOperationResponse<SearchResult>> FindPersonWithHttpMessagesAsync(IList<MatchSpecification> match, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
+        /// <param name='agencySystemName'>
+        /// </param>
+        /// <param name='id'>
+        /// </param>
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        Task<HttpOperationResponse<IList<IIdentifierValueDto>>> GetPersonForAgencyWithHttpMessagesAsync(string agencySystemName, long? id = default(long?), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+
         /// <param name='specification'>
         /// </param>
         /// <param name='customHeaders'>

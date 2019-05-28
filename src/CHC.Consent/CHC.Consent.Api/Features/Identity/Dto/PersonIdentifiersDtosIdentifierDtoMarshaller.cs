@@ -13,8 +13,8 @@ namespace CHC.Consent.Api.Features.Identity.Dto
         public PersonIdentifiersDtosIdentifierDtoMarshaller(DefinitionRegistry registry): base(registry, CreateDelegate)
         { 
         }
-        
-        public static readonly CreateIdentifier CreateDelegate = Create;  
+
+        private static readonly CreateIdentifier CreateDelegate = Create;  
         private static PersonIdentifier Create(IdentifierDefinition definition, IIdentifierValue value)
         {
             return new PersonIdentifier(value, definition);

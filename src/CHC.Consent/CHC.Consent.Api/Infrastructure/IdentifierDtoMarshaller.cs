@@ -14,7 +14,7 @@ namespace CHC.Consent.Api.Infrastructure
     {
         private IDictionary<string, IMarshaller> Marshallers { get; }
 
-        public IdentifierDtoMarshaller(DefinitionRegistry registry, CreateIdentifier createIdentifier)
+        protected IdentifierDtoMarshaller(DefinitionRegistry registry, CreateIdentifier createIdentifier)
         {
             Marshallers = registry.Accept(new IdentifierIdentifierValueDtoMarshaller(createIdentifier)).Marshallers;
         }
@@ -26,7 +26,10 @@ namespace CHC.Consent.Api.Infrastructure
 
         private IIdentifierValueDto MarshallToDto(TIdentifier identifier)
         {
-            return Marshallers[identifier.Definition.SystemName].MarshallToDto(identifier);
+            var name = identifier.Definition.SystemName;
+            if (!Marshallers.TryGetValue(name, out var marshaller))
+                throw new InvalidOperationException($"Identifier '{name}' has does not exist in the registry");
+            return marshaller.MarshallToDto(identifier);
         }
 
         public TIdentifier[] ConvertToIdentifiers(IEnumerable<IIdentifierValueDto> dtos)
@@ -39,7 +42,7 @@ namespace CHC.Consent.Api.Infrastructure
             return Marshallers[dto.SystemName].MarshallToIdentifier(dto);
         }
 
-        public delegate TIdentifier CreateIdentifier(TDefinition definition, IIdentifierValue value);
+        protected delegate TIdentifier CreateIdentifier(TDefinition definition, IIdentifierValue value);
 
         private class IdentifierIdentifierValueDtoMarshaller : IDefinitionVisitor
         {

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
@@ -11,17 +10,16 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.EntityFrameworkCore.Query.ResultOperators.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace CHC.Consent.Api.Features.Consent
 {
+    using ProducesResponseTypeAttribute = Infrastructure.Web.ProducesResponseTypeAttribute;
     [Route("/consent")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ConsentController : Controller
     {
-        private EvidenceDefinitionRegistry Registry { get; }
         private ILogger Logger { get; }
         private EvidenceDtosIdentifierDtoMarshaller EvidenceDtoMarshallers { get; }
         private readonly IConsentRepository consentRepository;
@@ -32,7 +30,6 @@ namespace CHC.Consent.Api.Features.Consent
             EvidenceDefinitionRegistry registry,
             ILogger<ConsentController> logger=null)
         {
-            Registry = registry;
             Logger = logger ?? NullLogger<ConsentController>.Instance;
             this.consentRepository = consentRepository;
             EvidenceDtoMarshallers = new EvidenceDtosIdentifierDtoMarshaller(registry);
@@ -83,7 +80,7 @@ namespace CHC.Consent.Api.Features.Consent
                     //TODO: Decide what to do with evidence, etc, for existing consents, or if you can be consented twice
                     return new SeeOtherOjectActionResult(
                         "GetStudySubject",
-                        routeValues: new {studyId = studyId, subjectIdentifier = studySubject.SubjectIdentifier},
+                        routeValues: new {studyId, subjectIdentifier = studySubject.SubjectIdentifier},
                         result: existingConsent.Id);
                 }
             }
@@ -99,7 +96,7 @@ namespace CHC.Consent.Api.Features.Consent
 
             return CreatedAtAction(
                 "GetStudySubject",
-                new {studyId = studyId, subjectIdentifier = studySubject.SubjectIdentifier},
+                new {studyId, subjectIdentifier = studySubject.SubjectIdentifier},
                 newConsentId.Id);
         }
 

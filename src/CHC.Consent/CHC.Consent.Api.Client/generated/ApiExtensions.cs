@@ -149,6 +149,36 @@ namespace CHC.Consent.Api.Client
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
+            /// <param name='agencySystemName'>
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            public static IList<IIdentifierValueDto> GetPersonForAgency(this IApi operations, string agencySystemName, long? id = default(long?))
+            {
+                return operations.GetPersonForAgencyAsync(agencySystemName, id).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='agencySystemName'>
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<IList<IIdentifierValueDto>> GetPersonForAgencyAsync(this IApi operations, string agencySystemName, long? id = default(long?), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.GetPersonForAgencyWithHttpMessagesAsync(agencySystemName, id, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
             /// <param name='specification'>
             /// </param>
             public static PersonCreatedResult PutPerson(this IApi operations, PersonSpecification specification)

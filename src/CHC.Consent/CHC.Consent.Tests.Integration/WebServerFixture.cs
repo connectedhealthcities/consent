@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http;
-using System.Threading.Tasks;
 using CHC.Consent.Api;
-using CHC.Consent.Common.Identity;
+using CHC.Consent.Api.Client.Models;
+using CHC.Consent.EFCore;
+using CHC.Consent.EFCore.Identity;
 using CHC.Consent.Testing.Utils;
 using CHC.Consent.Tests.Api.Client;
 using IdentityModel.Client;
 using IdentityServer4;
-using IdentityServer4.AccessTokenValidation;
-using IdentityServer4.EntityFramework.Options;
 using IdentityServer4.Models;
 using IdentityServer4.Test;
 using Microsoft.AspNetCore.Builder;
@@ -21,9 +19,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Rest;
 using Xunit.Abstractions;
 
@@ -49,7 +45,10 @@ namespace CHC.Consent.Tests
             {
                 options.ConfigureWarnings(_ => _.Ignore(InMemoryEventId.TransactionIgnoredWarning));
                 options.EnableSensitiveDataLogging();
-                options.UseInMemoryDatabase("CHC-Testing");
+
+
+                options.UseSqlServer(
+                    $@"Server=(localdb)\MSSqlLocalDB;Integrated Security=true;Initial Catalog=ChCIntegrations");
             }
         }
 
@@ -147,8 +146,6 @@ namespace CHC.Consent.Tests
                                     
                                     options.Validate();
                                 });
-
-                            services.Replace(ServiceDescriptor.Scoped(s => Identifiers.Registry));
                         })
             );
 
@@ -181,6 +178,8 @@ namespace CHC.Consent.Tests
             ServiceClientTracing.IsEnabled = true;
             tracingInterceptor = new XUnitServiceClientTracingInterceptor(null);
             ServiceClientTracing.AddTracingInterceptor(tracingInterceptor);
+
+            
         }
 
         public class TestOutputLoggerProvider : ILoggerProvider
@@ -218,6 +217,17 @@ namespace CHC.Consent.Tests
         {
             Server?.Dispose();
             Client?.Dispose();
+        }
+
+        public T AddData<T>(Func<ConsentContext,T> add)
+        {
+            using (var scope = Server.Host.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetService<ConsentContext>();
+                var result = add(context);
+                context.SaveChanges();
+                return result;
+            }
         }
     }
 }

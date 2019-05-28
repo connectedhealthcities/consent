@@ -225,6 +225,55 @@
       }
     },
     "/identities": {
+      "get": {
+        "tags": [
+          "Identity"
+        ],
+        "operationId": "GetPersonForAgency",
+        "consumes": [
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "agencySystemName",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IIdentifierValueDto"
+              }
+            }
+          }
+        }
+      },
       "put": {
         "tags": [
           "Identity"
