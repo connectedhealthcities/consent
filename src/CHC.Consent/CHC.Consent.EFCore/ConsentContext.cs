@@ -80,6 +80,8 @@ namespace CHC.Consent.EFCore
             modelBuilder.ApplyConfiguration(new AuthorityEntityConfiguration());
             modelBuilder.ApplyConfiguration<AgencyEntityConfiguration>();
 
+            modelBuilder.ApplyConfiguration<PersonAgencyIdConfiguration>();
+
             modelBuilder.Entity<SecurityPrinicipal>();
             
             modelBuilder.Entity<UserSecurityPrincipal>().Property<long>("ConsentUserId");
@@ -117,6 +119,8 @@ namespace CHC.Consent.EFCore
                 entity.Property<long>(nameof(IEntity.Id)).UseSqlServerIdentityColumn();
                 entity.HasKey(nameof(IEntity.Id));
             }
+            
+            
         }
 
         private static void AddDefinitionEntity<TDefinition>(ModelBuilder modelBuilder) where TDefinition : class, IDefinitionEntity

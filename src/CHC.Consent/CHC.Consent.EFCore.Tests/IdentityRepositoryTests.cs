@@ -10,6 +10,7 @@ using CHC.Consent.Testing.Utils;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using FluentAssertions.Formatting;
+using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Xunit;
@@ -267,6 +268,23 @@ namespace CHC.Consent.EFCore.Tests
         }
 
         [Fact]
+        public void BringsBackNoIdentifiersWhenPersonHasNoIdentifiers()
+        {
+            var personIdentity = new PersonIdentity(personTwo.Id);
+            
+            var foundDetails = CreateRepository(readContext)
+                .GetPeopleWithIdentifiers(
+                    new[] {personIdentity},
+                    new[] {testIdentifierDefinition.SystemName},
+                    null
+                );
+
+            foundDetails.Should().ContainKey(personIdentity)
+                .WhichValue.Should().BeEmpty();
+        }
+        
+
+        [Fact]
         public void CanSearchForSimpleIdentifiers()
         {
             var nhsNumber = Random.String();
@@ -370,7 +388,32 @@ namespace CHC.Consent.EFCore.Tests
                 agency.SystemName.Should().Be("external");
                 agency.Fields.Should().ContainInOrder("field-1", "field-2");
             }
+        }
 
+        [Fact]
+        public void CreatesAnAgencySpecificIdWhenNoneExists()
+        {
+            var agencyEntity = new AgencyEntity("test", "test");
+            updateContext.Add(agencyEntity);
+            updateContext.SaveChanges();
+            
+            
+            repository.GetPersonAgencyId((PersonIdentity) personOne.Id, (AgencyIdentity)agencyEntity.Id).Should().NotBeNull();
+        }
+        
+        [Fact]
+        public void GetsAnExistingPersonAgencyId()
+        {
+            var agencyEntity = new AgencyEntity("test", "test");
+            updateContext.Add(agencyEntity);
+            updateContext.SaveChanges();
+
+            updateContext.Add(
+                new PersonAgencyId {PersonId = personOne.Id, AgencyId = agencyEntity.Id, SpecificId = "AGENCY"});
+            updateContext.SaveChanges();
+            
+            
+            repository.GetPersonAgencyId((PersonIdentity) personOne.Id, (AgencyIdentity)agencyEntity.Id).Should().Be("AGENCY");
         }
     }
 }

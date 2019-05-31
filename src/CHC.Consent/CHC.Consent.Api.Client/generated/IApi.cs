@@ -100,7 +100,7 @@ namespace CHC.Consent.Api.Client
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<IList<IIdentifierValueDto>>> GetPersonForAgencyWithHttpMessagesAsync(string agencySystemName, long? id = default(long?), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<AgencyPersonDto>> GetPersonForAgencyWithHttpMessagesAsync(string agencySystemName, long? id = default(long?), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='specification'>
         /// </param>

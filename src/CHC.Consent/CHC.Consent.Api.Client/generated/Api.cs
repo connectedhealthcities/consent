@@ -1025,7 +1025,7 @@ namespace CHC.Consent.Api.Client
         /// <return>
         /// A response object containing the response body and response headers.
         /// </return>
-        public async Task<HttpOperationResponse<IList<IIdentifierValueDto>>> GetPersonForAgencyWithHttpMessagesAsync(string agencySystemName, long? id = default(long?), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<HttpOperationResponse<AgencyPersonDto>> GetPersonForAgencyWithHttpMessagesAsync(string agencySystemName, long? id = default(long?), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (agencySystemName == null)
             {
@@ -1124,7 +1124,7 @@ namespace CHC.Consent.Api.Client
                 throw ex;
             }
             // Create Result
-            var _result = new HttpOperationResponse<IList<IIdentifierValueDto>>();
+            var _result = new HttpOperationResponse<AgencyPersonDto>();
             _result.Request = _httpRequest;
             _result.Response = _httpResponse;
             // Deserialize Response
@@ -1133,7 +1133,7 @@ namespace CHC.Consent.Api.Client
                 _responseContent = await _httpResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
                 try
                 {
-                    _result.Body = SafeJsonConvert.DeserializeObject<IList<IIdentifierValueDto>>(_responseContent, DeserializationSettings);
+                    _result.Body = SafeJsonConvert.DeserializeObject<AgencyPersonDto>(_responseContent, DeserializationSettings);
                 }
                 catch (JsonException ex)
                 {

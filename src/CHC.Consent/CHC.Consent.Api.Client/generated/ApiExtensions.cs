@@ -153,7 +153,7 @@ namespace CHC.Consent.Api.Client
             /// </param>
             /// <param name='id'>
             /// </param>
-            public static IList<IIdentifierValueDto> GetPersonForAgency(this IApi operations, string agencySystemName, long? id = default(long?))
+            public static AgencyPersonDto GetPersonForAgency(this IApi operations, string agencySystemName, long? id = default(long?))
             {
                 return operations.GetPersonForAgencyAsync(agencySystemName, id).GetAwaiter().GetResult();
             }
@@ -168,7 +168,7 @@ namespace CHC.Consent.Api.Client
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<IList<IIdentifierValueDto>> GetPersonForAgencyAsync(this IApi operations, string agencySystemName, long? id = default(long?), CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<AgencyPersonDto> GetPersonForAgencyAsync(this IApi operations, string agencySystemName, long? id = default(long?), CancellationToken cancellationToken = default(CancellationToken))
             {
                 using (var _result = await operations.GetPersonForAgencyWithHttpMessagesAsync(agencySystemName, id, null, cancellationToken).ConfigureAwait(false))
                 {

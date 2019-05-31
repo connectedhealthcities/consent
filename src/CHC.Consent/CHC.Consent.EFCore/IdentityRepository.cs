@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Xml.Linq;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
@@ -178,5 +179,20 @@ namespace CHC.Consent.EFCore
                     .Include(_ => _.Fields)
                     .ThenInclude(_ => _.Identifier)
                     .SingleOrDefault(_ => _.SystemName == systemName);
+
+        public string GetPersonAgencyId(PersonIdentity personId, AgencyIdentity agencyId)
+        {
+            var existing = context.Set<PersonAgencyId>()
+                .SingleOrDefault(_ => _.PersonId == personId.Id && _.AgencyId == agencyId.Id);
+            
+            if (existing != null) return existing.SpecificId;
+            
+            var id = Convert.ToBase64String(Guid.NewGuid().ToByteArray()).TrimEnd('=');
+            context.Set<PersonAgencyId>()
+                .Add(new PersonAgencyId {PersonId = personId.Id, AgencyId = agencyId.Id, SpecificId = id});
+            context.SaveChanges();
+            
+            return id;
+        }
     }
 }

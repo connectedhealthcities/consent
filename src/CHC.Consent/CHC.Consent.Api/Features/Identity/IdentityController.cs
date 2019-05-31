@@ -109,7 +109,7 @@ namespace CHC.Consent.Api.Features.Identity
         [HttpGet]
         [ProducesResponseType(HttpStatusCode.BadRequest)]
         [ProducesResponseType(HttpStatusCode.NotFound)]
-        [ProducesResponseType(HttpStatusCode.OK, Type=typeof(IEnumerable<IIdentifierValueDto>))]
+        [ProducesResponseType(HttpStatusCode.OK, Type=typeof(AgencyPersonDto))]
         [AutoCommit]
         public IActionResult GetPersonForAgency(long id, [Required, NotNull]string agencySystemName)
         {
@@ -119,14 +119,18 @@ namespace CHC.Consent.Api.Features.Identity
 
             Debug.Assert(agency != null, nameof(agency) + " != null");
 
+
+            var personIdentity = new PersonIdentity(id);
             if (!IdentityRepository
-                .GetPeopleWithIdentifiers(new[] {new PersonIdentity(id)}, agency.Fields, UserProvider)
-                .TryGetValue(new PersonIdentity(id), out var identifiers))
+                .GetPeopleWithIdentifiers(new[] {personIdentity}, agency.Fields, UserProvider)
+                .TryGetValue(personIdentity, out var identifiers))
             {
                 return NotFound(id);
             }
 
-            return Ok(IdentifierDtoMarshaller.MarshallToDtos(identifiers));
+            var personIdForAgency = IdentityRepository.GetPersonAgencyId(personIdentity, agency.Id);
+
+            return Ok(new AgencyPersonDto(personIdForAgency, IdentifierDtoMarshaller.MarshallToDtos(identifiers)));
         }
 
 

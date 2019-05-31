@@ -35,7 +35,7 @@ namespace CHC.Consent.EFCore.Entities
             if (entity == null) return null;
             return new Agency
             {
-                Id = (AgencyIdentifier) entity.Id,
+                Id = (AgencyIdentity) entity.Id,
                 Name = entity.Name,
                 SystemName = entity.SystemName,
                 Fields = entity.Fields?.Select(_ => DefinitionParser.ParseString(_.Identifier.Definition).Name)

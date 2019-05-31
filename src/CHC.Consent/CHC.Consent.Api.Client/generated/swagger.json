@@ -265,11 +265,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "uniqueItems": false,
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/IIdentifierValueDto"
-              }
+              "$ref": "#/definitions/AgencyPersonDto"
             }
           }
         }
@@ -739,6 +735,23 @@
         "personId": {
           "format": "int64",
           "type": "integer"
+        }
+      }
+    },
+    "AgencyPersonDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "readOnly": true
+        },
+        "identifierValueDtos": {
+          "uniqueItems": false,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IIdentifierValueDto"
+          },
+          "readOnly": true
         }
       }
     },

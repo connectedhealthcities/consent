@@ -236,7 +236,8 @@ namespace CHC.Consent.Tests.Integration.Api
 
             var results = ApiClient.GetPersonForAgency(agency.SystemName, response.PersonId);
 
-            results.Should().OnlyContain(Identifier(nhsNumber));
+            results.Id.Should().NotBeNullOrWhiteSpace();
+            results.IdentifierValueDtos.Should().OnlyContain(Identifier(nhsNumber));
         }
     }
 }
