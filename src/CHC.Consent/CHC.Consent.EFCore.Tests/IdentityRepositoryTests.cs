@@ -1,8 +1,11 @@
+using System;
 using System.Linq;
 using System.Xml.Linq;
 using CHC.Consent.Common;
+using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.Identity;
 using CHC.Consent.EFCore.Security;
@@ -14,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Xunit;
 using Xunit.Abstractions;
+using Random = CHC.Consent.Testing.Utils.Random;
 
 namespace CHC.Consent.EFCore.Tests
 {
@@ -60,7 +64,9 @@ namespace CHC.Consent.EFCore.Tests
 
         private PersonIdentity FindPersonByNhsNumber(string nhsNumber)
         {
-            return repository.FindPersonBy(Identifiers.NhsNumber(nhsNumber));
+            return repository.FindPersonBy(
+                new CompositePersonSpecification(new PersonIdentifierSpecification(Identifiers.NhsNumber(nhsNumber)))
+            );
         }
 
         private PersonIdentifierEntity NhsNumberEntity(
@@ -176,6 +182,21 @@ namespace CHC.Consent.EFCore.Tests
 
             foundDetails.Should().ContainKey(personIdentity)
                 .WhichValue.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void CanFindAPersonByAgencyId()
+        {
+            var agency = createContext.Add(new AgencyEntity("test", "test")).Entity;
+            createContext.SaveChanges();
+            var agencyId = createContext.Add(
+                new PersonAgencyId
+                    {AgencyId = agency.Id, PersonId = personTwo.Id, SpecificId = Random.String()}).Entity;
+            createContext.SaveChanges();
+
+            var found = repository.FindPersonBy(new AgencyIdentifierPersonSpecification("test", agencyId.SpecificId));
+
+            Assert.Equal(personTwo, found);
         }
 
         [Fact]
@@ -340,6 +361,37 @@ namespace CHC.Consent.EFCore.Tests
                 .ContainSingleIdentifierValue(testIdentifierDefinition, testValue)
                 .And
                 .ContainSingleIdentifierValue(Identifiers.Definitions.NhsNumber, nhsNumber);
+        }
+
+        [Fact]
+        public void DoesNotFindANonConsentedPersonWhenConsentIsRequired()
+        {
+            repository.FindPersonBy(
+                new CompositePersonSpecification(
+                    new PersonIdentifierSpecification(Identifiers.NhsNumber(personOneNhsNumber)),
+                    new ConsentedPersonSpecification(new StudyIdentity(1))
+                )
+            ).Should().BeNull();
+        }
+
+        [Fact]
+        public void FindsAConsentedPersonWhenConsentIsRequired()
+        {
+            var personOneAgain = createContext.Find<PersonEntity>(personOne.Id);
+            var study = new StudyEntity {Name = Random.String()};
+            var subject = new StudySubjectEntity
+                {Person = personOneAgain, Study = study, SubjectIdentifier = Random.String()};
+            var consent = new ConsentEntity
+                {DateProvided = DateTime.Today, GivenBy = personOneAgain, StudySubject = subject};
+            createContext.AddRange(consent);
+            createContext.SaveChanges();
+
+            repository.FindPersonBy(
+                new CompositePersonSpecification(
+                    new PersonIdentifierSpecification(Identifiers.NhsNumber(personOneNhsNumber)),
+                    new ConsentedPersonSpecification(new StudyIdentity(1))
+                )
+            ).Should().Be((PersonIdentity) personOne.Id);
         }
 
         [Fact]

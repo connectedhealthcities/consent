@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Linq.Expressions;
 using System.Xml.Linq;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Identity;
@@ -10,64 +10,41 @@ using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.Identity;
-using CHC.Consent.EFCore.Security;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
-using NeinLinq;
 
 namespace CHC.Consent.EFCore
 {
     public class IdentityRepository : IIdentityRepository
     {
         private readonly ConsentContext context;
-        private DbSet<PersonIdentifierEntity> IdentifierEntities => context.PersonIdentifiers;
-        private DbSet<PersonEntity> People => context.People;
-        private DbSet<ConsentEntity> Consent => context.Set<ConsentEntity>();
-        private DbSet<AuthorityEntity> Authorities => context.Set<AuthorityEntity>();
-        private DbSet<AgencyEntity> Agencies => context.Set<AgencyEntity>();
-        
+
         private readonly PersonIdentifierXmlMarshallers marshallers;
 
         public IdentityRepository(
-            IdentifierDefinitionRegistry registry, 
+            IdentifierDefinitionRegistry registry,
             ConsentContext context)
         {
             this.context = context;
             marshallers = new PersonIdentifierXmlMarshallers(registry);
         }
 
-        /// <summary>
-        /// Convenience Method, mostly used for testing
-        /// </summary>
-        public PersonIdentity FindPersonBy(params PersonIdentifier[] identifiers) => 
-            FindPersonBy(identifiers.AsEnumerable());
-        
-        public PersonIdentity FindPersonBy(IEnumerable<PersonIdentifier> identifiers)
-        {
-            var predicate = identifiers.Aggregate(
-                PredicateBuilder.New<PersonEntity>(),
-                (t, i) =>
-                {
-                    var xmlValue = MarshalledValue(i);
-                    return t.Or(
-                        p => IdentifierEntities.Any(
-                                 _ => _.Person == p
-                                      && _.TypeName == i.Definition.SystemName
-                                      && _.Deleted == null
-                                      && _.Value == xmlValue));
-                }
-                );
-            return People.AsNoTracking().SingleOrDefault(predicate);
-        }
+        private DbSet<PersonIdentifierEntity> IdentifierEntities => context.PersonIdentifiers;
+        private DbSet<PersonEntity> People => context.People;
+        private DbSet<ConsentEntity> Consent => context.Set<ConsentEntity>();
+        private DbSet<AuthorityEntity> Authorities => context.Set<AuthorityEntity>();
+        private DbSet<AgencyEntity> Agencies => context.Set<AgencyEntity>();
 
-        private string MarshalledValue(PersonIdentifier identifier)
+        public PersonIdentity FindPersonBy(IPersonSpecification specification)
         {
-            return marshallers.MarshallToXml(identifier).ToString(SaveOptions.DisableFormatting);
+            var predicate = BuildExpressionFromSpecification(specification);
+            return People.AsNoTracking().SingleOrDefault(predicate);
         }
 
         public IEnumerable<PersonIdentifier> GetPersonIdentifiers(long personId)
         {
-            var identifierEntities = IdentifierEntities.AsNoTracking().Where(_ => _.Person.Id == personId && _.Deleted == null).AsEnumerable();
+            var identifierEntities = IdentifierEntities.AsNoTracking()
+                .Where(_ => _.Person.Id == personId && _.Deleted == null).AsEnumerable();
             return marshallers.MarshallFromXml(identifierEntities);
         }
 
@@ -75,11 +52,11 @@ namespace CHC.Consent.EFCore
         public PersonIdentity CreatePerson(IEnumerable<PersonIdentifier> identifiers, Authority authority)
         {
             var person = new PersonEntity();
-            
+
             People.Add(person);
             UpdatePerson(person, identifiers, authority);
-            context.SaveChanges(acceptAllChangesOnSuccess:true);
-            
+            context.SaveChanges(acceptAllChangesOnSuccess: true);
+
             return person;
         }
 
@@ -99,18 +76,6 @@ namespace CHC.Consent.EFCore
         {
             identifierNames = identifierNames.Distinct().ToArray();
             return PeopleWithIdentifiers(identifierNames, new HasIdCriteria(personIds));
-        }
-
-        private IDictionary<PersonIdentity, IEnumerable<PersonIdentifier>> PeopleWithIdentifiers(IEnumerable<string> identifierNames,
-            params ICriteria<PersonEntity>[] search)
-        {
-            return
-                People.AsNoTracking().Search(context, search)
-                    .Select(
-                        _ => new {_.Id, Identifiers = _.Identifiers.Where(i => identifierNames.Contains(i.TypeName))})
-                    .ToDictionary(
-                        _ => new PersonIdentity(_.Id),
-                        _ => _.Identifiers.Select(marshallers.MarshallFromXml).ToArray().AsEnumerable());
         }
 
 
@@ -134,9 +99,55 @@ namespace CHC.Consent.EFCore
             return Authorities.SingleOrDefault(_ => _.SystemName == systemName)?.ToAuthority();
         }
 
+        public Agency GetAgency(string systemName)
+            =>
+                Agencies
+                    .Include(_ => _.Fields)
+                    .ThenInclude(_ => _.Identifier)
+                    .SingleOrDefault(_ => _.SystemName == systemName);
+
+        public string GetPersonAgencyId(PersonIdentity personId, AgencyIdentity agencyId)
+        {
+            var existing = context.Set<PersonAgencyId>()
+                .SingleOrDefault(_ => _.PersonId == personId.Id && _.AgencyId == agencyId.Id);
+
+            if (existing != null) return existing.SpecificId;
+
+            var id = Convert.ToBase64String(Guid.NewGuid().ToByteArray()).TrimEnd('=');
+            context.Set<PersonAgencyId>()
+                .Add(new PersonAgencyId {PersonId = personId.Id, AgencyId = agencyId.Id, SpecificId = id});
+            context.SaveChanges();
+
+            return id;
+        }
+
+        private Expression<Func<PersonEntity, bool>> BuildExpressionFromSpecification(
+            IPersonSpecification specification)
+        {
+            return new PersonPredicateBuilder(context, MarshallValue).BuildPredicate(specification);
+        }
+
+        private string MarshallValue(PersonIdentifier identifier)
+        {
+            return marshallers.MarshallToXml(identifier).ToString(SaveOptions.DisableFormatting);
+        }
+
+        private IDictionary<PersonIdentity, IEnumerable<PersonIdentifier>> PeopleWithIdentifiers(
+            IEnumerable<string> identifierNames,
+            params ICriteria<PersonEntity>[] search)
+        {
+            return
+                People.AsNoTracking().Search(context, search)
+                    .Select(
+                        _ => new {_.Id, Identifiers = _.Identifiers.Where(i => identifierNames.Contains(i.TypeName))})
+                    .ToDictionary(
+                        _ => new PersonIdentity(_.Id),
+                        _ => _.Identifiers.Select(marshallers.MarshallFromXml).ToArray().AsEnumerable());
+        }
+
         private void Update(PersonEntity person, IEnumerable<PersonIdentifier> identifiers, Authority authority)
         {
-            var authorityEntity = Authorities.Find((long)authority.Id);
+            var authorityEntity = Authorities.Find((long) authority.Id);
             var storedIdentifiers = ExistingIdentifierEntities(person).ToList();
             foreach (var identifierGroup in identifiers.GroupBy(_ => _.Definition))
             {
@@ -144,13 +155,15 @@ namespace CHC.Consent.EFCore
 
                 foreach (var existingId in storedIdentifiers.Where(_ => _.TypeName == definition.SystemName))
                 {
-                    if (identifierGroup.All(_ => existingId.Value != MarshalledValue(_) && existingId.Authority.Priority >= authority.Priority))
+                    if (identifierGroup.All(
+                        _ => existingId.Value != MarshallValue(_) &&
+                             existingId.Authority.Priority >= authority.Priority))
                         existingId.Deleted = DateTime.Now;
                 }
 
                 foreach (var identifier in identifierGroup)
                 {
-                    var marshalledValue = MarshalledValue(identifier);
+                    var marshalledValue = MarshallValue(identifier);
 
                     if (storedIdentifiers.Any(_ => _.Value == marshalledValue)) continue;
 
@@ -173,26 +186,77 @@ namespace CHC.Consent.EFCore
             return IdentifierEntities.Where(_ => _.Person == person && _.Deleted == null).Include(_ => _.Authority);
         }
 
-        public Agency GetAgency(string systemName)
-            =>
-                Agencies
-                    .Include(_ => _.Fields)
-                    .ThenInclude(_ => _.Identifier)
-                    .SingleOrDefault(_ => _.SystemName == systemName);
-
-        public string GetPersonAgencyId(PersonIdentity personId, AgencyIdentity agencyId)
+        private class PersonPredicateBuilder : IPersonSpecificationVisitor
         {
-            var existing = context.Set<PersonAgencyId>()
-                .SingleOrDefault(_ => _.PersonId == personId.Id && _.AgencyId == agencyId.Id);
-            
-            if (existing != null) return existing.SpecificId;
-            
-            var id = Convert.ToBase64String(Guid.NewGuid().ToByteArray()).TrimEnd('=');
-            context.Set<PersonAgencyId>()
-                .Add(new PersonAgencyId {PersonId = personId.Id, AgencyId = agencyId.Id, SpecificId = id});
-            context.SaveChanges();
-            
-            return id;
+            private readonly ConsentContext context;
+
+
+            /// <inheritdoc />
+            public PersonPredicateBuilder(
+                ConsentContext context,
+                Func<PersonIdentifier, string> marshallValue
+            )
+            {
+                MarshallValue = marshallValue;
+                this.context = context;
+            }
+
+            private Func<PersonIdentifier, string> MarshallValue { get; }
+
+            public ExpressionStarter<PersonEntity> Predicate { get; private set; } =
+                PredicateBuilder.New<PersonEntity>();
+
+            /// <inheritdoc />
+            public void Visit(PersonIdentifierSpecification specification)
+            {
+                var identifier = specification.PersonIdentifier;
+                var xmlValue = MarshallValue(identifier);
+
+                Add(
+                    p => context.Set<PersonIdentifierEntity>().Any(
+                        _ => _.Person == p
+                             && _.TypeName == identifier.Definition.SystemName
+                             && _.Deleted == null
+                             && _.Value == xmlValue));
+            }
+
+            /// <inheritdoc />
+            public void Visit(AgencyIdentifierPersonSpecification specification)
+            {
+                Add(
+                    p =>
+                        (from id in context.Set<PersonAgencyId>()
+                            join agency in context.Set<AgencyEntity>() on id.AgencyId equals agency.Id
+                            where id.PersonId == p.Id
+                                  && agency.SystemName == specification.AgencyName
+                                  && id.SpecificId == specification.PersonAgencyId
+                            select id.Id).Any()
+                );
+            }
+
+            /// <inheritdoc />
+            public void Visit(ConsentedPersonSpecification specification)
+            {
+                Add(
+                    p =>
+                        context.Set<ConsentEntity>().Any(
+                            c => c.StudySubject.Person == p
+                                 && c.StudySubject.Study.Id == specification.StudyId.Id
+                                 && c.DateWithdrawn == null
+                        )
+                );
+            }
+
+            private void Add(Expression<Func<PersonEntity, bool>> expression)
+            {
+                Predicate = Predicate.And(expression);
+            }
+
+            public Expression<Func<PersonEntity, bool>> BuildPredicate(IPersonSpecification specification)
+            {
+                specification.Accept(this);
+                return Predicate;
+            }
         }
     }
 }

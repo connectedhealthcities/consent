@@ -101,8 +101,8 @@ namespace CHC.Consent.Tests.Api.Controllers
             var authority = new Authority {SystemName = authorityName};
             A.CallTo(
                     () => identityRepository.FindPersonBy(
-                        A<IEnumerable<PersonIdentifier>>.That.IsSameSequenceAs(
-                            Identifier(nhsNumberIdentifier))))
+                        A<CompositePersonSpecification>._)
+                )
                 .Returns(null);
             A.CallTo(() => identityRepository.GetAuthority(authorityName)).Returns(authority);
 
@@ -239,8 +239,9 @@ namespace CHC.Consent.Tests.Api.Controllers
             var identityRepository = A.Fake<IIdentityRepository>();
             A.CallTo(
                     () => identityRepository.FindPersonBy(
-                        A<IEnumerable<PersonIdentifier>>.That.Matches(
-                            _ => _.All(i => i.Definition == Identifiers.NhsNumber))))
+                        A<CompositePersonSpecification>.That.Matches(
+                            _ => _.Specifications.Cast<PersonIdentifierSpecification>().All(
+                                i => i.PersonIdentifier.Definition == Identifiers.NhsNumber))))
                 .Returns(existingPerson);
 
             var authority = new Authority {SystemName = "shabba-ranks"};
