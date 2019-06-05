@@ -3,9 +3,12 @@ using CHC.Consent.Api.Client.Models;
 
 namespace CHC.Consent.DataImporter.Features.ExportData
 {
-    public class StudySubjectWithIdentifiers
+    public class StudySubjectWithIdentifiers : IHaveIdentifiers
     {
         public string subjectIdentifier { get; set; }
         public IList<IIdentifierValueDto> identifiers { get; set; }
+
+        /// <inheritdoc />
+        IEnumerable<IIdentifierValueDto> IHaveIdentifiers.Identifiers => identifiers;
     }
 }

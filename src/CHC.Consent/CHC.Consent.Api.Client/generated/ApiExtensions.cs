@@ -227,6 +227,32 @@ namespace CHC.Consent.Api.Client
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
+            /// <param name='agencyName'>
+            /// </param>
+            public static AgencyInfoDto GetAgencyIdentifiersAndFieldNamesMetadata(this IApi operations, string agencyName)
+            {
+                return operations.GetAgencyIdentifiersAndFieldNamesMetadataAsync(agencyName).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='agencyName'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<AgencyInfoDto> GetAgencyIdentifiersAndFieldNamesMetadataAsync(this IApi operations, string agencyName, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.GetAgencyIdentifiersAndFieldNamesMetadataWithHttpMessagesAsync(agencyName, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
             public static IList<EvidenceDefinition> GetConsentStoreMetadata(this IApi operations)
             {
                 return operations.GetConsentStoreMetadataAsync().GetAwaiter().GetResult();

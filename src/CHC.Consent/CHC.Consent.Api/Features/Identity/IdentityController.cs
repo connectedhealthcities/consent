@@ -17,18 +17,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CHC.Consent.Api.Features.Identity
 {
-    using ProducesResponseTypeAttribute = Infrastructure.Web.ProducesResponseTypeAttribute;
     [Route("/identities")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class IdentityController : Controller
     {
         private readonly IdentifierDefinitionRegistry registry;
-        private PersonIdentifiersDtosIdentifierDtoMarshaller IdentifierDtoMarshaller { get; }
-        private IIdentityRepository IdentityRepository { get; }
-        private IUserProvider UserProvider { get; }
 
         public IdentityController(
-            IIdentityRepository identityRepository, 
+            IIdentityRepository identityRepository,
             IdentifierDefinitionRegistry registry,
             IUserProvider userProvider)
         {
@@ -38,10 +34,14 @@ namespace CHC.Consent.Api.Features.Identity
             IdentifierDtoMarshaller = new PersonIdentifiersDtosIdentifierDtoMarshaller(this.registry);
         }
 
+        private PersonIdentifiersDtosIdentifierDtoMarshaller IdentifierDtoMarshaller { get; }
+        private IIdentityRepository IdentityRepository { get; }
+        private IUserProvider UserProvider { get; }
+
 
         [Route("{id:int}")]
         [HttpGet]
-        [ProducesResponseType(HttpStatusCode.OK, Type=typeof(IEnumerable<IIdentifierValueDto>))]
+        [Infrastructure.Web.ProducesResponseType(HttpStatusCode.OK, Type = typeof(IEnumerable<IIdentifierValueDto>))]
         [AutoCommit]
         public IActionResult GetPerson(long id)
         {
@@ -49,12 +49,12 @@ namespace CHC.Consent.Api.Features.Identity
         }
 
         [HttpPost("search")]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type=typeof(SearchResult))]
-        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [Infrastructure.Web.ProducesResponseType((int) HttpStatusCode.OK, Type = typeof(SearchResult))]
+        [Infrastructure.Web.ProducesResponseType((int) HttpStatusCode.NotFound)]
         public IActionResult FindPerson([FromBody, Required] MatchSpecification[] match)
         {
-            if(!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
-            
+            if (!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
+
             var person = FindMatchingPerson(match);
 
             return
@@ -65,28 +65,31 @@ namespace CHC.Consent.Api.Features.Identity
 
         private PersonIdentity FindMatchingPerson(IEnumerable<MatchSpecification> match)
         {
-            return IdentityRepository.FindPerson(match.Select(_ => IdentifierDtoMarshaller.ConvertToIdentifiers(_.Identifiers)));
+            return IdentityRepository.FindPerson(
+                match.Select(_ => IdentifierDtoMarshaller.ConvertToIdentifiers(_.Identifiers)));
         }
 
         [HttpPut]
-        [ProducesResponseType(typeof(PersonCreatedResult), HttpStatusCode.Created)]
-        [ProducesResponseType(HttpStatusCode.SeeOther, Type=typeof(PersonCreatedResult))]
+        [Infrastructure.Web.ProducesResponseType(typeof(PersonCreatedResult), HttpStatusCode.Created)]
+        [Infrastructure.Web.ProducesResponseType(HttpStatusCode.SeeOther, Type = typeof(PersonCreatedResult))]
         [AutoCommit]
-        public IActionResult PutPerson([FromBody, Required]PersonSpecification specification)
+        public IActionResult PutPerson([FromBody, Required] PersonSpecification specification)
         {
-            if(!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
+            if (!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
             var authority = IdentityRepository.GetAuthority(specification.Authority);
-            if(authority == null)
-                ModelState.AddModelError(nameof(specification.Authority), $"Authority '{specification.Authority}' does not exist");
+            if (authority == null)
+                ModelState.AddModelError(
+                    nameof(specification.Authority),
+                    $"Authority '{specification.Authority}' does not exist");
             ValidateIdentifierTypes(specification.Identifiers, nameof(specification.Identifiers));
             ValidateIdentifierTypes(
                 specification.MatchSpecifications.SelectMany(_ => _.Identifiers),
                 nameof(specification.MatchSpecifications));
-            if(!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
+            if (!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
             //identifierChecker.EnsureHasNoInvalidDuplicates(specification.Identifiers);
 
             var identifiers = IdentifierDtoMarshaller.ConvertToIdentifiers(specification.Identifiers);
-            
+
 
             var person = FindMatchingPerson(specification.MatchSpecifications);
 
@@ -107,22 +110,21 @@ namespace CHC.Consent.Api.Features.Identity
         }
 
         [HttpGet]
-        [ProducesResponseType(HttpStatusCode.BadRequest)]
-        [ProducesResponseType(HttpStatusCode.NotFound)]
-        [ProducesResponseType(HttpStatusCode.OK, Type=typeof(AgencyPersonDto))]
+        [Infrastructure.Web.ProducesResponseType(HttpStatusCode.BadRequest)]
+        [Infrastructure.Web.ProducesResponseType(HttpStatusCode.NotFound)]
+        [Infrastructure.Web.ProducesResponseType(HttpStatusCode.OK, Type = typeof(AgencyPersonDto))]
         [AutoCommit]
-        public IActionResult GetPersonForAgency(long id, [Required, NotNull]string agencySystemName)
+        public IActionResult GetPersonForAgency(long id, [Required, NotNull] string agencySystemName)
         {
             var agency = IdentityRepository.GetAgency(agencySystemName);
-            if(agency == null) ModelState.AddModelError(nameof(agencySystemName), $"{agencySystemName} was not found");
+            if (agency == null) ModelState.AddModelError(nameof(agencySystemName), $"{agencySystemName} was not found");
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             Debug.Assert(agency != null, nameof(agency) + " != null");
 
-
             var personIdentity = new PersonIdentity(id);
             if (!IdentityRepository
-                .GetPeopleWithIdentifiers(new[] {personIdentity}, agency.Fields, UserProvider)
+                .GetPeopleWithIdentifiers(new[] {personIdentity}, agency.RootIdentifierNames(), UserProvider)
                 .TryGetValue(personIdentity, out var identifiers))
             {
                 return NotFound(id);

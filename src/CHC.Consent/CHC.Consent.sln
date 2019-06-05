@@ -22,6 +22,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHC.Consent.Tests.Integrati
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHC.Consent.Parsing", "CHC.Consent.Parsing\CHC.Consent.Parsing.csproj", "{DE2F537B-DAD5-4A62-A88F-737E0D22F915}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{59E9E65F-095A-4A25-9279-91786D975AE2}"
+ProjectSection(SolutionItems) = preProject
+	Directory.Build.props = Directory.Build.props
+EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +61,7 @@ Global
 		{2268F6BE-3E26-4F53-AFE4-931C52AF6AE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2268F6BE-3E26-4F53-AFE4-931C52AF6AE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2268F6BE-3E26-4F53-AFE4-931C52AF6AE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2268F6BE-3E26-4F53-AFE4-931C52AF6AE5}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
 		{02A0FC9D-494A-412F-AFCA-83589832619C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{02A0FC9D-494A-412F-AFCA-83589832619C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{02A0FC9D-494A-412F-AFCA-83589832619C}.Release|Any CPU.ActiveCfg = Release|Any CPU

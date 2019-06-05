@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using CHC.Consent.Common.Identity;
@@ -10,13 +9,6 @@ namespace CHC.Consent.EFCore.Entities
     public class AgencyEntity : IEntity
     {
         private static readonly IdentifierDefinitionParser DefinitionParser = new IdentifierDefinitionParser();
-
-        /// <inheritdoc />
-        public long Id { get; protected set; }
-        public string Name { get; protected set; }
-        public string SystemName { get; protected set; }
-        
-        public ICollection<AgencyFieldEntity> Fields { get; protected set; } = new List<AgencyFieldEntity>();
 
         /// <inheritdoc />
         protected AgencyEntity()
@@ -30,6 +22,14 @@ namespace CHC.Consent.EFCore.Entities
             SystemName = systemName;
         }
 
+        public string Name { get; protected set; }
+        public string SystemName { get; protected set; }
+
+        public ICollection<AgencyFieldEntity> Fields { get; protected set; } = new List<AgencyFieldEntity>();
+
+        /// <inheritdoc />
+        public long Id { get; protected set; }
+
         public static implicit operator Agency(AgencyEntity entity)
         {
             if (entity == null) return null;
@@ -38,8 +38,14 @@ namespace CHC.Consent.EFCore.Entities
                 Id = (AgencyIdentity) entity.Id,
                 Name = entity.Name,
                 SystemName = entity.SystemName,
-                Fields = entity.Fields?.Select(_ => DefinitionParser.ParseString(_.Identifier.Definition).Name)
-                             .ToArray() ?? Array.Empty<string>()
+                Fields =
+                    entity.Fields?.Select(
+                            _ =>
+                                string.Join(
+                                    IdentifierSearch.Separator,
+                                    new[] {DefinitionParser.ParseString(_.Identifier.Definition).Name, _.Subfields}
+                                        .Where(name => !string.IsNullOrWhiteSpace(name))))
+                        .ToArray() ?? Array.Empty<string>()
             };
         }
     }

@@ -10,7 +10,12 @@ namespace CHC.Consent.Common.Identity
 
         public string KeySelector()
         {
-            return IdentifierName.Split(new[] {IdentifierSearch.Separator}, StringSplitOptions.None)[0];
+            return RootIdentifier(IdentifierName);
+        }
+
+        public static string RootIdentifier(string identifierName)
+        {
+            return identifierName.Split(new[] {Separator}, StringSplitOptions.None)[0];
         }
     }
 }

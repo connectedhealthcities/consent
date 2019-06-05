@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
+using Agency = CHC.Consent.Common.Identity.Agency;
+using AgencyPersonDto = CHC.Consent.Api.Features.Identity.AgencyPersonDto;
 using IdentifierDefinition = CHC.Consent.Common.Identity.Identifiers.IdentifierDefinition;
 using IIdentifierValueDto = CHC.Consent.Api.Infrastructure.IIdentifierValueDto;
 using PersonIdentity = CHC.Consent.Common.PersonIdentity;
@@ -24,13 +26,13 @@ namespace CHC.Consent.Tests.Api.Controllers
 
     public class IdentityControllerTests
     {
-        private readonly ITestOutputHelper output;
-
         /// <inheritdoc />
         public IdentityControllerTests(ITestOutputHelper output)
         {
             this.output = output;
         }
+
+        private readonly ITestOutputHelper output;
 
 
         private IdentityController CreateController(
@@ -39,103 +41,58 @@ namespace CHC.Consent.Tests.Api.Controllers
             var registry = new IdentifierDefinitionRegistry(identifiers);
             return new IdentityController(identityRepository, registry, null);
         }
-        private IdentityController CreateController(IIdentityRepository identityRepository, IdentifierDefinitionRegistry registry=null)
-        {
-            return new IdentityController(identityRepository, registry??Testing.Utils.Identifiers.Registry, null);
-        }
 
-        [Fact]
-        public void Test()
+        private IdentityController CreateController(
+            IIdentityRepository identityRepository, IdentifierDefinitionRegistry registry = null)
         {
-            var nhsNumber = Identifiers.NhsNumber.Value("32222");
-            output.WriteLine(
-                JsonConvert.SerializeObject(
-                    new PersonSpecification(
-                    new CHC.Consent.Api.Client.Models.IIdentifierValueDto[]
-                        {
-                            Identifiers.DateOfBirth.Value(1.December(2018)),
-                            Identifiers.HospitalNumber.Value("1112333"),
-                            nhsNumber,
-                            ClientIdentifierValues.Address("3 Sheaf Street", "Leeds", postcode:"LS10 1HD")
-                        },
-                    "medway",
-                        new []
-                        {
-                            new MatchSpecification {Identifiers = new CHC.Consent.Api.Client.Models.IIdentifierValueDto[] {nhsNumber}}
-                        }
-                    ),
-                    Formatting.Indented
-                )
-            );
+            return new IdentityController(identityRepository, registry ?? Testing.Utils.Identifiers.Registry, null);
         }
 
 
         private PersonIdentifier Identifier(IIdentifierValueDto identifier)
         {
             return new PersonIdentifier(
-                new SimpleIdentifierValue(identifier.Value), 
+                new SimpleIdentifierValue(identifier.Value),
                 (IdentifierDefinition) Testing.Utils.Identifiers.Registry[identifier.SystemName]);
         }
 
-        
+        private static PersonIdentifier PersonIdentifier<T>(T value, IdentifierDefinition definition)
+            => Testing.Utils.Identifiers.PersonIdentifier(value, definition);
+
         [Fact]
-        public void UpdatesAnExistingPerson()
+        public void CorrectlyConvertsIdentifiers()
         {
-         
-            var existingPerson = new PersonIdentity(Random.Long());
-
-            var nhsNumberIdentifier = Identifiers.NhsNumber.Dto("444-333-111");
-            var bradfordHospitalNumberIdentifier = Identifiers.HospitalNumber.Dto("Added HospitalNumber");
-            
             var identityRepository = A.Fake<IIdentityRepository>();
-            A.CallTo(() => identityRepository.FindPersonBy(
-                A<IEnumerable<PersonIdentifier>>.That.Matches(
-                    _ => _.All(i => i.Definition == Identifiers.NhsNumber))))
-                .Returns(existingPerson);
-
-            var authority = new Authority {SystemName = "shabba-ranks"};
-            A.CallTo(() => identityRepository.GetAuthority("shabba-ranks"))
-                .Returns(authority);
-
+            A.CallTo(
+                    () => identityRepository.GetPersonIdentifiers(34))
+                .Returns(
+                    new[]
+                    {
+                        Testing.Utils.Identifiers.NhsNumber("1234"),
+                        Testing.Utils.Identifiers.Name("Peng", "Chips")
+                    });
 
             var controller = CreateController(identityRepository);
-            
-            var result = controller.PutPerson(
-                new CHC.Consent.Api.Features.Identity.Dto.PersonSpecification
-                {
-                    Authority = "shabba-ranks",
-                    Identifiers =
-                    {
-                        nhsNumberIdentifier,
-                        bradfordHospitalNumberIdentifier
-                    },
-                    MatchSpecifications =
-                    {
-                        new CHC.Consent.Api.Features.Identity.Dto.MatchSpecification
+
+            var result = controller.GetPerson(34);
+
+            result.Should().BeOfType<OkObjectResult>()
+                .Which.Value.Should().BeAssignableTo<IEnumerable<IIdentifierValueDto>>()
+                .Which
+                .Should().BeEquivalentTo(
+                    Identifiers.NhsNumber.Dto("1234"),
+                    Identifiers.Name.Dto(
+                        new[]
                         {
-                            Identifiers = new [] {nhsNumberIdentifier}
+                            Identifiers.FirstName.Dto("Peng"),
+                            Identifiers.LastName.Dto("Chips")
                         }
-                    }
-                }
-
-            );
-
-            A.CallTo(
-                    () => identityRepository.UpdatePerson(
-                        existingPerson,
-                        A<IEnumerable<PersonIdentifier>>.That.IsSameSequenceAs(
-                            Identifier(nhsNumberIdentifier),
-                            Identifier(bradfordHospitalNumberIdentifier)),
-                        authority)
-                )
-                .MustHaveHappenedOnceExactly();
-            Assert.IsType<SeeOtherOjectActionResult>(result);
+                    ));
         }
 
         [Fact]
         public void CreatesAPerson()
         {
-            
             var nhsNumberIdentifier = Identifiers.NhsNumber.Dto("New NHS Number");
             var bradfordHospitalNumberIdentifier = Identifiers.HospitalNumber.Dto("New HospitalNumber");
 
@@ -159,7 +116,6 @@ namespace CHC.Consent.Tests.Api.Controllers
                     Authority = authorityName,
                     Identifiers =
                     {
-                        
                         nhsNumberIdentifier,
                         bradfordHospitalNumberIdentifier
                     },
@@ -167,11 +123,10 @@ namespace CHC.Consent.Tests.Api.Controllers
                     {
                         new CHC.Consent.Api.Features.Identity.Dto.MatchSpecification
                         {
-                            Identifiers = new []{nhsNumberIdentifier}
+                            Identifiers = new[] {nhsNumberIdentifier}
                         }
                     }
                 }
-
             );
 
             Assert.IsAssignableFrom<CreatedAtActionResult>(result);
@@ -187,60 +142,39 @@ namespace CHC.Consent.Tests.Api.Controllers
         }
 
         [Fact]
-        public void CorrectlyConvertsIdentifiers()
-        {
-            var identityRepository = A.Fake<IIdentityRepository>();
-            A.CallTo(
-                    () => identityRepository.GetPersonIdentifiers(34))
-                .Returns(new []
-                {
-                    Testing.Utils.Identifiers.NhsNumber("1234"),
-                    Testing.Utils.Identifiers.Name("Peng", "Chips")
-                });
-
-            var controller = CreateController(identityRepository);
-
-            var result = controller.GetPerson(34);
-
-            result.Should().BeOfType<OkObjectResult>()
-                .Which.Value.Should().BeAssignableTo<IEnumerable<IIdentifierValueDto>>()
-                .Which
-                .Should().BeEquivalentTo(
-                    Identifiers.NhsNumber.Dto("1234"),
-                    Identifiers.Name.Dto(
-                        new[]
-                        {
-                            Identifiers.FirstName.Dto("Peng"),
-                            Identifiers.LastName.Dto("Chips")
-                        }
-                    ));
-        }
-
-        [Fact]
         public void GetCorrectPersonIdentifiersForAgency()
         {
             const string field1Name = "f-1";
             const string field2Name = "f-2";
             const string agencyName = "testing";
+            var agencyIdentity = (CHC.Consent.Common.Identity.AgencyIdentity) Random.Long();
 
-            var personId = (PersonIdentity)1625L;
+            var personId = (PersonIdentity) 1625L;
             var field1 = Identifiers.String(field1Name);
             var field2 = Identifiers.String(field2Name);
-            
+            var personAgencyId = Random.String();
+
 
             var identityRepository = A.Fake<IIdentityRepository>(_ => _.Strict());
 
             A.CallTo(() => identityRepository.GetAgency(agencyName))
-                .Returns(new Agency {Name = "Testing", Fields = new[] {field1Name, field2Name}});
+                .Returns(
+                    new Agency
+                    {
+                        Name = "Testing", Id = agencyIdentity, Fields = new[] {field1Name + "::sub-field", field2Name}
+                    });
+
+            A.CallTo(() => identityRepository.GetPersonAgencyId(personId, agencyIdentity))
+                .Returns(personAgencyId);
 
 
             var getPeopleWithIdentifiersCall = A.CallTo(
                 () => identityRepository.GetPeopleWithIdentifiers(
                     A<IEnumerable<PersonIdentity>>.That.IsSameSequenceAs(personId),
-                     A<IEnumerable<string>>.That.IsSameSequenceAs(field1Name, field2Name),
+                    A<IEnumerable<string>>.That.IsSameSequenceAs(field1Name, field2Name),
                     A<IUserProvider>.Ignored)
             );
-            
+
             getPeopleWithIdentifiersCall
                 .Returns(
                     new Dictionary<PersonIdentity, IEnumerable<PersonIdentifier>>
@@ -251,24 +185,100 @@ namespace CHC.Consent.Tests.Api.Controllers
                             PersonIdentifier("dt", field2)
                         }
                     });
-            
-            
+
+
             var controller = CreateController(identityRepository, field1, field2);
 
             var result = controller.GetPersonForAgency(personId, agencyName);
 
-            
+
             getPeopleWithIdentifiersCall.MustHaveHappenedOnceExactly();
 
             result.Should().BeOfType<OkObjectResult>()
-                .Which.Value.Should().BeAssignableTo<IEnumerable<IIdentifierValueDto>>()
+                .Which.Value.Should().BeAssignableTo<AgencyPersonDto>()
                 .Which.Should().BeEquivalentTo(
-                    field1.Dto("cs"),
-                    field2.Dto("dt")
+                    new AgencyPersonDto(personAgencyId, new[] {field1.Dto("cs"), field2.Dto("dt")})
                 );
         }
 
-        private static PersonIdentifier PersonIdentifier<T>(T value, IdentifierDefinition definition)
-            => Testing.Utils.Identifiers.PersonIdentifier(value, definition);
+        [Fact]
+        public void Test()
+        {
+            var nhsNumber = Identifiers.NhsNumber.Value("32222");
+            output.WriteLine(
+                JsonConvert.SerializeObject(
+                    new PersonSpecification(
+                        new CHC.Consent.Api.Client.Models.IIdentifierValueDto[]
+                        {
+                            Identifiers.DateOfBirth.Value(1.December(2018)),
+                            Identifiers.HospitalNumber.Value("1112333"),
+                            nhsNumber,
+                            ClientIdentifierValues.Address("3 Sheaf Street", "Leeds", postcode: "LS10 1HD")
+                        },
+                        "medway",
+                        new[]
+                        {
+                            new MatchSpecification
+                                {Identifiers = new CHC.Consent.Api.Client.Models.IIdentifierValueDto[] {nhsNumber}}
+                        }
+                    ),
+                    Formatting.Indented
+                )
+            );
+        }
+
+
+        [Fact]
+        public void UpdatesAnExistingPerson()
+        {
+            var existingPerson = new PersonIdentity(Random.Long());
+
+            var nhsNumberIdentifier = Identifiers.NhsNumber.Dto("444-333-111");
+            var bradfordHospitalNumberIdentifier = Identifiers.HospitalNumber.Dto("Added HospitalNumber");
+
+            var identityRepository = A.Fake<IIdentityRepository>();
+            A.CallTo(
+                    () => identityRepository.FindPersonBy(
+                        A<IEnumerable<PersonIdentifier>>.That.Matches(
+                            _ => _.All(i => i.Definition == Identifiers.NhsNumber))))
+                .Returns(existingPerson);
+
+            var authority = new Authority {SystemName = "shabba-ranks"};
+            A.CallTo(() => identityRepository.GetAuthority("shabba-ranks"))
+                .Returns(authority);
+
+
+            var controller = CreateController(identityRepository);
+
+            var result = controller.PutPerson(
+                new CHC.Consent.Api.Features.Identity.Dto.PersonSpecification
+                {
+                    Authority = "shabba-ranks",
+                    Identifiers =
+                    {
+                        nhsNumberIdentifier,
+                        bradfordHospitalNumberIdentifier
+                    },
+                    MatchSpecifications =
+                    {
+                        new CHC.Consent.Api.Features.Identity.Dto.MatchSpecification
+                        {
+                            Identifiers = new[] {nhsNumberIdentifier}
+                        }
+                    }
+                }
+            );
+
+            A.CallTo(
+                    () => identityRepository.UpdatePerson(
+                        existingPerson,
+                        A<IEnumerable<PersonIdentifier>>.That.IsSameSequenceAs(
+                            Identifier(nhsNumberIdentifier),
+                            Identifier(bradfordHospitalNumberIdentifier)),
+                        authority)
+                )
+                .MustHaveHappenedOnceExactly();
+            Assert.IsType<SeeOtherOjectActionResult>(result);
+        }
     }
 }

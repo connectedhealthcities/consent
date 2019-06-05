@@ -120,6 +120,16 @@ namespace CHC.Consent.Api.Client
         /// </param>
         Task<HttpOperationResponse<IList<IdentifierDefinition>>> GetIdentityStoreMetadataWithHttpMessagesAsync(Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
+        /// <param name='agencyName'>
+        /// </param>
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        Task<HttpOperationResponse<AgencyInfoDto>> GetAgencyIdentifiersAndFieldNamesMetadataWithHttpMessagesAsync(string agencyName, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
         /// </param>

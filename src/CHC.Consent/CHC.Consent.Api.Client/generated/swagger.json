@@ -346,6 +346,43 @@
         }
       }
     },
+    "/agency/{agencyName}": {
+      "get": {
+        "tags": [
+          "Meta"
+        ],
+        "operationId": "GetAgencyIdentifiersAndFieldNamesMetadata",
+        "consumes": [
+          "application/xml",
+          "application/xml",
+          "application/xml"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "agencyName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/AgencyInfoDto"
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/consent/meta": {
       "get": {
         "tags": [
@@ -959,6 +996,52 @@
       ],
       "x-ms-client-name": "StringDefinitionType",
       "x-ms-discriminator-value": "StringDefinitionType"
+    },
+    "AgencyInfoDto": {
+      "type": "object",
+      "properties": {
+        "agency": {
+          "$ref": "#/definitions/Agency"
+        },
+        "identifiers": {
+          "uniqueItems": false,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IdentifierDefinition"
+          }
+        }
+      }
+    },
+    "Agency": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/AgencyIdentity"
+        },
+        "name": {
+          "type": "string"
+        },
+        "systemName": {
+          "type": "string"
+        },
+        "fields": {
+          "uniqueItems": false,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "AgencyIdentity": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int64",
+          "type": "integer",
+          "readOnly": true
+        }
+      }
     },
     "StudySubjectValue": {
       "type": "object",

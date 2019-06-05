@@ -17,14 +17,13 @@ namespace CHC.Consent.Tests.Api.Controllers
                 Identifiers.Definitions.String("TestString"),
                 Identifiers.Definitions.Enum("TestEnum", "Yes", "No")
             };
-            var controller = new MetaController(new IdentifierDefinitionRegistry(definitions));
+            var controller = new MetaController(new IdentifierDefinitionRegistry(definitions), null);
 
             var result = controller.Get();
 
             result.Should().BeOfType<OkObjectResult>()
                 .Which
                 .Value.Should().BeEquivalentTo(definitions);
-
         }
     }
 }
