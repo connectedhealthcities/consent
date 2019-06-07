@@ -1,10 +1,13 @@
 using System;
+using CHC.Consent.Api.Features.Identity.Dto;
+using CHC.Consent.Common.Infrastructure.Definitions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace CHC.Consent.Api.Infrastructure
 {
@@ -29,9 +32,12 @@ namespace CHC.Consent.Api.Infrastructure
             ILogger<IIdentifierValueDtoJsonConverter> logger = null)
         {
             settings.TypeNameHandling = TypeNameHandling.Auto;
-            settings.SerializationBinder = new IdentifierTypeSerializationBinder(); 
+            settings.AddSwashbuckleNamesBinderFor<IDefinitionType>()
+                .AddSwashbuckleNamesBinderFor<MatchSpecification>();
             settings.Converters.Add(
                 new IIdentifierValueDtoJsonConverter(logger ?? NullLogger<IIdentifierValueDtoJsonConverter>.Instance));
+            
+            
             return settings;
         }
     }

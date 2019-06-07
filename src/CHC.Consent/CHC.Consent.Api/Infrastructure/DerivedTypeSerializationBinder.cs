@@ -2,36 +2,35 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using CHC.Consent.Common.Infrastructure.Definitions;
+using CHC.Consent.Common.Infrastructure;
 using Newtonsoft.Json.Serialization;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace CHC.Consent.Api.Infrastructure
 {
-    public class IdentifierTypeSerializationBinder : DefaultSerializationBinder
+    public class DerivedTypeSerializationBinder<TBaseType> : SerializationBinderDecorator
     {
         private readonly Lazy<IDictionary<string, Type>> typesByNameLazy;
         private readonly Lazy<IDictionary<Type, string>> namesByTypeLazy;
-        
+
         private IDictionary<string, Type> TypesByName => typesByNameLazy.Value;
         private IDictionary<Type, string> NamesByType => namesByTypeLazy.Value;
 
         /// <inheritdoc />
-        public IdentifierTypeSerializationBinder()
+        public DerivedTypeSerializationBinder(ISerializationBinder innerBinder) : base(innerBinder)
         {
             typesByNameLazy = new Lazy<IDictionary<string, Type>>(GetTypesByName);
-
             namesByTypeLazy =
                 new Lazy<IDictionary<Type, string>>(() => TypesByName.ToDictionary(_ => _.Value, _ => _.Key));
         }
 
-        private Dictionary<string, Type> GetTypesByName()
+        private static Dictionary<string, Type> GetTypesByName()
         {
-            var entryAssembly = GetType().Assembly;
-            return entryAssembly.GetReferencedAssemblies()
-                .Select(Assembly.Load)
-                .SelectMany(a => a.ExportedTypes.Where(t => typeof(IDefinitionType).IsAssignableFrom(t)))
-                .Where(t => t != typeof(IDefinitionType))
+            
+            var entryAssembly = AppDomain.CurrentDomain.GetAssemblies();
+            return entryAssembly
+                .SelectMany(a => a.GetTypes().Where(t => t.IsSubtypeOf(typeof(TBaseType))))
+                .Where(t => t.IsConcreteType())
                 .ToDictionary(t => t.FriendlyId());
         }
 

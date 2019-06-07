@@ -201,29 +201,32 @@ namespace CHC.Consent.Tests.DataImporter
     </person>
 </people>";
 
-            
+
             var xmlReader = CreateXmlReader(personXml);
             var specification = new XmlParser(
                     Identifiers.Registry.ConvertToClientDefinitions(),
-                KnownEvidence.Registry.ConvertToClientDefinitions())
+                    KnownEvidence.Registry.ConvertToClientDefinitions())
                 .GetPeople(xmlReader)
                 .Single();
             var person = specification.PersonSpecification;
 
 
             Assert.DoesNotContain(person.Identifiers, identifier => identifier == null);
-            Assert.Collection(person.Identifiers,
+            Assert.Collection(
+                person.Identifiers,
                 Matches.NhsNumber("4099999999"),
                 Matches.HospitalNumber("RAE9999999"),
                 Matches.Name("Jo", "Bloggs"),
                 Matches.DateOfBirth(16.June(1990)),
                 Matches.Address("22 Love Street", "Holmestown", "Bradtopia", "West Yorkshire", postcode: "BD92 4FX")
-                );
-            
-            Assert.Collection(person.MatchSpecifications,
-                m => Assert.Collection(m.Identifiers, Matches.NhsNumber("4099999999")),
-                m => Assert.Collection(m.Identifiers, Matches.HospitalNumber("RAE9999999"))
             );
+
+            person.MatchSpecifications
+                .Should()
+                .BeEquivalentTo(
+                    new IdentifierMatchSpecification(Identifiers.Definitions.NhsNumber.Value("4099999999")),
+                    new IdentifierMatchSpecification(Identifiers.Definitions.HospitalNumber.Value("RAE9999999"))
+                );
         }
 
 
@@ -273,7 +276,83 @@ namespace CHC.Consent.Tests.DataImporter
             Assert.NotEqual(0, exception.LineNumber);
         }
 
-        [Fact()]
+        [Fact]
+        public void CorrectlyParsedConsentedMatchSpecification()
+        {
+            ParseMatchSpecification("<consented study-id=\"123\" />")
+                .Should()
+                .BeEquivalentTo(new ConsentedForStudyMatchSpecification(123));
+        }
+
+        [Fact]
+        public void ThrowsExceptionForConsentedMatchSpecificationWithoutStudyId()
+        {
+            Action parse = () => ParseMatchSpecification("<consented />");
+            parse.Should()
+                .ThrowExactly<XmlParseException>()
+                .WithMessage("*study-id*");
+        }
+
+        [Fact]
+        public void ThrowsExceptionForContentedMatchSpecificationWithNonNumericStudyId()
+        {
+            Action parse = () => ParseMatchSpecification("<consented study-id=\"abc\" />");
+
+            parse.Should().ThrowExactly<XmlParseException>()
+                .WithMessage("*abc*");
+        }
+
+        [Fact]
+        public void CorrectlyParsesPersonAgencyIdMatchSpecification()
+        {
+            ParseMatchSpecification("<agency name=\"test\" id=\"123-456\" />")
+                .Should()
+                .BeEquivalentTo(new PersonAgencyIdMatchSpecification("test","123-456"));
+        }
+
+        [Fact]
+        public void ThrowsExceptionForPersonAgencyIdMatchSpecificationWithoutNameAttribute()
+        {
+            Action parse = () => ParseMatchSpecification("<agency id=\"123-214\" />");
+
+            parse.Should().ThrowExactly<XmlParseException>()
+                .WithMessage("*agency*");
+        }
+        
+        [Fact]
+        public void ThrowsExceptionForPersonAgencyIdMatchSpecificationWithoutIdAttribute()
+        {
+            Action parse = () => ParseMatchSpecification("<agency name=\"test\" />");
+
+            parse.Should().ThrowExactly<XmlParseException>()
+                .WithMessage("*id*");
+        }
+
+        [Fact]
+        public void CorrectlyParsesCompositeMatchSpecification()
+        {
+            CreateXmlParser(Identifiers.Registry)
+                .ParseMatchSpecification(
+            new XElement("match", 
+                new XElement("identifier", new XAttribute("type", "nhs-number"), "123"),
+                new XElement("consented", new XAttribute("study-id", 456L))
+            )
+                    ).Should().BeEquivalentTo(
+                    new CompositeMatchSpecification(
+                        new IdentifierMatchSpecification(Identifiers.Definitions.NhsNumber.Value("123")),
+                        new ConsentedForStudyMatchSpecification(456)
+                    )
+                );
+
+        }
+        
+        private static MatchSpecification ParseMatchSpecification(string xml)
+        {
+            return CreateXmlParser(Identifiers.Registry)
+                .ParseMatchSpecification(CreateXDocumentWithLineInfo(xml));
+        }
+
+        [Fact]
         public void CorrectlyParsesFullConsent()
         {
             var consent = ParseConsent(
@@ -294,11 +373,13 @@ namespace CHC.Consent.Tests.DataImporter
                 KnownEvidence.Registry
             );
 
-            Assert.Collection(
-                consent.GivenBy,
-                m => Assert.Collection(m.Identifiers, Matches.NhsNumber("8877881")),
-                m => Assert.Collection(m.Identifiers, Matches.HospitalNumber("1122112"))
-            );
+            consent.GivenBy
+                .Should()
+                .BeEquivalentTo(
+                    new IdentifierMatchSpecification(Identifiers.Definitions.NhsNumber.Value("8877881")),
+                    new IdentifierMatchSpecification(Identifiers.Definitions.HospitalNumber.Value("1122112"))
+                );
+            
             
             Assert.Collection(
                 consent.Evidence,

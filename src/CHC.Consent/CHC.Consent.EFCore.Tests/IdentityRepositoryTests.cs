@@ -383,9 +383,13 @@ namespace CHC.Consent.EFCore.Tests
                 {Person = personOneAgain, Study = study, SubjectIdentifier = Random.String()};
             var consent = new ConsentEntity
                 {DateProvided = DateTime.Today, GivenBy = personOneAgain, StudySubject = subject};
-            createContext.AddRange(consent);
+            createContext.AddRange(study, subject, consent);
             createContext.SaveChanges();
 
+            repository.FindPersonBy(
+                new PersonIdentifierSpecification(Identifiers.NhsNumber(personOneNhsNumber))
+            )?.Id.Should().Be(personOne.Id);
+            
             repository.FindPersonBy(
                 new CompositePersonSpecification(
                     new PersonIdentifierSpecification(Identifiers.NhsNumber(personOneNhsNumber)),

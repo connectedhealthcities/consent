@@ -718,16 +718,102 @@
       }
     },
     "MatchSpecification": {
+      "required": [
+        "$type"
+      ],
       "type": "object",
       "properties": {
-        "identifiers": {
-          "uniqueItems": false,
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/IIdentifierValueDto"
+        "$type": {
+          "enum": [
+            "identifierMatchSpecification",
+            "personAgencyIdMatchSpecification",
+            "consentedForStudyMatchSpecification",
+            "compositeMatchSpecification"
+          ],
+          "type": "string"
+        }
+      },
+      "discriminator": "$type"
+    },
+    "IdentifierMatchSpecification": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/MatchSpecification"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "identifiers": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IIdentifierValueDto"
+              }
+            }
           }
         }
-      }
+      ],
+      "x-ms-client-name": "IdentifierMatchSpecification",
+      "x-ms-discriminator-value": "IdentifierMatchSpecification"
+    },
+    "PersonAgencyIdMatchSpecification": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/MatchSpecification"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "agency": {
+              "type": "string"
+            },
+            "personAgencyId": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "PersonAgencyIdMatchSpecification",
+      "x-ms-discriminator-value": "PersonAgencyIdMatchSpecification"
+    },
+    "ConsentedForStudyMatchSpecification": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/MatchSpecification"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "studyId": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "ConsentedForStudyMatchSpecification",
+      "x-ms-discriminator-value": "ConsentedForStudyMatchSpecification"
+    },
+    "CompositeMatchSpecification": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/MatchSpecification"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "specifications": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MatchSpecification"
+              }
+            }
+          }
+        }
+      ],
+      "x-ms-client-name": "CompositeMatchSpecification",
+      "x-ms-discriminator-value": "CompositeMatchSpecification"
     },
     "SearchResult": {
       "required": [

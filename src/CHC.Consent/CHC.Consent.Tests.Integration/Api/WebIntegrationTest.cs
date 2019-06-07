@@ -33,9 +33,8 @@ namespace CHC.Consent.Tests.Api.Controllers
                 ctx =>
                 {
                     ctx.AddRange(
-                        Identifiers.Registry.Cast<Common.Identity.Identifiers.IdentifierDefinition>().Select(
-                            _ =>
-                                new IdentifierDefinitionEntity(_.Name, _.ToDefinition()))
+                        Identifiers.Registry.Cast<Common.Identity.Identifiers.IdentifierDefinition>()
+                            .Select(_ => new IdentifierDefinitionEntity(_.Name, _.ToDefinition()))
                     );
                     return 0;
                 }

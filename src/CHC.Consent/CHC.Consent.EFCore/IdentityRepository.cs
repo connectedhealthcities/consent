@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Xml.Linq;
 using CHC.Consent.Common;
+using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
@@ -120,6 +121,13 @@ namespace CHC.Consent.EFCore
 
             return id;
         }
+
+        /// <inheritdoc />
+        public Study GetStudy(StudyIdentity studyId) =>
+            context.Studies
+                .Where(_ => _.Id == studyId.Id)
+                .Select(_ => new Study(new StudyIdentity(_.Id), _.Name))
+                .SingleOrDefault();
 
         private Expression<Func<PersonEntity, bool>> BuildExpressionFromSpecification(
             IPersonSpecification specification)

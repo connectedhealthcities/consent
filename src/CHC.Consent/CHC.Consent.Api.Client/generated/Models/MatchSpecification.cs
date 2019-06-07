@@ -4,9 +4,6 @@
 
 namespace CHC.Consent.Api.Client.Models
 {
-    using Newtonsoft.Json;
-    using System.Collections;
-    using System.Collections.Generic;
     using System.Linq;
 
     public partial class MatchSpecification
@@ -19,24 +16,11 @@ namespace CHC.Consent.Api.Client.Models
             CustomInit();
         }
 
-        /// <summary>
-        /// Initializes a new instance of the MatchSpecification class.
-        /// </summary>
-        public MatchSpecification(IList<IIdentifierValueDto> identifiers = default(IList<IIdentifierValueDto>))
-        {
-            Identifiers = identifiers;
-            CustomInit();
-        }
 
         /// <summary>
         /// An initialization method that performs custom operations like setting defaults
         /// </summary>
         partial void CustomInit();
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "identifiers")]
-        public IList<IIdentifierValueDto> Identifiers { get; set; }
 
     }
 }

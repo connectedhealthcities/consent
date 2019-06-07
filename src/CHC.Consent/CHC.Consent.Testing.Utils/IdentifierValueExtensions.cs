@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using CHC.Consent.Api.Client.Models;
-using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure;
-using IIdentifierValueDto = CHC.Consent.Api.Infrastructure.IIdentifierValueDto;
+using IdentifierDefinition = CHC.Consent.Common.Identity.Identifiers.IdentifierDefinition;
+using IIdentifierValueDto = CHC.Consent.Api.Client.Models.IIdentifierValueDto;
 
 namespace CHC.Consent.Testing.Utils
 {
@@ -25,29 +24,29 @@ namespace CHC.Consent.Testing.Utils
             }
         }*/
 
-        public static Api.Client.Models.IdentifierValueDtoString Value(
-            this Common.Identity.Identifiers.IdentifierDefinition definition,
+        public static IdentifierValueDtoString Value(
+            this IdentifierDefinition definition,
             string value) =>
             new IdentifierValueDtoString(definition.SystemName, value);
         
-        public static Api.Client.Models.IdentifierValueDtoDateTime Value(
-            this Common.Identity.Identifiers.IdentifierDefinition definition,
+        public static IdentifierValueDtoDateTime Value(
+            this IdentifierDefinition definition,
             DateTime value) =>
             new IdentifierValueDtoDateTime(definition.SystemName, value);
         
-        public static Api.Client.Models.IdentifierValueDtoInt64 Value(
-            this Common.Identity.Identifiers.IdentifierDefinition definition,
+        public static IdentifierValueDtoInt64 Value(
+            this IdentifierDefinition definition,
             long value) =>
             new IdentifierValueDtoInt64(definition.SystemName, value);
         
-        public static Api.Client.Models.IdentifierValueDtoIIdentifierValueDto Value(
-            this Common.Identity.Identifiers.IdentifierDefinition definition,
-            IEnumerable<Api.Client.Models.IIdentifierValueDto> value) =>
+        public static IdentifierValueDtoIIdentifierValueDto Value(
+            this IdentifierDefinition definition,
+            IEnumerable<IIdentifierValueDto> value) =>
             new IdentifierValueDtoIIdentifierValueDto(definition.SystemName, value.ToArray()); 
         
 
-        public static IIdentifierValueDto Dto<T>(
-            this Common.Identity.Identifiers.IdentifierDefinition definition,
+        public static Api.Infrastructure.IIdentifierValueDto Dto<T>(
+            this IdentifierDefinition definition,
             T value)
             => new IdentifierValueDto<T>(definition.SystemName, value);
     }

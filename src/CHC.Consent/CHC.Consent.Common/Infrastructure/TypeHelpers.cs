@@ -13,5 +13,10 @@ namespace CHC.Consent.Common.Infrastructure
         {
             return type.IsSubtypeOf(typeof(TBase));
         }
+
+        public static bool IsConcreteType(this Type type)
+        {
+            return !type.IsAbstract && !type.IsInterface && !type.IsGenericTypeDefinition;
+        }
     }
 }

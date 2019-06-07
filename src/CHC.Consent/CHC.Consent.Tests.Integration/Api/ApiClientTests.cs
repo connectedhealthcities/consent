@@ -6,12 +6,15 @@ using CHC.Consent.Api.Client;
 using CHC.Consent.Api.Client.Models;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.EFCore;
+using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.Identity;
 using CHC.Consent.Testing.Utils;
 using CHC.Consent.Tests.Api.Controllers;
 using FluentAssertions;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Rest;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -41,6 +44,44 @@ namespace CHC.Consent.Tests.Integration.Api
             );
         }
 
+        [Fact]
+        public void CanSendDifferentMatchesToServer()
+        {
+            var study = AddData(c => c.Add(new StudyEntity { Name = Random.String()}).Entity);
+            var agency = AddData(c => c.Add(new AgencyEntity(Random.String(), Random.String())).Entity);
+            
+            var (name, _, _) = Name("test", Random.String());
+            var nhsNumber = NhsNumber(Random.String());
+
+            try
+            {
+                ApiClient.PutPerson(
+                        new PersonSpecification(
+                            new List<IIdentifierValueDto>
+                            {
+                                name,
+                                nhsNumber
+                            },
+                            "medway",
+                            new List<MatchSpecification>
+                            {
+                                new ConsentedForStudyMatchSpecification(study.Id),
+                                new PersonAgencyIdMatchSpecification(agency.SystemName, "terrance"),
+                                new IdentifierMatchSpecification(nhsNumber)
+                            }
+                        )
+                    )
+                    .Should().BeOfType<PersonCreatedResult>()
+                    .Which.PersonId.Should().NotBe(0);
+            }
+            catch (HttpOperationException e)
+            {
+                throw new Exception(
+                    e.Response.Content,
+                    e);
+            }
+        }
+
         [Theory, MemberData(nameof(IdentityTestData))]
         public void CanSendIdentitiesToServer(IIdentifierValueDto identifier, Action<IIdentifierValueDto> checkResult)
         {
@@ -52,7 +93,7 @@ namespace CHC.Consent.Tests.Integration.Api
                             "medway",
                             new List<MatchSpecification>
                             {
-                                new MatchSpecification {Identifiers = new List<IIdentifierValueDto> {identifier}}
+                                new IdentifierMatchSpecification {Identifiers = new List<IIdentifierValueDto> {identifier}}
                             }))
                 )
                 .Should().NotThrow();
@@ -192,7 +233,7 @@ namespace CHC.Consent.Tests.Integration.Api
                     "medway",
                     new List<MatchSpecification>
                     {
-                        new MatchSpecification {Identifiers = new List<IIdentifierValueDto> {nhsNumber}}
+                        new IdentifierMatchSpecification {Identifiers = new List<IIdentifierValueDto> {nhsNumber}}
                     }));
 
             Assert.NotNull(response);
@@ -229,7 +270,7 @@ namespace CHC.Consent.Tests.Integration.Api
                     "medway",
                     new[]
                     {
-                        new MatchSpecification {Identifiers = new IIdentifierValueDto[] {nhsNumber}},
+                        new IdentifierMatchSpecification {Identifiers = new IIdentifierValueDto[] {nhsNumber}},
                     }
                 )
             );

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using CHC.Consent.Api.Client.Models;
 using CHC.Consent.Api.Features.Identity;
+using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
@@ -17,7 +17,9 @@ using Agency = CHC.Consent.Common.Identity.Agency;
 using AgencyPersonDto = CHC.Consent.Api.Features.Identity.AgencyPersonDto;
 using IdentifierDefinition = CHC.Consent.Common.Identity.Identifiers.IdentifierDefinition;
 using IIdentifierValueDto = CHC.Consent.Api.Infrastructure.IIdentifierValueDto;
+using MatchSpecification = CHC.Consent.Api.Client.Models.MatchSpecification;
 using PersonIdentity = CHC.Consent.Common.PersonIdentity;
+using PersonSpecification = CHC.Consent.Api.Client.Models.PersonSpecification;
 
 namespace CHC.Consent.Tests.Api.Controllers
 {
@@ -121,10 +123,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                     },
                     MatchSpecifications =
                     {
-                        new CHC.Consent.Api.Features.Identity.Dto.MatchSpecification
-                        {
-                            Identifiers = new[] {nhsNumberIdentifier}
-                        }
+                        new IdentifierMatchSpecification{Identifiers = new[] {nhsNumberIdentifier}}
                     }
                 }
             );
@@ -218,8 +217,8 @@ namespace CHC.Consent.Tests.Api.Controllers
                         "medway",
                         new[]
                         {
-                            new MatchSpecification
-                                {Identifiers = new CHC.Consent.Api.Client.Models.IIdentifierValueDto[] {nhsNumber}}
+                            new CHC.Consent.Api.Client.Models.IdentifierMatchSpecification(
+                                new CHC.Consent.Api.Client.Models.IIdentifierValueDto[] {nhsNumber})
                         }
                     ),
                     Formatting.Indented
@@ -262,10 +261,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                     },
                     MatchSpecifications =
                     {
-                        new CHC.Consent.Api.Features.Identity.Dto.MatchSpecification
-                        {
-                            Identifiers = new[] {nhsNumberIdentifier}
-                        }
+                        new IdentifierMatchSpecification{Identifiers = new[] {nhsNumberIdentifier}}
                     }
                 }
             );

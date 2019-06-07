@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Identity.Identifiers;
+using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.Common.Infrastructure.Definitions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -50,6 +53,15 @@ namespace CHC.Consent.Api.Infrastructure.Web
             gen.SchemaFilter<SwaggerSchemaSubtypeFilter<IDefinition>>(
                 definitionTypes,
                 definitionTypes.Select(_ => _.FriendlyId()));
+
+            var matchSpecificationTypes = Assembly.GetEntryAssembly().Modules
+                .SelectMany(m => m.GetTypes())
+                .Where(_ => _.IsSubtypeOf(typeof(MatchSpecification)) && _.IsConcreteType())
+                .ToArray();
+
+            gen.SchemaFilter<SwaggerSchemaSubtypeFilter<MatchSpecification>>(
+                matchSpecificationTypes,
+                matchSpecificationTypes.Select(_ => _.Name.ToLowerCamel()));
         }
     }
 

@@ -218,9 +218,46 @@ namespace CHC.Consent.DataImporter.Features.ImportData
 
         }
 
-        private MatchSpecification ParseMatchSpecification(XContainer node)
+        public MatchSpecification ParseMatchSpecification(XContainer node)
         {
-            return new MatchSpecification(node.Elements("identifier").Select(ParseIdentifier).ToList());
+            var specifications = ParseMatchSpecifications(node).ToArray();
+            return specifications.Length == 1 
+                    ? specifications.First()
+                    : new CompositeMatchSpecification(specifications);
+        }
+
+        private IEnumerable<MatchSpecification> ParseMatchSpecifications(XContainer node)
+        {
+            foreach (var element in node.Elements())
+            {
+                if (element.Name == "identifier")
+                    yield return new IdentifierMatchSpecification(new [] { ParseIdentifier(element) });
+                else if (element.Name == "agency")
+                {
+                    var agency = (string) element.Attribute("name");
+                    var personAgencyId = (string) element.Attribute("id");
+                    
+                    if(string.IsNullOrWhiteSpace(agency))
+                       throw new XmlParseException(element, "agency match specification has no, or empty, agency attribute");
+                    if(string.IsNullOrWhiteSpace(personAgencyId))
+                       throw new XmlParseException(element, "agency match specification has no, or empty, id attribute");
+                    
+                    yield return new PersonAgencyIdMatchSpecification(
+                        agency,
+                        personAgencyId
+                    );
+                }
+                else if (element.Name == "consented")
+                {
+                    var studyIdAttribute = element.Attribute("study-id");
+                    if (studyIdAttribute == null)
+                        throw new XmlParseException(element, "consented match specification has no study-id attribute");
+                    if(!long.TryParse(studyIdAttribute.Value, out var studyId))
+                        throw new XmlParseException(element, $"'{studyIdAttribute}' is not a valid study id");
+                    
+                    yield return new ConsentedForStudyMatchSpecification(studyId);
+                }
+            }
         }
 
 

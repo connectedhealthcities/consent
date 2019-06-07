@@ -65,8 +65,11 @@ namespace CHC.Consent.Api.Features.Identity
 
         private PersonIdentity FindMatchingPerson(IEnumerable<MatchSpecification> match)
         {
-            return IdentityRepository.FindPerson(
-                match.Select(_ => IdentifierDtoMarshaller.ConvertToIdentifiers(_.Identifiers)));
+            var conversionContext = new MatchSpecificationConversionContext(IdentifierDtoMarshaller);
+            PersonIdentity FindPerson(MatchSpecification spec) =>
+                IdentityRepository.FindPersonBy(spec.ToPersonSpecification(conversionContext));
+
+            return match.Select(FindPerson).FirstOrDefault();
         }
 
         [HttpPut]
@@ -82,9 +85,7 @@ namespace CHC.Consent.Api.Features.Identity
                     nameof(specification.Authority),
                     $"Authority '{specification.Authority}' does not exist");
             ValidateIdentifierTypes(specification.Identifiers, nameof(specification.Identifiers));
-            ValidateIdentifierTypes(
-                specification.MatchSpecifications.SelectMany(_ => _.Identifiers),
-                nameof(specification.MatchSpecifications));
+            ValidateSpecifications(specification.MatchSpecifications, nameof(specification.MatchSpecifications));
             if (!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
             //identifierChecker.EnsureHasNoInvalidDuplicates(specification.Identifiers);
 
@@ -106,6 +107,20 @@ namespace CHC.Consent.Api.Features.Identity
                     "GetPerson",
                     routeValues: new {id = person.Id},
                     result: new PersonCreatedResult {PersonId = person});
+            }
+        }
+
+        private void ValidateSpecifications(IEnumerable<MatchSpecification> matchSpecifications, string modeStateKey)
+        {
+            var context = new MatchSpecificationValidationContext(
+                IdentityRepository,
+                registry,
+                ModelState,
+                modeStateKey);
+
+            foreach (var specification in matchSpecifications)
+            {
+                specification.Validate(context);
             }
         }
 

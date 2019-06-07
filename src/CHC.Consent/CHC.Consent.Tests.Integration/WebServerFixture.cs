@@ -43,7 +43,7 @@ namespace CHC.Consent.Tests
             /// <inheritdoc />
             protected override void ConfigureDatabaseOptions(IServiceProvider provider, DbContextOptionsBuilder options)
             {
-                options.ConfigureWarnings(_ => _.Ignore(InMemoryEventId.TransactionIgnoredWarning));
+                options.ConfigureWarnings(_ => _.Default(WarningBehavior.Ignore));
                 options.EnableSensitiveDataLogging();
 
 
