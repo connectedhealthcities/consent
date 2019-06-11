@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml;
 using CHC.Consent.Api.Client.Models;
+using CHC.Consent.DataImporter.Features;
 using CHC.Consent.DataImporter.Features.ExportData;
 using CHC.Consent.DataImporter.Features.ImportData;
 using McMaster.Extensions.CommandLineUtils;
@@ -19,7 +20,7 @@ using Serilog.Sinks.SystemConsole.Themes;
 
 namespace CHC.Consent.DataImporter
 {
-    [Command("chc-consent"), Subcommand(typeof(ImportCommand), typeof(ExportCommand)), HelpOption]
+    [Command("chc-consent"), Subcommand(typeof(ImportCommand), typeof(ExportCommand), typeof(ExportSubjectsCommand)), HelpOption]
     public class Program
     {
         public static Task<int> Main(string[] args)

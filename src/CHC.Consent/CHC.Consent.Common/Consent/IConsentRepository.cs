@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CHC.Consent.Common.Infrastructure;
 
 namespace CHC.Consent.Common.Consent
@@ -18,5 +19,7 @@ namespace CHC.Consent.Common.Consent
         StudySubject[] GetConsentedSubjects(StudyIdentity studyIdentity);
         IEnumerable<Consent> GetActiveConsentsForSubject(
             StudyIdentity studyId, string subjectIdentifier, IUserProvider user);
+
+        (StudySubject studySubject, DateTime? lastWithDrawn)[] GetSubjectsWithLastWithdrawalDate(StudyIdentity studyIdentity);
     }
 }

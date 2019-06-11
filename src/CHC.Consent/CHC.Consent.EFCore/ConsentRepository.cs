@@ -172,7 +172,29 @@ namespace CHC.Consent.EFCore
                         _.GivenBy,
                         evidences.TryGetValue(_.Id, out var evidence) ? evidence : Array.Empty<Evidence>()));
         }
-        
+
+        /// <inheritdoc />
+        public (StudySubject studySubject, DateTime? lastWithDrawn)[] GetSubjectsWithLastWithdrawalDate(StudyIdentity studyIdentity)
+        {
+            return
+                (from subject in StudySubjects
+                    where subject.Study.Id == studyIdentity.Id &&
+                          Consents.Any(_ => _.StudySubject == subject)
+                    select new
+                    {
+                        subject.SubjectIdentifier,
+                        PersonId = subject.Person.Id,
+                        MostRecentWithdrawal = Consents.Where(c => c.StudySubject == subject)
+                            .OrderByDescending(c => c.DateProvided)
+                            .Select(_ => _.DateWithdrawn).FirstOrDefault()
+                    }
+                ).AsEnumerable()
+                .Select(
+                    _ => (new StudySubject(studyIdentity, _.SubjectIdentifier, new PersonIdentity(_.PersonId)),
+                        _.MostRecentWithdrawal))
+                .ToArray();
+        }
+
         public StudySubject AddStudySubject(StudySubject studySubject)
         {
             var study = Studies.Get(studySubject.StudyId.Id);

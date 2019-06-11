@@ -33,6 +33,7 @@ namespace CHC.Consent.EFCore.Tests
         private readonly PersonIdentity consentedPersonId;
         private readonly PersonIdentity unconsentedPersonId;
         private readonly PersonIdentity withdrawnPersonId;
+        private DateTime withdrawnSubjectWithdrawnDate;
 
         /// <inheritdoc />
         public ConsentRepositoryTests(ITestOutputHelper outputHelper, DatabaseFixture fixture) : base(outputHelper, fixture)
@@ -70,11 +71,12 @@ namespace CHC.Consent.EFCore.Tests
             var withdrawnConsent = createContext.Add(new PersonEntity()).Entity;
             var withdrawnSubject = createContext.Add(
                 new StudySubjectEntity {Study = study, Person = withdrawnConsent, SubjectIdentifier = "Withdrawn"}).Entity;
+            withdrawnSubjectWithdrawnDate = 5.January(2018);
             createContext.Add(new ConsentEntity
             {
                 StudySubject = withdrawnSubject,
                 DateProvided = 1.December(2017),
-                DateWithdrawn = 5.January(2018),
+                DateWithdrawn = withdrawnSubjectWithdrawnDate,
                 GivenBy = withdrawnConsent
             });
             
@@ -306,6 +308,20 @@ namespace CHC.Consent.EFCore.Tests
             repository.GetConsentedSubjects(studyId)
                 .Should()
                 .OnlyContain(_ => _.StudyId == studyId && _.PersonId == consentedPersonId && _.SubjectIdentifier == "Consented");
+        }
+
+        [Fact]
+        public void GetsLatestWithdrawnDateForStudySubjects()
+        {
+            repository.GetSubjectsWithLastWithdrawalDate(studyId)
+                .Should()
+                .HaveCount(2)
+                .And
+                .ContainSingle(_ => _.studySubject.PersonId.Id == consentedPersonId.Id && _.lastWithDrawn == null)
+                .And
+                .ContainSingle(
+                    _ => _.studySubject.PersonId == withdrawnPersonId.Id &&
+                         _.lastWithDrawn == withdrawnSubjectWithdrawnDate);
         }
 
         private static void AssertStudySubject(StudySubjectEntity expected, StudySubject actual)

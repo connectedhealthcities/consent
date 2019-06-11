@@ -72,6 +72,32 @@ namespace CHC.Consent.Api.Client
             /// </param>
             /// <param name='studyId'>
             /// </param>
+            public static IList<SubjectWithWithdrawalDate> GetSubjectsForStudy(this IApi operations, long studyId)
+            {
+                return operations.GetSubjectsForStudyAsync(studyId).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='studyId'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<IList<SubjectWithWithdrawalDate>> GetSubjectsForStudyAsync(this IApi operations, long studyId, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.GetSubjectsForStudyWithHttpMessagesAsync(studyId, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='studyId'>
+            /// </param>
             /// <param name='subjectIdentifier'>
             /// </param>
             public static void GetConsentedStudySubject(this IApi operations, long studyId, string subjectIdentifier)

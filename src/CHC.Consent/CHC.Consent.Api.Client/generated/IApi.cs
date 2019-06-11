@@ -60,6 +60,16 @@ namespace CHC.Consent.Api.Client
 
         /// <param name='studyId'>
         /// </param>
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        Task<HttpOperationResponse<IList<SubjectWithWithdrawalDate>>> GetSubjectsForStudyWithHttpMessagesAsync(long studyId, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <param name='studyId'>
+        /// </param>
         /// <param name='subjectIdentifier'>
         /// </param>
         /// <param name='customHeaders'>

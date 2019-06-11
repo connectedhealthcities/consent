@@ -105,17 +105,35 @@ namespace CHC.Consent.Api.Features.Consent
         [ProducesResponseType((int) HttpStatusCode.NotFound)]
         public IActionResult GetConsentedSubjectsForStudy([BindRequired]long studyId)
         {
+            var (studyIdentity, actionResult) = GetStudy(studyId);
+            if (actionResult != null) return actionResult;
+
+            return Ok(consentRepository.GetConsentedSubjects(studyIdentity));
+        }
+
+        private (StudyIdentity studyIdentity, IActionResult actionResult) GetStudy(long studyId)
+        {
             var studyIdentity = consentRepository.GetStudy(studyId);
-            if (studyIdentity == null)
-            {
-                Logger.LogWarning("Study#{studyId} not found", studyId);
-                return NotFound();
-            }
-            
-            return Ok(
-                consentRepository.GetConsentedSubjects(studyIdentity)
-                    .Select(_ => _)
-                    .ToArray());
+            if (studyIdentity != null) return (studyIdentity, null);
+            Logger.LogWarning("Study#{studyId} not found", studyId);
+            return (studyIdentity, NotFound());
+
+        }
+
+        [HttpGet("{studyId}/all", Name = "GetSubjectsForStudy")]
+        [ProducesResponseTypeAttribute(HttpStatusCode.OK, typeof(SubjectWithWithdrawalDate[]))]
+        public IActionResult GetSubjectsForStudy([BindRequired, FromRoute] long studyId)
+        {
+            var (studyIdentity, actionResult) = GetStudy(studyId);
+            if (actionResult != null) return actionResult;
+
+            return
+                Ok(
+                    consentRepository.GetSubjectsWithLastWithdrawalDate(studyIdentity)
+                        .Select(_ => 
+                            new SubjectWithWithdrawalDate(_.studySubject.SubjectIdentifier, _.lastWithDrawn)
+                        )
+                );
         }
 
         [HttpGet("{studyId}/{subjectIdentifier}", Name = "GetConsentedStudySubject")]
@@ -125,6 +143,19 @@ namespace CHC.Consent.Api.Features.Consent
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             throw new NotImplementedException();
+        }
+
+        public class SubjectWithWithdrawalDate
+        {
+            public string SubjectIdentifier { get;  }
+            public DateTime? LastWithdrawalDate { get; }
+
+            /// <inheritdoc />
+            public SubjectWithWithdrawalDate(string subjectIdentifier, DateTime? lastWithdrawalDate)
+            {
+                SubjectIdentifier = subjectIdentifier;
+                LastWithdrawalDate = lastWithdrawalDate;
+            }
         }
     }
 }
