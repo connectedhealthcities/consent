@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Mail;
 using System.Reflection;
 using CHC.Consent.Api.Infrastructure;
 using CHC.Consent.EFCore;
@@ -7,9 +8,11 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace CHC.Consent.Api
 {
@@ -32,6 +35,10 @@ namespace CHC.Consent.Api
         {
             var configuration = context.Configuration;
             var environment = context.HostingEnvironment;
+
+            services.Configure<SmtpEmailSenderOptions>(configuration.GetSection("Smtp"));
+            services.AddTransient<IEmailSender, SmtpEmailSender>();
+            services.AddSingleton<IPostConfigureOptions<SmtpEmailSenderOptions>, FluentEmailConfiguration>();
 
             services.AddIdentity<ConsentUser, ConsentRole>()
                 .AddEntityFrameworkStores<ConsentContext>()
@@ -82,6 +89,16 @@ namespace CHC.Consent.Api
                             options.RequireHttpsMetadata = false;
                         options.ApiName = "api";
                     });
+        }
+        
+        public class FluentEmailConfiguration : IPostConfigureOptions<SmtpEmailSenderOptions>
+        {
+            /// <inheritdoc />
+            public void PostConfigure(string name, SmtpEmailSenderOptions options)
+            {
+                FluentEmail.Core.Email.DefaultSender =
+                    new FluentEmail.Smtp.SmtpSender(() => new SmtpClient(options.Host, options.Port));
+            }
         }
     }
 }

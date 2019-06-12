@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using AspNetCore.RouteAnalyzer;
 using CHC.Consent.Api.Features.Consent;
 using CHC.Consent.Api.Features.Identity.Dto;
 using CHC.Consent.Api.Infrastructure;
@@ -128,6 +129,8 @@ namespace CHC.Consent.Api
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            app.UseStaticFiles();
+            
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -139,8 +142,10 @@ namespace CHC.Consent.Api
                 app.UseIdentityServer();
             }
 
-            app.UseStaticFiles();
-            app.UseMvc(r => r.MapRoute("default", "{controller=home}/{action=index}"));
+            app.UseMvc(r =>
+            {
+                r.MapRoute("default", "{controller=home}/{action=index}");
+            });
             app.UseSwagger();
             app.UseSwaggerUI(ui =>
             {

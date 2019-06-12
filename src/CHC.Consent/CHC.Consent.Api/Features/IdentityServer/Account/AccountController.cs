@@ -9,6 +9,8 @@ using System.Linq;
 using System.Security.Claims;
 using System.Security.Principal;
 using System.Threading.Tasks;
+using CHC.Consent.Api.Infrastructure;
+using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.EFCore.Security;
 using IdentityModel;
 using IdentityServer4.Events;
@@ -18,9 +20,13 @@ using IdentityServer4.Services;
 using IdentityServer4.Stores;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Sprache;
 
 namespace CHC.Consent.Api.Features.IdentityServer
 {
@@ -260,6 +266,63 @@ namespace CHC.Consent.Api.Features.IdentityServer
             }
 
             return View("LoggedOut", vm);
+        }
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View(new ForgotPasswordModel());
+        }
+
+        [HttpPost, ValidateAntiForgeryToken, ActionName(nameof(ForgotPassword))]
+        public async Task<IActionResult> ForgotPasswordPost(
+            [FromForm] ForgotPasswordModel model,
+            [FromServices] IHostingEnvironment environment,
+            [FromServices] ILogger<AccountController> logger,
+            [FromServices] IOptions<SmtpEmailSenderOptions> emailOptions)
+        {
+            if (!ModelState.IsValid) return View(new ForgotPasswordModel());
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user != null)
+            {
+                if (!_userManager.Options.SignIn.RequireConfirmedEmail || user.EmailConfirmed)
+                {
+                    var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    var resetUrl = Url.Action(nameof(ResetPassword), null, new {token = resetToken}, Request.Scheme);
+                    var templatePath = environment.ContentRootFileProvider.GetFileInfo("Features/IdentityServer/Account/ForgotPasswordEmail.cshtml").PhysicalPath;
+                    await FluentEmail.Core.Email.From(emailOptions.Value.From)
+                        .To(user.Email)
+                        .UsingTemplateFromFile(
+                            templatePath,
+                            new ForgotPasswordEmailModel {User = User, Token = resetToken, Url = resetUrl},
+                            isHtml: true)
+                        .Subject("CHC Consent - Your Password Reset Request")
+                        .SendAsync();
+                }
+                else
+                {
+                    logger.LogWarning("User has not confirm email address email={0}", user.Email);
+                }
+            }
+            else
+            {
+                logger.LogWarning("Unknown user requested password reset email={0} ip={1}", model.Email, HttpContext.Connection.RemoteIpAddress);
+            }
+
+            return RedirectToAction(nameof(ForgotPasswordComplete));
+        }
+
+        [HttpGet]
+        public IActionResult ForgotPasswordComplete()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string token)
+        {
+            return new NotImplementedResult();
         }
 
         /*****************************************/
