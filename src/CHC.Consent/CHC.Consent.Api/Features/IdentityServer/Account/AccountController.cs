@@ -289,7 +289,7 @@ namespace CHC.Consent.Api.Features.IdentityServer
                 if (!_userManager.Options.SignIn.RequireConfirmedEmail || user.EmailConfirmed)
                 {
                     var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
-                    var resetUrl = Url.Action(nameof(ResetPassword), null, new {token = resetToken}, Request.Scheme);
+                    var resetUrl = Url.Action(nameof(ResetPassword), null, new { token = resetToken}, Request.Scheme);
                     var templatePath = environment.ContentRootFileProvider.GetFileInfo("Features/IdentityServer/Account/ForgotPasswordEmail.cshtml").PhysicalPath;
                     await FluentEmail.Core.Email.From(emailOptions.Value.From)
                         .To(user.Email)
@@ -297,6 +297,7 @@ namespace CHC.Consent.Api.Features.IdentityServer
                             templatePath,
                             new ForgotPasswordEmailModel {User = User, Token = resetToken, Url = resetUrl},
                             isHtml: true)
+                        .PlaintextAlternativeBody(resetUrl)
                         .Subject("CHC Consent - Your Password Reset Request")
                         .SendAsync();
                 }
@@ -322,7 +323,29 @@ namespace CHC.Consent.Api.Features.IdentityServer
         [HttpGet]
         public IActionResult ResetPassword(string token)
         {
-            return new NotImplementedResult();
+            return View(new ResetPasswordModel {Token = token});
+        }
+
+        [HttpPost, AutoValidateAntiforgeryToken, ActionName(nameof(ResetPassword))]
+        public async Task<IActionResult> ResetPasswordPost([FromForm] ResetPasswordModel input)
+        {
+            if (!ModelState.IsValid) return View(input);
+            var user = await _userManager.FindByEmailAsync(input.Email);
+            if (user != null)
+            {
+                var result = await _userManager.ResetPasswordAsync(user, input.Token, input.Password);
+                if (result.Succeeded)
+                {
+                    return RedirectToAction(nameof(Login));
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+
+            return View(input);
         }
 
         /*****************************************/
