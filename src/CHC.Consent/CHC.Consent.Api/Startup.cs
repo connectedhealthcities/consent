@@ -110,7 +110,7 @@ namespace CHC.Consent.Api
                         provider.GetService<ConsentContext>().Set<IdentifierDefinitionEntity>()
                             .Select(
                                 e =>
-                                    definitionParser.ParseString(e.Definition)));
+                                    new IdentifierDefinition(e.Name, definitionParser.ParseString(e.Definition).Type)));
                 }
             );
             //services.AddTransient(provider => KnownIdentifierDefinitions.KnownIdentifiers);

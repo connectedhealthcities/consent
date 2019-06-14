@@ -29,6 +29,7 @@ namespace CHC.Consent.Api.Pages
         public IList<PersonDetails> People { get; private set; } = Array.Empty<PersonDetails>();
         public bool ShowPeople { get; private set; } = false;
         public IEnumerable<string> IdentifierNames { get; private set; }
+        public Dictionary<string, string> IdentifierLabels { get; set; }
 
         [BindProperty]
         public IList<SearchFieldGroup> SearchGroups { get; set; } = new List<SearchFieldGroup>();
@@ -64,6 +65,7 @@ namespace CHC.Consent.Api.Pages
 
         public Study Study { get; private set; }
 
+
         /// <inheritdoc />
         public StudiesModel(
             IConsentRepository consent,
@@ -87,25 +89,13 @@ namespace CHC.Consent.Api.Pages
             Study = consent.GetStudies(user).SingleOrDefault(_ => _.Id == id);
             if (Study == null) return NotFound();
 
-            IdentifierNames = displayOptions.Default;
-
             foreach (var searchGroup in displayOptions.Search)
             {
                 var inputGroup = new SearchFieldGroup();
 
                 foreach (var field in searchGroup.Fields)
                 {
-
-                    var fieldNamePath = field.Name.Split(IdentifierSearch.Separator);
-                    DefinitionRegistry registry = identifierDefinitionRegistry;
-                    foreach (var fieldName in fieldNamePath.Take(fieldNamePath.Length - 1))
-                    {
-                        var definition = registry[fieldName];
-                        var type = (CompositeDefinitionType) definition.Type;
-                        registry = type.Identifiers;
-                    }
-
-                    var fieldType = registry[fieldNamePath.Last()].Type.SystemName;
+                    var fieldType = GetIdentifierDefinitionByPath(field.Name).Type.SystemName;
                     inputGroup.Fields.Add(
                         new SearchField
                         {
@@ -132,6 +122,8 @@ namespace CHC.Consent.Api.Pages
             if (Study == null) return NotFound();
 
             IdentifierNames = displayOptions.Default;
+            IdentifierLabels = IdentifierNames.ToDictionary(_ => _, path => GetIdentifierDefinitionByPath(path).Name);
+            
 
             var identifierSearches = SearchGroups
                 .SelectMany(_ => _.Fields)
@@ -168,6 +160,20 @@ namespace CHC.Consent.Api.Pages
                 ).ToImmutableList();
 
             return Page();
+        }
+
+        private IdentifierDefinition GetIdentifierDefinitionByPath(string path)
+        {
+            var fieldNamePath = path.Split(IdentifierSearch.Separator);
+            DefinitionRegistry registry = identifierDefinitionRegistry;
+            foreach (var fieldName in fieldNamePath.Take(fieldNamePath.Length - 1))
+            {
+                var definition = registry[fieldName];
+                var type = (CompositeDefinitionType) definition.Type;
+                registry = type.Identifiers;
+            }
+
+            return (IdentifierDefinition) registry[fieldNamePath.Last()];
         }
 
         private static IdentifierSearchOperator GetOperator(SearchField searchField)

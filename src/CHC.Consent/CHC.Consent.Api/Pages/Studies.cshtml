@@ -82,10 +82,10 @@
     <table class="table" condition="Model.People.Any()">
         <thead>
         <th>Subject Identifier</th>
-        @foreach (var identifierType in Model.IdentifierNames)
+        @foreach (var systemName in Model.IdentifierNames)
         {
 
-            <th>@identifierType</th>
+            <th>@Model.IdentifierLabels[systemName]</th>
 
         }
         </thead>
