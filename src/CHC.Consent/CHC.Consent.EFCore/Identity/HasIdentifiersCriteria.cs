@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
@@ -5,6 +6,7 @@ using System.Text;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.EFCore.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Net.Http.Headers;
 
 namespace CHC.Consent.EFCore.Identity
 {
@@ -26,6 +28,7 @@ namespace CHC.Consent.EFCore.Identity
         /// <inheritdoc />
         public IQueryable<PersonEntity> ApplyTo(IQueryable<PersonEntity> queryable, ConsentContext context)
         {
+            if(criteria.Length == 0) return queryable;
             var query = new StringBuilder("SELECT * FROM dbo.Person WHERE ");
             var vars = new List<SqlParameter>();
             var counter = 0;
@@ -50,11 +53,26 @@ namespace CHC.Consent.EFCore.Identity
                         query.Append(" AND ");
                     }
 
-                    query.AppendFormat(
-                        " cast([Value] as xml).exist('{0}/text()[ contains( lower-case(.), sql:variable(\"@var{1}\") ) ]') = 1 ",
-                        identifierSearch.IdentifierName.Replace(IdentifierSearch.Separator, "/"),
-                        ++counter
-                    );
+                    switch (identifierSearch.Operator)
+                    {
+                        case IdentifierSearchOperator.Contains:
+                            query.AppendFormat(
+                                " cast([Value] as xml).exist('{0}/text()[ contains( lower-case(.), sql:variable(\"@var{1}\") ) ]') = 1 ",
+                                identifierSearch.IdentifierName.Replace(IdentifierSearch.Separator, "/"),
+                                ++counter
+                            );
+                            break;
+                        case IdentifierSearchOperator.LessThanOrEqual:
+                            query.AppendFormat(" cast([Value] as xml).value('.', 'date') <= @var{0} ", ++counter);
+                            break;
+                        case IdentifierSearchOperator.GreaterThanOrEqual:
+                            query.AppendFormat(" cast([Value] as xml).value('.', 'date') >= @var{0} ", ++counter);
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+
                     vars.Add(new SqlParameter($"@var{counter}", identifierSearch.Value?.ToLowerInvariant()));
 
                 }

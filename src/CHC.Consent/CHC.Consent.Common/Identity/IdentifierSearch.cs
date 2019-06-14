@@ -8,6 +8,8 @@ namespace CHC.Consent.Common.Identity
         public string IdentifierName { get; set; }
         public string Value { get; set; }
 
+        public IdentifierSearchOperator Operator { get; set; } = IdentifierSearchOperator.Contains;
+
         public string KeySelector()
         {
             return RootIdentifier(IdentifierName);

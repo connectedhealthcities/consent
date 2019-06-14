@@ -4,6 +4,7 @@ namespace CHC.Consent.Common.Infrastructure.Definitions.Types
 {
     public class CompositeDefinitionType : IDefinitionType 
     {
+        public const string DataType = "composite";
         public DefinitionRegistry Identifiers { get; }
 
         /// <inheritdoc />
@@ -16,8 +17,8 @@ namespace CHC.Consent.Common.Infrastructure.Definitions.Types
 
         public CompositeDefinitionType(params IDefinition[] identifiers) 
         {
-            Identifiers = new DefinitionRegistry(identifiers);   
-            SystemName = $"composite({string.Join(",", identifiers.Select(_ => _.AsString))})";
+            Identifiers = new DefinitionRegistry(identifiers);
+            SystemName = $"{DataType}({string.Join(",", identifiers.Select(_ => _.AsString))})";
         }
     }
 }

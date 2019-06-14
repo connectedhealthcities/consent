@@ -1,6 +1,39 @@
 ﻿@page "{id:long}"
+@using CHC.Consent.Common.Infrastructure.Definitions.Types
+@using Microsoft.AspNetCore.Html
 @model StudiesModel
 
+@functions
+{
+
+    static string InputType(StudiesModel.SearchField field)
+    {
+        switch (field.DataType)
+        {
+            case DateDefinitionType.DataType:
+                return "date";
+            case IntegerDefinitionType.DataType:
+                return "number";
+            default:
+                return "text";
+        }
+    }
+
+    private static IHtmlContent AttributesFor(StudiesModel.SearchField searchField)
+    {
+
+        switch (searchField.DataType)
+        {
+            case DateDefinitionType.DataType:
+                return new HtmlString("data-val='true' data-val-date='Please enter a valid date'");
+            case IntegerDefinitionType.DataType:
+                return new HtmlString("data-val='true' data-val-number=''");
+            default:
+                return null;
+        }
+    }
+
+}
 
 
 @section title {@Model.Study.Name}
@@ -9,54 +42,76 @@
 
 <div class="bg-danger" asp-validation-summary="ModelOnly"></div>
 
-<form method="post" >
-    <div class="form-row">
-    @for (var index = 0; index < Model.SearchFields.Count; index++)
+<form method="post" class="" data-val="true" >
+    
+    @* ReSharper disable once ForCanBeConvertedToForeach *@
+    @for (var groupIndex = 0; groupIndex < Model.SearchGroups.Count; groupIndex++)
     {
-        <div class="form-group col-md-4">
-            <input type="hidden" asp-for="SearchFields[index].FieldName"/>
-            <input type="hidden" asp-for="SearchFields[index].Label"/>
-            <label asp-for="SearchFields[index].Value">@Model.SearchFields[index].Label</label>
-            <input class="form-control form-control-sm" type="text" asp-for="SearchFields[index].Value"/>
-            <span asp-validation-for="SearchFields[index].Value"></span>
+        <div class="form-group form-row">
+            @for (var fieldIndex = 0; fieldIndex < Model.SearchGroups[groupIndex].Fields.Count; ++fieldIndex)
+            {
+                <input type="hidden" asp-for="@Model.SearchGroups[groupIndex].Fields[fieldIndex].FieldName"/>
+                <input type="hidden" asp-for="@Model.SearchGroups[groupIndex].Fields[fieldIndex].Label"/>
+                <input type="hidden" asp-for="@Model.SearchGroups[groupIndex].Fields[fieldIndex].Compare"/>
+                <input type="hidden" asp-for="@Model.SearchGroups[groupIndex].Fields[fieldIndex].DataType"/>
+                @if (!string.IsNullOrWhiteSpace(Model.SearchGroups[groupIndex].Fields[fieldIndex].Label))
+                {
+                <label class="col-2 col-form-label-sm" asp-for="@Model.SearchGroups[groupIndex].Fields[fieldIndex].Value">@Model.SearchGroups[groupIndex].Fields[fieldIndex].Label</label>
+                }
+                <div class="col-auto">
+                    <input class="form-control form-control-sm" 
+                           asp-for="@Model.SearchGroups[groupIndex].Fields[fieldIndex].Value"
+                           type="@InputType(Model.SearchGroups[groupIndex].Fields[fieldIndex])"
+                           @AttributesFor(Model.SearchGroups[groupIndex].Fields[fieldIndex])
+                           />
+                </div>
+                <span asp-validation-for="@Model.SearchGroups[groupIndex].Fields[fieldIndex].Value" class="text-danger"></span>
+            }
         </div>
     }
+    <div class="form-group form-row">
+        <label class="col-2 col-form-label-sm" asp-for="SubjectIdentifier">Subject Id</label>
+        <div class="col-auto"><input class="form-control form-control-sm" asp-for="SubjectIdentifier" /></div>
+        <span asp-validation-for="SubjectIdentifier" class="text-danger"></span>
     </div>
     <button type="submit" class="btn btn-primary btn-sm">Search</button>
 </form>
 
-<table class="table" condition="Model.People.Any()">
-    <thead>
-    <th>Subject Identifier</th>
-    @foreach (var identifierType in Model.IdentifierNames)
-    {
-    
-        <th>@identifierType</th>
+@if (Model.ShowPeople)
+{
+    <table class="table" condition="Model.People.Any()">
+        <thead>
+        <th>Subject Identifier</th>
+        @foreach (var identifierType in Model.IdentifierNames)
+        {
 
-    }
-    </thead>
-    <tbody>
-    @foreach (var (subject, identifiers) in Model.People)
-    {
-        <tr>
-            <td><a asp-page="Subject"  asp-route-studyId="@subject.StudyId.Id" asp-route-subjectIdentifier="@subject.SubjectIdentifier">@subject.SubjectIdentifier</a> </td>
-            @{
-                foreach (var identifierType in Model.IdentifierNames)
-                {
-                    <td>
-                        @{
-                            foreach (var identifier in identifiers.Where(_ => _.Definition.SystemName == identifierType))
-                            {
-                                <span>@await Component.InvokeAsync("Identifier", new { identifier })</span>
+            <th>@identifierType</th>
+
+        }
+        </thead>
+        <tbody>
+        @foreach (var (subject, identifiers) in Model.People)
+        {
+            <tr>
+                <td><a asp-page="Subject" asp-route-studyId="@subject.StudyId.Id" asp-route-subjectIdentifier="@subject.SubjectIdentifier">@subject.SubjectIdentifier</a> </td>
+                @{
+                    foreach (var identifierType in Model.IdentifierNames)
+                    {
+                        <td>
+                            @{
+                                foreach (var identifier in identifiers.Where(_ => _.Definition.SystemName == identifierType))
+                                {
+                                    <span>@await Component.InvokeAsync("Identifier", new {identifier})</span>
+                                }
                             }
-                        } 
-                    </td>
+                        </td>
+                    }
                 }
-            }
-        </tr>
+            </tr>
 
-    }
-    </tbody>
-</table>
+        }
+        </tbody>
+    </table>
 
-<p class="small">Found @Model.People.Count people</p>
+    <p class="small">Found @Model.People.Count people</p>
+}

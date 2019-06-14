@@ -19,13 +19,12 @@ namespace CHC.Consent.Common.Identity
             IEnumerable<string> identifierNames,
             IUserProvider user);
 
-        IDictionary<PersonIdentity, IEnumerable<PersonIdentifier>>
-            GetPeopleWithIdentifiers(
-                IEnumerable<PersonIdentity> personIds,
-                IEnumerable<string> identifierNames,
-                IUserProvider user,
-                IEnumerable<IdentifierSearch> search
-            );
+        IDictionary<PersonIdentity, IEnumerable<PersonIdentifier>> GetPeopleWithIdentifiers(
+            IEnumerable<PersonIdentity> personIds,
+            IEnumerable<string> identifierNames,
+            IUserProvider user,
+            IEnumerable<IdentifierSearch> search, 
+            string subjectIdentifier);
 
         Authority GetAuthority(string systemName);
         Agency GetAgency(string systemName);

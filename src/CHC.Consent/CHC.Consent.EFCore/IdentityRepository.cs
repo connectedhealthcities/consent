@@ -80,18 +80,18 @@ namespace CHC.Consent.EFCore
         }
 
 
-        public IDictionary<PersonIdentity, IEnumerable<PersonIdentifier>>
-            GetPeopleWithIdentifiers(
-                IEnumerable<PersonIdentity> personIds,
-                IEnumerable<string> identifierNames,
-                IUserProvider user,
-                IEnumerable<IdentifierSearch> search
-            )
+        public IDictionary<PersonIdentity, IEnumerable<PersonIdentifier>> GetPeopleWithIdentifiers(
+            IEnumerable<PersonIdentity> personIds,
+            IEnumerable<string> identifierNames,
+            IUserProvider user,
+            IEnumerable<IdentifierSearch> search, 
+            string subjectIdentifier)
         {
             return PeopleWithIdentifiers(
                 identifierNames,
                 new HasIdentifiersCriteria(search),
-                new HasIdCriteria(personIds.Select(_ => _.Id)));
+                new HasIdCriteria(personIds.Select(_ => _.Id)),
+                new HasSubjectIdentifier(subjectIdentifier));
         }
 
         /// <inheritdoc />
@@ -265,6 +265,27 @@ namespace CHC.Consent.EFCore
                 specification.Accept(this);
                 return Predicate;
             }
+        }
+    }
+
+    public class HasSubjectIdentifier : ICriteria<PersonEntity>
+    {
+        public string SubjectIdentifier { get; }
+
+        public HasSubjectIdentifier(string subjectIdentifier)
+        {
+            SubjectIdentifier = subjectIdentifier;
+        }
+
+        /// <inheritdoc />
+        public IQueryable<PersonEntity> ApplyTo(IQueryable<PersonEntity> queryable, ConsentContext context)
+        {
+            if (string.IsNullOrEmpty(SubjectIdentifier)) return queryable;
+            return queryable.Where(
+                p =>
+                    context.Set<StudySubjectEntity>().Any(
+                        s => s.Person == p 
+                             && s.SubjectIdentifier.Contains(SubjectIdentifier)));
         }
     }
 }

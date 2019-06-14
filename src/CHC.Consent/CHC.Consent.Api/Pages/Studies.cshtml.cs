@@ -7,6 +7,8 @@ using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
+using CHC.Consent.Common.Infrastructure.Definitions;
+using CHC.Consent.Common.Infrastructure.Definitions.Types;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
@@ -20,20 +22,32 @@ namespace CHC.Consent.Api.Pages
         private ILogger<StudiesModel> Logger { get; }
         private readonly IUserProvider user;
         private readonly IConsentRepository consent;
-        private readonly IIdentityRepository identifiers;
+        private readonly IIdentityRepository identityRepository;
+        private readonly IdentifierDefinitionRegistry identifierDefinitionRegistry;
         private readonly IdentifierDisplayOptions displayOptions;
 
         public IList<PersonDetails> People { get; private set; } = Array.Empty<PersonDetails>();
+        public bool ShowPeople { get; private set; } = false;
         public IEnumerable<string> IdentifierNames { get; private set; }
-        
+
         [BindProperty]
-        public IList<SearchField> SearchFields { get; set; } = new List<SearchField>();
+        public IList<SearchFieldGroup> SearchGroups { get; set; } = new List<SearchFieldGroup>();
+
+        [BindProperty]
+        public string SubjectIdentifier { get; set; }
+
+        public class SearchFieldGroup
+        {
+            public IList<SearchField> Fields { get; } = new List<SearchField>();
+        }
 
         public class SearchField
         {
             public string FieldName { get; set; }
             public string Value { get; set; }
+            public string Compare { get; set; }
             public string Label { get; set; }
+            public string DataType { get; set; }
         }
 
         public class PersonDetails
@@ -53,7 +67,8 @@ namespace CHC.Consent.Api.Pages
         /// <inheritdoc />
         public StudiesModel(
             IConsentRepository consent,
-            IIdentityRepository identifiers,
+            IIdentityRepository identityRepository,
+            IdentifierDefinitionRegistry identifierDefinitionRegistry,
             IUserProvider user, 
             IOptions<IdentifierDisplayOptions> displayOptionsProvider,
             ILogger<StudiesModel> logger
@@ -62,7 +77,8 @@ namespace CHC.Consent.Api.Pages
             Logger = logger;
             this.user = user;
             this.consent = consent;
-            this.identifiers = identifiers;
+            this.identityRepository = identityRepository;
+            this.identifierDefinitionRegistry = identifierDefinitionRegistry;
             this.displayOptions = displayOptionsProvider.Value;
         }
 
@@ -73,26 +89,40 @@ namespace CHC.Consent.Api.Pages
 
             IdentifierNames = displayOptions.Default;
 
-            foreach (var field in displayOptions.Search)
+            foreach (var searchGroup in displayOptions.Search)
             {
-                SearchFields.Add(new SearchField{FieldName = field.Name, Label = field.Label});
+                var inputGroup = new SearchFieldGroup();
+
+                foreach (var field in searchGroup.Fields)
+                {
+
+                    var fieldNamePath = field.Name.Split(IdentifierSearch.Separator);
+                    DefinitionRegistry registry = identifierDefinitionRegistry;
+                    foreach (var fieldName in fieldNamePath.Take(fieldNamePath.Length - 1))
+                    {
+                        var definition = registry[fieldName];
+                        var type = (CompositeDefinitionType) definition.Type;
+                        registry = type.Identifiers;
+                    }
+
+                    var fieldType = registry[fieldNamePath.Last()].Type.SystemName;
+                    inputGroup.Fields.Add(
+                        new SearchField
+                        {
+                            FieldName = field.Name, Label = field.Label, Compare = field.Compare, DataType = fieldType
+                        });
+                }
+                
+                SearchGroups.Add(inputGroup);
             }
-        
+
             var studyIdentity = Study.Id;
             var consentedSubjects = consent.GetConsentedSubjects(studyIdentity);
             Logger.LogDebug(
                 "Found {count} consentedPeople - {consentedPeopleIds}",
                 consentedSubjects.Count(),
                 consentedSubjects);
-
-            var peopleDetails = identifiers.GetPeopleWithIdentifiers(consentedSubjects.Select(_ => _.PersonId), IdentifierNames, user);
-
-            People =
-                (from s in consentedSubjects
-                    join p in peopleDetails on s.PersonId equals p.Key
-                    select new PersonDetails {Subject = s, Identifiers = p.Value}
-                ).ToImmutableList();
-                    
+                   
             return Page();
         }
 
@@ -103,16 +133,18 @@ namespace CHC.Consent.Api.Pages
 
             IdentifierNames = displayOptions.Default;
 
-            var searches = SearchFields.Where(_ => !string.IsNullOrWhiteSpace(_.Value)).Select(_ => new IdentifierSearch{ IdentifierName = _.FieldName, Value = _.Value})
+            var identifierSearches = SearchGroups
+                .SelectMany(_ => _.Fields)
+                .Where(_ => !string.IsNullOrWhiteSpace(_.Value))
+                .Select(_ => new IdentifierSearch {IdentifierName = _.FieldName, Value = _.Value, Operator = GetOperator(_)})
                 .ToArray();
 
-            if (!searches.Any())
+            if (string.IsNullOrEmpty(SubjectIdentifier) && !identifierSearches.Any())
             {
                 ModelState.AddModelError("", "Please enter a search criteria");
             }
 
             if (!ModelState.IsValid) return Page();
-
 
             var studyIdentity = Study.Id;
             var consentedSubjects = consent.GetConsentedSubjects(studyIdentity);
@@ -121,7 +153,13 @@ namespace CHC.Consent.Api.Pages
                 consentedSubjects.Count(),
                 consentedSubjects);
 
-            var peopleDetails = identifiers.GetPeopleWithIdentifiers(consentedSubjects.Select(_ => _.PersonId), IdentifierNames, user, searches);
+            ShowPeople = true;
+            var peopleDetails = identityRepository.GetPeopleWithIdentifiers(
+                consentedSubjects.Select(_ => _.PersonId), 
+                IdentifierNames, 
+                user, 
+                identifierSearches,
+                SubjectIdentifier);
 
             People =
                 (from p in peopleDetails
@@ -130,6 +168,19 @@ namespace CHC.Consent.Api.Pages
                 ).ToImmutableList();
 
             return Page();
+        }
+
+        private static IdentifierSearchOperator GetOperator(SearchField searchField)
+        {
+            switch (searchField.Compare)
+            {
+                case "before":
+                    return IdentifierSearchOperator.LessThanOrEqual;
+                case "after":
+                    return IdentifierSearchOperator.GreaterThanOrEqual;
+                default:
+                    return IdentifierSearchOperator.Contains;
+            }
         }
     }
 }
