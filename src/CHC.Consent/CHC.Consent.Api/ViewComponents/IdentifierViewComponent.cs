@@ -76,13 +76,15 @@ namespace CHC.Consent.Api.ViewComponents
             }
         }
 
-        public IViewComponentResult Invoke(PersonIdentifier identifier, IdentifierDefinitionRegistry registry)
+        public IViewComponentResult Invoke(PersonIdentifier identifier, DefinitionRegistry registry, bool raw)
         {
             if (identifier == null) return Empty();
-            return View(GetViewName(registry, identifier.Definition), identifier.Value);
+            var result = View(GetViewName(registry, identifier.Definition), identifier.Value);
+            result.ViewData["Raw"] = raw;
+            return result;
         }
 
-        private string GetViewName(IdentifierDefinitionRegistry registry, IdentifierDefinition definition)
+        private string GetViewName(DefinitionRegistry registry, IDefinition definition)
         {
             var definitionSystemName = definition.SystemName;
             if (ViewEngine.FindView(ViewContext, definitionSystemName, false).Success)
@@ -90,7 +92,7 @@ namespace CHC.Consent.Api.ViewComponents
             return GetDefaultViewName(registry, definition);
         }
 
-        private string GetDefaultViewName(IdentifierDefinitionRegistry registry, IdentifierDefinition definition)
+        private string GetDefaultViewName(DefinitionRegistry registry, IDefinition definition)
         {
             return (registry == null ? ViewNames : registry.Accept(new IdentifierTypeToView()))[definition];
         }

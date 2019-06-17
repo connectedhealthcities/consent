@@ -142,7 +142,7 @@ namespace CHC.Consent.EFCore
         {
             var consentDetails = (
                     from c in Consents.ToInjectable()
-                        .WithReadPermissionGrantedTo(user)
+                       // .WithReadPermissionGrantedTo(user)
                     let subject = c.StudySubject
                     where c.DateWithdrawn == null
                           && subject.SubjectIdentifier == subjectIdentifier
@@ -174,7 +174,7 @@ namespace CHC.Consent.EFCore
         }
 
         /// <inheritdoc />
-        public (StudySubject studySubject, DateTime? lastWithDrawn)[] GetSubjectsWithLastWithdrawalDate(StudyIdentity studyIdentity)
+        public IEnumerable<(StudySubject studySubject, DateTime? lastWithDrawn)> GetSubjectsWithLastWithdrawalDate(StudyIdentity studyIdentity)
         {
             return
                 (from subject in StudySubjects

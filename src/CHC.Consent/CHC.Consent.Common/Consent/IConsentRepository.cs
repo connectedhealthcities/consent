@@ -20,6 +20,6 @@ namespace CHC.Consent.Common.Consent
         IEnumerable<Consent> GetActiveConsentsForSubject(
             StudyIdentity studyId, string subjectIdentifier, IUserProvider user);
 
-        (StudySubject studySubject, DateTime? lastWithDrawn)[] GetSubjectsWithLastWithdrawalDate(StudyIdentity studyIdentity);
+        IEnumerable<(StudySubject studySubject, DateTime? lastWithDrawn)> GetSubjectsWithLastWithdrawalDate(StudyIdentity studyIdentity);
     }
 }

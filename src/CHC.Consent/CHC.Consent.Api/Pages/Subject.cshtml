@@ -1,21 +1,95 @@
 ﻿@page "{studyId:long}/subject/{subjectIdentifier}"
 
+@using CHC.Consent.Common.Identity.Identifiers
+@using CHC.Consent.Common.Infrastructure
+@using CHC.Consent.Common.Infrastructure.Definitions
+@using CHC.Consent.Common.Infrastructure.Definitions.Types
+@using Microsoft.AspNetCore.Html
 @model Subject
+@inject IdentifierDefinitionRegistry IdentifierDefinitionRegistry 
 
-<table class="table">
-    <thead>
+@functions
+{
+
+    Task<IHtmlContent> DisplayFormattedIdentifier(params string[] systemNames) => DisplayIdentifier(systemNames, false);
+
+    Task<IHtmlContent> DisplayRawIdentifier(params string[] systemNames) => DisplayIdentifier(systemNames, true);
+
+    private Task<IHtmlContent> DisplayIdentifier(string[] systemNames, bool raw)
+    {
+        var rootIdentifier = Model.GetIdentifier(systemNames.First());
+        var identifier = rootIdentifier;
+        var registry = (DefinitionRegistry) IdentifierDefinitionRegistry;
+        foreach (var systemName in systemNames.Skip(1))
+        {
+            if (identifier == null) continue;
+            registry = ((CompositeDefinitionType) identifier.Definition.Type).Identifiers;
+            var compositeIdentifierValue = (identifier.Value as CompositeIdentifierValue<PersonIdentifier>);
+            identifier = compositeIdentifierValue?.Identifiers.FirstOrDefault(_ => _.Definition.SystemName == systemName);
+        }
+
+
+        return Component.InvokeAsync("Identifier", new {identifier, registry, raw });
+    }
+
+    int? Age()
+    {
+        var dateOfBirthValue = Model.GetIdentifier("date-of-birth")?.Value;
+        if (!(dateOfBirthValue?.Value is DateTime)) return null;
+
+        var today = DateTime.Today;
+        var dateOfBirth = (DateTime) dateOfBirthValue.Value;
+
+        var years = today.Year - dateOfBirth.Year;
+        if (today.Month <= dateOfBirth.Month && today.Day < dateOfBirth.Day)
+            years -= 1;
+        return years;
+    }
+}
+
+@section title{ @await  DisplayRawIdentifier("name") }
+
+
+<table class="table table-sm table-striped table-borderless">
+    
     <tr>
-        <td>Date Given</td>
-        <td>Given For</td>
+        <th>Participant</th>
+        <td>@await DisplayFormattedIdentifier("name")</td>
     </tr>
-    </thead>
-    <tbody>
-
-    @foreach (var consent in Model.ActiveConsents)
+    <tr>
+        <th>Date Of Birth</th>
+        <td>@await DisplayFormattedIdentifier("date-of-birth")</td>
+    </tr>
+    <tr>
+        <th>First Line Of Address</th>
+        <td>@await DisplayFormattedIdentifier("address", "line-1")</td>
+    </tr>
+    <tr>
+        <th>Postcode</th>
+        <td>@await DisplayFormattedIdentifier("address", "postcode")</td>
+    </tr>
+    <tr>
+        <th>Age</th>
+        <td>@Age()</td>
+    </tr>
+    @{
+        var activeConsent = Model.ActiveConsents.OrderByDescending(_ => _.DateGiven).FirstOrDefault();
+        
+    }
+    @if (activeConsent != null)
     {
         <tr>
-            <td>@consent.DateGiven.ToLongDateString()</td>
+            <th>Consented Status</th>
+            <td>Consented</td>
+        </tr>
+        <tr>
+            <th>Withdrawal Requested By</th>
+            <td></td>
+        </tr>
+        <tr>
+            <th>Withdrawal Requested By</th>
+            <td></td>
         </tr>
     }
-    </tbody>
 </table>
+
