@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Xml;
 using System.Xml.Linq;
 using CHC.Consent.Common;
 using CHC.Consent.Common.Consent;
@@ -9,6 +11,7 @@ using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
 using CHC.Consent.EFCore.Security;
+using Microsoft.EntityFrameworkCore;
 using NeinLinq;
 
 
@@ -140,29 +143,22 @@ namespace CHC.Consent.EFCore
             string subjectIdentifier,
             IUserProvider user)
         {
-            var consentDetails = (
-                    from c in Consents.ToInjectable()
+            var consentDetails = 
+                (
+                    from c in ConsentsFor(studyId.Id, subjectIdentifier).Include(_ => _.GivenEvidence).ToInjectable()
                        // .WithReadPermissionGrantedTo(user)
                     let subject = c.StudySubject
                     where c.DateWithdrawn == null
-                          && subject.SubjectIdentifier == subjectIdentifier
-                          && subject.Study.Id == studyId.Id
                     select new
                     {
                         c.Id,
                         c.DateProvided,
                         PersonId = subject.Person.Id,
                         GivenBy = c.GivenBy.Id,
+                        c.GivenEvidence
                     }
                 )
                 .ToArray();
-            var consentIds = consentDetails.Select(c => c.Id).ToArray();
-            var evidences =
-                Evidence
-                    .OfType<GivenEvidenceEntity>()
-                    .Where(e => consentIds.Contains(e.Consent.Id))
-                    .GroupBy(e => e.Consent.Id)
-                    .ToDictionary(e => e.Key, e => e.Select(s => EvidenceRegistry.MarshallFromXml(s.Type, XElement.Parse(s.Value))));
             
             return consentDetails
                 .Select(
@@ -170,8 +166,16 @@ namespace CHC.Consent.EFCore
                         new StudySubject(studyId, subjectIdentifier, new PersonIdentity(_.PersonId)),
                         _.DateProvided,
                         _.GivenBy,
-                        evidences.TryGetValue(_.Id, out var evidence) ? evidence : Array.Empty<Evidence>()));
+                        _.GivenEvidence.AsQueryable().Select(MarshallEvidenceFromEntity())
+                        )
+                );
         }
+
+        private Expression<Func<EvidenceEntity, Evidence>> MarshallEvidenceFromEntity()
+        {
+            return evidence => EvidenceRegistry.MarshallFromXml(evidence.Type, XElement.Parse(evidence.Value));
+        }
+        
 
         /// <inheritdoc />
         public IEnumerable<(StudySubject studySubject, DateTime? lastWithDrawn)> GetSubjectsWithLastWithdrawalDate(StudyIdentity studyIdentity)
@@ -193,6 +197,68 @@ namespace CHC.Consent.EFCore
                     _ => (new StudySubject(studyIdentity, _.SubjectIdentifier, new PersonIdentity(_.PersonId)),
                         _.MostRecentWithdrawal))
                 .ToArray();
+        }
+
+        /// <inheritdoc />
+        public void WithdrawConsent(StudySubject studySubject, params Evidence[] allEvidence)
+        {
+            var activeConsent = ConsentsFor(studySubject.StudyId.Id, studySubject.SubjectIdentifier)
+                .Where(_ => _.DateWithdrawn == null)
+                .OrderByDescending(_ => _.DateProvided)
+                .FirstOrDefault();
+            
+            activeConsent.DateWithdrawn = DateTime.Now;
+            foreach (var evidence in allEvidence)
+            {
+                activeConsent.WithdrawnEvidence.Add(
+                    new WithdrawnEvidenceEntity
+                    {
+                        Type = evidence.Definition.SystemName,
+                        Value = EvidenceRegistry.MarshallToXml(evidence).ToString(SaveOptions.DisableFormatting),
+
+                    }
+                );
+            }
+        }
+
+        private IQueryable<ConsentEntity> ConsentsFor(long studyId, string subjectIdentifier)
+        {
+            return Consents.Where(
+                c => c.StudySubject.SubjectIdentifier == subjectIdentifier &&
+                     c.StudySubject.Study.Id == studyId);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<Common.Consent.Consent> GetConsentsForSubject(StudyIdentity studyIdentity, string subjectIdentifier, IUserProvider user)
+        {
+            return
+                from c in (
+                from c in ConsentsFor(studyIdentity, subjectIdentifier)
+                    .Include(_ => _.GivenEvidence).Include(_ => _.WithdrawnEvidence)
+                orderby c.DateProvided descending
+                let subject = c.StudySubject
+                let person = subject.Person
+                select new
+                {
+                    StudySubject = new StudySubject(studyIdentity, subjectIdentifier, 
+                        new PersonIdentity(person.Id)), 
+                    c.DateProvided, 
+                    c.DateWithdrawn,
+                    GivenById = c.GivenBy.Id,
+                    GivenEvidence = c.GivenEvidence.ToArray(),
+                    WithdrawnEvidence = c.WithdrawnEvidence.ToArray()
+                }
+                ).ToArray()
+                select new Common.Consent.Consent(
+                    c.StudySubject,
+                    c.DateProvided,
+                    c.GivenById,
+                    c.GivenEvidence.AsQueryable().Select(MarshallEvidenceFromEntity()))
+                {
+                    DateWithdrawn = c.DateWithdrawn,
+                    WithdrawnEvidence = c.WithdrawnEvidence.AsQueryable().Select(MarshallEvidenceFromEntity())
+                };
+
         }
 
         public StudySubject AddStudySubject(StudySubject studySubject)

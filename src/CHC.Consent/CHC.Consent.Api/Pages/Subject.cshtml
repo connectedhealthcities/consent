@@ -1,5 +1,8 @@
 ﻿@page "{studyId:long}/subject/{subjectIdentifier}"
 
+@using System.ComponentModel
+@using CHC.Consent.Common.Consent
+@using CHC.Consent.Common.Consent.Evidences
 @using CHC.Consent.Common.Identity.Identifiers
 @using CHC.Consent.Common.Infrastructure
 @using CHC.Consent.Common.Infrastructure.Definitions
@@ -45,51 +48,123 @@
             years -= 1;
         return years;
     }
+
+    private Evidence GetEvidence(IEnumerable<Evidence> evidence, EvidenceDefinition definition)
+    {
+        return evidence?.FirstOrDefault(_ => _.Definition == definition);
+    }
+
+    private string Evidence(params EvidenceDefinition[] path)
+    {
+        if (Model.CurrentConsent == null) return null;
+        var currentEvidence = path.Skip(1)
+            .Aggregate(
+                GetEvidence(Model.CurrentConsent.WithdrawnEvidence, path[0]),
+                (current, definition) => 
+                    GetEvidence((current?.Value as CompositeIdentifierValue<Evidence>)?.Identifiers, definition));
+        return currentEvidence?.Value?.Value?.ToString();
+    }
+
 }
 
 @section title{ @await  DisplayRawIdentifier("name") }
 
+<div class="row" style="margin-top: 1em">
 
-<table class="table table-sm table-striped table-borderless">
+<div class="col-md-6">
+    <table class="table table-sm table-striped table-borderless">
     
-    <tr>
-        <th>Participant</th>
-        <td>@await DisplayFormattedIdentifier("name")</td>
-    </tr>
-    <tr>
-        <th>Date Of Birth</th>
-        <td>@await DisplayFormattedIdentifier("date-of-birth")</td>
-    </tr>
-    <tr>
-        <th>First Line Of Address</th>
-        <td>@await DisplayFormattedIdentifier("address", "line-1")</td>
-    </tr>
-    <tr>
-        <th>Postcode</th>
-        <td>@await DisplayFormattedIdentifier("address", "postcode")</td>
-    </tr>
-    <tr>
-        <th>Age</th>
-        <td>@Age()</td>
-    </tr>
-    @{
-        var activeConsent = Model.ActiveConsents.OrderByDescending(_ => _.DateGiven).FirstOrDefault();
-        
-    }
-    @if (activeConsent != null)
-    {
         <tr>
-            <th>Consented Status</th>
-            <td>Consented</td>
+            <th>Participant</th>
+            <td>@await DisplayFormattedIdentifier("name")</td>
         </tr>
         <tr>
-            <th>Withdrawal Requested By</th>
-            <td></td>
+            <th>Date Of Birth</th>
+            <td>@await DisplayFormattedIdentifier("date-of-birth")</td>
         </tr>
         <tr>
-            <th>Withdrawal Requested By</th>
-            <td></td>
+            <th>First Line Of Address</th>
+            <td>@await DisplayFormattedIdentifier("address", "line-1")</td>
         </tr>
-    }
-</table>
+        <tr>
+            <th>Postcode</th>
+            <td>@await DisplayFormattedIdentifier("address", "postcode")</td>
+        </tr>
+        <tr>
+            <th>Age</th>
+            <td>@Age()</td>
+        </tr>
+    
+        @if (Model.ConsentIsActive)
+        {
+            <tr>
+                <th>Consented Status</th>
+                <td>Consented</td>
+            </tr>
+            <tr>
+                <th>Withdrawal Requested By</th>
+                <td></td>
+            </tr>
+            <tr>
+                <th>Withdrawal Requested By</th>
+                <td></td>
+            </tr>
+        }
+        else
+        {
+            <tr>
+                <th>Consented Status</th>
+                <td>@(Model.CurrentConsent == null ? "Never consented" : "Withdrawn")</td>
+            </tr>
+            <tr>
+                <th>Withdrawal Requested By</th>
+                <td>@Evidence(KnownEvidence.Bib4AllWithdrawal, KnownEvidence.Bib4AllWithdrawalParts.RequestedBy)</td>
+            </tr>
+            <tr>
+                <th>Withdrawal Requested By</th>
+                <td>@Evidence(KnownEvidence.Bib4AllWithdrawal, KnownEvidence.Bib4AllWithdrawalParts.Relationship)</td>
+            </tr>
+        }
+    </table>
 
+</div>
+@if(Model.ConsentIsActive) 
+{
+<div class="col-md-6">
+
+    <p>Withdrawing a participant</p>
+    <p>The boxes below must be complete to remove a participant from the study.</p>
+
+    <form id="withdrawal-form" method="post" autocomplete="off" autocapitalize="off" >
+        <div class="form-group">
+            <label asp-for="Input.WithdrawnByName">Withdrawal requested by (Full Name)</label>
+            <input asp-for="Input.WithdrawnByName" class="form-control form-control" />
+            <span asp-validation-for="Input.WithdrawnByName" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Input.WithdrawnByRelationship">Relationship to Participant</label>
+            <input asp-for="Input.WithdrawnByRelationship" class="form-control form-control"/>
+            <span asp-validation-for="Input.WithdrawnByRelationship" class="text-danger"></span>
+        </div>
+    
+        <button type="submit" class="btn btn-sm">Withdraw participant from study</button>
+    </form>
+</div>
+}
+</div>
+
+
+@section Scripts
+{
+    <script>
+    jQuery(function($){
+        var data = $('#withdrawal-form').data('validator');
+        if(!data) return; 
+        data.settings.submitHandler = function(form, event) {
+            if(confirm('You are withdrawing a participant from a study')) {
+                form.submit();
+            }
+        };
+    });
+    </script>
+}

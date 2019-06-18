@@ -21,6 +21,11 @@ namespace CHC.Consent.Common.Consent
         public Evidence()
         {
         }
+        
+        public static Evidence Composite(EvidenceDefinition definition, params Evidence[] values)
+         => new Evidence(definition, new CompositeIdentifierValue<Evidence>(values));
+        public static Evidence String(EvidenceDefinition definition, string value)
+        => new Evidence(definition, new SimpleIdentifierValue(value));
 
         /// <inheritdoc />
         public bool Equals(Evidence other)

@@ -21,5 +21,7 @@ namespace CHC.Consent.Common.Consent
             StudyIdentity studyId, string subjectIdentifier, IUserProvider user);
 
         IEnumerable<(StudySubject studySubject, DateTime? lastWithDrawn)> GetSubjectsWithLastWithdrawalDate(StudyIdentity studyIdentity);
+        void WithdrawConsent(StudySubject studySubject, params Evidence[] allEvidence);
+        IEnumerable<Consent> GetConsentsForSubject(StudyIdentity studyIdentity, string subjectIdentifier, IUserProvider user);
     }
 }
