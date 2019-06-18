@@ -2,6 +2,7 @@
 using System.Net.Mail;
 using System.Reflection;
 using CHC.Consent.Api.Infrastructure;
+using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.Security;
 using Microsoft.AspNetCore;
@@ -41,6 +42,7 @@ namespace CHC.Consent.Api
             services.AddSingleton<IPostConfigureOptions<SmtpEmailSenderOptions>, FluentEmailConfiguration>();
 
             services.AddIdentity<ConsentUser, ConsentRole>()
+                .AddSignInManager<ConsentUserSignInManager>()
                 .AddEntityFrameworkStores<ConsentContext>()
                 .AddDefaultTokenProviders();
 
