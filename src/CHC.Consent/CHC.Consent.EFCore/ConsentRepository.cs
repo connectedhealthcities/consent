@@ -122,7 +122,7 @@ namespace CHC.Consent.EFCore
         public IEnumerable<Study> GetStudies(IUserProvider user)
         {
             return Studies.ToInjectable()
-                .WithReadPermissionGrantedTo(user)
+                //.WithReadPermissionGrantedTo(user)
                 .Select(_ => new Study(_.Id, _.Name))
                 .ToArray();
         }
