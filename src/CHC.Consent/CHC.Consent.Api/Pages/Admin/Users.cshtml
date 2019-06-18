@@ -1,10 +1,11 @@
 @page
+@using CHC.Consent.Common.Infrastructure.Definitions
 @using CHC.Consent.EFCore.Security
 @using Microsoft.AspNetCore.Identity
-@using Microsoft.VisualStudio.Web.CodeGeneration.Contracts.Messaging
 @model Users
 @inject UserManager<ConsentUser> Users
 
+@section title { User Admin}
 
 @if (!string.IsNullOrEmpty(Model.Message))
 {
@@ -13,22 +14,30 @@
     </div>
 }
 
-<table class="table">
+@functions {
+
+    public string YesNo(bool value) => value ? "✔" : "❌";
+}
+
+<table class="table table-hover">
     <thead>
     <tr>
         <th>User name</th>
         <th>Email address</th>
         <th>Locked out?</th>
         <th>Active</th>
+        <th>Admin</th>
+        <th colspan="2"></th>
     </tr>
     </thead>
-    @foreach (var @user in Users.Users.OrderBy(_ => _.Email))
+    @foreach (var @user in Users.Users.OrderBy(_ => _.NormalizedUserName).ToArray())
     {
         <tr>
             <td>@user.UserName</td>
             <td>@user.Email</td>
-            <td>@(user.LockoutEnd?.ToString("F"))</td>
-            <td>@(user.Deleted == null ? "✔" : "❌")</td>
+            <td>@YesNo(user.LockoutEnd == null)</td>
+            <td>@YesNo(user.Deleted == null)</td>
+            <td>@YesNo(await Users.IsInRoleAsync(user, "Website Admin"))</td>
             <td>
                 @if (@user.Deleted == null)
                 {
@@ -38,32 +47,76 @@
                     </form>
                 }
             </td>
+            <td>
+                @if (@user.Deleted == null)
+                {
+                    <button type="button" class="btn btn-link" data-toggle="modal" data-target="#change-password-@user.Id">Change password</button>
+                    <div class="modal" id="change-password-@user.Id" role="dialog">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <form asp-page-handler="ChangePassword">
+                                    <div class="modal-header">
+                                        Change Password for @user.UserName
+                                    </div>
+                                    <div class="modal-body">
+                                        <input asp-for="ChangePassword.UserId" value="@user.Id"/>
+                                        <div class="form-group">
+                                            <label asp-for="ChangePassword.Password">Password</label>
+                                            <input asp-for="ChangePassword.Password" class="form-control"/>
+                                            <span asp-validation-for="ChangePassword.Password" class="text-danger"></span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label asp-for="ChangePassword.ConfirmPassword">Confirm Password</label>
+                                            <input asp-for="ChangePassword.ConfirmPassword" class="form-control"/>
+                                            <span asp-validation-for="ChangePassword.ConfirmPassword" class="text-danger"></span>
+                                        </div>
+
+
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="submit" class="btn btn-primary">Create User</button>
+                                    </div>
+                                </form></div>
+                        </div>
+                    </div>
+                }
+                
+            </td>
 
         </tr>
     }
 </table>
 
-<form asp-page-handler="Create">
-    <div asp-validation-summary="All"></div>
-    <div class="form-group">
-        <label asp-for="Create.UserName">Username</label>
-        <input asp-for="Create.UserName" class="form-control"/>
-        <span asp-validation-for="Create.UserName" class="text-danger"></span>
+<div class="card">
+    <div class="card-header">Create A User</div>
+    <div class="card-body">
+        <form asp-page-handler="Create">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Create.UserName">Username</label>
+                <input asp-for="Create.UserName" class="form-control"/>
+                <span asp-validation-for="Create.UserName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Create.EmailAddress">Email address</label>
+                <input asp-for="Create.EmailAddress" class="form-control"/>
+                <span asp-validation-for="Create.EmailAddress" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Create.Password">Password</label>
+                <input asp-for="Create.Password" class="form-control"/>
+                <span asp-validation-for="Create.Password" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Create.ConfirmPassword">Confirm Password</label>
+                <input asp-for="Create.ConfirmPassword" class="form-control"/>
+                <span asp-validation-for="Create.ConfirmPassword" class="text-danger"></span>
+            </div>
+            <div class="form-group form-check">
+                <input asp-for="Create.IsAdmin" class="form-check-input"/>
+                <label class="form-check-label" asp-for="Create.IsAdmin">Is Admin</label>
+            </div>
+            <button type="submit" class="btn btn-primary">Create User</button>
+        </form>
     </div>
-    <div class="form-group">
-        <label asp-for="Create.EmailAddress">Email address</label>
-        <input asp-for="Create.EmailAddress" class="form-control"/>
-        <span asp-validation-for="Create.EmailAddress" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="Create.Password">Password</label>
-        <input asp-for="Create.Password" class="form-control"/>
-        <span asp-validation-for="Create.Password" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="Create.ConfirmPassword">Confirm Password</label>
-        <input asp-for="Create.ConfirmPassword" class="form-control"/>
-        <span asp-validation-for="Create.ConfirmPassword" class="text-danger"></span>
-    </div>
-    <button type="submit" class="btn btn-primary">Create User</button>
-</form>
+</div>

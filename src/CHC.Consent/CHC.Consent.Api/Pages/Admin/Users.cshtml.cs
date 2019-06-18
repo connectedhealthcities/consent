@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CHC.Consent.EFCore.Security;
@@ -29,6 +30,9 @@ namespace CHC.Consent.Api.Pages.Admin
         
         [BindProperty(SupportsGet = false)]
         public CreateModel Create { get; set; }
+        
+        [BindProperty(SupportsGet = false)]
+        public ChangePasswordModel ChangePassword { get; set; }
 
         [TempData]
         public string Message { get; set; }
@@ -48,12 +52,19 @@ namespace CHC.Consent.Api.Pages.Admin
 
         public async Task<IActionResult> OnPostCreateAsync()
         {
+            ModelState.Clear();
+            TryValidateModel(Create);
             if (!ModelState.IsValid) return Page();
-            var result = await userManager.CreateAsync(
-                new ConsentUser {Email = Create.EmailAddress, UserName = Create.UserName}, Create.Password);
+            var user = new ConsentUser {Email = Create.EmailAddress, UserName = Create.UserName};
+            var result = await userManager.CreateAsync(user, Create.Password);
 
             if (result.Succeeded)
             {
+                if (Create.IsAdmin)
+                {
+                    await userManager.AddToRoleAsync(user, "Website Admin");
+                }
+
                 Message = $"User '{Create.UserName}' created";
                 return RedirectToPage();
             }
@@ -64,6 +75,29 @@ namespace CHC.Consent.Api.Pages.Admin
             }
 
             return Page();
+        }
+
+        public async Task<IActionResult> OnPostChangePasswordAsync()
+        {
+            ModelState.Clear();
+            TryValidateModel(ChangePassword);
+            if (!ModelState.IsValid) return Page();
+            
+            var user = await userManager.FindByIdAsync(ChangePassword.UserId);
+            if (user != null)
+            {
+                var resetToken = await userManager.GeneratePasswordResetTokenAsync(user);
+
+                var result = await userManager.ResetPasswordAsync(user, resetToken, ChangePassword.Password);
+
+                if (result.Succeeded)
+                {
+                    Message = $"Password updated successfully";
+                }
+            }
+
+            return RedirectToPage();
+
         }
 
         public class DeactivateModel
@@ -83,9 +117,22 @@ namespace CHC.Consent.Api.Pages.Admin
             [DataType(DataType.Password), Required, MinLength(6)]
             public string Password { get; set; }
 
-            [Compare(nameof(Password))]
+            [Compare(nameof(Password)),Required,DataType(DataType.Password)]
             public string ConfirmPassword { get; set; }
 
+            public bool IsAdmin { get; set; }
+        }
+
+        public class ChangePasswordModel
+        {
+            [HiddenInput(DisplayValue = false)]
+            public string UserId { get; set; }
+
+            [DataType(DataType.Password), Required, MinLength(6)]
+            public string Password { get; set; }
+
+            [Compare(nameof(Password)),Required,DataType(DataType.Password)]
+            public string ConfirmPassword { get; set; }
         }
     }
 

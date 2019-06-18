@@ -1,4 +1,6 @@
 ﻿@using IdentityServer4.Extensions
+@using Microsoft.AspNetCore.Authorization
+@inject IAuthorizationService Authorization
 <!DOCTYPE html>
 <html>
 <head>
@@ -22,6 +24,10 @@
             <div class="navbar-collapse collapse">
                 <ul class="navbar-nav">
                     <li><a class="nav-item nav-link active" asp-page="/Index">Home</a></li>
+                    @if ((await Authorization.AuthorizeAsync(User, "WebsiteAdmin")).Succeeded)
+                    {
+                        <li><a class="nav-item nav-link active" asp-page="/Admin/Users">User Admin</a></li>
+                    }
                 </ul>
             </div>
             

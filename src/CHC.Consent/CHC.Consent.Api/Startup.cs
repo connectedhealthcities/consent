@@ -55,7 +55,12 @@ namespace CHC.Consent.Api
                 .AddFeatureFolders()
                 .AddApplicationPart(typeof(ConsentController).Assembly)
                 .AddControllersAsServices()
-                .AddRazorPagesOptions(o => o.Conventions.AuthorizeFolder("/"));
+                .AddRazorPagesOptions(o =>
+                {
+                    o.Conventions.AuthorizeFolder("/");
+                    o.Conventions.AuthorizeFolder("/Admin", "WebsiteAdmin");
+                });
+            
 
             services.AddTransient<IConfigureOptions<MvcJsonOptions>, ConfigureJsonOptions>();
 
@@ -77,6 +82,13 @@ namespace CHC.Consent.Api
                         options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                         options.GetClaimsFromUserInfoEndpoint = true;                        
                     });
+
+            services.AddAuthorization(
+                options =>
+                {
+                    options.AddPolicy("WebsiteAdmin", p => p.RequireRole("Website Admin"));
+                });
+                
             services.AddHttpContextAccessor();
             services.AddTransient<IUserProvider, HttpContextUserProvider>();
 

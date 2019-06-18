@@ -67,6 +67,8 @@ namespace CHC.Consent.Api.Bootstrap
                 var bib4allStudyManager = "BiB4All Study Manager";
                 await roleManager.CreateAsync(new ConsentRole {Name = bib4allStudyManager});
 
+                await roleManager.CreateAsync(new ConsentRole {Name = "Website Admin"});
+
                 await userManager.CreateAsync(new ConsentUser {UserName = "alice"}, "Pass123$");
                 var consentUser = await userManager.FindByNameAsync("alice");
                 await userManager.AddToRoleAsync(consentUser, bib4allStudyManager);
