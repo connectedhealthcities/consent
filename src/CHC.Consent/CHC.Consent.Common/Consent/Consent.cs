@@ -8,7 +8,7 @@ namespace CHC.Consent.Common.Consent
     {
         public StudySubject StudySubject { get; }
         
-        public long GivenByPersonId { get; }
+        public long? GivenByPersonId { get; }
 
         public DateTime DateGiven { get; }
         public DateTime? DateWithdrawn { get; set; }
@@ -17,7 +17,7 @@ namespace CHC.Consent.Common.Consent
         public IEnumerable<Evidence> WithdrawnEvidence { get; set; }
         
         /// <inheritdoc />
-        public Consent(StudySubject studySubject, DateTime dateGiven, long givenByPersonId, IEnumerable<Evidence> givenEvidence)
+        public Consent(StudySubject studySubject, DateTime dateGiven, long? givenByPersonId, IEnumerable<Evidence> givenEvidence)
         {
             StudySubject = studySubject;
             GivenByPersonId = givenByPersonId;

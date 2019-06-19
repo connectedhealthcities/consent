@@ -30,7 +30,7 @@ namespace CHC.Consent.DataImporter
                 .WriteTo.Console(outputTemplate:"[{Level:u}] {Message:lj} {Exception} {Properties:j}{NewLine}",theme: AnsiConsoleTheme.Literate)
                 .Enrich.FromLogContext()
                 .Destructure.With<DefinitionDestructor>()
-                .MinimumLevel.Is(LogEventLevel.Debug)
+                .MinimumLevel.Is(LogEventLevel.Verbose)
                 .CreateLogger();
 
             return new HostBuilder()
@@ -56,7 +56,6 @@ namespace CHC.Consent.DataImporter
                             .AddSingleton(Log.Logger)
                             .AddSingleton<IUnhandledExceptionHandler,ExceptionLogger>()
                         )
-                
                 .UseSerilog()
                 .RunCommandLineApplicationAsync<Program>(args);
             

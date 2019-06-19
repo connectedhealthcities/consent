@@ -40,65 +40,41 @@ namespace CHC.Consent.Common.Consent.Evidences
         {
             public static class UserParts
             {
-                public static StringEvidenceDefinition Name { get; } = String("Name");
-                public static StringEvidenceDefinition Email { get; } = String(("Email"));
-                public static StringEvidenceDefinition Id { get; } = String("Id");
+                public static EvidenceDefinition Name { get; } = String("Name");
+                public static EvidenceDefinition Email { get; } = String(("Email"));
+                public static EvidenceDefinition Id { get; } = String("Id");
             }
 
-            public static readonly CompositeEvidenceDefinition User = Composite("User", UserParts.Email, UserParts.Name);
-            public static readonly StringEvidenceDefinition IpAddress = String("IP Address");
+            public static readonly EvidenceDefinition User = Composite("User", UserParts.Email, UserParts.Name);
+            public static readonly EvidenceDefinition IpAddress = String("IP Address");
 
         }
 
-        public static readonly CompositeEvidenceDefinition Website = Composite("Website", WebsiteParts.User, WebsiteParts.IpAddress);
+        public static readonly EvidenceDefinition Website = Composite("Website", WebsiteParts.User, WebsiteParts.IpAddress);
 
         public static class Bib4AllWithdrawalParts
         {
-            public static readonly StringEvidenceDefinition RequestedBy = String("Requested By");
-            public static readonly StringEvidenceDefinition Relationship = String("Relationship to Subject");
+            public static readonly EvidenceDefinition RequestedBy = String("Requested By");
+            public static readonly EvidenceDefinition Relationship = String("Relationship to Subject");
         }
 
-        public class CompositeEvidenceDefinition : EvidenceDefinition
-        {
-            /// <inheritdoc />
-            public CompositeEvidenceDefinition(string name, IDefinitionType type) : base(name, type)
-            {
-            }
-
-            public Evidence Create(params Evidence[] parts)
-            {
-                return Evidence.Composite(this, parts);
-            }
-        }
-
-        public class StringEvidenceDefinition : EvidenceDefinition
-        {
-            /// <inheritdoc />
-            public StringEvidenceDefinition(string name, IDefinitionType type) : base(name, type)
-            {
-            }
-
-            public Evidence Create(string value)
-            {
-                return Evidence.String(this, value);
-            }
-        }
         
-        public static readonly CompositeEvidenceDefinition Bib4AllWithdrawal =
+        
+        public static readonly EvidenceDefinition Bib4AllWithdrawal =
             Composite(
                 "Bib4All Withdrawal Request",
                 Bib4AllWithdrawalParts.RequestedBy,
                 Bib4AllWithdrawalParts.Relationship
             );
 
-        private static StringEvidenceDefinition String(string name)
+        private static EvidenceDefinition String(string name)
         {
-            return new StringEvidenceDefinition(name, new StringDefinitionType());
+            return new EvidenceDefinition(name, new StringDefinitionType());
         }
 
-        private static CompositeEvidenceDefinition Composite(string name, params IDefinition[] parts)
+        private static EvidenceDefinition Composite(string name, params IDefinition[] parts)
         {
-            return new CompositeEvidenceDefinition(name, new CompositeDefinitionType(parts));
+            return new EvidenceDefinition(name, new CompositeDefinitionType(parts));
         }
 
         private static EvidenceDefinition Number(string name)

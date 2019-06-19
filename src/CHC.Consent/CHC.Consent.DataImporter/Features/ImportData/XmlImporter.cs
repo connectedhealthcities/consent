@@ -69,17 +69,21 @@ namespace CHC.Consent.DataImporter.Features.ImportData
         {
             Log.Debug("Processing Consent GivenOn {date} for person {personId}", consent.DateGiven, personId);
             Log.Verbose("Processing consent {@consent}", consent);
-            
-            Log.Verbose("Find consent provider from {@givenBy}", consent.GivenBy);
-            var givenBy = api.FindPerson(consent.GivenBy);
 
-            if (givenBy == null)
+            SearchResult givenBy = null;
+            if (consent.GivenBy != null && consent.GivenBy.Length > 0)
             {
-                Log.Verbose(
-                    "Cannot find person who gave consent - {@specification}",
-                    new object[] {consent.GivenBy});
-                Log.Error("Cannot find person who gave consent");
-                throw new NotImplementedException("Cannot find ");
+                Log.Verbose("Find consent provider from {@givenBy}", consent.GivenBy);
+                givenBy = api.FindPerson(consent.GivenBy);
+
+                if (givenBy == null)
+                {
+                    Log.Verbose(
+                        "Cannot find person who gave consent - {@specification}",
+                        new object[] {consent.GivenBy});
+                    Log.Error("Cannot find person who gave consent");
+                    throw new NotImplementedException("Cannot find ");
+                }
             }
 
             var existingSubject = api.FindBySubjectId(consent.StudyId, personId);
@@ -110,7 +114,7 @@ namespace CHC.Consent.DataImporter.Features.ImportData
                     personId,
                     consent.DateGiven,
                     consent.Evidence,
-                    givenBy.PersonId));
+                    givenBy?.PersonId));
         }
     }
 }

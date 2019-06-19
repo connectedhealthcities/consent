@@ -99,8 +99,12 @@ namespace CHC.Consent.EFCore
             
             if(subject == null) throw new NotImplementedException($"StudySubject#{consent.StudySubject} not found");
 
-            var givenBy = People.Get(consent.GivenByPersonId);
-            if(givenBy == null) throw new NotImplementedException($"Person#{consent.GivenByPersonId} not found");
+            PersonEntity givenBy = null;
+            if (consent.GivenByPersonId != null)
+            {
+                givenBy = People.Get(consent.GivenByPersonId.Value);
+                if (givenBy == null) throw new NotImplementedException($"Person#{consent.GivenByPersonId} not found");
+            }
 
             var saved = Consents.Add(
                 new ConsentEntity {DateProvided = consent.DateGiven, GivenBy = givenBy, StudySubject = subject});
@@ -244,7 +248,7 @@ namespace CHC.Consent.EFCore
                         new PersonIdentity(person.Id)), 
                     c.DateProvided, 
                     c.DateWithdrawn,
-                    GivenById = c.GivenBy.Id,
+                    GivenById = (long?)c.GivenBy.Id,
                     GivenEvidence = c.GivenEvidence.ToArray(),
                     WithdrawnEvidence = c.WithdrawnEvidence.ToArray()
                 }
@@ -253,10 +257,10 @@ namespace CHC.Consent.EFCore
                     c.StudySubject,
                     c.DateProvided,
                     c.GivenById,
-                    c.GivenEvidence.AsQueryable().Select(MarshallEvidenceFromEntity()))
+                    c.GivenEvidence?.AsQueryable().Select(MarshallEvidenceFromEntity()))
                 {
                     DateWithdrawn = c.DateWithdrawn,
-                    WithdrawnEvidence = c.WithdrawnEvidence.AsQueryable().Select(MarshallEvidenceFromEntity())
+                    WithdrawnEvidence = c.WithdrawnEvidence?.AsQueryable().Select(MarshallEvidenceFromEntity())
                 };
 
         }

@@ -22,7 +22,6 @@ namespace CHC.Consent.Api.Features.Consent
         [Required]
         public IIdentifierValueDto[] Evidence { get; set; }
         
-        [Required]
-        public long GivenBy { get; set; } 
+        public long? GivenBy { get; set; } 
     }
 }
