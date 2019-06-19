@@ -2,7 +2,7 @@ using System;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace CHC.Consent.DataImporter.Features.ImportData
+namespace CHC.Consent.DataTool.Features.ImportData
 {
     public class XmlParseException : Exception
     {

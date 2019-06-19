@@ -1,12 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
-using CHC.Consent.Api.Client;
 using JetBrains.Annotations;
 using McMaster.Extensions.CommandLineUtils;
-using Microsoft.Extensions.Logging;
-using Microsoft.Rest;
 
-namespace CHC.Consent.DataImporter.Features.ImportData
+namespace CHC.Consent.DataTool.Features.ImportData
 {
     [Command("import")]
     class ImportCommand

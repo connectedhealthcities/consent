@@ -6,7 +6,7 @@ using System.Xml.Linq;
 using CHC.Consent.Api.Client.Models;
 using Serilog;
 
-namespace CHC.Consent.DataImporter.Features.ImportData
+namespace CHC.Consent.DataTool.Features.ImportData
 {
     public class IdentifierValueParser
     {

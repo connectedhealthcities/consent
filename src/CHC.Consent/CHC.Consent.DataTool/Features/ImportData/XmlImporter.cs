@@ -7,7 +7,7 @@ using CHC.Consent.Api.Client.Models;
 using Serilog;
 using Serilog.Context;
 
-namespace CHC.Consent.DataImporter.Features.ImportData
+namespace CHC.Consent.DataTool.Features.ImportData
 {
     internal class XmlImporter
     {

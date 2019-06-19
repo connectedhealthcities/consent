@@ -4,11 +4,11 @@ using System.Threading.Tasks;
 using CHC.Consent.Api.Client;
 using IdentityModel;
 using IdentityModel.Client;
-using Serilog;
 using Microsoft.Rest;
+using Serilog;
 using Serilog.Events;
 
-namespace CHC.Consent.DataImporter
+namespace CHC.Consent.DataTool
 {
     public class ApiClientProvider
     {

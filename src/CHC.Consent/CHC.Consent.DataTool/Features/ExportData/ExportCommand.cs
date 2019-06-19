@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Logging;
 
-namespace CHC.Consent.DataImporter.Features.ExportData
+namespace CHC.Consent.DataTool.Features.ExportData
 {
     [Command("export")]
     public class ExportCommand

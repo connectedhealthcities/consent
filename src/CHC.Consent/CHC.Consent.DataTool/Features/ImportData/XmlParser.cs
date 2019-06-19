@@ -9,7 +9,7 @@ using CHC.Consent.Api.Client.Models;
 using Serilog;
 using Serilog.Context;
 
-namespace CHC.Consent.DataImporter.Features.ImportData
+namespace CHC.Consent.DataTool.Features.ImportData
 {
     /// <summary>
     /// <para>Simple XML parser that tries to match element names against constructor arguments.</para>

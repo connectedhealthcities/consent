@@ -22,7 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CHC.Consent.Api.Client\CHC.Consent.Api.Client.csproj" />
     <ProjectReference Include="..\CHC.Consent.Api\CHC.Consent.Api.csproj" />
-    <ProjectReference Include="..\CHC.Consent.DataImporter\CHC.Consent.DataImporter.csproj" />
+    <ProjectReference Include="..\CHC.Consent.DataTool\CHC.Consent.DataTool.csproj" />
     <ProjectReference Include="..\CHC.Consent.Testing.Utils\CHC.Consent.Testing.Utils.csproj" />
   </ItemGroup>
 </Project>

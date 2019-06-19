@@ -4,6 +4,8 @@
     <OutputType>Exe</OutputType>
     <LangVersion>latest</LangVersion>
     <RuntimeIdentifiers>netcore21;win-x64</RuntimeIdentifiers>
+    <AssemblyName>CHC.Consent.DataTool</AssemblyName>
+    <RootNamespace>CHC.Consent.DataTool</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CsvHelper" Version="12.1.1" />

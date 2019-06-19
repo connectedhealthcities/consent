@@ -12,7 +12,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHC.Consent.EFCore.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHC.Consent.Testing.Utils", "CHC.Consent.Testing.Utils\CHC.Consent.Testing.Utils.csproj", "{7D1EFE71-9C0B-4F6A-8D17-DF15D18F5AA3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHC.Consent.DataImporter", "CHC.Consent.DataImporter\CHC.Consent.DataImporter.csproj", "{2268F6BE-3E26-4F53-AFE4-931C52AF6AE5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHC.Consent.DataTool", "CHC.Consent.DataTool\CHC.Consent.DataTool.csproj", "{2268F6BE-3E26-4F53-AFE4-931C52AF6AE5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CHC.Consent.Api.Client", "CHC.Consent.Api.Client\CHC.Consent.Api.Client.csproj", "{02A0FC9D-494A-412F-AFCA-83589832619C}"
 EndProject

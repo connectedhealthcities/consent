@@ -4,7 +4,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using CHC.Consent.Api.Client.Models;
-using CHC.Consent.DataImporter.Features.ExportData;
+using CHC.Consent.DataTool.Features.ExportData;
 using CHC.Consent.Testing.Utils;
 using FluentAssertions;
 using Xunit;

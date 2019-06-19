@@ -4,7 +4,7 @@ using System.IO;
 using CHC.Consent.Api.Client.Models;
 using CsvHelper;
 
-namespace CHC.Consent.DataImporter.Features.ExportData
+namespace CHC.Consent.DataTool.Features.ExportData
 {
     public abstract class CsvWriterBase<T> where T : IHaveIdentifiers
     {

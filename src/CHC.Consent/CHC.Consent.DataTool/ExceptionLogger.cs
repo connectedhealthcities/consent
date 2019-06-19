@@ -2,7 +2,7 @@ using System;
 using McMaster.Extensions.Hosting.CommandLine;
 using Serilog;
 
-namespace CHC.Consent.DataImporter
+namespace CHC.Consent.DataTool
 {
     /// <summary>
     /// Logs errors to Serilog

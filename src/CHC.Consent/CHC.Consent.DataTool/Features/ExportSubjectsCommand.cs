@@ -9,7 +9,7 @@ using JetBrains.Annotations;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Logging;
 
-namespace CHC.Consent.DataImporter.Features
+namespace CHC.Consent.DataTool.Features
 {
     [Command("export-subjects")]
     public class ExportSubjectsCommand

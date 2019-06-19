@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace CHC.Consent.DataImporter.Features.ExportData
+namespace CHC.Consent.DataTool.Features.ExportData
 {
     public abstract class CsvExporter
     {

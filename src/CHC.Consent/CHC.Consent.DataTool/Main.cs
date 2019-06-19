@@ -1,24 +1,20 @@
 ﻿using System.Collections.Generic;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Xml;
 using CHC.Consent.Api.Client.Models;
-using CHC.Consent.DataImporter.Features;
-using CHC.Consent.DataImporter.Features.ExportData;
-using CHC.Consent.DataImporter.Features.ImportData;
+using CHC.Consent.DataTool.Features;
+using CHC.Consent.DataTool.Features.ExportData;
+using CHC.Consent.DataTool.Features.ImportData;
 using McMaster.Extensions.CommandLineUtils;
 using McMaster.Extensions.Hosting.CommandLine;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
-using Serilog.Formatting.Json;
 using Serilog.Sinks.SystemConsole.Themes;
 
-namespace CHC.Consent.DataImporter
+namespace CHC.Consent.DataTool
 {
     [Command("chc-consent"), Subcommand(typeof(ImportCommand), typeof(ExportCommand), typeof(ExportSubjectsCommand)), HelpOption]
     public class Program

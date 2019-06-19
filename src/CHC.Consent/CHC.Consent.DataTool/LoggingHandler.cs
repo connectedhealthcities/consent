@@ -5,7 +5,7 @@ using Microsoft.Rest;
 using Serilog;
 using Serilog.Context;
 
-namespace CHC.Consent.DataImporter
+namespace CHC.Consent.DataTool
 {
     internal class LoggingHandler : DelegatingHandler
     {

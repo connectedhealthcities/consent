@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using CHC.Consent.Api.Client.Models;
 
-namespace CHC.Consent.DataImporter.Features.ExportData
+namespace CHC.Consent.DataTool.Features.ExportData
 {
     public class StudySubjectWithIdentifiers : IHaveIdentifiers
     {

@@ -1,4 +1,4 @@
-namespace CHC.Consent.DataImporter
+namespace CHC.Consent.DataTool
 {
     public class ApiConfiguration
     {
