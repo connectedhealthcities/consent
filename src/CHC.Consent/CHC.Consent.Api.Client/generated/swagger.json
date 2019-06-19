@@ -591,8 +591,7 @@
         "subjectIdentifier",
         "personId",
         "dateGiven",
-        "evidence",
-        "givenBy"
+        "evidence"
       ],
       "type": "object",
       "properties": {
@@ -1194,7 +1193,7 @@
   "securityDefinitions": {
     "oauth2": {
       "flow": "implicit",
-      "authorizationUrl": "http://localhost:5000/connect/authorize",
+      "authorizationUrl": "http://localhost:57911/connect/authorize",
       "scopes": {
         "openid": "Open id (Required)",
         "profile": "Profile",

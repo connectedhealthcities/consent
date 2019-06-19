@@ -7,6 +7,7 @@ using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.Common.Infrastructure.Definitions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Swagger;
@@ -21,19 +22,22 @@ namespace CHC.Consent.Api.Infrastructure.Web
         /// <inheritdoc />
         public SwaggerGenOptionsProvider(IServiceProvider services)
         {
-            
             Services = services;
         }
 
         /// <inheritdoc />
         public void Configure(SwaggerGenOptions gen)
         {
+            var oAuth2Options = Services.GetRequiredService<IConfiguration>()
+                .GetSection("IdentityServer")
+                .Get<IdentityServerConfiguration>();
+            
             gen.AddSecurityDefinition(
                 "oauth2",
                 new OAuth2Scheme
                 {
                     Flow = "implicit",
-                    AuthorizationUrl = "http://localhost:5000/connect/authorize",
+                    AuthorizationUrl =  new UriBuilder(oAuth2Options.Authority) { Path = "connect/authorize" }.Uri.ToString(),
                     Scopes = new Dictionary<string, string>
                     {
                         ["openid"] = "Open id (Required)",
@@ -64,6 +68,4 @@ namespace CHC.Consent.Api.Infrastructure.Web
                 matchSpecificationTypes.Select(_ => _.Name.ToLowerCamel()));
         }
     }
-
-    
 }
