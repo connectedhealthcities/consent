@@ -20,6 +20,7 @@ using IIdentifierValueDto = CHC.Consent.Api.Infrastructure.IIdentifierValueDto;
 using MatchSpecification = CHC.Consent.Api.Client.Models.MatchSpecification;
 using PersonIdentity = CHC.Consent.Common.PersonIdentity;
 using PersonSpecification = CHC.Consent.Api.Client.Models.PersonSpecification;
+using UpdateMode = CHC.Consent.Api.Client.Models.UpdateMode;
 
 namespace CHC.Consent.Tests.Api.Controllers
 {
@@ -214,6 +215,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                             nhsNumber,
                             ClientIdentifierValues.Address("3 Sheaf Street", "Leeds", postcode: "LS10 1HD")
                         },
+                        UpdateMode.CreateOrUpdate,
                         "medway",
                         new[]
                         {

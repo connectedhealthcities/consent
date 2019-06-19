@@ -62,6 +62,7 @@ namespace CHC.Consent.Tests.Integration.Api
                                 name,
                                 nhsNumber
                             },
+                            UpdateMode.CreateOrUpdate,
                             "medway",
                             new List<MatchSpecification>
                             {
@@ -90,6 +91,7 @@ namespace CHC.Consent.Tests.Integration.Api
                     _ => response  = _.PutPerson(
                         new PersonSpecification(
                             new List<IIdentifierValueDto> {identifier},
+                            UpdateMode.CreateOrUpdate,
                             "medway",
                             new List<MatchSpecification>
                             {
@@ -230,6 +232,7 @@ namespace CHC.Consent.Tests.Integration.Api
             var response = ApiClient.PutPerson(
                 new PersonSpecification(
                     new List<IIdentifierValueDto> {nhsNumber, name},
+                    UpdateMode.CreateOrUpdate,
                     "medway",
                     new List<MatchSpecification>
                     {
@@ -267,6 +270,7 @@ namespace CHC.Consent.Tests.Integration.Api
             var response = ApiClient.PutPerson(
                 new PersonSpecification(
                     new[] {name, nhsNumber,},
+                    UpdateMode.CreateOrUpdate,
                     "medway",
                     new[]
                     {
