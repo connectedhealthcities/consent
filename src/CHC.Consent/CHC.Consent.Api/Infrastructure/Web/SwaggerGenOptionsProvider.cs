@@ -52,6 +52,8 @@ namespace CHC.Consent.Api.Infrastructure.Web
             gen.SchemaFilter<SwaggerSchemaSubtypeFilter<IIdentifierValueDto>>(
                 IdentifierValueDtos.KnownDtoTypes,
                 IdentifierValueDtos.KnownDtoTypes.Select(_ => _.FriendlyId()));
+            
+            gen.SchemaFilter<EnumSchemaFilter>();
 
             var definitionTypes = new [] { typeof(IdentifierDefinition), typeof(EvidenceDefinition) };
             gen.SchemaFilter<SwaggerSchemaSubtypeFilter<IDefinition>>(
@@ -66,6 +68,22 @@ namespace CHC.Consent.Api.Infrastructure.Web
             gen.SchemaFilter<SwaggerSchemaSubtypeFilter<MatchSpecification>>(
                 matchSpecificationTypes,
                 matchSpecificationTypes.Select(_ => _.Name.ToLowerCamel()));
+        }
+    }
+
+    public class EnumSchemaFilter : ISchemaFilter
+    {
+        /// <inheritdoc />
+        public void Apply(Schema schema, SchemaFilterContext context)
+        {
+            if (!context.SystemType.IsEnum) return;
+            schema.Extensions.Add(
+                "x-ms-enum",
+                new
+                {
+                    name = context.SystemType.Name,
+                    modelAsString = false
+                });
         }
     }
 }

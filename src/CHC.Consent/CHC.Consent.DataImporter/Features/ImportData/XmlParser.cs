@@ -33,25 +33,27 @@ namespace CHC.Consent.DataImporter.Features.ImportData
                 var lineInfo = (IXmlLineInfo) element;
 
 
-                if(definition == null) yield break;
-                if(!(definition.Type is CompositeDefinitionType composite)) yield break;
+                if (definition == null) yield break;
+                if (!(definition.Type is CompositeDefinitionType composite)) yield break;
 
                 var fields = composite.Identifiers;
 
                 var baseUri = fields.FirstOrDefault(_ => _.SystemName == "base-uri");
                 var lineNumber = fields.FirstOrDefault(_ => _.SystemName == "line-number");
                 var linePosition = fields.FirstOrDefault(_ => _.SystemName == "line-position");
-                
+
                 var innerValues = new List<IIdentifierValueDto>();
                 if (baseUri != null && !string.IsNullOrWhiteSpace(element.BaseUri))
                     innerValues.Add(new IdentifierValueDtoString("base-uri", element.BaseUri));
-                
+
                 if (lineInfo.HasLineInfo())
                 {
-                    if(lineNumber != null) innerValues.Add(new IdentifierValueDtoInt64(lineNumber.SystemName, lineInfo.LineNumber));
-                    if(linePosition != null) innerValues.Add(new IdentifierValueDtoInt64(linePosition.SystemName, lineInfo.LinePosition));
+                    if (lineNumber != null)
+                        innerValues.Add(new IdentifierValueDtoInt64(lineNumber.SystemName, lineInfo.LineNumber));
+                    if (linePosition != null)
+                        innerValues.Add(new IdentifierValueDtoInt64(linePosition.SystemName, lineInfo.LinePosition));
                 }
-                
+
                 yield return new IdentifierValueDtoIIdentifierValueDto(definition.SystemName, innerValues);
 
             }
@@ -96,7 +98,7 @@ namespace CHC.Consent.DataImporter.Features.ImportData
                 throw new NotImplementedException();
             }
 
-            
+
             Authority = xmlReader["authority"];
             if (Authority == null)
             {
@@ -104,17 +106,36 @@ namespace CHC.Consent.DataImporter.Features.ImportData
                 throw new NotImplementedException($"people element has no authority attribute");
             }
 
+            var updateModeString = xmlReader["mode"];
+            if (updateModeString != null)
+            {
+                if (!Enum.TryParse(typeof(UpdateMode), updateModeString, out var updateMode))
+                {
+
+                    Log.Fatal(
+                        "people element has unknown update mode {updateMode}  at {@lineInfo}",
+                        updateModeString,
+                        LineInfo(xmlReader));
+                    throw new NotImplementedException($"{updateModeString} is not a valid update mode");
+                }
+
+                this.UpdateMode = (UpdateMode) updateMode;
+            }
+
+
             while (xmlReader.Read())
             {
                 if (IsEndOfPeople(xmlReader)) break;
                 var lineInfo = LineInfo(xmlReader);
-                using(LogContext.PushProperty("FileLocation",lineInfo))
+                using (LogContext.PushProperty("FileLocation", lineInfo))
                 {
                     foreach (var importedPersonSpecification in ParsePeople(xmlReader))
                         yield return importedPersonSpecification;
                 }
             }
         }
+
+        public UpdateMode UpdateMode { get; set; } = UpdateMode.CreateOrUpdate;
 
         public string Authority { get; private set; }
 
@@ -136,6 +157,7 @@ namespace CHC.Consent.DataImporter.Features.ImportData
                 Log.Error("Don't know how to handle {name} {type}", xmlReader.Name, xmlReader.NodeType);
                 throw new NotImplementedException();
             }
+
             if (xmlReader.LocalName != "person")
             {
                 Log.Error("Don't know how to handle {name} {type}", xmlReader.Name, xmlReader.NodeType);
@@ -153,6 +175,7 @@ namespace CHC.Consent.DataImporter.Features.ImportData
                     .Select(ParseIdentifier)
                     .ToArray(),
                 Authority = Authority,
+                UpdateMode = UpdateMode,
                 MatchSpecifications =
                     personNode.XPathSelectElements("/person/lookup/match")
                         .Select(ParseMatchSpecification)
@@ -173,10 +196,10 @@ namespace CHC.Consent.DataImporter.Features.ImportData
         }
 
         public ImportedConsentSpecification ParseConsent(
-            XElement consentNode) 
+            XElement consentNode)
         {
-            var date = (DateTime)consentNode.Attribute("date-given");
-            var studyId = (long)consentNode.Attribute("study-id");
+            var date = (DateTime) consentNode.Attribute("date-given");
+            var studyId = (long) consentNode.Attribute("study-id");
 
             //TODO: better error recording and typey stuff here
 
@@ -204,12 +227,12 @@ namespace CHC.Consent.DataImporter.Features.ImportData
         {
             using (LogContext.PushProperty("DefinitionType", "Evidence"))
             {
-               return consentNode.XPathSelectElements("evidence/evidence")
+                return consentNode.XPathSelectElements("evidence/evidence")
                     .Select(evidenceValueParser.Parse)
                     .ToArray();
             }
 
-            
+
         }
 
         private IEnumerable<IIdentifierValueDto> GetImportSourceEvidence(XElement node)
@@ -221,9 +244,9 @@ namespace CHC.Consent.DataImporter.Features.ImportData
         public MatchSpecification ParseMatchSpecification(XContainer node)
         {
             var specifications = ParseMatchSpecifications(node).ToArray();
-            return specifications.Length == 1 
-                    ? specifications.First()
-                    : new CompositeMatchSpecification(specifications);
+            return specifications.Length == 1
+                ? specifications.First()
+                : new CompositeMatchSpecification(specifications);
         }
 
         private IEnumerable<MatchSpecification> ParseMatchSpecifications(XContainer node)
@@ -231,17 +254,21 @@ namespace CHC.Consent.DataImporter.Features.ImportData
             foreach (var element in node.Elements())
             {
                 if (element.Name == "identifier")
-                    yield return new IdentifierMatchSpecification(new [] { ParseIdentifier(element) });
+                    yield return new IdentifierMatchSpecification(new[] {ParseIdentifier(element)});
                 else if (element.Name == "agency")
                 {
                     var agency = (string) element.Attribute("name");
                     var personAgencyId = (string) element.Attribute("id");
-                    
-                    if(string.IsNullOrWhiteSpace(agency))
-                       throw new XmlParseException(element, "agency match specification has no, or empty, agency attribute");
-                    if(string.IsNullOrWhiteSpace(personAgencyId))
-                       throw new XmlParseException(element, "agency match specification has no, or empty, id attribute");
-                    
+
+                    if (string.IsNullOrWhiteSpace(agency))
+                        throw new XmlParseException(
+                            element,
+                            "agency match specification has no, or empty, agency attribute");
+                    if (string.IsNullOrWhiteSpace(personAgencyId))
+                        throw new XmlParseException(
+                            element,
+                            "agency match specification has no, or empty, id attribute");
+
                     yield return new PersonAgencyIdMatchSpecification(
                         agency,
                         personAgencyId
@@ -252,9 +279,9 @@ namespace CHC.Consent.DataImporter.Features.ImportData
                     var studyIdAttribute = element.Attribute("study-id");
                     if (studyIdAttribute == null)
                         throw new XmlParseException(element, "consented match specification has no study-id attribute");
-                    if(!long.TryParse(studyIdAttribute.Value, out var studyId))
+                    if (!long.TryParse(studyIdAttribute.Value, out var studyId))
                         throw new XmlParseException(element, $"'{studyIdAttribute}' is not a valid study id");
-                    
+
                     yield return new ConsentedForStudyMatchSpecification(studyId);
                 }
             }

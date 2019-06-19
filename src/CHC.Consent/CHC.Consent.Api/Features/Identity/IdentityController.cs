@@ -87,6 +87,7 @@ namespace CHC.Consent.Api.Features.Identity
             ValidateIdentifierTypes(specification.Identifiers, nameof(specification.Identifiers));
             ValidateSpecifications(specification.MatchSpecifications, nameof(specification.MatchSpecifications));
             if (!ModelState.IsValid) return new BadRequestObjectResult(ModelState);
+            
             //identifierChecker.EnsureHasNoInvalidDuplicates(specification.Identifiers);
 
             var identifiers = IdentifierDtoMarshaller.ConvertToIdentifiers(specification.Identifiers);
@@ -96,18 +97,26 @@ namespace CHC.Consent.Api.Features.Identity
 
             if (person == null)
             {
+                if (specification.UpdateMode == UpdateMode.UpdateOnly)
+                {
+                    return NotFound();
+                }
+
                 person = IdentityRepository.CreatePerson(identifiers, authority);
                 return CreatedAtAction("GetPerson", new {id = person.Id}, new PersonCreatedResult {PersonId = person});
             }
-            else
-            {
-                IdentityRepository.UpdatePerson(person, identifiers, authority);
 
-                return new SeeOtherOjectActionResult(
-                    "GetPerson",
-                    routeValues: new {id = person.Id},
-                    result: new PersonCreatedResult {PersonId = person});
+            if (specification.UpdateMode == UpdateMode.CreateOnly)
+            {
+                return BadRequest(new {Message = $"Person already exists"});
             }
+            
+            IdentityRepository.UpdatePerson(person, identifiers, authority);
+
+            return new SeeOtherOjectActionResult(
+                "GetPerson",
+                routeValues: new {id = person.Id},
+                result: new PersonCreatedResult {PersonId = person});
         }
 
         private void ValidateSpecifications(IEnumerable<MatchSpecification> matchSpecifications, string modeStateKey)

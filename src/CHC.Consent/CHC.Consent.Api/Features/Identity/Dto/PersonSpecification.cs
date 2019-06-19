@@ -9,6 +9,7 @@
     {
         public List<IIdentifierValueDto> Identifiers { get; set; } = new List<IIdentifierValueDto>();
 
+        public UpdateMode UpdateMode { get; set; }
         
         public string Authority { get; set; }
 

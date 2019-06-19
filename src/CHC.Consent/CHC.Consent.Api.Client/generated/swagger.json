@@ -889,6 +889,19 @@
             "$ref": "#/definitions/IIdentifierValueDto"
           }
         },
+        "updateMode": {
+          "enum": [
+            "CreateOrUpdate",
+            "UpdateOnly",
+            "CreateOnly"
+          ],
+          "type": "string",
+          "x-ms-enum": {
+            "name": "UpdateMode",
+            "modelAsString": false,
+            "oldModelAsString": false
+          }
+        },
         "authority": {
           "type": "string"
         },

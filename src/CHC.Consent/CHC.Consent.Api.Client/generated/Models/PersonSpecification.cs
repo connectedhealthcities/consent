@@ -22,9 +22,12 @@ namespace CHC.Consent.Api.Client.Models
         /// <summary>
         /// Initializes a new instance of the PersonSpecification class.
         /// </summary>
-        public PersonSpecification(IList<IIdentifierValueDto> identifiers = default(IList<IIdentifierValueDto>), string authority = default(string), IList<MatchSpecification> matchSpecifications = default(IList<MatchSpecification>))
+        /// <param name="updateMode">Possible values include: 'CreateOrUpdate',
+        /// 'UpdateOnly', 'CreateOnly'</param>
+        public PersonSpecification(IList<IIdentifierValueDto> identifiers = default(IList<IIdentifierValueDto>), UpdateMode? updateMode = default(UpdateMode?), string authority = default(string), IList<MatchSpecification> matchSpecifications = default(IList<MatchSpecification>))
         {
             Identifiers = identifiers;
+            UpdateMode = updateMode;
             Authority = authority;
             MatchSpecifications = matchSpecifications;
             CustomInit();
@@ -39,6 +42,13 @@ namespace CHC.Consent.Api.Client.Models
         /// </summary>
         [JsonProperty(PropertyName = "identifiers")]
         public IList<IIdentifierValueDto> Identifiers { get; set; }
+
+        /// <summary>
+        /// Gets or sets possible values include: 'CreateOrUpdate',
+        /// 'UpdateOnly', 'CreateOnly'
+        /// </summary>
+        [JsonProperty(PropertyName = "updateMode")]
+        public UpdateMode? UpdateMode { get; set; }
 
         /// <summary>
         /// </summary>
