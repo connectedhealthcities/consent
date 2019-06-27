@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using CHC.Consent.Api.Client.Models;
 using CHC.Consent.DataTool.Features;
@@ -29,20 +30,17 @@ namespace CHC.Consent.DataTool
                 .MinimumLevel.Is(LogEventLevel.Verbose)
                 .CreateLogger();
 
+            
             return new HostBuilder()
                 .ConfigureAppConfiguration(
                     c =>
+                    {
+                        Log.Information(
+                            "Using settings from {appSettingsPath}",
+                            c.GetFileProvider().GetFileInfo("appsettings.json").PhysicalPath);
                         c.AddJsonFile("appsettings.json", false)
-                            .AddEnvironmentVariables()
-                            .AddCommandLine(
-                                args,
-                                new Dictionary<string, string>
-                                {
-                                    ["-url"] = "Api_BaseUrl", 
-                                    ["-client_id"] = "Api_ClientId",
-                                    ["-secret"] = "Api_ClientSecret"
-                                })
-                )
+                            .AddEnvironmentVariables();
+                    })
                 
                 .ConfigureServices(
                     (context, services) =>
