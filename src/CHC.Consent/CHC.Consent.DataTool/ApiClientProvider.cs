@@ -80,7 +80,7 @@ namespace CHC.Consent.DataTool
             Logger.Debug("Getting oauth2 discovery document from {baseUrl}", Configuration.BaseUrl);
             using (var httpClient = CreateTokenHttpClient())
             {
-                var document = await httpClient.GetDiscoveryDocumentAsync();
+                var document = await httpClient.GetDiscoveryDocumentAsync(new DiscoveryDocumentRequest{ Policy = {RequireHttps = false}});
                 EnsureSuccess(document);
                 return document;
             }
