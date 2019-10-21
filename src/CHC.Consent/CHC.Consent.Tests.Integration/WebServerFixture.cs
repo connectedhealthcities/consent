@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Threading.Tasks;
 using CHC.Consent.Api;
 using CHC.Consent.Api.Client.Models;
 using CHC.Consent.EFCore;
@@ -122,7 +123,6 @@ namespace CHC.Consent.Tests
                         } )
                 );
 
-
             Server = new TestServer(
                 new WebHostBuilder()
                     .UseStartup<InMemoryDatabaseStartup>()
@@ -149,8 +149,9 @@ namespace CHC.Consent.Tests
                         })
             );
 
-            
-            
+            var db = Server.Host.Services.GetRequiredService<ConsentContext>();
+            db.Database.EnsureCreated();
+
             Client = Server.CreateClient();
             Client.GetAsync("/");
 
