@@ -106,7 +106,7 @@ namespace CHC.Consent.Api.Bootstrap
 
                     consent.EvidenceDefinition.AddRange(
                         KnownEvidence.Registry.Cast<EvidenceDefinition>()
-                            .Select(_ => new EvidenceDefinitionEntity(_.Name, _.SystemName))
+                            .Select(_ => new EvidenceDefinitionEntity(_.Name, _.SystemName + ":" + _.Type.SystemName))
                             .Where(e => consent.EvidenceDefinition.All(ent => ent.Name != e.Name))
                     );
 

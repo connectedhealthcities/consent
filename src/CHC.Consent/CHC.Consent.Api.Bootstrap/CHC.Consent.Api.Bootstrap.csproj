@@ -9,4 +9,9 @@
     <ProjectReference Include="..\CHC.Consent.Api\CHC.Consent.Api.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
