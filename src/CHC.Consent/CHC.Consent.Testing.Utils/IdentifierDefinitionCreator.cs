@@ -24,13 +24,6 @@ namespace CHC.Consent.Testing.Utils
         public void Visit(IDefinition definition, CompositeDefinitionType type)
         {
             Write(definition, type);
-            text.Write("(");
-            foreach (var (index, identifier) in type.Identifiers.AddIndex())
-            {
-                if (index > 0) text.Write(",");
-                identifier.Accept(this);
-            }
-            text.Write(")");
         }
 
         /// <inheritdoc />

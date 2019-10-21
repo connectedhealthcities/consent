@@ -13,6 +13,7 @@ using CHC.Consent.Common.Identity;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure;
 using CHC.Consent.EFCore;
+using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Identity;
 using CHC.Consent.Parsing;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -125,11 +126,20 @@ namespace CHC.Consent.Api
                                     new IdentifierDefinition(e.Name, definitionParser.ParseString(e.Definition).Type)));
                 }
             );
-            //services.AddTransient(provider => KnownIdentifierDefinitions.KnownIdentifiers);
+            services.TryAddScoped<EvidenceDefinitionRegistry>(
+                provider =>
+                {
+                    var parser = new EvidenceDefinitionParser();
+                    return new EvidenceDefinitionRegistry(
+                        provider.GetService<ConsentContext>().Set<EvidenceDefinitionEntity>()
+                            .Select(
+                                e => new EvidenceDefinition(e.Name, parser.ParseString(e.Definition).Type)
+                            )
+                    );
+                }
+            );
             
             services.AddTransient<IPersonIdentifierDisplayHandlerProvider, PersonIdentifierHandlerProvider>();
-
-            services.AddSingleton(KnownEvidence.Registry);
         }
 
         protected virtual void ConfigureDatabaseOptions(IServiceProvider provider, DbContextOptionsBuilder options)

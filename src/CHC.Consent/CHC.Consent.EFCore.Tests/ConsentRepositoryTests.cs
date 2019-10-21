@@ -90,9 +90,6 @@ namespace CHC.Consent.EFCore.Tests
             
             repository = CreateRepository(readContext);
 
-            
-            
-           
         }
 
         private ConsentRepository CreateRepository(

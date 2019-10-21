@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Identity.Identifiers;
 using CHC.Consent.Common.Infrastructure.Definitions;
 using CHC.Consent.Common.Infrastructure.Definitions.Types;
@@ -63,6 +64,13 @@ namespace CHC.Consent.Parsing
     {
         /// <inheritdoc />
         public IdentifierDefinitionParser() : base(IdentifierDefinition.Create)
+        {
+        }
+    }
+    
+    public class EvidenceDefinitionParser : DefinitionParser<EvidenceDefinition>
+    {
+        public EvidenceDefinitionParser() : base(EvidenceDefinition.Create)
         {
         }
     }

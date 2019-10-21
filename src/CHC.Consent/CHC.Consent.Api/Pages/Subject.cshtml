@@ -1,8 +1,5 @@
 ﻿@page "{studyId:long}/subject/{subjectIdentifier}"
-
-@using System.ComponentModel
 @using CHC.Consent.Common.Consent
-@using CHC.Consent.Common.Consent.Evidences
 @using CHC.Consent.Common.Identity.Identifiers
 @using CHC.Consent.Common.Infrastructure
 @using CHC.Consent.Common.Infrastructure.Definitions
@@ -49,12 +46,12 @@
         return years;
     }
 
-    private Evidence GetEvidence(IEnumerable<Evidence> evidence, EvidenceDefinition definition)
+    private static Evidence GetEvidence(IEnumerable<Evidence> evidence, string systemName)
     {
-        return evidence?.FirstOrDefault(_ => _.Definition == definition);
+        return evidence?.FirstOrDefault(_ => _.Definition.SystemName == systemName);
     }
 
-    private string Evidence(params EvidenceDefinition[] path)
+    private string Evidence(params string[] path)
     {
         if (Model.CurrentConsent == null) return null;
         var currentEvidence = path.Skip(1)
@@ -118,11 +115,11 @@
             </tr>
             <tr>
                 <th>Withdrawal Requested By</th>
-                <td>@Evidence(KnownEvidence.Bib4AllWithdrawal, KnownEvidence.Bib4AllWithdrawalParts.RequestedBy)</td>
+                <td>@Evidence("bib4all-withdrawal-request", "requested-by")</td>
             </tr>
             <tr>
-                <th>Withdrawal Requested By</th>
-                <td>@Evidence(KnownEvidence.Bib4AllWithdrawal, KnownEvidence.Bib4AllWithdrawalParts.Relationship)</td>
+                <th>Relationship to Subject</th>
+                <td>@Evidence("bib4all-withdrawal-request", "relationship-to-subject")</td>
             </tr>
         }
     </table>

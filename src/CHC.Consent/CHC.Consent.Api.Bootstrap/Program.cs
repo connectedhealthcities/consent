@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.EFCore;
 using CHC.Consent.EFCore.Consent;
 using CHC.Consent.EFCore.Entities;
@@ -102,6 +103,12 @@ namespace CHC.Consent.Api.Bootstrap
                             entities.Add(identifier);
                         }
                     }
+
+                    consent.EvidenceDefinition.AddRange(
+                        KnownEvidence.Registry.Cast<EvidenceDefinition>()
+                            .Select(_ => new EvidenceDefinitionEntity(_.Name, _.SystemName))
+                            .Where(e => consent.EvidenceDefinition.All(ent => ent.Name != e.Name))
+                    );
 
                     foreach (var authority in Authorities)
                     {

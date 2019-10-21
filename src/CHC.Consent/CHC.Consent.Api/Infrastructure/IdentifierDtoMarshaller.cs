@@ -39,6 +39,7 @@ namespace CHC.Consent.Api.Infrastructure
 
         private TIdentifier MarshallToIdentifier(IIdentifierValueDto dto)
         {
+            if(!Marshallers.ContainsKey(dto.SystemName)) throw new InvalidOperationException($"{dto.SystemName} is not a known type");
             return Marshallers[dto.SystemName].MarshallToIdentifier(dto);
         }
 
