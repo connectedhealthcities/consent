@@ -42,7 +42,7 @@
 
 <div class="bg-danger" asp-validation-summary="ModelOnly"></div>
 
-<form method="post" class="" data-val="true" >
+<form method="get" class="" data-val="true" >
     
     @* ReSharper disable once ForCanBeConvertedToForeach *@
     @for (var groupIndex = 0; groupIndex < Model.SearchGroups.Count; groupIndex++)
@@ -50,10 +50,6 @@
         <div class="form-group form-row">
             @for (var fieldIndex = 0; fieldIndex < Model.SearchGroups[groupIndex].Fields.Count; ++fieldIndex)
             {
-                <input type="hidden" asp-for="@Model.SearchGroups[groupIndex].Fields[fieldIndex].FieldName"/>
-                <input type="hidden" asp-for="@Model.SearchGroups[groupIndex].Fields[fieldIndex].Label"/>
-                <input type="hidden" asp-for="@Model.SearchGroups[groupIndex].Fields[fieldIndex].Compare"/>
-                <input type="hidden" asp-for="@Model.SearchGroups[groupIndex].Fields[fieldIndex].DataType"/>
                 @if (!string.IsNullOrWhiteSpace(Model.SearchGroups[groupIndex].Fields[fieldIndex].Label))
                 {
                 <label class="col-2 col-form-label-sm" asp-for="@Model.SearchGroups[groupIndex].Fields[fieldIndex].Value">@Model.SearchGroups[groupIndex].Fields[fieldIndex].Label</label>
@@ -74,7 +70,7 @@
         <div class="col-auto"><input class="form-control form-control-sm" asp-for="SubjectIdentifier" /></div>
         <span asp-validation-for="SubjectIdentifier" class="text-danger"></span>
     </div>
-    <button type="submit" class="btn btn-primary btn-sm">Search</button>
+    <button type="submit" name="search" value="true" class="btn btn-primary btn-sm">Search</button>
 </form>
 
 @if (Model.ShowPeople)

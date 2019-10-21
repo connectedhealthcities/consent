@@ -31,15 +31,15 @@ namespace CHC.Consent.Api.Pages
         public IEnumerable<string> IdentifierNames { get; private set; }
         public Dictionary<string, string> IdentifierLabels { get; set; }
 
-        [BindProperty]
+        [BindProperty(SupportsGet = true)]
         public IList<SearchFieldGroup> SearchGroups { get; set; } = new List<SearchFieldGroup>();
 
-        [BindProperty]
+        [BindProperty(SupportsGet = true)]
         public string SubjectIdentifier { get; set; }
-
+        
         public class SearchFieldGroup
         {
-            public IList<SearchField> Fields { get; } = new List<SearchField>();
+            public IList<SearchField> Fields { get; set; } = new List<SearchField>();
         }
 
         public class SearchField
@@ -81,30 +81,16 @@ namespace CHC.Consent.Api.Pages
             this.consent = consent;
             this.identityRepository = identityRepository;
             this.identifierDefinitionRegistry = identifierDefinitionRegistry;
-            this.displayOptions = displayOptionsProvider.Value;
+            displayOptions = displayOptionsProvider.Value;
+            
+            SearchGroups = GetDefinedSearchGroups();
         }
 
-        public ActionResult OnGet(long id)
+        public ActionResult OnGet([FromRoute]long id, [FromQuery]bool search)
         {
             Study = consent.GetStudies(user).SingleOrDefault(_ => _.Id == id);
             if (Study == null) return NotFound();
 
-            foreach (var searchGroup in displayOptions.Search)
-            {
-                var inputGroup = new SearchFieldGroup();
-
-                foreach (var field in searchGroup.Fields)
-                {
-                    var fieldType = GetIdentifierDefinitionByPath(field.Name).Type.SystemName;
-                    inputGroup.Fields.Add(
-                        new SearchField
-                        {
-                            FieldName = field.Name, Label = field.Label, Compare = field.Compare, DataType = fieldType
-                        });
-                }
-                
-                SearchGroups.Add(inputGroup);
-            }
 
             var studyIdentity = Study.Id;
             var consentedSubjects = consent.GetConsentedSubjects(studyIdentity);
@@ -112,19 +98,56 @@ namespace CHC.Consent.Api.Pages
                 "Found {count} consentedPeople - {consentedPeopleIds}",
                 consentedSubjects.Count(),
                 consentedSubjects);
-                   
-            return Page();
+
+            if (!search)
+            {
+                SearchGroups = GetDefinedSearchGroups();
+                return Page();
+            }
+
+            var mergedSearchGroups = GetDefinedSearchGroups();
+            for (var searchGroupIndex = 0; searchGroupIndex < Math.Min(SearchGroups.Count, mergedSearchGroups.Length); searchGroupIndex++)
+            {
+                var searchGroup = SearchGroups[searchGroupIndex];
+                for (var fieldIndex = 0; fieldIndex < Math.Min(searchGroup.Fields.Count, mergedSearchGroups[searchGroupIndex].Fields.Count); fieldIndex++)
+                {
+                    mergedSearchGroups[searchGroupIndex].Fields[fieldIndex].Value =
+                        searchGroup.Fields[fieldIndex].Value;
+                }
+            }
+
+            SearchGroups = mergedSearchGroups;
+
+            return DoSearch();
+        }
+
+        private SearchFieldGroup[] GetDefinedSearchGroups()
+        {
+            return displayOptions.Search
+                .Select(s => new SearchFieldGroup
+                {
+                    Fields = s.Fields.Select(field =>
+                        new SearchField
+                        {
+                            FieldName = field.Name, Label = field.Label, Compare = field.Compare, DataType =
+                                GetIdentifierDefinitionByPath(field.Name).Type.SystemName
+
+                        }).ToArray()
+                }).ToArray();
+            
         }
 
         public ActionResult OnPost(long id)
         {
             Study = consent.GetStudies(user).SingleOrDefault(_ => _.Id == id);
-            if (Study == null) return NotFound();
+            return Study == null ? NotFound() : DoSearch();
+        }
 
+        private ActionResult DoSearch()
+        {
             IdentifierNames = displayOptions.Default;
             IdentifierLabels = IdentifierNames.ToDictionary(_ => _, path => GetIdentifierDefinitionByPath(path).Name);
             
-
             var identifierSearches = SearchGroups
                 .SelectMany(_ => _.Fields)
                 .Where(_ => !string.IsNullOrWhiteSpace(_.Value))
@@ -147,9 +170,9 @@ namespace CHC.Consent.Api.Pages
 
             ShowPeople = true;
             var peopleDetails = identityRepository.GetPeopleWithIdentifiers(
-                consentedSubjects.Select(_ => _.PersonId), 
-                IdentifierNames, 
-                user, 
+                consentedSubjects.Select(_ => _.PersonId),
+                IdentifierNames,
+                user,
                 identifierSearches,
                 SubjectIdentifier);
 
