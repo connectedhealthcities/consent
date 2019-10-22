@@ -38,7 +38,13 @@ namespace CHC.Consent.Api.Pages
 
         [BindProperty(SupportsGet = true)]
         public string SubjectIdentifier { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public bool IncludeWithdrawnParticipants { get; set; }
         
+        [BindProperty(SupportsGet = true)]
+        public bool Search { get; set; }
+
         public class SearchFieldGroup
         {
             public IList<SearchField> Fields { get; set; } = new List<SearchField>();
@@ -92,9 +98,9 @@ namespace CHC.Consent.Api.Pages
             SearchGroups = GetDefinedSearchGroups();
         }
 
-        public ActionResult OnGet([FromRoute]long id, [FromQuery]bool search)
+        public ActionResult OnGet([FromRoute]long id)
         {
-            Study = Studies.GetStudies(user).SingleOrDefault(_ => _.Id == id);
+            Study = Studies.GetStudy(id);
             if (Study == null) return NotFound();
 
 
@@ -105,26 +111,37 @@ namespace CHC.Consent.Api.Pages
                 consentedSubjects.Length,
                 consentedSubjects);
 
-            if (!search)
+            if (!Search)
             {
                 SearchGroups = GetDefinedSearchGroups();
                 return Page();
             }
 
+            var mergedSearchGroups = GetSearchGroupsAndValues();
+
+            SearchGroups = mergedSearchGroups;
+
+            return DoSearch();
+        }
+
+        private SearchFieldGroup[] GetSearchGroupsAndValues()
+        {
             var mergedSearchGroups = GetDefinedSearchGroups();
-            for (var searchGroupIndex = 0; searchGroupIndex < Math.Min(SearchGroups.Count, mergedSearchGroups.Length); searchGroupIndex++)
+            for (var searchGroupIndex = 0;
+                searchGroupIndex < Math.Min(SearchGroups.Count, mergedSearchGroups.Length);
+                searchGroupIndex++)
             {
                 var searchGroup = SearchGroups[searchGroupIndex];
-                for (var fieldIndex = 0; fieldIndex < Math.Min(searchGroup.Fields.Count, mergedSearchGroups[searchGroupIndex].Fields.Count); fieldIndex++)
+                for (var fieldIndex = 0;
+                    fieldIndex < Math.Min(searchGroup.Fields.Count, mergedSearchGroups[searchGroupIndex].Fields.Count);
+                    fieldIndex++)
                 {
                     mergedSearchGroups[searchGroupIndex].Fields[fieldIndex].Value =
                         searchGroup.Fields[fieldIndex].Value;
                 }
             }
 
-            SearchGroups = mergedSearchGroups;
-
-            return DoSearch();
+            return mergedSearchGroups;
         }
 
         private SearchFieldGroup[] GetDefinedSearchGroups()
@@ -141,12 +158,6 @@ namespace CHC.Consent.Api.Pages
                         }).ToArray()
                 }).ToArray();
             
-        }
-
-        public ActionResult OnPost(long id)
-        {
-            Study = Studies.GetStudies(user).SingleOrDefault(_ => _.Id == id);
-            return Study == null ? NotFound() : DoSearch();
         }
 
         private ActionResult DoSearch()
@@ -168,10 +179,13 @@ namespace CHC.Consent.Api.Pages
             if (!ModelState.IsValid) return Page();
 
             var studyIdentity = Study.Id;
-            var consentedSubjects = Subjects.GetConsentedSubjects(studyIdentity);
+            var consentedSubjects =
+                IncludeWithdrawnParticipants
+                    ? Subjects.GetSubjectsWithLastWithdrawalDate(studyIdentity).Select(_ => _.studySubject)
+                    : Subjects.GetConsentedSubjects(studyIdentity);
             Logger.LogDebug(
                 "Found {count} consentedPeople - {consentedPeopleIds}",
-                consentedSubjects.Count(),
+                consentedSubjects.LongCount(),
                 consentedSubjects);
 
             ShowPeople = true;

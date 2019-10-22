@@ -44,38 +44,56 @@
 
 <form method="get" class="" data-val="true" >
     
-    @* ReSharper disable once ForCanBeConvertedToForeach *@
-    @for (var groupIndex = 0; groupIndex < Model.SearchGroups.Count; groupIndex++)
-    {
-        <div class="form-group form-row">
-            @for (var fieldIndex = 0; fieldIndex < Model.SearchGroups[groupIndex].Fields.Count; ++fieldIndex)
-            {
-                @if (!string.IsNullOrWhiteSpace(Model.SearchGroups[groupIndex].Fields[fieldIndex].Label))
+    <div class="form-row">
+        
+        @* ReSharper disable once ForCanBeConvertedToForeach *@
+        @for (var groupIndex = 0; groupIndex < Model.SearchGroups.Count; groupIndex++)
+        {
+            <div class="form-group form-row col-lg-6">
+                @for (var fieldIndex = 0; fieldIndex < Model.SearchGroups[groupIndex].Fields.Count; ++fieldIndex)
                 {
-                <label class="col-2 col-form-label-sm" asp-for="@Model.SearchGroups[groupIndex].Fields[fieldIndex].Value">@Model.SearchGroups[groupIndex].Fields[fieldIndex].Label</label>
+                    @if (!string.IsNullOrWhiteSpace(Model.SearchGroups[groupIndex].Fields[fieldIndex].Label))
+                    {
+                        <label class="col-2 col-form-label-sm" asp-for="@Model.SearchGroups[groupIndex].Fields[fieldIndex].Value">@Model.SearchGroups[groupIndex].Fields[fieldIndex].Label</label>
+                    }
+                    <div class="col-auto">
+                        <input class="form-control form-control-sm"
+                               asp-for="@Model.SearchGroups[groupIndex].Fields[fieldIndex].Value"
+                               type="@InputType(Model.SearchGroups[groupIndex].Fields[fieldIndex])"
+                               @AttributesFor(Model.SearchGroups[groupIndex].Fields[fieldIndex])/>
+                    </div>
+                    <span asp-validation-for="@Model.SearchGroups[groupIndex].Fields[fieldIndex].Value" class="text-danger"></span>
                 }
-                <div class="col-auto">
-                    <input class="form-control form-control-sm" 
-                           asp-for="@Model.SearchGroups[groupIndex].Fields[fieldIndex].Value"
-                           type="@InputType(Model.SearchGroups[groupIndex].Fields[fieldIndex])"
-                           @AttributesFor(Model.SearchGroups[groupIndex].Fields[fieldIndex])
-                           />
-                </div>
-                <span asp-validation-for="@Model.SearchGroups[groupIndex].Fields[fieldIndex].Value" class="text-danger"></span>
-            }
-        </div>
-    }
-    <div class="form-group form-row">
+            </div>
+        }
+    </div>
+    <div class="form-row">
+    <div class="form-group form-row col-lg-6">
         <label class="col-2 col-form-label-sm" asp-for="SubjectIdentifier">Subject Id</label>
         <div class="col-auto"><input class="form-control form-control-sm" asp-for="SubjectIdentifier" /></div>
         <span asp-validation-for="SubjectIdentifier" class="text-danger"></span>
     </div>
-    <button type="submit" name="search" value="true" class="btn btn-primary btn-sm">Search</button>
+    </div>
+    <div class="form-row ">
+        <div class="form-row col-lg-6 form-group"> 
+            <div class="offset-lg-2 form-check">
+            <input class="form-check-input" type="checkbox" asp-for="IncludeWithdrawnParticipants">
+            <label class="form-check-label"> Include withdrawn participants </label>
+            </div>
+        </div>
+    </div>
+    <div class="form-row form-group">
+        <button type="submit" name="@Html.NameFor(_ => _.Search)" value="@true.ToString()" class="btn btn-primary btn-sm">Search</button>
+        @if (Model.Search)
+        {
+            <text>&nbsp;</text><a class="btn btn-secondary btn-sm" href="?">New Search</a>
+        }
+    </div>
 </form>
 
 @if (Model.ShowPeople)
 {
-    <table class="table" condition="Model.People.Any()">
+    <table class="table" condition="Model.People.Any()" style="margin-top:0.5em">
         <thead>
         <th>Subject Identifier</th>
         @foreach (var systemName in Model.IdentifierNames)
