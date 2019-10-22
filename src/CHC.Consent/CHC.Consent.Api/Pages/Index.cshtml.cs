@@ -19,11 +19,11 @@ namespace CHC.Consent.Api.Pages
     [Authorize]
     public class IndexModel : PageModel
     {
-        private IConsentRepository Consent { get; }
+        private IStudyRepository Consent { get; }
         private readonly IUserProvider user;
 
         /// <inheritdoc />
-        public IndexModel(IConsentRepository consent, IUserProvider user)
+        public IndexModel(IStudyRepository consent, IUserProvider user)
         {
             Consent = consent;
             this.user = user;

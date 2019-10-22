@@ -104,6 +104,10 @@ namespace CHC.Consent.Api
         {
             services.AddScoped<IIdentityRepository, IdentityRepository>();
             services.AddScoped<IConsentRepository, ConsentRepository>();
+            services.AddScoped<StudySubjectRepository>();
+            services.AddScoped<IStudySubjectRepository, StudySubjectRepository>();
+            services.AddScoped<StudyRepository>();
+            services.AddScoped<IStudyRepository, StudyRepository>();
             services.AddScoped<ISubjectIdentifierRepository, SubjectIdentifierRepository>();
 
             services.AddDbContext<ConsentContext>(ConfigureDatabaseOptions);

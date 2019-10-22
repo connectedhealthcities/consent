@@ -393,7 +393,7 @@ namespace CHC.Consent.EFCore.Tests
             repository.FindPersonBy(
                 new CompositePersonSpecification(
                     new PersonIdentifierSpecification(Identifiers.NhsNumber(personOneNhsNumber)),
-                    new ConsentedPersonSpecification(new StudyIdentity(1))
+                    new ConsentedPersonSpecification(new StudyIdentity(study.Id))
                 )
             ).Should().Be((PersonIdentity) personOne.Id);
         }

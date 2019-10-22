@@ -24,7 +24,7 @@ namespace CHC.Consent.EFCore.Tests
     public class ConsentRepositoryTests : DbTests
     {
         private readonly StudyEntity study;
-        private readonly ConsentRepository repository;
+        private readonly ConsentRepository consents;
         private readonly StudySubjectEntity consentedStudySubject;
         
         private readonly ConsentEntity activeConsent;
@@ -34,6 +34,8 @@ namespace CHC.Consent.EFCore.Tests
         private readonly PersonIdentity unconsentedPersonId;
         private readonly PersonIdentity withdrawnPersonId;
         private DateTime withdrawnSubjectWithdrawnDate;
+        private IStudySubjectRepository studySubjects;
+        private readonly IStudyRepository studies;
 
         /// <inheritdoc />
         public ConsentRepositoryTests(ITestOutputHelper outputHelper, DatabaseFixture fixture) : base(outputHelper, fixture)
@@ -88,11 +90,13 @@ namespace CHC.Consent.EFCore.Tests
             unconsentedPersonId = unconsentedPerson;
             withdrawnPersonId = withdrawnConsent;
             
-            repository = CreateRepository(readContext);
+            consents = CreateConsentRepository(readContext);
 
+            studySubjects = CreateStudySubjectRepository(readContext);
+            studies = CreateStudyRepository(readContext);
         }
 
-        private ConsentRepository CreateRepository(
+        private static ConsentRepository CreateConsentRepository(
             ConsentContext consentContext, 
             params EvidenceDefinition[] evidentTypes)
         {
@@ -103,13 +107,29 @@ namespace CHC.Consent.EFCore.Tests
                 evidentTypes.Any() ? new EvidenceDefinitionRegistry(evidentTypes) : KnownEvidence.Registry;
             
             return new ConsentRepository(
-                storeProvider.Get<StudyEntity>(),
-                storeProvider.Get<StudySubjectEntity>(),
+                (StudySubjectRepository) CreateStudySubjectRepository(consentContext),
                 storeProvider.Get<PersonEntity>(),
                 storeProvider.Get<ConsentEntity>(),
                 storeProvider.Get<EvidenceEntity>(),
                 evidenceRegistry
                 );
+        }
+
+        private static IStudyRepository CreateStudyRepository(ConsentContext db)
+        {
+            var storeProvider = (IStoreProvider) new ContextStoreProvider(db);
+            return new StudyRepository(storeProvider.Get<StudyEntity>());
+        }
+        
+        private static IStudySubjectRepository CreateStudySubjectRepository(ConsentContext db)
+        {
+            var storeProvider = (IStoreProvider) new ContextStoreProvider(db);
+
+            return new StudySubjectRepository(new StudyRepository(storeProvider.Get<StudyEntity>()),
+                storeProvider.Get<StudySubjectEntity>(),
+                storeProvider.Get<PersonEntity>(),
+                storeProvider.Get<ConsentEntity>()
+            );
         }
 
         [Fact]
@@ -120,7 +140,7 @@ namespace CHC.Consent.EFCore.Tests
             var personId = new PersonIdentity(person.Id);
 
             var subjectIdentifier = Random.String();
-            var addedSubject = CreateRepository(updateContext).AddStudySubject(
+            var addedSubject = CreateStudySubjectRepository(updateContext).AddStudySubject(
                 new StudySubject(studyId, subjectIdentifier, personId));
             updateContext.SaveChanges();
 
@@ -156,7 +176,7 @@ namespace CHC.Consent.EFCore.Tests
             var dateGiven = Random.Date().Date;
 
 
-            var consent = CreateRepository(updateContext)
+            var consent = CreateConsentRepository(updateContext)
                 .AddConsent(
                     new Common.Consent.Consent(studySubject, dateGiven, personId, null)
                 );
@@ -210,7 +230,7 @@ namespace CHC.Consent.EFCore.Tests
                     .MarshallToXml(evidence)
                     .ToString(SaveOptions.DisableFormatting);
             
-            var consent = CreateRepository(updateContext)
+            var consent = CreateConsentRepository(updateContext)
                 .AddConsent(
                     new Common.Consent.Consent(studySubject, dateGiven, personId, new [] { evidence })
                 );
@@ -239,37 +259,37 @@ namespace CHC.Consent.EFCore.Tests
         [Fact]
         public void CanGetStudyById()
         {
-            Assert.Equal(studyId, repository.GetStudy(study.Id));
+            Assert.Equal(studyId, studies.GetStudy(study.Id)?.Id);
         }
 
         [Fact]
         public void ReturnsNullStudyForNonExistantStudy()
         {
-            Assert.Null(repository.GetStudy(-1));
+            Assert.Null(studies.GetStudy(-1));
         }
 
         [Fact]
         public void CanFindStudySubjectByStudyAndSubjectIdentifier()
         {
-            AssertStudySubject(consentedStudySubject, repository.FindStudySubject(studyId, consentedStudySubject.SubjectIdentifier));
+            AssertStudySubject(consentedStudySubject, studySubjects.GetStudySubject(studyId, consentedStudySubject.SubjectIdentifier));
         }
 
         [Fact]
         public void ReturnsNullStudySubjectForNonExistantStudyAndSubjectIdentifier()
         {
-            repository.FindStudySubject(studyId, "nope").Should().BeNull();
+            studySubjects.GetStudySubject(studyId, "nope").Should().BeNull();
         }
 
         [Fact]
         public void CanFindStudySubjectByStudyAndPersonId()
         {
-            AssertStudySubject(consentedStudySubject, repository.FindStudySubject(studyId, consentedPersonId));
+            AssertStudySubject(consentedStudySubject,studySubjects.FindStudySubject(studyId, consentedPersonId));
         }
 
         [Fact]
         public void ReturnsNullStudySubjectForNonExistantStudyAndPersonId()
         {
-            Assert.Null(repository.FindStudySubject(studyId, new PersonIdentity(-consentedStudySubject.Person.Id)));
+            Assert.Null(studySubjects.FindStudySubject(studyId, new PersonIdentity(-consentedStudySubject.Person.Id)));
         }
 
         [Fact]
@@ -277,7 +297,7 @@ namespace CHC.Consent.EFCore.Tests
         {
             Assert.Equal(
                 activeConsent.Id,
-                repository.FindActiveConsent(
+                consents.FindActiveConsent(
                     new StudySubject(
                         studyId,
                         consentedStudySubject.SubjectIdentifier,
@@ -288,21 +308,21 @@ namespace CHC.Consent.EFCore.Tests
         public void ReturnsNullConsentForAnStudySubjectWithOnlyWithdrawnConsent()
         {
             Assert.Null(
-                repository.FindActiveConsent(
+                consents.FindActiveConsent(
                     new StudySubject(studyId, "Unconsented", unconsentedPersonId)));
         }
 
         [Fact()]
         public void ReturnsNullConsentForAnUnknownStudySubject()
         {
-            Assert.Null(repository.FindActiveConsent(
+            Assert.Null(consents.FindActiveConsent(
                 new StudySubject(studyId, "Unknown", new PersonIdentity(67))));
         }
 
         [Fact]
         public void OnlyGetsConsentedSubjectsForStudy()
         {
-            repository.GetConsentedSubjects(studyId)
+            studySubjects.GetConsentedSubjects(studyId)
                 .Should()
                 .OnlyContain(_ => _.StudyId == studyId && _.PersonId == consentedPersonId && _.SubjectIdentifier == "Consented");
         }
@@ -310,7 +330,7 @@ namespace CHC.Consent.EFCore.Tests
         [Fact]
         public void GetsLatestWithdrawnDateForStudySubjects()
         {
-            repository.GetSubjectsWithLastWithdrawalDate(studyId)
+            studySubjects.GetSubjectsWithLastWithdrawalDate(studyId)
                 .Should()
                 .HaveCount(2)
                 .And

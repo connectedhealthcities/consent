@@ -21,15 +21,17 @@ namespace CHC.Consent.Api.Pages
     {
         private ConsentContext Db { get; }
         private readonly IUserProvider user;
-        private readonly IConsentRepository consent;
+        private readonly IStudySubjectRepository subjects;
+        private readonly IConsentRepository consents;
         private readonly IIdentityRepository identity;
 
         /// <inheritdoc />
-        public Subject(IUserProvider user, ConsentContext db, IConsentRepository consent, IIdentityRepository identity)
+        public Subject(IUserProvider user, ConsentContext db, IStudySubjectRepository subjects, IConsentRepository consents, IIdentityRepository identity)
         {
             Db = db;
             this.user = user;
-            this.consent = consent;
+            this.subjects = subjects;
+            this.consents = consents;
             this.identity = identity;
         }
 
@@ -43,9 +45,9 @@ namespace CHC.Consent.Api.Pages
 
         private void InitialiseBindingData(long studyId, string subjectIdentifier)
         {
-            StudySubject = consent.FindStudySubject(new StudyIdentity(studyId), subjectIdentifier);
+            StudySubject = subjects.GetStudySubject(new StudyIdentity(studyId), subjectIdentifier);
             if (StudySubject == null) return;
-            Consents = consent.GetConsentsForSubject(new StudyIdentity(studyId), subjectIdentifier, user);
+            Consents = consents.GetConsentsForSubject(new StudyIdentity(studyId), subjectIdentifier);
             CurrentConsent = Consents.FirstOrDefault();
             ConsentIsActive = CurrentConsent != null && CurrentConsent.DateWithdrawn == null;
             Identifiers = identity.GetPersonIdentifiers(StudySubject.PersonId);
@@ -56,7 +58,7 @@ namespace CHC.Consent.Api.Pages
             InitialiseBindingData(studyId, subjectIdentifier);
             if (StudySubject == null) return NotFound();
 
-            consent.WithdrawConsent(
+            consents.WithdrawConsent(
                 StudySubject,
                 KnownEvidence.Website.Create(
                     KnownEvidence.WebsiteParts.User.Create(

@@ -19,6 +19,8 @@ namespace CHC.Consent.Api.Pages
 {
     public class StudiesModel : PageModel
     {
+        private IStudyRepository Studies { get; }
+        private IStudySubjectRepository Subjects { get; }
         private ILogger<StudiesModel> Logger { get; }
         private readonly IUserProvider user;
         private readonly IConsentRepository consent;
@@ -68,6 +70,8 @@ namespace CHC.Consent.Api.Pages
 
         /// <inheritdoc />
         public StudiesModel(
+            IStudyRepository studies,
+            IStudySubjectRepository subjects,
             IConsentRepository consent,
             IIdentityRepository identityRepository,
             IdentifierDefinitionRegistry identifierDefinitionRegistry,
@@ -76,6 +80,8 @@ namespace CHC.Consent.Api.Pages
             ILogger<StudiesModel> logger
             )
         {
+            Studies = studies;
+            Subjects = subjects;
             Logger = logger;
             this.user = user;
             this.consent = consent;
@@ -88,15 +94,15 @@ namespace CHC.Consent.Api.Pages
 
         public ActionResult OnGet([FromRoute]long id, [FromQuery]bool search)
         {
-            Study = consent.GetStudies(user).SingleOrDefault(_ => _.Id == id);
+            Study = Studies.GetStudies(user).SingleOrDefault(_ => _.Id == id);
             if (Study == null) return NotFound();
 
 
             var studyIdentity = Study.Id;
-            var consentedSubjects = consent.GetConsentedSubjects(studyIdentity);
+            var consentedSubjects = Subjects.GetConsentedSubjects(studyIdentity);
             Logger.LogDebug(
                 "Found {count} consentedPeople - {consentedPeopleIds}",
-                consentedSubjects.Count(),
+                consentedSubjects.Length,
                 consentedSubjects);
 
             if (!search)
@@ -139,7 +145,7 @@ namespace CHC.Consent.Api.Pages
 
         public ActionResult OnPost(long id)
         {
-            Study = consent.GetStudies(user).SingleOrDefault(_ => _.Id == id);
+            Study = Studies.GetStudies(user).SingleOrDefault(_ => _.Id == id);
             return Study == null ? NotFound() : DoSearch();
         }
 
@@ -162,7 +168,7 @@ namespace CHC.Consent.Api.Pages
             if (!ModelState.IsValid) return Page();
 
             var studyIdentity = Study.Id;
-            var consentedSubjects = consent.GetConsentedSubjects(studyIdentity);
+            var consentedSubjects = Subjects.GetConsentedSubjects(studyIdentity);
             Logger.LogDebug(
                 "Found {count} consentedPeople - {consentedPeopleIds}",
                 consentedSubjects.Count(),

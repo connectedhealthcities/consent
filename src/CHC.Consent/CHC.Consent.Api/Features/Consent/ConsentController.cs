@@ -20,18 +20,24 @@ namespace CHC.Consent.Api.Features.Consent
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ConsentController : Controller
     {
+        private IStudyRepository Studies { get; }
+        private IStudySubjectRepository Subjects { get; }
         private ILogger Logger { get; }
         private EvidenceDtosIdentifierDtoMarshaller EvidenceDtoMarshallers { get; }
-        private readonly IConsentRepository consentRepository;
+        private IConsentRepository Consents { get; }
 
         
         public ConsentController(
-            IConsentRepository consentRepository, 
+            IStudyRepository studies,
+            IStudySubjectRepository subjects,
+            IConsentRepository consents, 
             EvidenceDefinitionRegistry registry,
             ILogger<ConsentController> logger=null)
         {
+            Studies = studies;
+            Subjects = subjects;
             Logger = logger ?? NullLogger<ConsentController>.Instance;
-            this.consentRepository = consentRepository;
+            Consents = consents;
             EvidenceDtoMarshallers = new EvidenceDtosIdentifierDtoMarshaller(registry);
         }
 
@@ -49,45 +55,45 @@ namespace CHC.Consent.Api.Features.Consent
             }
             
 
-            var studyId = consentRepository.GetStudy(specification.StudyId);
-            if (studyId == null)
+            var study = Studies.GetStudy(specification.StudyId);
+            if (study == null)
             {
                 Logger.LogWarning("Study#{studyId} not found", specification.StudyId);
                 return NotFound();
             }
-            var studySubject = consentRepository.FindStudySubject(studyId, specification.SubjectIdentifier);
+            var studySubject = Subjects.GetStudySubject(study.Id, specification.SubjectIdentifier);
             if (studySubject == null)
             {
                 var subjectSpecification = new { specification.StudyId, specification.PersonId };
                 Logger.LogDebug("No existing studySubject - creating a new subject for {spec}", subjectSpecification);
                 var personId = new PersonIdentity( specification.PersonId );
                 
-                studySubject = consentRepository.FindStudySubject(studyId, personId);
+                studySubject = Subjects.FindStudySubject(study.Id, personId);
                 if (studySubject != null)
                 {
                     Logger.LogError("There is already a study subject for {spec} - {identifier}", subjectSpecification, studySubject.SubjectIdentifier);
                     return BadRequest();
                 }
 
-                studySubject = new StudySubject(studyId, specification.SubjectIdentifier, personId );
-                studySubject = consentRepository.AddStudySubject(studySubject);
+                studySubject = new StudySubject(study.Id, specification.SubjectIdentifier, personId );
+                studySubject = Subjects.AddStudySubject(studySubject);
             }
             else
             {
-                var existingConsent = consentRepository.FindActiveConsent(studySubject);
+                var existingConsent = Consents.FindActiveConsent(studySubject);
                 if (existingConsent != null)
                 {
                     //TODO: Decide what to do with evidence, etc, for existing consents, or if you can be consented twice
                     return new SeeOtherOjectActionResult(
                         "GetStudySubject",
-                        routeValues: new {studyId, subjectIdentifier = studySubject.SubjectIdentifier},
+                        routeValues: new {studyId = study, subjectIdentifier = studySubject.SubjectIdentifier},
                         result: existingConsent.Id);
                 }
             }
 
             var evidence = EvidenceDtoMarshallers.ConvertToIdentifiers(specification.Evidence);
             
-            var newConsentId = consentRepository.AddConsent(
+            var newConsentId = Consents.AddConsent(
                 new Common.Consent.Consent(
                     studySubject,
                     specification.DateGiven,
@@ -96,7 +102,7 @@ namespace CHC.Consent.Api.Features.Consent
 
             return CreatedAtAction(
                 "GetStudySubject",
-                new {studyId, subjectIdentifier = studySubject.SubjectIdentifier},
+                new {studyId = study, subjectIdentifier = studySubject.SubjectIdentifier},
                 newConsentId.Id);
         }
 
@@ -108,15 +114,15 @@ namespace CHC.Consent.Api.Features.Consent
             var (studyIdentity, actionResult) = GetStudy(studyId);
             if (actionResult != null) return actionResult;
 
-            return Ok(consentRepository.GetConsentedSubjects(studyIdentity));
+            return Ok(Subjects.GetConsentedSubjects(studyIdentity));
         }
 
         private (StudyIdentity studyIdentity, IActionResult actionResult) GetStudy(long studyId)
         {
-            var studyIdentity = consentRepository.GetStudy(studyId);
-            if (studyIdentity != null) return (studyIdentity, null);
+            var study = Studies.GetStudy(studyId);
+            if (study != null) return (study.Id, null);
             Logger.LogWarning("Study#{studyId} not found", studyId);
-            return (studyIdentity, NotFound());
+            return (study.Id, NotFound());
 
         }
 
@@ -129,7 +135,7 @@ namespace CHC.Consent.Api.Features.Consent
 
             return
                 Ok(
-                    consentRepository.GetSubjectsWithLastWithdrawalDate(studyIdentity)
+                    Subjects.GetSubjectsWithLastWithdrawalDate(studyIdentity)
                         .Select(_ => 
                             new SubjectWithWithdrawalDate(_.studySubject.SubjectIdentifier, _.lastWithDrawn)
                         )

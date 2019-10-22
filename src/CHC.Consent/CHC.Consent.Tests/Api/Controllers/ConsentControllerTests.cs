@@ -26,7 +26,9 @@ namespace CHC.Consent.Tests.Api.Controllers
             protected readonly Study Study;
             protected readonly StudySubject StudySubject;
             protected Consent CreatedConsent;
-            protected readonly IConsentRepository ConsentRepository;
+            protected readonly IConsentRepository Consents;
+            protected readonly IStudyRepository Studies;
+            protected readonly IStudySubjectRepository StudySubjects;
             public StudyIdentity StudyId { get; }
 
             /// <inheritdoc />
@@ -35,16 +37,29 @@ namespace CHC.Consent.Tests.Api.Controllers
                 Study = Create.Study;
                 StudyId = new StudyIdentity(Study.Id);
                 StudySubject = new StudySubject(StudyId, "AA100023", new PersonIdentity(500L));
-                ConsentRepository = CreateConsentRepository(Study, StudySubject);
+                Studies = CreateStudyRepository(Study);
+                StudySubjects = CreateSubjectRepository(Study, StudySubject);
+                Consents = CreateConsentRepository(Study, StudySubject);
             }
 
+            private IStudyRepository CreateStudyRepository(Study study)
+            {
+                var fake = A.Fake<IStudyRepository>(x => x.Strict());
+                A.CallTo(() => fake.GetStudy(study.Id)).Returns(study);
+                return fake;
+            }
+
+            private IStudySubjectRepository CreateSubjectRepository(Study study, StudySubject subject)
+            {
+                var fake = A.Fake<IStudySubjectRepository>(x => x.Strict());
+                A.CallTo(() => fake.GetStudySubject(study.Id, subject.SubjectIdentifier)).Returns(subject);
+                A.CallTo(() => fake.FindStudySubject(study.Id, subject.PersonId)).Returns(subject);
+                return fake;
+            }
 
             private IConsentRepository CreateConsentRepository(Study study, StudySubject studySubject)
             {
                 var consentRepository = A.Fake<IConsentRepository>(x => x.Strict());
-                A.CallTo(() => consentRepository.GetStudy(study.Id)).Returns(StudyId);
-                A.CallTo(() => consentRepository.FindStudySubject(StudyId, studySubject.SubjectIdentifier)).Returns(studySubject);
-                A.CallTo(() => consentRepository.FindStudySubject(StudyId, StudySubject.PersonId)).Returns(studySubject);
                 A.CallTo(() => consentRepository.AddConsent(A<Consent>._))
                     .Invokes((Consent c) => CreatedConsent = c);
                 return consentRepository;
@@ -61,7 +76,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 
             )
             {
-                Result = CreateConsentController(consentRepository??ConsentRepository)
+                Result = CreateConsentController(consentRepository??Consents)
                     .PutConsent(
                         new ConsentSpecification
                         {
@@ -92,9 +107,13 @@ namespace CHC.Consent.Tests.Api.Controllers
                     subjectIdentifier,
                     personId);
 
-            public static ConsentController CreateConsentController(IConsentRepository consentRepository)
+            public ConsentController CreateConsentController(IConsentRepository consentRepository)
             {
-                return new ConsentController(consentRepository, KnownEvidence.Registry);
+                return new ConsentController(
+                    Studies, 
+                    StudySubjects, 
+                    consentRepository, 
+                    KnownEvidence.Registry);
             }
         }
 
@@ -103,7 +122,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             /// <inheritdoc />
             public WhenRecordingNewConsent_ForAnExistingStudySubject_WithoutActiveConsent()
             {
-                A.CallTo(() => ConsentRepository.FindActiveConsent(StudySubject))
+                A.CallTo(() => Consents.FindActiveConsent(StudySubject))
                     .Returns(null);
                 RecordConsent(
                     Evidences.ServerMedwayDto(takenBy:"Peter Crowther"),
@@ -137,7 +156,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             {
                 var nonExistentStudyId = - Study.Id;
 
-                A.CallTo(() => ConsentRepository.GetStudy(nonExistentStudyId)).Returns(null);
+                A.CallTo(() => Studies.GetStudy(nonExistentStudyId)).Returns(null);
                 
                 RecordConsent(A.Dummy<IIdentifierValueDto>(), A.Dummy<DateTime>(), studyId: nonExistentStudyId);
             }
@@ -167,10 +186,10 @@ namespace CHC.Consent.Tests.Api.Controllers
             {
                 newSubjectIdentifier = StudySubject.SubjectIdentifier + "New";
                 newPersonId = StudySubject.PersonId.Id + 1;
-                A.CallTo(() => ConsentRepository.FindStudySubject(StudyId, newSubjectIdentifier)).Returns(null);
-                A.CallTo(() => ConsentRepository.FindStudySubject(StudyId, new PersonIdentity(newPersonId))).Returns(null);
+                A.CallTo(() => StudySubjects.GetStudySubject(StudyId, newSubjectIdentifier)).Returns(null);
+                A.CallTo(() => StudySubjects.FindStudySubject(StudyId, new PersonIdentity(newPersonId))).Returns(null);
 
-                A.CallTo(() => ConsentRepository.AddStudySubject(A<StudySubject>._))
+                A.CallTo(() => StudySubjects.AddStudySubject(A<StudySubject>._))
                     .Invokes((StudySubject created) => createdStudySubject = created);
                 
                 RecordConsent(Evidences.ServerMedwayDto(takenBy:"Michael Fish"), A.Dummy<DateTime>(), subjectIdentifier: newSubjectIdentifier, personId: newPersonId);
@@ -208,7 +227,7 @@ namespace CHC.Consent.Tests.Api.Controllers
             {
                 newSubjectIdentifier = StudySubject.SubjectIdentifier + "New";
                 
-                A.CallTo(() => ConsentRepository.FindStudySubject(StudyId, newSubjectIdentifier)).Returns(null);
+                A.CallTo(() => StudySubjects.GetStudySubject(StudyId, newSubjectIdentifier)).Returns(null);
                 
                 
                 RecordConsent(A.Dummy<IIdentifierValueDto>(), A.Dummy<DateTime>(), subjectIdentifier: newSubjectIdentifier);
@@ -238,7 +257,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 var givenEvidence = Array.Empty<IIdentifierValueDto>();
                 existingConsentId = new ConsentIdentity(43); 
                     
-                A.CallTo(() => ConsentRepository.FindActiveConsent(StudySubject))
+                A.CallTo(() => Consents.FindActiveConsent(StudySubject))
                     .Returns(existingConsentId);
                 
                 RecordConsent(givenEvidence, dateGiven);
@@ -270,7 +289,7 @@ namespace CHC.Consent.Tests.Api.Controllers
                 existingConsent = new Consent(StudySubject, dateGiven, Random.Long(), givenEvidence);
                 A.CallTo(
                         () =>
-                            ConsentRepository.FindActiveConsent(
+                            Consents.FindActiveConsent(
                                 StudySubject))
                     .Returns(null);
                 
@@ -304,10 +323,10 @@ namespace CHC.Consent.Tests.Api.Controllers
                     .ToArray();
                 
                 
-                A.CallTo(() => ConsentRepository.GetConsentedSubjects(StudyId))
+                A.CallTo(() => StudySubjects.GetConsentedSubjects(StudyId))
                     .Returns(studySubjects);
 
-                result = CreateConsentController(ConsentRepository).GetConsentedSubjectsForStudy(StudyId);
+                result = CreateConsentController(Consents).GetConsentedSubjectsForStudy(StudyId);
             }
 
             [Fact]
