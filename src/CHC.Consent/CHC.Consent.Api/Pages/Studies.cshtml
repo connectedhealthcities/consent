@@ -1,6 +1,7 @@
 ﻿@page "{id:long}"
 @using CHC.Consent.Common.Infrastructure.Definitions.Types
 @using Microsoft.AspNetCore.Html
+@using Microsoft.AspNetCore.Http.Extensions
 @model StudiesModel
 
 @functions
@@ -21,7 +22,6 @@
 
     private static IHtmlContent AttributesFor(StudiesModel.SearchField searchField)
     {
-
         switch (searchField.DataType)
         {
             case DateDefinitionType.DataType:
@@ -42,10 +42,10 @@
 
 <div class="bg-danger" asp-validation-summary="ModelOnly"></div>
 
-<form method="get" class="" data-val="true" >
-    
+<form method="get" class="" data-val="true">
+
     <div class="form-row">
-        
+
         @* ReSharper disable once ForCanBeConvertedToForeach *@
         @for (var groupIndex = 0; groupIndex < Model.SearchGroups.Count; groupIndex++)
         {
@@ -68,17 +68,19 @@
         }
     </div>
     <div class="form-row">
-    <div class="form-group form-row col-lg-6">
-        <label class="col-2 col-form-label-sm" asp-for="SubjectIdentifier">Subject Id</label>
-        <div class="col-auto"><input class="form-control form-control-sm" asp-for="SubjectIdentifier" /></div>
-        <span asp-validation-for="SubjectIdentifier" class="text-danger"></span>
-    </div>
+        <div class="form-group form-row col-lg-6">
+            <label class="col-2 col-form-label-sm" asp-for="SubjectIdentifier">Subject Id</label>
+            <div class="col-auto">
+                <input class="form-control form-control-sm" asp-for="SubjectIdentifier"/>
+            </div>
+            <span asp-validation-for="SubjectIdentifier" class="text-danger"></span>
+        </div>
     </div>
     <div class="form-row ">
-        <div class="form-row col-lg-6 form-group"> 
+        <div class="form-row col-lg-6 form-group">
             <div class="offset-lg-2 form-check">
-            <input class="form-check-input" type="checkbox" asp-for="IncludeWithdrawnParticipants">
-            <label class="form-check-label"> Include withdrawn participants </label>
+                <input class="form-check-input" type="checkbox" asp-for="IncludeWithdrawnParticipants">
+                <label class="form-check-label"> Include withdrawn participants </label>
             </div>
         </div>
     </div>
@@ -86,7 +88,8 @@
         <button type="submit" name="@Html.NameFor(_ => _.Search)" value="@true.ToString()" class="btn btn-primary btn-sm">Search</button>
         @if (Model.Search)
         {
-            <text>&nbsp;</text><a class="btn btn-secondary btn-sm" href="?">New Search</a>
+            <text>&nbsp;</text>
+            <a class="btn btn-secondary btn-sm" href="?">New Search</a>
         }
     </div>
 </form>
@@ -98,16 +101,16 @@
         <th>Subject Identifier</th>
         @foreach (var systemName in Model.IdentifierNames)
         {
-
             <th>@Model.IdentifierLabels[systemName]</th>
-
         }
         </thead>
         <tbody>
         @foreach (var (subject, identifiers) in Model.People)
         {
             <tr>
-                <td><a asp-page="Subject" asp-route-studyId="@subject.StudyId.Id" asp-route-subjectIdentifier="@subject.SubjectIdentifier">@subject.SubjectIdentifier</a> </td>
+                <td>
+                    <a asp-page="Subject" asp-route-studyId="@subject.StudyId.Id" asp-route-ReturnUrl="@Request.GetEncodedPathAndQuery()" asp-route-subjectIdentifier="@subject.SubjectIdentifier">@subject.SubjectIdentifier</a>
+                </td>
                 @{
                     foreach (var identifierType in Model.IdentifierNames)
                     {
@@ -122,7 +125,6 @@
                     }
                 }
             </tr>
-
         }
         </tbody>
     </table>

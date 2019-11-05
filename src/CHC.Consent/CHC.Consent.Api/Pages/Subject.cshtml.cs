@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Security.Claims;
-using CHC.Consent.Api.Infrastructure.Web;
 using CHC.Consent.Common.Consent;
 using CHC.Consent.Common.Consent.Evidences;
 using CHC.Consent.Common.Identity;
@@ -19,14 +18,14 @@ namespace CHC.Consent.Api.Pages
 {
     public class Subject : PageModel
     {
-        private ConsentContext Db { get; }
-        private readonly IUserProvider user;
-        private readonly IStudySubjectRepository subjects;
         private readonly IConsentRepository consents;
         private readonly IIdentityRepository identity;
+        private readonly IStudySubjectRepository subjects;
+        private readonly IUserProvider user;
 
         /// <inheritdoc />
-        public Subject(IUserProvider user, ConsentContext db, IStudySubjectRepository subjects, IConsentRepository consents, IIdentityRepository identity)
+        public Subject(IUserProvider user, ConsentContext db, IStudySubjectRepository subjects,
+            IConsentRepository consents, IIdentityRepository identity)
         {
             Db = db;
             this.user = user;
@@ -34,6 +33,19 @@ namespace CHC.Consent.Api.Pages
             this.consents = consents;
             this.identity = identity;
         }
+
+        private ConsentContext Db { get; }
+
+        [BindProperty(SupportsGet = true)] public string ReturnUrl { get; set; }
+
+
+        private StudySubject StudySubject { get; set; }
+        public Common.Consent.Consent CurrentConsent { get; private set; }
+        private IEnumerable<Common.Consent.Consent> Consents { get; set; }
+        public bool ConsentIsActive { get; set; }
+        private IEnumerable<PersonIdentifier> Identifiers { get; set; }
+
+        [BindProperty(SupportsGet = false)] public InputModel Input { get; set; }
 
         public IActionResult OnGet(long studyId, string subjectIdentifier)
         {
@@ -75,19 +87,14 @@ namespace CHC.Consent.Api.Pages
             );
 
             Db.SaveChanges();
-            
-            return RedirectToPage();
+
+            return RedirectToPage(new {ReturnUrl});
         }
 
-
-        private StudySubject StudySubject { get; set; }
-        public Common.Consent.Consent CurrentConsent { get; private set; }
-        private IEnumerable<Common.Consent.Consent> Consents { get; set; }
-        public bool ConsentIsActive { get; set; }
-        private IEnumerable<PersonIdentifier> Identifiers { get; set; }
-        
-        [BindProperty(SupportsGet = false)]
-        public InputModel Input { get; set; }
+        public PersonIdentifier GetIdentifier(string systemName)
+        {
+            return Identifiers.FirstOrDefault(_ => _.Definition.SystemName == systemName);
+        }
 
         public class InputModel
         {
@@ -96,11 +103,6 @@ namespace CHC.Consent.Api.Pages
 
             [Required(AllowEmptyStrings = false), DisplayName("Relationship")]
             public string WithdrawnByRelationship { get; set; }
-        }
-
-        public PersonIdentifier GetIdentifier(string systemName)
-        {
-            return Identifiers.FirstOrDefault(_ => _.Definition.SystemName == systemName);
         }
     }
 }
